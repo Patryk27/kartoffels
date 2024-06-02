@@ -1,12 +1,12 @@
 # hellbots
 
-**Hellbots is an online robot combat arena!**
+**Hellbots is an online robot-combat arena!**
 
-Implement own bot, submit it and see it fight other bots in real-time:
+Implement your own bot, submit it and see it fight other bots in real-time:
 
 <https://hellbots.pwy.io>
 
-## Getting started
+## How to play?
 
 TODO
 
