@@ -54,6 +54,11 @@ async fn main() -> Result<()> {
 
     // ---
 
+    for line in include_str!("./logo.txt").lines() {
+        info!("{}", line);
+    }
+
+    info!("");
     info!(?args, "initializing");
 
     let state = init(args.store).await?;
