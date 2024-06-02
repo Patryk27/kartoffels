@@ -1,0 +1,14 @@
+[package]
+name = "hellbots-vm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+elf = { workspace = true }
+serde = { workspace = true }
+serde_bytes = { workspace = true }
+
+[dev-dependencies]
+itertools = { workspace = true }
+pretty_assertions = { workspace = true }

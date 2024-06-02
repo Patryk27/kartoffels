@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0.5em;
+  overflow: hidden;
+
+  color: #f0f0f0;
+  background: #050505;
+
+  font-size: 18px;
+  font-family: 'Sono';
+}
+
+a {
+  color: #0080ff;
+
+  &:hover {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
+select, button, textarea {
+  margin: 0;
+  padding: 0.25em 0.5em;
+
+  color: #f0f0f0;
+  background: #090909;
+  border: 1px solid #444444;
+
+  font-family: 'Sono';
+  font-size: 1em;
+}
+
+select, button {
+  &:hover {
+    border: 1px solid #00ff80;
+  }
+
+  &:active {
+    outline: 1px solid #00ff80;
+  }
+
+  &:disabled {
+    color: #444444;
+
+    &:hover {
+      cursor: default;
+      border: 1px solid #444444;
+    }
+
+    &:active {
+      cursor: default;
+      outline: none;
+    }
+  }
+}
+
+button {
+  cursor: pointer;
+}
+
+input {
+  &[type = "checkbox"] {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+textarea {
+  &:read-only {
+    cursor: default;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+label {
+  color: #f0f0f0;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+}

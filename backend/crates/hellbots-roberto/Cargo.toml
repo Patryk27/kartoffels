@@ -1,0 +1,7 @@
+[package]
+name = "hellbots-roberto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hellbots-pac = { path = "../hellbots-pac" }
