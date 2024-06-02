@@ -18,10 +18,6 @@
       return;
     }
 
-    if (bot != null && bot.value.is_followed) {
-      followBot(false);
-    }
-
     let worldEvent = null;
 
     switch (event.keyCode) {
@@ -47,6 +43,10 @@
     }
 
     if (worldEvent != null) {
+      if (bot != null && bot.value.is_followed) {
+        followBot(false);
+      }
+
       world.socket.send(JSON.stringify(worldEvent));
     }
   };

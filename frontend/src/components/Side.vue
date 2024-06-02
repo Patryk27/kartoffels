@@ -64,27 +64,28 @@
         </p>
 
         <p>
-          <!-- TODO v-model here is invalid, but :value seems not to work -->
-          <input
-            id="bot-follow"
-            type="checkbox"
-            v-model="bot.is_followed"
-            @click="ev => emit('botFollow', ev.target.checked)"/>
-
-          <label for="bot-follow">
-            follow with camera
-          </label>
-        </p>
-
-        <p>
           uart:
         </p>
       </div>
 
       <textarea readonly :value="bot.uart" />
+
+      <div>
+        <!-- TODO v-model here is invalid, but :value seems not to work -->
+        <input
+          id="bot-follow"
+          type="checkbox"
+          v-model="bot.is_followed"
+          @click="ev => emit('botFollow', ev.target.checked)"
+          :disabled="paused" />
+
+        <label for="bot-follow">
+          follow with camera
+        </label>
+      </div>
     </div>
 
-    <div v-if="bots != null" id="bots">
+    <div v-if="bots != null && bots.length > 0" id="bots">
       <table>
         <thead>
           <tr>
@@ -146,6 +147,7 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    padding-bottom: 1em;
 
     button + button {
       margin-left: 1em;
