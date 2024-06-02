@@ -1,3 +1,4 @@
+use crate::error::{AppError, AppResult};
 use crate::AppState;
 use axum::body::Bytes;
 use axum::extract::{Path, State};
@@ -8,16 +9,19 @@ use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-// TODO size limit
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
     Path(world_id): Path<WorldId>,
     body: Bytes,
-) -> impl IntoResponse {
-    let world = state.read().await.worlds.get(&world_id).cloned().unwrap();
-    let id = world.create_bot(body.to_vec()).await.unwrap();
+) -> AppResult<impl IntoResponse> {
+    let world = state.read().await.world(world_id)?;
 
-    Json(Response { id })
+    let id = world
+        .create_bot(body.to_vec())
+        .await
+        .map_err(AppError::MK_BAD_REQUEST)?;
+
+    Ok(Json(Response { id }))
 }
 
 #[derive(Debug, Serialize)]

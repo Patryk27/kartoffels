@@ -2,10 +2,13 @@
 #![feature(try_blocks)]
 
 mod endpoints;
+mod error;
+mod state;
 
-use anyhow::{anyhow, Context, Result};
+use crate::state::*;
+use anyhow::{Context, Result};
 use clap::Parser;
-use hellbots::{World, WorldHandle, WorldId};
+use hellbots::World;
 use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
@@ -24,16 +27,10 @@ struct AppArgs {
     listen: SocketAddr,
 
     #[clap(long)]
-    store: Option<PathBuf>,
+    data: Option<PathBuf>,
 
     #[clap(long)]
     debug: bool,
-}
-
-#[derive(Debug)]
-pub(crate) struct AppState {
-    store: Option<PathBuf>,
-    worlds: HashMap<WorldId, WorldHandle>,
 }
 
 #[tokio::main]
@@ -54,14 +51,14 @@ async fn main() -> Result<()> {
 
     // ---
 
-    for line in include_str!("./logo.txt").lines() {
+    for line in include_str!("../logo.txt").lines() {
         info!("{}", line);
     }
 
     info!("");
     info!(?args, "initializing");
 
-    let state = init(args.store).await?;
+    let state = init(args.data).await?;
     let state = Arc::new(RwLock::new(state));
 
     let listener = TcpListener::bind(&args.listen).await?;
@@ -88,24 +85,15 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn init(store: Option<PathBuf>) -> Result<AppState> {
+async fn init(data: Option<PathBuf>) -> Result<AppState> {
     let mut worlds = HashMap::new();
 
-    if let Some(store) = &store {
-        debug!("checking store");
+    if let Some(data) = &data {
+        debug!("checking data directory");
 
-        let store_meta = fs::metadata(store).await.with_context(|| {
-            format!("couldn't open store: {}", store.display())
+        let mut entries = fs::read_dir(data).await.with_context(|| {
+            format!("couldn't open data directory: {}", data.display())
         })?;
-
-        if !store_meta.is_dir() {
-            return Err(anyhow!(
-                "store is not a directory: {}",
-                store.display()
-            ));
-        }
-
-        let mut entries = fs::read_dir(store).await?;
 
         while let Some(entry) = entries.next_entry().await? {
             let entry_path = entry.path();
@@ -149,9 +137,8 @@ async fn init(store: Option<PathBuf>) -> Result<AppState> {
             })?;
         }
     } else {
-        warn!("running without any store");
-        warn!("all worlds will be deleted upon server's restart");
+        warn!("running without any data directory");
     }
 
-    Ok(AppState { store, worlds })
+    Ok(AppState { data, worlds })
 }

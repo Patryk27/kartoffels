@@ -1,5 +1,8 @@
+use crate::error::{AppError, AppResult};
 use crate::AppState;
+use anyhow::Context;
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
 use hellbots::{World, WorldConfig, WorldId};
@@ -13,28 +16,39 @@ use tracing::info;
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
     config: Json<WorldConfig>,
-) -> impl IntoResponse {
+) -> AppResult<impl IntoResponse> {
     let mut state = state.write().await;
     let id = WorldId::new(&mut rand::thread_rng());
     let config = config.0;
 
-    info!(?config, "creating new world");
+    info!(?id, ?config, "creating new world");
 
-    let store = if let Some(store) = &state.store {
-        let store = store.join(id.to_string()).with_extension("world");
-        let store = File::create(&store).await.unwrap(); // TODO unwrap
+    if state.has_world_named(&config.name) {
+        return Err(AppError::Other(
+            StatusCode::BAD_REQUEST,
+            "world with this name already exists".into(),
+        ));
+    }
 
-        Some(store.into_std().await)
+    let file = if let Some(data) = &state.data {
+        let file = data.join(id.to_string()).with_extension("world");
+
+        let file = File::create(&file)
+            .await
+            .context("couldn't create world's file")
+            .map_err(AppError::MK_INTERNAL_SERVER_ERROR)?;
+
+        Some(file.into_std().await)
     } else {
         None
     };
 
-    let world = World::create(id, config, store).unwrap(); // TODO unwrap
+    let world =
+        World::create(id, config, file).map_err(AppError::MK_BAD_REQUEST)?;
 
-    // TODO avoid duplicates
     state.worlds.insert(id, world);
 
-    Json(Response { id })
+    Ok(Json(Response { id }))
 }
 
 #[derive(Clone, Debug, Serialize)]

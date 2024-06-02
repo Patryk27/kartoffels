@@ -1,5 +1,5 @@
+use crate::error::AppResult;
 use crate::AppState;
-use anyhow::Result;
 use axum::extract::ws::Message;
 use axum::extract::{Path, State, WebSocketUpgrade};
 use axum::response::IntoResponse;
@@ -19,10 +19,10 @@ pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
     Path(world_id): Path<WorldId>,
     socket: WebSocketUpgrade,
-) -> impl IntoResponse {
-    let world = state.read().await.worlds.get(&world_id).cloned().unwrap();
+) -> AppResult<impl IntoResponse> {
+    let world = state.read().await.world(world_id)?;
 
-    socket.on_upgrade(|socket| async move {
+    Ok(socket.on_upgrade(|socket| async move {
         debug!("socket opened");
 
         let (tx, rx) = socket.split();
@@ -30,7 +30,7 @@ pub async fn handle(
         Task::new(world).await.main(tx, rx).await;
 
         debug!("socket closed");
-    })
+    }))
 }
 
 #[derive(Debug)]
@@ -58,7 +58,7 @@ impl Task {
     async fn main(
         mut self,
         mut tx: impl Sink<Message, Error = Error> + Unpin,
-        mut rx: impl Stream<Item = Result<Message, Error>> + Unpin,
+        mut rx: impl Stream<Item = AppResult<Message, Error>> + Unpin,
     ) {
         let mut penalty = None;
 
@@ -99,7 +99,7 @@ impl Task {
         }
     }
 
-    fn process_msg(&mut self, msg: Result<Message, Error>) {
+    fn process_msg(&mut self, msg: AppResult<Message, Error>) {
         let msg = match &msg {
             Ok(msg) => msg,
             Err(err) => {
