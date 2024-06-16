@@ -36,7 +36,7 @@ pub async fn handle(
         let file = File::create(&file)
             .await
             .context("couldn't create world's file")
-            .map_err(AppError::MK_INTERNAL_SERVER_ERROR)?;
+            .map_err(AppError::MAP_HTTP_500)?;
 
         Some(file.into_std().await)
     } else {
@@ -44,7 +44,7 @@ pub async fn handle(
     };
 
     let world =
-        World::create(id, config, file).map_err(AppError::MK_BAD_REQUEST)?;
+        World::create(id, config, file).map_err(AppError::MAP_HTTP_400)?;
 
     state.worlds.insert(id, world);
 

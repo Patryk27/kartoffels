@@ -20,14 +20,13 @@ pub struct Bots {
 }
 
 impl Bots {
-    pub fn submit(
+    pub fn create(
         &mut self,
         rng: &mut impl RngCore,
         map: &Map,
         bot: AliveBot,
-        id: Option<BotId>,
     ) -> Result<BotId> {
-        let id = id.unwrap_or_else(|| self.random_unoccupied_id(rng));
+        let id = self.random_unoccupied_id(rng);
         let pos = self.random_unoccupied_pos(map)?;
 
         if self.alive.remove(id).is_ok() {
@@ -120,7 +119,7 @@ impl Bots {
         loop {
             let pos = map.rand_pos(&mut rng);
 
-            if map.get(pos).is_floor() && self.alive.pos_to_id(pos).is_none() {
+            if map.get(pos).is_floor() && self.alive.pos_to_id_opt(pos).is_none() {
                 return Ok(pos);
             }
 

@@ -1,8 +1,7 @@
 <script setup>
   import { ref, onMounted, watch } from 'vue';
 
-  const emit = defineEmits(['resize']);
-  const props = defineProps(['map', 'bot', 'bots', 'paused']);
+  const props = defineProps(['map', 'bot', 'bots', 'camera', 'paused']);
   const canvas = ref(null);
   const canvasWrapper = ref(null);
 
@@ -15,6 +14,10 @@
   watch(() => [props.map, props.paused], _ => {
     refresh();
   });
+
+  watch(() => [props.bot, props.bots, props.camera], _ => {
+    refresh();
+  }, { deep: true });
 
   onMounted(() => {
     document.fonts.ready.then(() => {
@@ -59,12 +62,10 @@
       x: Math.round(canvasWrapper.value.clientWidth / textMetrics.width),
       y: Math.round(canvasWrapper.value.clientHeight / textMetrics.height),
     };
-
-    emit('resize', chars);
   }
 
   function refresh() {
-    const { map, bot, bots, paused } = props;
+    const { map, bot, bots, camera, paused } = props;
 
     if (ctxt == null) {
       return;
@@ -72,45 +73,55 @@
 
     ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-    if (map == null) {
+    if (map == null || camera == null) {
       ctxt.fillStyle = 'rgb(0, 255, 128)';
       ctxt.fillText('connecting...', 0, textMetrics.height);
 
       return;
     }
 
-    let nth = 0;
-
     for (let y = 0; y <= chars.y; y += 1) {
       for (let x = 0; x <= chars.x; x += 1) {
-        const tile = map[nth];
-        const tileBase = String.fromCharCode(tile >> 24);
-        const tileMeta0 = (tile >> 16) & 0xff;
+        const tileX = camera.x - Math.round(chars.x / 2) + x;
+        const tileY = camera.y - Math.round(chars.y / 2) + y;
 
-        let tileColor = 'rgb(80, 80, 80)';
-        let tileOffsetY = 0;
+        if (tileX < 0 || tileY < 0 || tileX >= map.size[0] || tileY >= map.size[1]) {
+          continue;
+        }
 
-        switch (tileBase) {
-          case '.':
-            tileOffsetY = -0.45;
-            break;
+        const tileIdx = tileY * map.size[0] + tileX;
+        const tile = map.tiles[tileIdx] ?? 0;
+        const tileBot = map.bots[tileIdx] ?? null;
 
-          case '=':
-            tileColor = 'rgb(255, 106, 128)';
-            tileOffsetY = -0.15;
-            break;
+        let tileChar;
+        let tileColor;
+        let tileOffsetY;
 
-          case '@':
-            const tileBotIdx = tileMeta0;
+        if (tileBot) {
+          tileChar = '@';
 
-            if (bot && bot.idx == tileBotIdx) {
-              tileColor = 'rgb(0, 128, 255)';
-            } else {
-              tileColor = 'rgb(0, 255, 128)';
-            }
+          if (bot && bot.id == tileBot.id) {
+            tileColor = 'rgb(0, 128, 255)';
+          } else {
+            tileColor = 'rgb(0, 255, 128)';
+          }
 
-            tileOffsetY = -0.15;
-            break;
+          tileOffsetY = -0.15;
+        } else {
+          tileChar = String.fromCharCode(tile >> 24);
+          tileColor = 'rgb(80, 80, 80)';
+          tileOffsetY = 0.0;
+
+          switch (tileChar) {
+            case '.':
+              tileOffsetY = -0.45;
+              break;
+
+            case '=':
+              tileColor = 'rgb(255, 106, 128)';
+              tileOffsetY = -0.15;
+              break;
+          }
         }
 
         if (paused) {
@@ -120,12 +131,10 @@
         ctxt.fillStyle = tileColor;
 
         ctxt.fillText(
-          tileBase,
+          tileChar,
           textMetrics.width * x,
           textMetrics.height * (y + tileOffsetY),
         );
-
-        nth += 1;
       }
     }
   }

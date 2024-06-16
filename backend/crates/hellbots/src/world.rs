@@ -1,23 +1,26 @@
 mod handle;
+mod serialized;
+mod update;
 
 pub use self::handle::*;
+use self::serialized::*;
+pub use self::update::*;
 use crate::{
-    AliveBot, BotId, Bots, LoopTimer, Map, Mode, Theme, WorldConfig, WorldId,
-    WorldName, WorldSnapshot,
+    AliveBot, AliveBotEntryMut, BotId, Bots, LoopTimer, Map, Mode, Theme,
+    WorldConfig, WorldId, WorldName,
 };
 use anyhow::{Context, Result};
 use derivative::Derivative;
 use hellbots_vm as vm;
 use maybe_owned::MaybeOwned;
 use rand::RngCore;
-use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::sync::Arc;
-use std::thread;
 use std::time::{Duration, Instant};
-use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::sync::{mpsc, oneshot, RwLock};
+use std::{mem, thread};
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::{mpsc, oneshot};
 use tracing::{debug, info, span, warn, Level};
 
 #[derive(Debug)]
@@ -28,7 +31,6 @@ pub struct World {
     theme: Theme,
     map: Map,
     bots: Bots,
-    snapshot: Arc<RwLock<WorldSnapshot>>,
     file: Option<File>,
 }
 
@@ -62,7 +64,6 @@ impl World {
             theme,
             map,
             bots: Default::default(),
-            snapshot: Default::default(),
             file,
         };
 
@@ -70,7 +71,7 @@ impl World {
     }
 
     pub fn resume(id: WorldId, mut file: File) -> Result<WorldHandle> {
-        let this = SerializedWorld::read_from(&mut file)?;
+        let this = SerializedWorld::load(&mut file)?;
 
         info!(
             ?id,
@@ -87,7 +88,6 @@ impl World {
             theme: this.theme.into_owned(),
             map: this.map.into_owned(),
             bots: this.bots.into_owned(),
-            snapshot: Default::default(),
             file: Some(file),
         };
 
@@ -98,9 +98,8 @@ impl World {
         let name = self.name.clone();
         let mode = self.mode.ty();
         let theme = self.theme.ty();
-        let snapshot = self.snapshot.clone();
 
-        let (tx, rx) = mpsc::unbounded_channel();
+        let (tx, rx) = mpsc::channel(256);
 
         thread::spawn({
             let span = span!(
@@ -121,21 +120,21 @@ impl World {
             mode,
             theme,
             tx,
-            snapshot,
         }
     }
 
-    fn main(mut self, mut rx: UnboundedReceiver<WorldMsg>) -> Result<()> {
+    fn main(mut self, mut rx: Receiver<WorldRequest>) -> Result<()> {
         info!("ready");
 
         let mut rng = rand::thread_rng();
         let mut timer = LoopTimer::new(Self::SIM_HZ, Self::SIM_TICKS);
-        let mut stats = StatsCtrl::new();
-        let mut persistence = PersistenceCtrl::new();
+        let mut stats = WorldStats::new();
+        let mut state = WorldState::new();
+        let mut clients = WorldClients::new();
 
         loop {
             timer.iter(|timer| -> Result<()> {
-                self.process_msg(&mut rng, &mut rx)
+                self.process_msg(&mut rng, &mut clients, &mut rx)
                     .context("process_msg() failed")?;
 
                 for _ in 0..Self::SIM_TICKS {
@@ -146,13 +145,9 @@ impl World {
                     .on_after_tick(&mut rng, &mut self.theme, &mut self.map)
                     .context("on_after_tick() failed")?;
 
-                self.snapshot
-                    .blocking_write()
-                    .update(&self.mode, &self.map, &self.bots)
-                    .context("update() failed")?;
-
-                stats.process(&self, timer);
-                persistence.process(&mut self)?;
+                stats.process(&self, timer, &clients);
+                state.process(&mut self)?;
+                clients.process(&mut self)?;
 
                 Ok(())
             })?;
@@ -162,7 +157,8 @@ impl World {
     fn process_msg(
         &mut self,
         rng: &mut impl RngCore,
-        rx: &mut UnboundedReceiver<WorldMsg>,
+        clients: &mut WorldClients,
+        rx: &mut Receiver<WorldRequest>,
     ) -> Result<()> {
         let Ok(msg) = rx.try_recv() else {
             return Ok(());
@@ -171,41 +167,31 @@ impl World {
         info!(?msg, "processing message");
 
         match msg {
-            WorldMsg::CreateBot { src, tx } => {
-                match self.create_or_update_bot(rng, src, None) {
-                    Ok(id) => _ = tx.send(Ok(id)),
-                    Err(err) => _ = tx.send(Err(err)),
-                }
+            WorldRequest::CreateBot { src, tx } => {
+                _ = tx.send(
+                    try {
+                        let fw = vm::Firmware::new(&src)?;
+                        let vm = vm::Runtime::new(fw);
+                        let bot = AliveBot::new(rng, vm);
+
+                        self.bots.create(rng, &self.map, bot)?
+                    },
+                );
             }
 
-            WorldMsg::UpdateBot { id, src, tx } => {
-                match self.create_or_update_bot(rng, src, Some(id)) {
-                    Ok(_) => _ = tx.send(Ok(())),
-                    Err(err) => _ = tx.send(Err(err)),
-                }
+            WorldRequest::Join { id, tx } => {
+                _ = tx.send(clients.add(id));
             }
         }
 
         Ok(())
     }
 
-    fn create_or_update_bot(
-        &mut self,
-        rng: &mut impl RngCore,
-        src: Vec<u8>,
-        id: Option<BotId>,
-    ) -> Result<BotId> {
-        let fw = vm::Firmware::new(&src)?;
-        let vm = vm::Runtime::new(fw);
-        let bot = AliveBot::new(rng, vm);
-        let id = self.bots.submit(rng, &self.map, bot, id)?;
-
-        Ok(id)
-    }
-
     fn tick(&mut self, rng: &mut impl RngCore) -> Result<()> {
         for id in self.bots.alive.pick_ids(rng) {
-            let Some((pos, bot, bots)) = self.bots.alive.entry_mut(id) else {
+            let Some((AliveBotEntryMut { pos, bot }, bots)) =
+                self.bots.alive.get_mut(id)
+            else {
                 continue;
             };
 
@@ -243,10 +229,9 @@ impl World {
     }
 }
 
-#[allow(clippy::enum_variant_names)]
 #[derive(Derivative)]
 #[derivative(Debug)]
-enum WorldMsg {
+enum WorldRequest {
     CreateBot {
         #[derivative(Debug = "ignore")]
         src: Vec<u8>,
@@ -255,60 +240,21 @@ enum WorldMsg {
         tx: oneshot::Sender<Result<BotId>>,
     },
 
-    UpdateBot {
-        id: BotId,
+    Join {
+        id: Option<BotId>,
 
         #[derivative(Debug = "ignore")]
-        src: Vec<u8>,
-
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<Result<()>>,
+        tx: oneshot::Sender<mpsc::Receiver<WorldUpdate>>,
     },
 }
 
-#[derive(Serialize, Deserialize)]
-struct SerializedWorld<'a> {
-    // TODO version
-    name: MaybeOwned<'a, WorldName>,
-    mode: MaybeOwned<'a, Mode>,
-    theme: MaybeOwned<'a, Theme>,
-    map: MaybeOwned<'a, Map>,
-    bots: MaybeOwned<'a, Bots>,
-}
-
-impl SerializedWorld<'_> {
-    fn save_to(self, file: &mut File) -> Result<()> {
-        file.seek(SeekFrom::Start(0))?;
-
-        let mut writer = BufWriter::new(&mut *file);
-
-        ciborium::into_writer(&self, &mut writer)?;
-
-        writer.flush()?;
-        drop(writer);
-
-        let len = file.stream_position()?;
-
-        file.set_len(len)?;
-
-        Ok(())
-    }
-
-    fn read_from(file: &mut File) -> Result<Self> {
-        let mut reader = BufReader::new(&mut *file);
-        let this = ciborium::from_reader(&mut reader)?;
-
-        Ok(this)
-    }
-}
-
 #[derive(Debug)]
-struct StatsCtrl {
+struct WorldStats {
     ticks: u32,
     next_check_at: Instant,
 }
 
-impl StatsCtrl {
+impl WorldStats {
     fn new() -> Self {
         Self {
             ticks: 0,
@@ -316,7 +262,12 @@ impl StatsCtrl {
         }
     }
 
-    fn process(&mut self, world: &World, timer: &LoopTimer) {
+    fn process(
+        &mut self,
+        world: &World,
+        timer: &LoopTimer,
+        clients: &WorldClients,
+    ) {
         self.ticks += World::SIM_TICKS;
 
         if Instant::now() < self.next_check_at {
@@ -324,10 +275,11 @@ impl StatsCtrl {
         }
 
         let msg = format!(
-            "{} bot(s) | {} KHz vCPU | {} ms backlog",
+            "{} bot(s) | {} KHz vCPU | {} ms backlog | {} client(s)",
             world.bots.alive.len(),
             self.ticks / 1_000,
             timer.backlog_ms(),
+            clients.len(),
         );
 
         if timer.backlog_ms() >= 500 {
@@ -343,11 +295,11 @@ impl StatsCtrl {
 }
 
 #[derive(Debug)]
-struct PersistenceCtrl {
+struct WorldState {
     next_save_at: Instant,
 }
 
-impl PersistenceCtrl {
+impl WorldState {
     fn new() -> Self {
         Self {
             next_save_at: Instant::now(),
@@ -375,7 +327,7 @@ impl PersistenceCtrl {
 
         let tt = Instant::now();
 
-        world.save_to(file).context("couldn't save the world")?;
+        world.store(file).context("couldn't save the world")?;
 
         info!(tt = ?tt.elapsed(), "saved");
 
@@ -383,4 +335,108 @@ impl PersistenceCtrl {
 
         Ok(())
     }
+}
+
+#[derive(Debug)]
+struct WorldClients {
+    clients: Vec<WorldClient>,
+    next_update_at: Instant,
+}
+
+impl WorldClients {
+    fn new() -> Self {
+        Self {
+            clients: Default::default(),
+            next_update_at: Instant::now() + Duration::from_millis(25),
+        }
+    }
+
+    fn add(&mut self, id: Option<BotId>) -> mpsc::Receiver<WorldUpdate> {
+        let (tx, rx) = mpsc::channel(32);
+
+        self.clients.push(WorldClient {
+            id,
+            tx,
+            is_fresh: true,
+        });
+
+        rx
+    }
+
+    fn len(&self) -> usize {
+        self.clients.len()
+    }
+
+    fn process(&mut self, world: &mut World) -> Result<()> {
+        if Instant::now() < self.next_update_at {
+            return Ok(());
+        }
+
+        let mode = Some(Arc::new(world.mode.state()?));
+
+        let map = if world.map.take_dirty() {
+            Some(Arc::new(world.map.clone()))
+        } else {
+            None
+        };
+
+        let bots = {
+            let bots: BTreeMap<_, _> = world
+                .bots
+                .alive
+                .iter()
+                .map(|bot| (bot.id, AnyBotUpdate { pos: bot.pos }))
+                .collect();
+
+            Some(Arc::new(bots))
+        };
+
+        self.clients
+            .extract_if(|client| {
+                let map = if mem::take(&mut client.is_fresh) && map.is_none() {
+                    Some(Arc::new(world.map.clone()))
+                } else {
+                    map.clone()
+                };
+
+                let bot = client
+                    .id
+                    .and_then(|id| world.bots.alive.get(id))
+                    .map(|bot| BotUpdate {
+                        uart: bot.bot.uart.to_string(),
+                    });
+
+                let update = WorldUpdate {
+                    mode: mode.clone(),
+                    map,
+                    bots: bots.clone(),
+                    bot,
+                };
+
+                match client.tx.try_send(update) {
+                    Ok(_) => {
+                        // Client is still alive, keep it
+                        false
+                    }
+
+                    Err(_) => {
+                        // Client has been disconnected, delete it
+                        debug!("disconnecting client");
+                        true
+                    }
+                }
+            })
+            .for_each(drop);
+
+        self.next_update_at = Instant::now() + Duration::from_millis(100);
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+struct WorldClient {
+    id: Option<BotId>,
+    tx: mpsc::Sender<WorldUpdate>,
+    is_fresh: bool,
 }

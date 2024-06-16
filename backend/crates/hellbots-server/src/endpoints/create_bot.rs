@@ -19,7 +19,7 @@ pub async fn handle(
     let id = world
         .create_bot(body.to_vec())
         .await
-        .map_err(AppError::MK_BAD_REQUEST)?;
+        .map_err(AppError::MAP_HTTP_400)?;
 
     Ok(Json(Response { id }))
 }

@@ -1,4 +1,4 @@
-use crate::{AliveBot, BotId, BotSnapshot};
+use crate::{AliveBot, BotId};
 use anyhow::{Context, Result};
 use glam::IVec2;
 use maybe_owned::MaybeOwned;
@@ -65,68 +65,43 @@ impl AliveBots {
         Ok(bot)
     }
 
-    pub fn id_to_bot_err(&self, id: BotId) -> Result<&AliveBot> {
-        self.entries
-            .get(&id)
-            .with_context(|| format!("couldn't find bot {id}"))
-            .context("id_to_bot() failed")
-    }
-
-    pub fn id_to_pos_err(&self, id: BotId) -> Result<IVec2> {
-        self.id_to_pos
-            .get(&id)
-            .copied()
-            .with_context(|| format!("couldn't find bot {id}"))
-            .context("id_to_pos() failed")
-    }
-
-    pub fn pos_to_id(&self, pos: IVec2) -> Option<BotId> {
+    pub fn pos_to_id_opt(&self, pos: IVec2) -> Option<BotId> {
         self.pos_to_id.get(&pos).copied()
-    }
-
-    pub fn entry_mut(
-        &mut self,
-        id: BotId,
-    ) -> Option<(IVec2, &mut AliveBot, AliveBotsLocator)> {
-        let pos = *self.id_to_pos.get(&id)?;
-        let bot = self.entries.get_mut(&id).unwrap();
-
-        let bots = AliveBotsLocator {
-            pos_to_id: &self.pos_to_id,
-        };
-
-        Some((pos, bot, bots))
     }
 
     pub fn has(&self, id: BotId) -> bool {
         self.entries.contains_key(&id)
     }
 
-    pub fn locator(&self) -> AliveBotsLocator {
-        AliveBotsLocator {
+    pub fn get(&self, id: BotId) -> Option<AliveBotEntry> {
+        Some(AliveBotEntry {
+            id,
+            pos: *self.id_to_pos.get(&id)?,
+            bot: self.entries.get(&id)?,
+        })
+    }
+
+    pub fn get_mut(
+        &mut self,
+        id: BotId,
+    ) -> Option<(AliveBotEntryMut, AliveBotsLocator)> {
+        let entry = AliveBotEntryMut {
+            pos: *self.id_to_pos.get(&id)?,
+            bot: self.entries.get_mut(&id)?,
+        };
+
+        let locator = AliveBotsLocator {
             pos_to_id: &self.pos_to_id,
-        }
+        };
+
+        Some((entry, locator))
     }
 
-    pub fn ids(&self) -> impl Iterator<Item = BotId> + '_ {
-        self.entries.keys().copied()
-    }
-
-    pub fn pick_ids(&self, rng: &mut impl RngCore) -> Vec<BotId> {
-        let mut ids: Vec<_> = self.ids().collect();
-
-        ids.shuffle(rng);
-        ids
-    }
-
-    pub fn snapshots(&self) -> impl Iterator<Item = (BotId, BotSnapshot)> + '_ {
-        self.entries.iter().map(|(id, bot)| {
-            let snapshot = BotSnapshot {
-                pos: self.id_to_pos[id],
-                uart: bot.uart.to_string(),
-            };
-
-            (*id, snapshot)
+    pub fn iter(&self) -> impl Iterator<Item = AliveBotEntry> + '_ {
+        self.entries.iter().map(|(id, bot)| AliveBotEntry {
+            id: *id,
+            pos: self.id_to_pos[id],
+            bot,
         })
     }
 
@@ -137,6 +112,32 @@ impl AliveBots {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
+
+    pub fn pick_ids(&self, rng: &mut impl RngCore) -> Vec<BotId> {
+        let mut ids: Vec<_> = self.entries.keys().copied().collect();
+
+        ids.shuffle(rng);
+        ids
+    }
+
+    pub fn locator(&self) -> AliveBotsLocator {
+        AliveBotsLocator {
+            pos_to_id: &self.pos_to_id,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct AliveBotEntry<'a> {
+    pub id: BotId,
+    pub pos: IVec2,
+    pub bot: &'a AliveBot,
+}
+
+#[derive(Debug)]
+pub struct AliveBotEntryMut<'a> {
+    pub pos: IVec2,
+    pub bot: &'a mut AliveBot,
 }
 
 #[derive(Debug)]

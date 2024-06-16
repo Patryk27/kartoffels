@@ -10,6 +10,57 @@
 
   const props = defineProps(['mode', 'bot', 'bots', 'paused']);
 
+  const botEntries = computed(() => {
+    let allEntries = [];
+
+    for (const [id, bot] of Object.entries(props.bots ?? { })) {
+      allEntries.push({
+        id,
+        score: (props.mode ?? { }).scores[id] ?? 0,
+      });
+    }
+
+    allEntries.sort((a, b) => {
+      if (a.score == b.score) {
+        return b.id.localeCompare(a.id);
+      } else {
+        return b.score - a.score;
+      }
+    });
+
+    // ---
+
+    let entries = [];
+
+    for (let nth = 0; nth < 8; nth += 1) {
+      const entry = allEntries[nth];
+
+      if (entry) {
+        entries.push({
+          nth: nth + 1,
+          ...entry
+        });
+      } else {
+        entries.push(null);
+      }
+    }
+
+    if (props.bot != null) {
+      const connectedBotNth = allEntries.findIndex((entry) => {
+        return entry.id == props.bot.id;
+      });
+
+      if (connectedBotNth >= entries.length) {
+        entries[entries.length - 1] = {
+          nth: connectedBotNth + 1,
+          ...allEntries[connectedBotNth]
+        };
+      }
+    }
+
+    return entries;
+  });
+
   function connectToBot() {
     /* TODO */
   }
@@ -85,34 +136,31 @@
       </div>
     </div>
 
-    <div v-if="bots != null && bots.length > 0" id="bots">
+    <div id="bots">
       <table>
         <thead>
           <tr>
-            <th>nth</th>
-            <th>bot</th>
+            <th colspan="2">bot</th>
             <th>score</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr
-            v-for="nth in 8"
-            :key="nth"
-            :set="botItem = bots[nth - 1]">
-            <template v-if="botItem">
+          <tr v-for="botEntry in botEntries">
+            <template v-if="botEntry">
               <td>
-                #{{ nth }}
+                #{{ botEntry.nth }}&nbsp;
               </td>
 
               <td>
-                <a @click="emit('botClick', bots[nth - 1].id)">
-                  {{ botItem.id }}
+                <a @click="emit('botClick', botEntry.id)"
+                   :class="botEntry.id == bot?.id ? 'connected-bot' : ''">
+                  {{ botEntry.id }}
                 </a>
               </td>
 
-              <td style="text-align: right">
-                {{ mode.scores[botItem.id] ?? '0' }}
+              <td>
+                {{ botEntry.score }}
               </td>
             </template>
 
@@ -125,7 +173,7 @@
                 -
               </td>
 
-              <td style="text-align: right">
+              <td>
                 -
               </td>
             </template>
@@ -189,8 +237,17 @@
         font-weight: normal;
       }
 
-      td:nth-child(2) {
+      td:nth-child(3) {
         text-align: right;
+      }
+    }
+
+    a {
+      color: rgb(0, 255, 128);
+
+      &.connected-bot {
+        color: rgb(0, 128, 255);
+        font-weight: bold;
       }
     }
   }

@@ -4,10 +4,11 @@ use rand::{Rng, RngCore};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+use std::num::NonZeroU64;
 use std::str::FromStr;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Id(u64);
+pub struct Id(NonZeroU64);
 
 impl Id {
     pub fn new(rng: &mut impl RngCore) -> Self {
@@ -34,7 +35,11 @@ impl FromStr for Id {
         let [e, f] = parse_part(ef)?;
         let [g, h] = parse_part(gh)?;
 
-        Ok(Self(u64::from_be_bytes([a, b, c, d, e, f, g, h])))
+        let val = u64::from_be_bytes([a, b, c, d, e, f, g, h])
+            .try_into()
+            .context("invalid id format")?;
+
+        Ok(Self(val))
     }
 }
 
@@ -42,6 +47,7 @@ impl fmt::Display for Id {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let id = self
             .0
+            .get()
             .to_be_bytes()
             .array_chunks()
             .map(|[a, b]| format!("{:02x}{:02x}", a, b))

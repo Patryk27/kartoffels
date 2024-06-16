@@ -1,13 +1,16 @@
 use glam::{uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
 use std::fmt::Write;
+use std::{fmt, mem};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
     tiles: Box<[Tile]>,
+
+    #[serde(skip_serializing, skip_deserializing)]
+    is_dirty: bool,
 }
 
 impl Map {
@@ -15,6 +18,7 @@ impl Map {
         Self {
             size,
             tiles: vec![tile; (size.x * size.y) as usize].into_boxed_slice(),
+            is_dirty: true,
         }
     }
 
@@ -37,6 +41,7 @@ impl Map {
     pub fn set(&mut self, pos: IVec2, tile: Tile) {
         if let Some(idx) = self.pos_to_idx(pos) {
             self.tiles[idx] = tile;
+            self.is_dirty = true;
         }
     }
 
@@ -53,6 +58,10 @@ impl Map {
 
     pub fn contains(&self, pos: IVec2) -> bool {
         self.pos_to_idx(pos).is_some()
+    }
+
+    pub fn take_dirty(&mut self) -> bool {
+        mem::take(&mut self.is_dirty)
     }
 
     fn pos_to_idx(&self, pos: IVec2) -> Option<usize> {

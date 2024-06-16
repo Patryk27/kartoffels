@@ -11,10 +11,10 @@ pub enum AppError {
 }
 
 impl AppError {
-    pub const MK_BAD_REQUEST: fn(Error) -> Self =
+    pub const MAP_HTTP_400: fn(Error) -> Self =
         |err| AppError::Other(StatusCode::BAD_REQUEST, format!("{:?}", err));
 
-    pub const MK_INTERNAL_SERVER_ERROR: fn(Error) -> Self = |err| {
+    pub const MAP_HTTP_500: fn(Error) -> Self = |err| {
         AppError::Other(StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
     };
 }

@@ -8,135 +8,186 @@
   const mode = ref(null);
   const bot = ref(null);
   const bots = ref(null);
+  const camera = ref(null);
   const paused = ref(false);
+  const crash = ref(null);
 
-  let world = null;
-  let chars = { x: 1, y: 1 };
+  let session = null;
 
-  document.onkeydown = () => {
-    if (world == null || world.socket == null || paused.value) {
-      return;
-    }
+  onMounted(() => {
+    document.onkeydown = () => {
+      const moveCamera = (dx, dy) => {
+        if (camera.value != null) {
+          camera.value.x += dx;
+          camera.value.y += dy;
 
-    let worldEvent = null;
+          if (bot.value != null) {
+            bot.value.is_followed = false;
+          }
+        }
+      };
 
-    switch (event.keyCode) {
-      case 37: // left
-      case 65: // a
-        worldEvent = { op: 'move-camera', args: { dx: -8 } };
-        break;
+      switch (event.keyCode) {
+        case 37: // left
+        case 65: // a
+          moveCamera(-8, 0);
+          break;
 
-      case 38: // up
-      case 87: // w
-        worldEvent = { op: 'move-camera', args: { dy: -8 } };
-        break;
+        case 38: // up
+        case 87: // w
+          moveCamera(0, -8);
+          break;
 
-      case 39: // right
-      case 68: // d
-        worldEvent = { op: 'move-camera', args: { dx: 8 } };
-        break;
+        case 39: // right
+        case 68: // d
+          moveCamera(8, 0);
+          break;
 
-      case 40: // down
-      case 83: // s
-        worldEvent = { op: 'move-camera', args: { dy: 8 } };
-        break;
-    }
+        case 40: // down
+        case 83: // s
+          moveCamera(0, 8);
+          break;
 
-    if (worldEvent != null) {
-      if (bot != null && bot.value.is_followed) {
-        followBot(false);
+        case 32:
+          togglePause();
       }
-
-      world.socket.send(JSON.stringify(worldEvent));
-    }
-  };
-
-  function resize(newChars) {
-    chars = newChars;
-
-    if (world != null && world.socket != null) {
-      world.socket.send(JSON.stringify({
-        op: 'scale-camera',
-        args: chars,
-      }));
-    }
-  }
-
-  function pause() {
-    paused.value = !paused.value;
-  }
-
-  function changeWorld(newWorldId) {
-    if (world != null) {
-      if (world.id == newWorldId) {
-        return;
-      }
-
-      if (world.socket != null) {
-        world.socket.close();
-      }
-    }
-
-    localStorage.removeItem('botId');
-    localStorage.removeItem('worldId');
-
-    world = {
-      id: newWorldId,
-      socket: new WebSocket(
-        `${import.meta.env.VITE_WS_URL}/worlds/${newWorldId}`
-      ),
     };
 
-    return new Promise((resolve, reject) => {
-      paused.value = false;
+    window.onerror = (msg) => {
+      crash.value = msg;
+    };
+  });
 
-      world.socket.onopen = () => {
-        localStorage.setItem('worldId', world.id);
+  function join(newWorldId, newBotId) {
+    if (session != null) {
+      if (session.socket != null) {
+        session.socket.close();
+      }
 
-        world.socket.send(JSON.stringify({
-          op: 'scale-camera',
-          args: chars,
-        }));
+      session = null;
+    }
 
-        resolve();
-      };
+    localStorage.removeItem('worldId');
+    localStorage.removeItem('botId');
 
-      world.socket.onmessage = event => {
-        if (paused.value) {
-          return;
-        }
+    const socketUrl =
+      (newBotId == null)
+        ? `${import.meta.env.VITE_WS_URL}/worlds/${newWorldId}`
+        : `${import.meta.env.VITE_WS_URL}/worlds/${newWorldId}/bots/${newBotId}`;
 
-        const data = JSON.parse(event.data);
+    session = {
+      worldId: newWorldId,
+      botId: newBotId,
+      socket: new WebSocket(socketUrl),
+    };
 
-        map.value = data.map;
-        mode.value = data.mode;
-        bots.value = data.bots;
+    // ---
 
-        const botIdToIdx = id => {
-          for (let idx = 0; idx < data.bots.length; idx += 1) {
-            if (data.bots[idx].id == id) {
-              return idx;
-            }
-          }
+    map.value = null;
+    mode.value = null;
+    bot.value = null;
+    bots.value = null;
+    camera.value = null;
+    paused.value = false;
 
-          return -1;
+    // ---
+
+    session.socket.onopen = () => {
+      localStorage.setItem('worldId', session.worldId);
+
+      if (session.botId == null) {
+        bot.value = null;
+      } else {
+        localStorage.setItem('botId', session.botId);
+
+        bot.value = {
+          id: newBotId,
+          is_followed: true,
+        };
+      }
+    };
+
+    session.socket.onmessage = event => {
+      const data = JSON.parse(event.data);
+
+      if (data.map != null) {
+        map.value = {
+          size: data.map.size,
+          tiles: data.map.tiles,
+          bots: [],
         };
 
-        if (bot.value) {
-          bot.value.idx = botIdToIdx(bot.value.id);
-          bot.value.uart = data.bot ? data.bot.uart : '';
+        camera.value = {
+          x: Math.round(data.map.size[0] / 2),
+          y: Math.round(data.map.size[1] / 2),
+        };
+      }
+
+      if (data.mode != null) {
+        mode.value = data.mode;
+      }
+
+      if (data.bots != null) {
+        let mapBots = [];
+
+        for (const [botId, bot] of Object.entries(data.bots)) {
+          const tileIdx = bot.pos[1] * map.value.size[0] + bot.pos[0];
+
+          mapBots[tileIdx] = {
+            id: botId,
+          };
         }
-      };
-    });
+
+        bots.value = data.bots;
+        map.value.bots = mapBots;
+
+        if (bot.value != null && bot.value.is_followed) {
+          const botEntry = data.bots[bot.value.id];
+
+          if (botEntry != null) {
+            camera.value = {
+              x: botEntry.pos[0],
+              y: botEntry.pos[1],
+            };
+          }
+        }
+      }
+
+      if (bot.value != null) {
+        bot.value.idx = data.bot ? data.bot.idx : null;
+        bot.value.uart = data.bot ? data.bot.uart : null;
+      }
+    };
+
+    session.socket.onerror = event => {
+      crash.value = 'lost connection to the server';
+    };
   }
 
-  async function uploadBot(file) {
-    if (world == null || world.socket == null || paused.value) {
+  function togglePause() {
+    paused.value = !paused.value;
+
+    if (paused.value) {
+      session.socket.close();
+    } else {
+      join(
+        localStorage.getItem('worldId'),
+        localStorage.getItem('botId'),
+      );
+    }
+  }
+
+  function handleWorldChange(worldId) {
+    join(worldId, null);
+  }
+
+  async function handleBotUpload(file) {
+    if (session == null || session.socket == null) {
       return;
     }
 
     var response = await fetch(
-      `${import.meta.env.VITE_HTTP_URL}/worlds/${world.id}/bots`,
+      `${import.meta.env.VITE_HTTP_URL}/worlds/${session.worldId}/bots`,
       {
         method: 'POST',
         body: file,
@@ -145,106 +196,88 @@
 
     var response = await response.json();
 
-    connectToBot(response.id);
+    join(session.worldId, response.id);
   }
 
-  function disconnectFromBot() {
-    if (world == null || world.socket == null) {
+  function handleBotDisconnect() {
+    if (session == null) {
       return;
     }
 
-    bot.value = null;
-
-    world.socket.send(JSON.stringify({
-      op: 'disconnect-from-bot',
-    }));
-
-    localStorage.removeItem('botId');
+    join(session.worldId, null);
   }
 
-  function connectToBot(id) {
-    if (world == null || world.socket == null) {
+  function handleBotFollow(follow) {
+    if (session == null || bot.value == null) {
       return;
     }
-
-    bot.value = {
-      id,
-      is_followed: true,
-    };
-
-    world.socket.send(JSON.stringify({
-      op: 'connect-to-bot',
-      args: { id },
-    }));
-
-    world.socket.send(JSON.stringify({
-      op: 'follow-bot',
-    }));
-
-    localStorage.setItem('botId', bot.value.id);
-
-    paused.value = false;
-  }
-
-  function followBot(follow) {
-    if (world == null || world.socket == null) {
-      return;
-    }
-
-    world.socket.send(JSON.stringify({
-      op: follow ? 'follow-bot' : 'unfollow-bot',
-    }));
 
     bot.value.is_followed = follow;
   }
 
-  function changeBot(id) {
-    if (bot.value && bot.value.id == id && !paused.value) {
-      disconnectFromBot();
+  function handleBotClick(id) {
+    if (session == null) {
+      return;
+    }
+
+    if (bot.value != null && bot.value.id == id && !paused.value) {
+      join(session.worldId, null);
     } else {
-      connectToBot(id);
+      join(session.worldId, id);
     }
   }
 
   // ---
 
-  const savedWorldId = localStorage.getItem('worldId');
-  const savedBotId = localStorage.getItem('botId');
+  const prevWorldId = localStorage.getItem('worldId');
+  const prevBotId = localStorage.getItem('botId');
 
-  if (savedWorldId) {
-    changeWorld(savedWorldId).then(() => {
-      if (savedBotId) {
-        changeBot(savedBotId);
-      }
-    });
+  if (prevWorldId) {
+    join(prevWorldId, prevBotId);
   }
 </script>
 
 <template>
-  <Nav
-    :world="world"
-    :paused="paused"
-    @world-change="changeWorld"
-    @pause="pause" />
-
-  <main>
-    <Canvas
-      :map="map"
-      :bot="bot"
-      :bots="bots"
+  <template v-if="crash == null">
+    <Nav
+      :session="session"
       :paused="paused"
-      @resize="resize" />
+      @world-change="handleWorldChange"
+      @pause="togglePause" />
 
-    <Side
-      :mode="mode"
-      :bot="bot"
-      :bots="bots"
-      :paused="paused"
-      @bot-upload="uploadBot"
-      @bot-disconnect="disconnectFromBot"
-      @bot-follow="followBot"
-      @bot-click="changeBot"/>
-  </main>
+    <main>
+      <Canvas
+        :map="map"
+        :bot="bot"
+        :bots="bots"
+        :camera="camera"
+        :paused="paused" />
+
+      <Side
+        :mode="mode"
+        :bot="bot"
+        :bots="bots"
+        :paused="paused"
+        @bot-upload="handleBotUpload"
+        @bot-disconnect="handleBotDisconnect"
+        @bot-follow="handleBotFollow"
+        @bot-click="handleBotClick"/>
+    </main>
+  </template>
+
+  <template v-else>
+    <p style="margin: 0">
+      whoopsie, the game has ✨ crashed ✨
+    </p>
+
+    <p>
+      {{ crash }}
+    </p>
+
+    <p style="margin-top: 0">
+      please refresh the page to restart
+    </p>
+  </template>
 </template>
 
 <style scoped>

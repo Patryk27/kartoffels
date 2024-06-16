@@ -20,7 +20,7 @@ impl AliveBotTick {
         pos: IVec2,
     ) -> Result<()> {
         if let Some(dir) = self.stab_dir {
-            if let Some(killed_id) = bots.alive.pos_to_id(pos + dir) {
+            if let Some(killed_id) = bots.alive.pos_to_id_opt(pos + dir) {
                 bots.kill(
                     rng,
                     mode,

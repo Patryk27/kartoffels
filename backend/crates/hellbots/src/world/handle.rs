@@ -1,16 +1,17 @@
-use super::WorldMsg;
-use crate::{BotId, WorldName, WorldSnapshot};
-use anyhow::{Context, Result};
+use super::WorldRequest;
+use crate::{BotId, WorldName, WorldUpdate};
+use anyhow::{anyhow, Context, Result};
+use futures_util::Stream;
 use std::sync::Arc;
-use tokio::sync::{mpsc, oneshot, RwLock};
+use tokio::sync::{mpsc, oneshot};
+use tokio_stream::wrappers::ReceiverStream;
 
 #[derive(Clone, Debug)]
 pub struct WorldHandle {
     pub(super) name: Arc<WorldName>,
     pub(super) mode: &'static str,
     pub(super) theme: &'static str,
-    pub(super) tx: mpsc::UnboundedSender<WorldMsg>,
-    pub(super) snapshot: Arc<RwLock<WorldSnapshot>>,
+    pub(super) tx: mpsc::Sender<WorldRequest>,
 }
 
 impl WorldHandle {
@@ -28,27 +29,30 @@ impl WorldHandle {
         self.theme
     }
 
-    pub fn snapshot(&self) -> &RwLock<WorldSnapshot> {
-        &self.snapshot
-    }
-
     pub async fn create_bot(&self, src: Vec<u8>) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
         self.tx
-            .send(WorldMsg::CreateBot { src, tx })
-            .context(Self::ERR_DIED)?;
+            .send(WorldRequest::CreateBot { src, tx })
+            .await
+            .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
 
         rx.await.context(Self::ERR_DIED)?
     }
 
-    pub async fn update_bot(&self, id: BotId, src: Vec<u8>) -> Result<()> {
+    pub async fn join(
+        &self,
+        id: Option<BotId>,
+    ) -> Result<impl Stream<Item = WorldUpdate>> {
         let (tx, rx) = oneshot::channel();
 
         self.tx
-            .send(WorldMsg::UpdateBot { id, src, tx })
-            .context(Self::ERR_DIED)?;
+            .send(WorldRequest::Join { id, tx })
+            .await
+            .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
 
-        rx.await.context(Self::ERR_DIED)?
+        let rx = rx.await.context(Self::ERR_DIED)?;
+
+        Ok(ReceiverStream::new(rx))
     }
 }

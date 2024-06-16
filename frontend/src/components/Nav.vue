@@ -2,8 +2,8 @@
   import { ref, watch, onMounted } from 'vue';
 
   const emit = defineEmits(['worldChange', 'pause']);
-  const props = defineProps(['world', 'paused']);
-  const world = ref(null);
+  const props = defineProps(['session', 'paused']);
+  const world = ref(props.session ? props.session.worldId : null);
   const worlds = ref([]);
 
   watch(world, value => {
@@ -11,15 +11,17 @@
   });
 
   onMounted(async () => {
-    var response = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
-    var response = await response.json();
+    try {
+      var response = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
+      var response = await response.json();
 
-    worlds.value = response.worlds;
+      worlds.value = response.worlds;
 
-    if (props.world) {
-      world.value = props.world.id;
-    } else {
-      world.value = response.worlds[0].id;
+      if (world.value == null) {
+        world.value = response.worlds[0].id;
+      }
+    } catch (err) {
+      window.onerror(err);
     }
   });
 </script>

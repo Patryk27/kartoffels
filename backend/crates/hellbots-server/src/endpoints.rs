@@ -14,7 +14,8 @@ pub fn router() -> Router<Arc<RwLock<AppState>>> {
     Router::new()
         .route("/worlds", get(get_worlds::handle))
         .route("/worlds", post(create_world::handle))
-        .route("/worlds/:world", get(get_world::handle))
+        .route("/worlds/:world", get(get_world::handle1))
         .route("/worlds/:world/bots", post(create_bot::handle))
+        .route("/worlds/:world/bots/:bot", get(get_world::handle2))
         .layer(DefaultBodyLimit::max(512 * 1024))
 }
