@@ -1,4 +1,4 @@
-# Kartoffels
+# 🥔 Kartoffels 🥔
 
 **Kartoffels is an online robo-combat arena!**
 
