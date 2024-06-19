@@ -499,81 +499,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
-name = "hellbots"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "ciborium",
- "derivative",
- "futures-util",
- "glam",
- "hellbots-vm",
- "indoc",
- "itertools",
- "maybe-owned",
- "pretty_assertions",
- "rand",
- "rand_chacha",
- "serde",
- "serde_json",
- "test-case",
- "tokio",
- "tokio-stream",
- "tracing",
-]
-
-[[package]]
-name = "hellbots-pac"
-version = "0.1.0"
-
-[[package]]
-name = "hellbots-roberto"
-version = "0.1.0"
-dependencies = [
- "hellbots-pac",
-]
-
-[[package]]
-name = "hellbots-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "clap",
- "futures-util",
- "glam",
- "hellbots",
- "rand",
- "serde",
- "serde_json",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "hellbots-vm"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "elf",
- "itertools",
- "pretty_assertions",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "hellbots-vm-tests"
-version = "0.1.0"
-dependencies = [
- "hellbots-pac",
- "spin",
- "talc",
-]
-
-[[package]]
 name = "hermit-abi"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -695,6 +620,81 @@ name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
+
+[[package]]
+name = "kartoffels"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ciborium",
+ "derivative",
+ "futures-util",
+ "glam",
+ "indoc",
+ "itertools",
+ "kartoffels-vm",
+ "maybe-owned",
+ "pretty_assertions",
+ "rand",
+ "rand_chacha",
+ "serde",
+ "serde_json",
+ "test-case",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+]
+
+[[package]]
+name = "kartoffels-pac"
+version = "0.1.0"
+
+[[package]]
+name = "kartoffels-roberto"
+version = "0.1.0"
+dependencies = [
+ "kartoffels-pac",
+]
+
+[[package]]
+name = "kartoffels-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "clap",
+ "futures-util",
+ "glam",
+ "kartoffels",
+ "rand",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "kartoffels-vm"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "elf",
+ "itertools",
+ "pretty_assertions",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "kartoffels-vm-tests"
+version = "0.1.0"
+dependencies = [
+ "kartoffels-pac",
+ "spin",
+ "talc",
+]
 
 [[package]]
 name = "lazy_static"

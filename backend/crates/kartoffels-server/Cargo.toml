@@ -1,0 +1,21 @@
+[package]
+name = "kartoffels-server"
+version = "0.1.0"
+edition = "2021"
+default-run = "kartoffels-server"
+
+[dependencies]
+kartoffels = { path = "../kartoffels" }
+
+anyhow = { workspace = true }
+axum = { workspace = true }
+clap = { workspace = true }
+futures-util = { workspace = true }
+glam = { workspace = true }
+rand = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

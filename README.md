@@ -1,12 +1,12 @@
-# hellbots
+# Kartoffels
 
-**Hellbots is an online robot-combat arena!**
+**Kartoffels is an online robo-combat arena!**
 
 Implement your own bot, submit it and see it fight other bots in real-time:
 
-<https://hellbots.pwy.io>
+<https://kartoffels.pwy.io>
 
-## How to play?
+## Getting started
 
 TODO
 
@@ -43,7 +43,7 @@ Content-Type: application/json
 ```
 POST http://localhost:1313/worlds/:id/bots
 
-< /Users/PWY/Projects/hellbots/backend/target/riscv64-unknown-bot/release/hellbots-roberto
+< /x/kartoffels/backend/target/riscv64-unknown-bot/release/kartoffels-roberto
 ```
 
 ## License

@@ -2,12 +2,12 @@
 resolver = "2"
 
 members = [
-    "crates/hellbots",
-    "crates/hellbots-pac",
-    "crates/hellbots-roberto",
-    "crates/hellbots-server",
-    "crates/hellbots-vm",
-    "crates/hellbots-vm-tests",
+    "crates/kartoffels",
+    "crates/kartoffels-pac",
+    "crates/kartoffels-roberto",
+    "crates/kartoffels-server",
+    "crates/kartoffels-vm",
+    "crates/kartoffels-vm-tests",
 ]
 
 [workspace.dependencies]

@@ -1,6 +1,6 @@
 [alias]
-build-roberto = "build -p hellbots-roberto --release --target ../misc/riscv64-unknown-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
-build-vm-tests = "build -p hellbots-vm-tests --release --target ../../../misc/riscv64-unknown-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
+build-roberto = "build -p kartoffels-roberto --release --target ../misc/riscv64-unknown-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
+build-vm-tests = "build -p kartoffels-vm-tests --release --target ../../../misc/riscv64-unknown-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
 
 [target.riscv64-unknown-bot]
 rustflags = [
