@@ -6,6 +6,13 @@ Implement your own bot, submit it and see it fight other bots in real-time:
 
 <https://kartoffels.pwy.io>
 
+## Name
+
+kartoffel (🇩🇪)    
+= potato    
+= slang for "slow machine"    
+= exactly what kartoffel bots are - slow machines they are indeed!
+
 ## Getting started
 
 TODO
@@ -13,37 +20,17 @@ TODO
 ## Running locally
 
 ```
+$ mkdir /tmp/kartoffels
+
 $ cd backend
 $ cargo build-roberto
-$ cargo run --release
+$ cargo run --release -- --data /tmp/kartoffels --quick-start
 ```
 
 ```
 $ cd frontend
 $ npm install
 $ npm run dev
-```
-
-```
-POST http://localhost:1313/worlds
-Content-Type: application/json
-
-{
-  "name": "charlie",
-  "mode": {
-    "type": "deathmatch"
-  },
-  "theme": {
-    "type": "arena",
-    "radius": 16
-  }
-}
-```
-
-```
-POST http://localhost:1313/worlds/:id/bots
-
-< /x/kartoffels/backend/target/riscv64-unknown-bot/release/kartoffels-roberto
 ```
 
 ## License
