@@ -1,5 +1,6 @@
 <script setup>
   import { ref, onMounted, watch } from 'vue';
+  import { botIdToColor } from '@/utils/bot.ts';
 
   const props = defineProps(['map', 'bot', 'bots', 'camera', 'paused']);
   const canvas = ref(null);
@@ -99,13 +100,7 @@
 
         if (tileBot) {
           tileChar = '@';
-
-          if (bot && bot.id == tileBot.id) {
-            tileColor = 'rgb(0, 128, 255)';
-          } else {
-            tileColor = 'rgb(0, 255, 128)';
-          }
-
+          tileColor = botIdToColor(tileBot.id);
           tileOffsetY = -0.15;
         } else {
           tileChar = String.fromCharCode(tile >> 24);

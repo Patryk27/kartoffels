@@ -1,5 +1,6 @@
 <script setup>
   import { ref, onMounted, watch, computed } from 'vue';
+  import { botIdToColor } from '@/utils/bot.ts';
 
   const emit = defineEmits([
     'botUpload',
@@ -111,7 +112,10 @@
 
         <p>
           id: <br />
-          {{ bot.id }}
+
+          <span :style="`color: ${botIdToColor(bot.id)}`">
+            {{ bot.id }}
+          </span>
         </p>
 
         <p>
@@ -154,7 +158,8 @@
 
               <td>
                 <a @click="emit('botClick', botEntry.id)"
-                   :class="botEntry.id == bot?.id ? 'connected-bot' : ''">
+                   :class="botEntry.id == bot?.id ? 'connected-bot' : ''"
+                   :style="`color: ${botIdToColor(botEntry.id)}`">
                   {{ botEntry.id }}
                 </a>
               </td>
