@@ -50,6 +50,7 @@
 
         case 32:
           togglePause();
+          break;
       }
     };
 

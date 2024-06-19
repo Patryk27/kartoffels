@@ -46,11 +46,11 @@
           :class="paused ? 'paused' : ''"
           @click="emit('pause')">
         <template v-if="paused">
-          ⏵︎
+          resume
         </template>
 
         <template v-else>
-          ⏸︎
+          pause
         </template>
       </button>
     </div>
