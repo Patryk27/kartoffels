@@ -99,7 +99,7 @@
 
       if (bot.value != null) {
         bot.value.idx = data.bot ? data.bot.idx : null;
-        bot.value.uart = data.bot ? data.bot.uart : null;
+        bot.value.serial = data.bot ? data.bot.serial : null;
       }
     };
 

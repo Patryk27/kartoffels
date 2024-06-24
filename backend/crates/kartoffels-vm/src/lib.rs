@@ -133,8 +133,9 @@ mod tests {
     }
 
     fn extract_tests() -> Vec<String> {
-        let manifest =
-            Path::new("..").join("kartoffels-vm-tests").join("Cargo.toml");
+        let manifest = Path::new("..")
+            .join("kartoffels-vm-tests")
+            .join("Cargo.toml");
 
         let manifest = fs::read_to_string(manifest).unwrap();
 

@@ -119,7 +119,9 @@ impl Bots {
         loop {
             let pos = map.rand_pos(&mut rng);
 
-            if map.get(pos).is_floor() && self.alive.pos_to_id_opt(pos).is_none() {
+            if map.get(pos).is_floor()
+                && self.alive.pos_to_id_opt(pos).is_none()
+            {
                 return Ok(pos);
             }
 

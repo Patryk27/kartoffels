@@ -403,7 +403,7 @@ impl WorldClients {
                     .id
                     .and_then(|id| world.bots.alive.get(id))
                     .map(|bot| BotUpdate {
-                        uart: bot.bot.uart.to_string(),
+                        serial: bot.bot.serial.to_string(),
                     });
 
                 let update = WorldUpdate {

@@ -2,17 +2,17 @@ mod arm;
 mod battery;
 mod motor;
 mod radar;
+mod serial;
 mod tick;
 mod timer;
-mod uart;
 
 pub use self::arm::*;
 pub use self::battery::*;
 pub use self::motor::*;
 pub use self::radar::*;
+pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
-pub use self::uart::*;
 use crate::{AliveBotsLocator, BotId, Map};
 use anyhow::{Context, Result};
 use glam::IVec2;
@@ -26,7 +26,7 @@ pub struct AliveBot {
     pub vm: Option<vm::Runtime>,
     pub timer: BotTimer,
     pub battery: BotBattery,
-    pub uart: BotUart,
+    pub serial: BotSerial,
     pub motor: BotMotor,
     pub arm: BotArm,
     pub radar: BotRadar,
@@ -35,7 +35,7 @@ pub struct AliveBot {
 impl AliveBot {
     const MEM_TIMER: u32 = 0;
     const MEM_BATTERY: u32 = 1024;
-    const MEM_UART: u32 = 2 * 1024;
+    const MEM_SERIAL: u32 = 2 * 1024;
     const MEM_MOTOR: u32 = 3 * 1024;
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
@@ -45,7 +45,7 @@ impl AliveBot {
             vm: Some(vm),
             timer: BotTimer::new(rng),
             battery: BotBattery::default(),
-            uart: BotUart::default(),
+            serial: BotSerial::default(),
             motor: BotMotor::new(rng),
             arm: BotArm::default(),
             radar: BotRadar::default(),
@@ -59,7 +59,7 @@ impl AliveBot {
         pos: IVec2,
     ) -> Result<AliveBotTick> {
         self.timer.tick();
-        self.uart.tick();
+        self.serial.tick();
         self.arm.tick();
         self.motor.tick();
         self.radar.tick(map, bots, pos, self.motor.dir);
@@ -108,7 +108,7 @@ impl vm::Mmio for AliveBot {
         self.timer
             .mmio_load(addr)
             .or_else(|_| self.battery.mmio_load(addr))
-            .or_else(|_| self.uart.mmio_load(addr))
+            .or_else(|_| self.serial.mmio_load(addr))
             .or_else(|_| self.motor.mmio_load(addr))
             .or_else(|_| self.arm.mmio_load(addr))
             .or_else(|_| self.radar.mmio_load(addr))
@@ -118,7 +118,7 @@ impl vm::Mmio for AliveBot {
         self.timer
             .mmio_store(addr, val)
             .or_else(|_| self.battery.mmio_store(addr, val))
-            .or_else(|_| self.uart.mmio_store(addr, val))
+            .or_else(|_| self.serial.mmio_store(addr, val))
             .or_else(|_| self.motor.mmio_store(addr, val))
             .or_else(|_| self.arm.mmio_store(addr, val))
             .or_else(|_| self.radar.mmio_store(addr, val))

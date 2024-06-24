@@ -119,11 +119,11 @@
         </p>
 
         <p>
-          uart:
+          serial port:
         </p>
       </div>
 
-      <textarea readonly :value="bot.uart" />
+      <textarea readonly :value="bot.serial" />
 
       <div>
         <!-- TODO v-model here is invalid, but :value seems not to work -->

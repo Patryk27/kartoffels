@@ -6,7 +6,8 @@
   <main>
     <div id="tutorial">
       <p>
-        hey there solder, you great piece of fusible metal alloy 🫡🫡🫡
+        hey there solder, you great piece of low-melting-point metal alloy
+        🫡🫡🫡
       </p>
 
       <p>

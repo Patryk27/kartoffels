@@ -4,11 +4,11 @@ use std::collections::VecDeque;
 use std::fmt;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct BotUart {
+pub struct BotSerial {
     pub buffer: VecDeque<u32>,
 }
 
-impl BotUart {
+impl BotSerial {
     const CAPACITY: usize = 256;
 
     pub fn tick(&mut self) {
@@ -21,7 +21,7 @@ impl BotUart {
 
     pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
         match addr {
-            AliveBot::MEM_UART => {
+            AliveBot::MEM_SERIAL => {
                 if self.buffer.len() >= Self::CAPACITY {
                     self.buffer.pop_front();
                 }
@@ -36,7 +36,7 @@ impl BotUart {
     }
 }
 
-impl fmt::Display for BotUart {
+impl fmt::Display for BotSerial {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for byte in &self.buffer {
             if let Some(char) = char::from_u32(*byte) {

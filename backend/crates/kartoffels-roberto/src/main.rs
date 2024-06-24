@@ -11,7 +11,7 @@ fn main() {
     let mut sample_dir_at = 0;
 
     loop {
-        uart_send('.');
+        serial_send('.');
 
         let radar = {
             radar_wait();
@@ -21,41 +21,41 @@ fn main() {
         };
 
         if radar[1][2] == '@' {
-            uart_send('!');
+            serial_send('!');
             arm_stab();
             continue;
         }
 
         if radar[1][2] == '.' && got_enemy_in(radar, 0..5, 0..2) {
-            uart_send('^');
+            serial_send('^');
             motor_wait();
             motor_step();
             continue;
         }
 
         if got_enemy_in(radar, 3..5, 0..5) {
-            uart_send('<');
+            serial_send('<');
             motor_wait();
             motor_turn(1);
             continue;
         }
 
         if got_enemy_in(radar, 0..2, 0..5) {
-            uart_send('>');
+            serial_send('>');
             motor_wait();
             motor_turn(-1);
             continue;
         }
 
         if got_enemy_in(radar, 0..5, 3..5) {
-            uart_send('v');
+            serial_send('v');
             motor_wait();
             motor_turn(if rng.bool() { -1 } else { 1 });
             continue;
         }
 
         if timer_ticks() < sample_dir_at && radar[1][2] != '.' {
-            uart_send('?');
+            serial_send('?');
             sample_dir_at = 0;
         }
 

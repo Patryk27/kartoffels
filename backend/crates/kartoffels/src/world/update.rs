@@ -22,7 +22,7 @@ pub struct WorldUpdate {
 
 #[derive(Debug, Serialize)]
 pub struct BotUpdate {
-    pub uart: String,
+    pub serial: String,
 }
 
 #[derive(Debug, Serialize)]
