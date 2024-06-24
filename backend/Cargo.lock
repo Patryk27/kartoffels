@@ -665,6 +665,7 @@ dependencies = [
  "clap",
  "futures-util",
  "glam",
+ "indoc",
  "kartoffels",
  "rand",
  "serde",

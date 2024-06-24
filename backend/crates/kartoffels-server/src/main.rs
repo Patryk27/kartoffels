@@ -8,6 +8,7 @@ mod state;
 use crate::state::*;
 use anyhow::{Context, Result};
 use clap::Parser;
+use indoc::indoc;
 use kartoffels::World;
 use std::collections::HashMap;
 use std::env;
@@ -20,6 +21,15 @@ use tokio::sync::RwLock;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{debug, info, warn};
+
+const LOGO: &str = indoc! {r#"
+     _              _         __  __     _
+    | |            | |       / _|/ _|   | |
+    | | ____ _ _ __| |_ ___ | |_| |_ ___| |___
+    | |/ / _` | '__| __/ _ \|  _|  _/ _ \ / __|
+    |   < (_| | |  | || (_) | | | ||  __/ \__ \
+    |_|\_\__,_|_|   \__\___/|_| |_| \___|_|___/
+"#};
 
 #[derive(Debug, Parser)]
 struct AppArgs {
@@ -51,7 +61,7 @@ async fn main() -> Result<()> {
 
     // ---
 
-    for line in include_str!("../logo.txt").lines() {
+    for line in LOGO.lines() {
         info!("{}", line);
     }
 

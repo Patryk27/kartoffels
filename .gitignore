@@ -1,2 +1,4 @@
+/.tmp
+/result
 /backend/target
 /frontend/node_modules

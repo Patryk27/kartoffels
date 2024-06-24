@@ -10,6 +10,13 @@ members = [
     "crates/kartoffels-vm-tests",
 ]
 
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.metadata.crane]
+name = "kartoffels-backend"
+
 [workspace.dependencies]
 anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["macros", "ws"] }

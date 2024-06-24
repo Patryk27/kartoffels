@@ -17,9 +17,8 @@ macro_rules! test {
 #[macro_export]
 macro_rules! test {
     ($code:literal) => {
-        #[export_name = "main"]
-        fn main() -> i32 {
-            0
+        fn main() {
+            //
         }
     };
 }

@@ -8,6 +8,10 @@ Implement your own bot, submit it and see it fight other bots in real-time:
 
 [Play it online!](https://kartoffels.pwy.io)
 
+## Rules
+
+TODO
+
 ## Getting started
 
 TODO
@@ -20,6 +24,19 @@ kartoffel (🇩🇪)
 = exactly what kartoffel bots are - slow machines they are indeed!
 
 ## Running locally
+
+### On NixOS
+
+Flake already contains an example configuration, so it's as easy as:
+
+```
+$ sudo nixos-container create demo
+$ sudo nixos-container start demo
+```
+
+... and then just open listed IP in your web browser.
+
+### On other machines
 
 ```
 $ mkdir /tmp/kartoffels
