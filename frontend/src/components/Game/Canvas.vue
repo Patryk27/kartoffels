@@ -12,33 +12,11 @@
   let textMetrics = null;
   let chars = { x: 0, y: 0 };
 
-  watch(() => [props.map, props.paused], _ => {
-    refresh();
-  });
-
-  watch(() => [props.bot, props.bots, props.camera], _ => {
-    refresh();
-  }, { deep: true });
-
-  onMounted(() => {
-    document.fonts.ready.then(() => {
-      ctxt = canvas.value.getContext('2d');
-
-      ctxt.scale(
-        window.devicePixelRatio || 1,
-        window.devicePixelRatio || 1,
-      );
-
-      window.onresize = () => {
-        resize();
-      };
-
-      resize();
-      refresh();
-    });
-  });
-
   function resize() {
+    if (canvasWrapper.value == null) {
+      return;
+    }
+
     scale = Math.max(
       Math.min(
         canvasWrapper.value.clientWidth,
@@ -75,9 +53,6 @@
     ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
     if (map == null || camera == null) {
-      ctxt.fillStyle = 'rgb(0, 255, 128)';
-      ctxt.fillText('connecting...', 0, textMetrics.height);
-
       return;
     }
 
@@ -133,6 +108,34 @@
       }
     }
   }
+
+  // ---
+
+  watch(() => [props.map, props.paused], _ => {
+    refresh();
+  });
+
+  watch(() => [props.bot, props.bots, props.camera], _ => {
+    refresh();
+  }, { deep: true });
+
+  onMounted(() => {
+    document.fonts.ready.then(() => {
+      ctxt = canvas.value.getContext('2d');
+
+      ctxt.scale(
+        window.devicePixelRatio || 1,
+        window.devicePixelRatio || 1,
+      );
+
+      window.onresize = () => {
+        resize();
+      };
+
+      resize();
+      refresh();
+    });
+  });
 </script>
 
 <template>

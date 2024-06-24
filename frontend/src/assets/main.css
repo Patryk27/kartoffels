@@ -14,7 +14,6 @@ body {
   height: 100%;
   margin: 0;
   padding: 0.5em;
-  overflow: hidden;
 
   color: #f0f0f0;
   background: #050505;
@@ -91,6 +90,12 @@ textarea {
 
 label {
   color: #f0f0f0;
+}
+
+pre {
+  font-size: 18px;
+  font-family: 'Sono';
+  color: #c86b85;
 }
 
 #app {

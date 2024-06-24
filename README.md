@@ -1,6 +1,6 @@
 # 🥔 Kartoffels 🥔
 
-**[Kartoffels](https://kartoffels.pwy.io) is an online robo-combat arena!**
+**[Kartoffels](https://kartoffels.pwy.io) is an online robot combat arena!**
 
 Implement your own bot, submit it and see it fight other bots in real-time:
 
@@ -8,20 +8,16 @@ Implement your own bot, submit it and see it fight other bots in real-time:
 
 [Play it online!](https://kartoffels.pwy.io)
 
-## Rules
-
-TODO
-
-## Getting started
-
-TODO
-
 ## Name
 
 kartoffel (🇩🇪)    
 = potato    
 = slang for "slow machine"    
 = exactly what kartoffel bots are - slow machines they are indeed!
+
+## Getting started
+
+TODO
 
 ## Running locally
 
