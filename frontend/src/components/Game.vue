@@ -15,7 +15,6 @@
   const paused = ref(false);
 
   let socket = null;
-  let session = props.session;
 
   function join(newBotId) {
     if (socket != null) {
@@ -104,7 +103,13 @@
     };
 
     socket.onerror = event => {
-      crash.value = 'lost connection to the server';
+      if (newBotId == null) {
+        window.onerror(`couldn't join world ${props.worldId}`);
+      } else {
+        alert(`couldn't join bot ${newBotId} - maybe it got killed?`);
+
+        join(null);
+      }
     };
   }
 
@@ -128,7 +133,7 @@
   }
 
   async function handleBotUpload(file) {
-    if (session == null || socket == null) {
+    if (socket == null) {
       return;
     }
 
@@ -141,23 +146,26 @@
         },
       );
 
-      var response = await response.json();
+      if (response.status == 200) {
+        var response = await response.json();
 
-      join(response.id);
+        join(response.id);
+      } else {
+        var response = await response.text();
+
+        alert("err, your bot couldn't be uploaded:\n\n" + response);
+      }
     } catch (err) {
-      // TODO handle validation errors
       window.onerror(err);
     }
   }
 
-  function handleBotDisconnect() {
-    join(null);
+  function handleBotConnect(id) {
+    join(id);
   }
 
-  function handleBotFollow(follow) {
-    if (bot.value != null) {
-      bot.value.is_followed = follow;
-    }
+  function handleBotDisconnect() {
+    join(null);
   }
 
   function handleBotClick(id) {
@@ -235,9 +243,9 @@
       :bots="bots"
       :paused="paused"
       @bot-upload="handleBotUpload"
+      @bot-connect="handleBotConnect"
       @bot-disconnect="handleBotDisconnect"
-      @bot-follow="handleBotFollow"
-      @bot-click="handleBotClick"/>
+      @bot-click="handleBotClick" />
   </main>
 </template>
 

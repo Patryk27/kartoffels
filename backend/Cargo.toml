@@ -20,6 +20,7 @@ name = "kartoffels-backend"
 [workspace.dependencies]
 anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
+chrono = "0.4.38"
 ciborium = "0.2.2"
 clap = { version = "4.5.4", features = ["derive"] }
 derivative = "2.2.0"

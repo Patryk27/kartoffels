@@ -7,6 +7,7 @@ edition = "2021"
 kartoffels-vm = { path = "../kartoffels-vm" }
 
 anyhow = { workspace = true }
+chrono = { workspace = true }
 ciborium = { workspace = true }
 derivative = { workspace = true }
 futures-util = { workspace = true }

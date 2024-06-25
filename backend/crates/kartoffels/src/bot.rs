@@ -67,13 +67,11 @@ impl AliveBot {
         // ---
 
         let mut vm =
-            mem::take(&mut self.vm).context("tried to resume a crashed bot")?;
+            mem::take(&mut self.vm).context("tried to tick() a crashed bot")?;
 
-        let result = vm.tick(self);
+        vm.tick(self).context("firmware crashed")?;
 
         self.vm = Some(vm);
-
-        result.context("firmware crashed")?;
 
         // ---
 
@@ -92,14 +90,8 @@ impl AliveBot {
         Ok(AliveBotTick { stab_dir, move_dir })
     }
 
-    pub fn reset(mut self, rng: &mut impl RngCore) -> Result<Self> {
-        Ok(Self::new(
-            rng,
-            self.vm
-                .take()
-                .context("tried to resume a crashed bot")?
-                .reset(),
-        ))
+    pub fn reset(mut self, rng: &mut impl RngCore) -> Option<Self> {
+        Some(Self::new(rng, self.vm.take()?.reset()))
     }
 }
 

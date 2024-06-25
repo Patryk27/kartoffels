@@ -86,12 +86,14 @@ impl Bots {
         } else {
             // TODO resurrect after 1s
 
-            debug!(?id, ?pos, "bot resurrected");
+            if let Some(bot) = bot.reset(rng) {
+                debug!(?id, ?pos, "bot resurrected");
 
-            let bot = bot.reset(rng).context("reset() failed")?;
-
-            if self.alive.add(id, pos, bot).is_err() {
-                return Err(anyhow!("couldn't spawn resurrected bot"));
+                if self.alive.add(id, pos, bot).is_err() {
+                    return Err(anyhow!("couldn't spawn resurrected bot"));
+                }
+            } else {
+                // TODO
             }
         }
 

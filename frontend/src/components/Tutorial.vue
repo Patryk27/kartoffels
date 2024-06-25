@@ -27,10 +27,10 @@
         - robots contain peripherals (radar, motors etc.) which your code can
           play with
         <br>
-        - every tick each robot (in randomized order) executes a single CPU
+        - every tick each robot in randomized order executes a single CPU
           instruction
         <br>
-        - there's 60_000 ticks per second
+        - there's 64k ticks per bot per second
         <br>
         - the game is simulated on a central server, so you're playing against
           other players

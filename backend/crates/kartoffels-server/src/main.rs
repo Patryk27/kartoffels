@@ -41,9 +41,6 @@ struct AppArgs {
 
     #[clap(long)]
     debug: bool,
-
-    #[clap(long)]
-    quick_start: bool,
 }
 
 #[tokio::main]
@@ -71,7 +68,7 @@ async fn main() -> Result<()> {
     info!("");
     info!(?args, "initializing");
 
-    let state = init(args.data, args.quick_start).await?;
+    let state = init(args.data).await?;
     let state = Arc::new(RwLock::new(state));
 
     let listener = TcpListener::bind(&args.listen).await?;
@@ -98,7 +95,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn init(data: Option<PathBuf>, quick_start: bool) -> Result<AppState> {
+async fn init(data: Option<PathBuf>) -> Result<AppState> {
     let mut worlds = HashMap::new();
 
     if let Some(data) = &data {
@@ -151,10 +148,6 @@ async fn init(data: Option<PathBuf>, quick_start: bool) -> Result<AppState> {
         }
     } else {
         warn!("running without any data directory");
-    }
-
-    if quick_start {
-        todo!();
     }
 
     Ok(AppState { data, worlds })

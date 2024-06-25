@@ -78,6 +78,10 @@ input {
   }
 }
 
+label {
+  color: #f0f0f0;
+}
+
 textarea {
   &:read-only {
     cursor: default;
@@ -88,14 +92,31 @@ textarea {
   }
 }
 
-label {
-  color: #f0f0f0;
-}
-
 pre {
   font-size: 18px;
   font-family: 'Sono';
   color: #c86b85;
+}
+
+table {
+  border-collapse: collapse;
+
+  thead {
+    th {
+      font-weight: normal;
+    }
+  }
+}
+
+dialog {
+  top: 10vh;
+  max-height: 80vh;
+  padding: 0.75em;
+  overflow: auto;
+
+  color: #f0f0f0;
+  background: #050505;
+  border: 1px solid #00ff80;
 }
 
 #app {

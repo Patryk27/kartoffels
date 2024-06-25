@@ -59,7 +59,7 @@
       </p>
 
       <p style="margin-top: 0">
-        please refresh the page to restart
+        please refresh the page and try again
       </p>
     </main>
   </template>

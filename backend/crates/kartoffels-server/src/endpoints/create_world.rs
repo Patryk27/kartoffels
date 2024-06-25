@@ -15,11 +15,11 @@ use tracing::info;
 // TODO must be password-protected
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
-    config: Json<WorldConfig>,
+    request: Json<WorldConfig>,
 ) -> AppResult<impl IntoResponse> {
     let mut state = state.write().await;
     let id = WorldId::new(&mut rand::thread_rng());
-    let config = config.0;
+    let config = request.0;
 
     info!(?id, ?config, "creating new world");
 

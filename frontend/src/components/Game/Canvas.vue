@@ -139,19 +139,19 @@
 </script>
 
 <template>
-  <div ref="canvasWrapper">
+  <div ref="canvasWrapper" class="game-canvas">
     <canvas ref="canvas" />
   </div>
 </template>
 
 <style scoped>
-  div {
+  .game-canvas {
     position: relative;
     border: 1px dashed #444444;
     flex-grow: 1;
-  }
 
-  canvas {
-    position: absolute;
+    canvas {
+      position: absolute;
+    }
   }
 </style>

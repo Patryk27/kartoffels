@@ -9,7 +9,7 @@ in
 {
   options = {
     services.kartoffels = {
-      enable = mkEnableOption "Kartoffels, an online robo-combat arena";
+      enable = mkEnableOption "Kartoffels, an online robot combat arena";
 
       backend = {
         package = mkOption {

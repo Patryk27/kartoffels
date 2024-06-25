@@ -15,10 +15,6 @@ kartoffel (🇩🇪)
 = slang for "slow machine"    
 = exactly what kartoffel bots are - slow machines they are indeed!
 
-## Getting started
-
-TODO
-
 ## Running locally
 
 ### On NixOS
@@ -30,23 +26,45 @@ $ sudo nixos-container create demo
 $ sudo nixos-container start demo
 ```
 
-... and then just open listed IP in your web browser.
+... and then just open the listed IP in your web browser.
 
 ### On other machines
 
+Start backend:
+
 ```
 $ mkdir /tmp/kartoffels
-
 $ cd backend
-$ cargo build-roberto
-$ cargo run --release -- --data /tmp/kartoffels --quick-start
+$ cargo run --release -- --data /tmp/kartoffels
 ```
+
+Start frontend:
 
 ```
 $ cd frontend
 $ npm install
 $ npm run dev
 ```
+
+Create a map:
+
+```
+POST http://localhost:1313/worlds
+Content-Type: application/json
+
+{
+  "name": "the arena",
+  "mode": {
+    "type": "deathmatch"
+  },
+  "theme": {
+    "type": "arena",
+    "radius": 20
+  }
+}
+```
+
+Enjoy!
 
 ## License
 

@@ -1,9 +1,10 @@
 <script setup>
   const emit = defineEmits(['leave', 'pause', 'openTutorial']);
+  const props = defineProps(['paused']);
 </script>
 
 <template>
-  <nav>
+  <nav class="game-nav">
     <div>
       <button @click="emit('leave')">
         leave world
@@ -16,7 +17,7 @@
       </button>
 
       <button
-          id="pause"
+          class="pause"
           :class="paused ? 'paused' : ''"
           @click="emit('pause')">
         <template v-if="paused">
@@ -32,7 +33,7 @@
 </template>
 
 <style scoped>
-  nav {
+  .game-nav {
     display: flex;
     margin-bottom: 0.5em;
 
@@ -40,14 +41,14 @@
       flex-grow: 1;
     }
 
-    button + button {
-      margin-left: 0.5em;
-    }
-  }
+    button {
+      &.paused {
+        border: 1px solid red;
+      }
 
-  #pause {
-    &.paused {
-      border: 1px solid red;
+      & + button {
+        margin-left: 0.5em;
+      }
     }
   }
 </style>
