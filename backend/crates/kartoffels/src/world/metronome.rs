@@ -2,12 +2,12 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
-pub struct LoopTimer {
+pub struct Metronome {
     max_iter_tt: i64,
     backlog: i64,
 }
 
-impl LoopTimer {
+impl Metronome {
     const ONE_SECOND_NS: i64 = Duration::from_secs(1).as_nanos() as i64;
 
     pub fn new(hz: u32, ticks: u32) -> Self {

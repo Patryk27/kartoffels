@@ -1,6 +1,5 @@
 use crate::error::{AppError, AppResult};
 use crate::AppState;
-use anyhow::Context;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -8,7 +7,6 @@ use axum::Json;
 use kartoffels::{World, WorldConfig, WorldId};
 use serde::Serialize;
 use std::sync::Arc;
-use tokio::fs::File;
 use tokio::sync::RwLock;
 use tracing::info;
 
@@ -30,21 +28,13 @@ pub async fn handle(
         ));
     }
 
-    let file = if let Some(data) = &state.data {
-        let file = data.join(id.to_string()).with_extension("world");
-
-        let file = File::create(&file)
-            .await
-            .context("couldn't create world's file")
-            .map_err(AppError::MAP_HTTP_500)?;
-
-        Some(file.into_std().await)
-    } else {
-        None
-    };
+    let path = state
+        .data
+        .as_ref()
+        .map(|data| data.join(id.to_string()).with_extension("world"));
 
     let world =
-        World::create(id, config, file).map_err(AppError::MAP_HTTP_400)?;
+        World::create(id, config, path).map_err(AppError::MAP_HTTP_400)?;
 
     state.worlds.insert(id, world);
 

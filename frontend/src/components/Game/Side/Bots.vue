@@ -56,7 +56,7 @@
       <tbody>
         <tr
           v-for="entry in filteredBots"
-          :class="entry?.id == bot?.id ? 'connected-bot' : ''">
+          :class="(entry != null && entry.id == bot?.id) ? 'connected-bot' : ''">
           <template v-if="entry != null && entry.ty == 'bot'">
             <td>
               #{{ entry.nth }}&nbsp;

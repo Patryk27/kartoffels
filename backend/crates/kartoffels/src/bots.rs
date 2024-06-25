@@ -27,30 +27,30 @@ impl Bots {
         bot: AliveBot,
     ) -> Result<BotId> {
         let id = self.random_unoccupied_id(rng);
-        let pos = self.random_unoccupied_pos(map)?;
 
-        if self.alive.remove(id).is_ok() {
-            debug!(?id, "bot deleted");
-        }
+        let pos = self
+            .random_unoccupied_pos(map)
+            .context("couldn't squeeze any space for the bot")?;
 
-        match self.alive.add(id, pos, bot) {
-            Ok(()) => {
-                debug!(?id, ?pos, "bot created");
-            }
+        // TODO make limit configurable
+        if self.alive.len() < 64 {
+            self.alive.add(id, pos, bot);
 
-            Err(bot) => match self.queued.push(QueuedBot { id, bot }) {
+            debug!(?id, ?pos, "bot created");
+        } else {
+            match self.queued.push(QueuedBot { id, bot }) {
                 Ok(()) => {
                     debug!(?id, "bot queued");
                 }
 
                 Err(()) => {
-                    debug!(?id, "bot rejected (queue full)");
+                    debug!(?id, "bot discarded (queue full)");
 
                     return Err(anyhow!(
                         "too many robots queued, try again later"
                     ));
                 }
-            },
+            }
         }
 
         Ok(id)
@@ -60,51 +60,43 @@ impl Bots {
         &mut self,
         rng: &mut impl RngCore,
         mode: &mut Mode,
-        map: &mut Map,
         id: BotId,
-        reason: impl ToString,
+        reason: &str,
         killer: Option<BotId>,
-    ) -> Result<()> {
-        let reason = reason.to_string();
-        let bot = self.alive.remove(id)?;
-
+    ) {
         debug!(?id, ?reason, ?killer, "bot killed");
 
-        self.dead.add(id, DeadBot { reason });
+        let bot = self.alive.remove(id);
 
-        mode.on_bot_killed(id, killer)
-            .context("on_bot_killed() failed")?;
+        self.dead.add(
+            id,
+            DeadBot {
+                reason: reason.into(),
+            },
+        );
 
-        let pos = self.random_unoccupied_pos(map)?;
+        mode.on_bot_killed(id, killer);
 
-        if let Some(QueuedBot { id, bot }) = self.queued.pop() {
-            debug!(?id, ?pos, "bot dequeued");
+        if let Some(bot) = bot.reset(rng) {
+            match self.queued.push(QueuedBot { id, bot }) {
+                Ok(()) => {
+                    debug!(?id, "bot requeued");
+                }
 
-            if self.alive.add(id, pos, bot).is_err() {
-                return Err(anyhow!("couldn't spawn dequeued bot"));
+                Err(()) => {
+                    debug!(?id, "bot discarded (queue is full)");
+                }
             }
         } else {
-            // TODO resurrect after 1s
-
-            if let Some(bot) = bot.reset(rng) {
-                debug!(?id, ?pos, "bot resurrected");
-
-                if self.alive.add(id, pos, bot).is_err() {
-                    return Err(anyhow!("couldn't spawn resurrected bot"));
-                }
-            } else {
-                // TODO
-            }
+            debug!(?id, "bot discarded (couldn't be reset)");
         }
-
-        Ok(())
     }
 
     pub fn has(&self, id: BotId) -> bool {
         self.alive.has(id) || self.dead.has(id) || self.queued.has(id)
     }
 
-    fn random_unoccupied_id(&self, rng: &mut impl RngCore) -> BotId {
+    pub fn random_unoccupied_id(&self, rng: &mut impl RngCore) -> BotId {
         loop {
             let id = BotId::new(rng);
 
@@ -114,7 +106,7 @@ impl Bots {
         }
     }
 
-    fn random_unoccupied_pos(&self, map: &Map) -> Result<IVec2> {
+    pub fn random_unoccupied_pos(&self, map: &Map) -> Option<IVec2> {
         let mut rng = rand::thread_rng();
         let mut nth = 0;
 
@@ -122,15 +114,15 @@ impl Bots {
             let pos = map.rand_pos(&mut rng);
 
             if map.get(pos).is_floor()
-                && self.alive.pos_to_id_opt(pos).is_none()
+                && self.alive.lookup_by_pos(pos).is_none()
             {
-                return Ok(pos);
+                return Some(pos);
             }
 
             nth += 1;
 
             if nth >= 1024 {
-                return Err(anyhow!("couldn't squeeze any space for the bot"));
+                return None;
             }
         }
     }

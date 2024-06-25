@@ -1,5 +1,4 @@
 use crate::{Map, Tile};
-use anyhow::Result;
 use glam::uvec2;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +12,7 @@ impl ArenaTheme {
         Self { config }
     }
 
-    pub(super) fn create_map(&self) -> Result<Map> {
+    pub(super) fn create_map(&self) -> Map {
         let mut map = Map::new(
             Tile::VOID,
             uvec2(self.config.radius, self.config.radius) * 2 + 1,
@@ -32,7 +31,7 @@ impl ArenaTheme {
             }
         }
 
-        Ok(map)
+        map
     }
 }
 

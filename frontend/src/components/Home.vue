@@ -23,6 +23,12 @@
             session.value.worldName = world.name;
           }
         }
+
+        // If the world this session refers to got deleted, no point in offering
+        // to restore the session
+        if (session.value.worldName == null) {
+          session.value = null;
+        }
       }
     } catch (err) {
       error.value = err;

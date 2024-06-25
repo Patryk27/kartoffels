@@ -18,6 +18,7 @@
 
   function join(newBotId) {
     if (socket != null) {
+      socket.onclose = null;
       socket.close();
     }
 
@@ -48,6 +49,10 @@
         worldId: props.worldId,
         botId: bot.value?.id,
       });
+    };
+
+    socket.onclose = () => {
+      window.onerror('lost connection to the server');
     };
 
     socket.onmessage = event => {
@@ -117,6 +122,7 @@
     paused.value = !paused.value;
 
     if (paused.value) {
+      socket.onclose = null;
       socket.close();
     } else {
       // TODO don't restart camera position

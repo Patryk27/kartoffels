@@ -67,7 +67,6 @@
       style="resize: none" />
 
     <div>
-      <!-- TODO v-model here is invalid, but :value seems not to work -->
       <input
         id="bot-follow"
         type="checkbox"

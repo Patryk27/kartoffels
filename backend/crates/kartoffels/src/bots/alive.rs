@@ -1,5 +1,5 @@
 use crate::{AliveBot, BotId};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use glam::IVec2;
 use maybe_owned::MaybeOwned;
 use rand::prelude::SliceRandom;
@@ -16,29 +16,17 @@ pub struct AliveBots {
 }
 
 impl AliveBots {
-    #[allow(clippy::result_large_err)]
-    pub fn add(
-        &mut self,
-        id: BotId,
-        pos: IVec2,
-        bot: AliveBot,
-    ) -> Result<(), AliveBot> {
-        if self.entries.len() >= 64 {
-            // TODO make the max length configurable
-            return Err(bot);
-        }
+    pub fn add(&mut self, id: BotId, pos: IVec2, bot: AliveBot) {
+        assert!(!self.entries.contains_key(&id));
+        assert!(!self.pos_to_id.contains_key(&pos));
 
         self.entries.insert(id, bot);
         self.pos_to_id.insert(pos, id);
         self.id_to_pos.insert(id, pos);
-
-        Ok(())
     }
 
     pub fn relocate(&mut self, id: BotId, new_pos: IVec2) {
-        if self.pos_to_id.contains_key(&new_pos) {
-            return;
-        }
+        assert!(!self.pos_to_id.contains_key(&new_pos),);
 
         let hash_map::RawEntryMut::Occupied(entry) =
             self.id_to_pos.raw_entry_mut().from_key(&id)
@@ -52,20 +40,16 @@ impl AliveBots {
         self.pos_to_id.insert(new_pos, id);
     }
 
-    pub fn remove(&mut self, id: BotId) -> Result<AliveBot> {
-        let pos = self
-            .id_to_pos
-            .remove(&id)
-            .with_context(|| format!("couldn't find bot #{}", id))?;
-
+    pub fn remove(&mut self, id: BotId) -> AliveBot {
+        let pos = self.id_to_pos.remove(&id).unwrap();
         let bot = self.entries.remove(&id).unwrap();
 
-        self.pos_to_id.remove(&pos);
+        self.pos_to_id.remove(&pos).unwrap();
 
-        Ok(bot)
+        bot
     }
 
-    pub fn pos_to_id_opt(&self, pos: IVec2) -> Option<BotId> {
+    pub fn lookup_by_pos(&self, pos: IVec2) -> Option<BotId> {
         self.pos_to_id.get(&pos).copied()
     }
 
@@ -73,7 +57,7 @@ impl AliveBots {
         self.entries.contains_key(&id)
     }
 
-    pub fn get(&self, id: BotId) -> Option<AliveBotEntry> {
+    pub fn try_get(&self, id: BotId) -> Option<AliveBotEntry> {
         Some(AliveBotEntry {
             id,
             pos: *self.id_to_pos.get(&id)?,
@@ -81,7 +65,7 @@ impl AliveBots {
         })
     }
 
-    pub fn get_mut(
+    pub fn try_get_mut(
         &mut self,
         id: BotId,
     ) -> Option<(AliveBotEntryMut, AliveBotsLocator)> {
@@ -181,8 +165,7 @@ impl<'de> Deserialize<'de> for AliveBots {
         let proxy = SerializedAliveBots::deserialize(deserializer)?;
 
         for entry in proxy.bots {
-            this.add(entry.id, entry.pos, entry.bot.into_owned())
-                .unwrap(); // TODO
+            this.add(entry.id, entry.pos, entry.bot.into_owned());
         }
 
         Ok(this)

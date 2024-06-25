@@ -2,7 +2,6 @@ mod deathmatch;
 
 pub use self::deathmatch::*;
 use crate::{BotId, Map, Theme};
-use anyhow::Result;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -21,7 +20,7 @@ impl Mode {
         }
     }
 
-    pub fn state(&self) -> Result<Value> {
+    pub fn state(&self) -> Value {
         match self {
             Mode::Deathmatch(this) => this.state(),
         }
@@ -31,9 +30,11 @@ impl Mode {
         &mut self,
         killed_id: BotId,
         killer_id: Option<BotId>,
-    ) -> Result<()> {
+    ) {
         match self {
-            Mode::Deathmatch(this) => this.on_bot_killed(killed_id, killer_id),
+            Mode::Deathmatch(this) => {
+                this.on_bot_killed(killed_id, killer_id);
+            }
         }
     }
 
@@ -42,9 +43,11 @@ impl Mode {
         rng: &mut impl RngCore,
         theme: &mut Theme,
         map: &mut Map,
-    ) -> Result<()> {
+    ) {
         match self {
-            Mode::Deathmatch(this) => this.on_after_tick(rng, theme, map),
+            Mode::Deathmatch(this) => {
+                this.on_after_tick(rng, theme, map);
+            }
         }
     }
 }

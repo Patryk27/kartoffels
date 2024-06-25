@@ -15,7 +15,7 @@ use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::fs::{self, File};
+use tokio::fs;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tower_http::cors::{self, CorsLayer};
@@ -99,7 +99,7 @@ async fn init(data: Option<PathBuf>) -> Result<AppState> {
     let mut worlds = HashMap::new();
 
     if let Some(data) = &data {
-        debug!("checking data directory");
+        debug!(path = ?data, "checking data directory");
 
         let mut entries = fs::read_dir(data).await.with_context(|| {
             format!("couldn't open data directory: {}", data.display())
@@ -114,37 +114,50 @@ async fn init(data: Option<PathBuf>) -> Result<AppState> {
                 continue;
             };
 
-            if entry.path().extension().and_then(|ext| ext.to_str())
-                != Some("world")
-            {
+            let Some(entry_ext) =
+                entry_path.extension().and_then(|ext| ext.to_str())
+            else {
                 continue;
-            }
-
-            info!("loading: {}", entry_path.display());
-
-            let result: Result<()> = try {
-                let id = entry_stem
-                    .parse()
-                    .context("couldn't extract world id from path")?;
-
-                let world = File::options()
-                    .read(true)
-                    .write(true)
-                    .open(&entry_path)
-                    .await
-                    .context("couldn't open world's file")?
-                    .into_std()
-                    .await;
-
-                let world = World::resume(id, world)
-                    .context("couldn't resume the world")?;
-
-                worlds.insert(id, world);
             };
 
-            result.with_context(|| {
-                format!("couldn't load: {}", entry_path.display())
-            })?;
+            match entry_ext {
+                "new" => {
+                    // TODO bail?
+
+                    warn!(
+                        path = ?entry_path,
+                        "found a suspicious file (leftover from previous run)",
+                    );
+                }
+
+                "world" => {
+                    info!("loading: {}", entry_path.display());
+
+                    let result: Result<()> = try {
+                        let id = entry_stem
+                            .parse()
+                            .context("couldn't extract world id from path")?;
+
+                        let world = World::resume(id, &entry_path)
+                            .context("couldn't resume the world")?;
+
+                        worlds.insert(id, world);
+                    };
+
+                    result.with_context(|| {
+                        format!("couldn't load: {}", entry_path.display())
+                    })?;
+                }
+
+                _ => {
+                    // TODO bail?
+
+                    warn!(
+                        path = ?entry_path,
+                        "found a suspicious file (not created by kartoffels)",
+                    );
+                }
+            }
         }
     } else {
         warn!("running without any data directory");

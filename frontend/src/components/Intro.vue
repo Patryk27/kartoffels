@@ -78,9 +78,8 @@
 
 <style scoped>
   .component {
-    margin-top: 1em;
-    padding: 1em;
     max-width: 1024px;
+    padding: 1em;
     border: 1px solid #ff8000;
     border-radius: 5px;
 

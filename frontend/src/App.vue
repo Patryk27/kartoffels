@@ -1,5 +1,6 @@
 <script setup>
   import { ref, onMounted } from 'vue';
+  import Crash from './components/Crash.vue';
   import Game from './components/Game.vue';
   import Home from './components/Home.vue';
   import Intro from './components/Intro.vue';
@@ -49,18 +50,7 @@
   </template>
 
   <template v-if="route.id == 'bsod'">
-    <main style="padding: 1em">
-      <p style="margin: 0">
-        whoopsie, kartoffels have fell out of pot and ✨ crashed ✨
-      </p>
-
-      <p>
-        {{ route.msg }}
-      </p>
-
-      <p style="margin-top: 0">
-        please refresh the page and try again
-      </p>
-    </main>
+    <Crash
+      :msg="route.msg" />
   </template>
 </template>

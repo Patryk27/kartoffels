@@ -4,7 +4,6 @@ mod room;
 use self::corridor::*;
 use self::room::*;
 use crate::{Map, Tile};
-use anyhow::Result;
 use glam::{ivec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
@@ -19,7 +18,7 @@ impl DungeonTheme {
         Self { config }
     }
 
-    pub(super) fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
+    pub(super) fn create_map(&self, rng: &mut impl RngCore) -> Map {
         let mut map = Map::new(Tile::VOID, self.config.size);
         let rooms = self.generate_rooms(rng, &map);
         let corrs = self.generate_corridors(rng, &rooms);
@@ -58,7 +57,7 @@ impl DungeonTheme {
             }
         }
 
-        Ok(map)
+        map
     }
 
     fn generate_rooms(&self, rng: &mut impl RngCore, map: &Map) -> Vec<Room> {
@@ -154,7 +153,6 @@ mod tests {
             size: uvec2(80, 60),
         })
         .create_map(&mut rng)
-        .unwrap()
         .to_string();
 
         let expected =

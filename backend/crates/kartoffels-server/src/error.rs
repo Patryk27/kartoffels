@@ -13,10 +13,6 @@ pub enum AppError {
 impl AppError {
     pub const MAP_HTTP_400: fn(Error) -> Self =
         |err| AppError::Other(StatusCode::BAD_REQUEST, format!("{:?}", err));
-
-    pub const MAP_HTTP_500: fn(Error) -> Self = |err| {
-        AppError::Other(StatusCode::INTERNAL_SERVER_ERROR, format!("{:?}", err))
-    };
 }
 
 impl IntoResponse for AppError {
