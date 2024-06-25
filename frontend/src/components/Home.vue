@@ -2,7 +2,7 @@
   import { ref, watch, onMounted } from 'vue';
   import { loadSession } from '@/utils/session.ts';
 
-  const emit = defineEmits(['join', 'restore', 'openTutorial']);
+  const emit = defineEmits(['join', 'restore', 'openIntro']);
   const world = ref(null);
   const worlds = ref(null);
   const session = ref(loadSession());
@@ -31,8 +31,8 @@
 </script>
 
 <template>
-  <main>
-    <div id="intro">
+  <main class="component">
+    <div class="intro">
       <p>
         welcome to 🥔
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
@@ -50,7 +50,7 @@
       </p>
 
       <p v-if="error == null" style="text-align: center; padding: 0.5em">
-        👉 <a @click="emit('openTutorial')">getting started</a> 👈
+        👉 <a @click="emit('openIntro')">getting started</a> 👈
       </p>
 
       <p class="quote">
@@ -58,10 +58,10 @@
       </p>
     </div>
 
-    <div id="menu">
+    <div class="menu">
       <template v-if="error == null">
         <template v-if="worlds == null || worlds.length > 0">
-          <div id="world-selection">
+          <div class="world-selection">
             <label for="world">
               choose world and click join:
             </label>
@@ -77,7 +77,7 @@
             </button>
           </div>
 
-          <div v-if="session != null" id="session-restore">
+          <div v-if="session != null" class="session-restore">
             <div class="or">
               or
             </div>
@@ -86,11 +86,9 @@
               restore your previous session
             </button>
 
-            <template v-if="session.worldName != null">
-              <p>
-                (world: {{ session.worldName }})
-              </p>
-            </template>
+            <p>
+              (world: {{ session.worldName }})
+            </p>
           </div>
         </template>
 
@@ -120,75 +118,75 @@
 </template>
 
 <style scoped>
-  main {
+  .component {
     display: flex;
     flex-direction: column;
     max-width: 1024px;
     padding: 1em;
-  }
 
-  #intro {
-    padding: 1em;
-    margin-bottom: 1em;
-    border: 1px solid #00ff80;
-    border-radius: 5px;
+    .intro {
+      padding: 1em;
+      margin-bottom: 1em;
+      border: 1px solid #00ff80;
+      border-radius: 5px;
 
-    p {
-      &:first-child {
-        margin-top: 0;
+      p {
+        &:first-child {
+          margin-top: 0;
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.quote {
+          color: #606060;
+          text-align: right;
+        }
+      }
+    }
+
+    .menu {
+      text-align: center;
+    }
+
+    .world-selection {
+      margin-top: 1em;
+
+      label {
+        display: block;
+        margin-bottom: 0.25em;
       }
 
-      &:last-child {
-        margin-bottom: 0;
+      button {
+        margin-left: 0.5em;
+      }
+    }
+
+    .session-restore {
+      margin-top: 1.5em;
+
+      .or {
+        margin-bottom: 1.5em;
       }
 
-      &.quote {
+      button {
+        font-weight: 600;
+      }
+
+      button + p {
+        margin-top: 0.5em;
         color: #606060;
-        text-align: right;
       }
     }
-  }
 
-  #menu {
-    text-align: center;
-  }
+    .rainbow {
+      display: inline-block;
 
-  #world-selection {
-    margin-top: 1em;
-
-    label {
-      display: block;
-      margin-bottom: 0.25em;
+      animation:
+        rainbow-color 0.5s linear 0s infinite,
+        rainbow-rotate 1.8s ease-in-out 0s infinite;
     }
-
-    button {
-      margin-left: 0.5em;
-    }
-  }
-
-  #session-restore {
-    margin-top: 1.5em;
-
-    .or {
-      margin-bottom: 1.5em;
-    }
-
-    button {
-      font-weight: 600;
-    }
-
-    button + p {
-      margin-top: 0.5em;
-      color: #606060;
-    }
-  }
-
-  .rainbow {
-    display: inline-block;
-
-    animation:
-      rainbow-color 0.5s linear 0s infinite,
-      rainbow-rotate 1.8s ease-in-out 0s infinite;
   }
 
   @keyframes rainbow-color {

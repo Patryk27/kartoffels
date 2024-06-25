@@ -5,7 +5,7 @@
   import Nav from './Game/Nav.vue';
   import Side from './Game/Side.vue';
 
-  const emit = defineEmits(['leave', 'openTutorial']);
+  const emit = defineEmits(['leave', 'openIntro']);
   const props = defineProps(['worldId', 'botId']);
   const map = ref(null);
   const mode = ref(null);
@@ -106,19 +106,11 @@
       if (newBotId == null) {
         window.onerror(`couldn't join world ${props.worldId}`);
       } else {
-        alert(`couldn't join bot ${newBotId} - maybe it got killed?`);
+        alert(`couldn't find bot ${newBotId} - maybe it got killed?`);
 
         join(null);
       }
     };
-  }
-
-  function handleLeave() {
-    emit('leave');
-  }
-
-  function handleOpenTutorial() {
-    emit('openTutorial');
   }
 
   function handlePause() {
@@ -223,36 +215,45 @@
 </script>
 
 <template>
-  <Nav
-    :paused="paused"
-    @leave="handleLeave"
-    @pause="handlePause"
-    @open-tutorial="handleOpenTutorial" />
-
-  <main>
-    <Canvas
-      :map="map"
-      :bot="bot"
-      :bots="bots"
-      :camera="camera"
-      :paused="paused" />
-
-    <Side
-      :mode="mode"
-      :bot="bot"
-      :bots="bots"
+  <div class="component">
+    <Nav
       :paused="paused"
-      @bot-upload="handleBotUpload"
-      @bot-connect="handleBotConnect"
-      @bot-disconnect="handleBotDisconnect"
-      @bot-click="handleBotClick" />
-  </main>
+      @leave="emit('leave')"
+      @pause="handlePause"
+      @open-intro="emit('openIntro')" />
+
+    <main>
+      <Canvas
+        :map="map"
+        :bot="bot"
+        :bots="bots"
+        :camera="camera"
+        :paused="paused" />
+
+      <Side
+        :mode="mode"
+        :bot="bot"
+        :bots="bots"
+        :paused="paused"
+        @bot-upload="handleBotUpload"
+        @bot-connect="handleBotConnect"
+        @bot-disconnect="handleBotDisconnect"
+        @bot-click="handleBotClick" />
+    </main>
+  </div>
 </template>
 
 <style scoped>
-  main {
+  .component {
     display: flex;
-    align-items: stretch;
+    flex-direction: column;
     flex-grow: 1;
+    align-self: stretch;
+
+    main {
+      display: flex;
+      align-items: stretch;
+      flex-grow: 1;
+    }
   }
 </style>

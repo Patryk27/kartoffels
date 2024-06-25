@@ -1,5 +1,5 @@
 <script setup>
-  const emit = defineEmits(['leave', 'pause', 'openTutorial']);
+  const emit = defineEmits(['leave', 'pause', 'openIntro']);
   const props = defineProps(['paused']);
 </script>
 
@@ -7,12 +7,12 @@
   <nav class="game-nav">
     <div>
       <button @click="emit('leave')">
-        leave world
+        go back
       </button>
     </div>
 
     <div>
-      <button @click="emit('openTutorial')">
+      <button @click="emit('openIntro')">
         help
       </button>
 

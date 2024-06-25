@@ -2,7 +2,7 @@
   import { ref, onMounted } from 'vue';
   import Game from './components/Game.vue';
   import Home from './components/Home.vue';
-  import Tutorial from './components/Tutorial.vue';
+  import Intro from './components/Intro.vue';
 
   const route = ref({
     id: 'home',
@@ -16,8 +16,8 @@
     route.value = { id: 'home' };
   }
 
-  function handleOpenTutorial() {
-    route.value = { id: 'tutorial' };
+  function handleOpenIntro() {
+    route.value = { id: 'intro' };
   }
 
   onMounted(() => {
@@ -32,7 +32,7 @@
     <Home
       @join="handleJoinOrRestore"
       @restore="handleJoinOrRestore"
-      @open-tutorial="handleOpenTutorial" />
+      @open-intro="handleOpenIntro" />
   </template>
 
   <template v-if="route.id == 'game'">
@@ -40,11 +40,11 @@
       :worldId="route.worldId"
       :botId="route.botId"
       @leave="handleLeave"
-      @open-tutorial="handleOpenTutorial" />
+      @open-intro="handleOpenIntro" />
   </template>
 
-  <template v-if="route.id == 'tutorial'">
-    <Tutorial
+  <template v-if="route.id == 'intro'">
+    <Intro
       @leave="handleLeave" />
   </template>
 

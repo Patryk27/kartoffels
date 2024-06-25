@@ -1,11 +1,18 @@
 <script setup>
   import { botIdToColor } from '@/utils/bot.ts';
 
+  const emit = defineEmits(['close']);
   const props = defineProps(['opened', 'sortedBots']);
 </script>
 
 <template>
   <dialog class="game-side-summary" :open="opened">
+    <nav>
+      <button @click="emit('close')">
+        close
+      </button>
+    </nav>
+
     <table>
       <thead>
         <tr>

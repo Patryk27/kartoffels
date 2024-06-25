@@ -1,22 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap');
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
 body {
   height: 100%;
   margin: 0;
   padding: 0.5em;
 
   color: #f0f0f0;
-  background: #050505;
 
   font-size: 18px;
   font-family: 'Sono';
@@ -117,12 +106,19 @@ dialog {
   color: #f0f0f0;
   background: #050505;
   border: 1px solid #00ff80;
+
+  nav {
+    text-align: right;
+    margin-bottom: 1em;
+  }
 }
 
 #app {
-  width: 100%;
-  height: 100%;
-
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
 }

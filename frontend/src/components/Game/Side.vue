@@ -40,8 +40,12 @@
     return result;
   });
 
-  function handleShowMore() {
+  function handleOpenSummary() {
     isSummaryOpened.value = !isSummaryOpened.value;
+  }
+
+  function handleCloseSummary() {
+    isSummaryOpened.value = false;
   }
 </script>
 
@@ -59,11 +63,12 @@
       :sortedBots="sortedBots"
       :mode="mode"
       @bot-click="id => emit('botClick', id)"
-      @show-more="handleShowMore()" />
+      @show-more="handleOpenSummary()" />
 
     <Summary
       :opened="isSummaryOpened"
-      :sortedBots="sortedBots" />
+      :sortedBots="sortedBots"
+      @close="handleCloseSummary()" />
   </div>
 </template>
 
