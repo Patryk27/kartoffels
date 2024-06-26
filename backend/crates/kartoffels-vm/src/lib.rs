@@ -56,28 +56,16 @@ impl Runtime {
 #[cfg(test)]
 mod tests {
     use super::{Firmware, Mmio, Runtime};
-    use itertools::Itertools;
-    use pretty_assertions as pa;
     use std::collections::HashMap;
-    use std::fmt::Write;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::{Command, Stdio};
 
     #[test]
     fn test() {
-        let status = Command::new("cargo")
-            .arg("build-vm-tests")
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .status()
-            .unwrap();
+        build_tests();
 
-        if !status.success() {
-            panic!("couldn't compile tests");
-        }
-
-        let tests = extract_tests();
+        let tests = find_tests();
 
         assert!(!tests.is_empty());
 
@@ -90,7 +78,7 @@ mod tests {
             .join("release");
 
         for test in tests {
-            run(
+            run_test(
                 &test,
                 rs_dir.join(&test).with_extension("rs"),
                 elf_dir.join(&test),
@@ -98,7 +86,38 @@ mod tests {
         }
     }
 
-    fn run(test: &str, rs_path: PathBuf, elf_path: PathBuf) {
+    fn build_tests() {
+        let status = Command::new("cargo")
+            .arg("build-vm-tests")
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()
+            .unwrap();
+
+        if !status.success() {
+            panic!("couldn't compile test fixtures");
+        }
+    }
+
+    fn find_tests() -> Vec<String> {
+        let manifest = Path::new("..")
+            .join("kartoffels-vm-tests")
+            .join("Cargo.toml");
+
+        let manifest = fs::read_to_string(manifest).unwrap();
+
+        manifest
+            .lines()
+            .flat_map(|line| {
+                let line = line.strip_prefix("    { name = \"")?;
+                let (name, _) = line.split_once('"')?;
+
+                Some(name.to_owned())
+            })
+            .collect()
+    }
+
+    fn run_test(test: &str, rs_path: PathBuf, elf_path: PathBuf) {
         println!("running {}", test);
 
         if !rs_path.exists() {
@@ -122,67 +141,52 @@ mod tests {
 
         // ---
 
-        let actual = extract_actual(&vm);
-        let expected = extract_expected(&rs_path);
+        for (reg_id, reg_val_exp) in extract_expected_regs(&rs_path) {
+            let reg_val_act = vm.regs[reg_id];
 
-        pa::assert_eq!(expected, actual, "test failed: {}", test);
+            assert!(
+                reg_val_exp == reg_val_act,
+                "mismatch: x{} says {}, but we expected {}",
+                reg_id,
+                reg_val_act,
+                reg_val_exp,
+            );
+        }
 
         // ---
 
         println!();
     }
 
-    fn extract_tests() -> Vec<String> {
-        let manifest = Path::new("..")
-            .join("kartoffels-vm-tests")
-            .join("Cargo.toml");
-
-        let manifest = fs::read_to_string(manifest).unwrap();
-
-        manifest
-            .lines()
-            .flat_map(|line| {
-                let line = line.strip_prefix("    { name = \"")?;
-                let (name, _) = line.split_once('"')?;
-
-                Some(name.to_owned())
-            })
-            .collect()
-    }
-
-    fn extract_actual(vm: &Runtime) -> String {
-        let regs = vm
-            .regs
-            .iter()
-            .enumerate()
-            .filter(|(_, val)| **val != 0)
-            .map(|(idx, val)| format!(" * x{} = {}", idx, *val))
-            .join("\n");
-
-        let mut out = String::default();
-
-        _ = writeln!(out, "/*");
-        _ = writeln!(out, "{}", regs);
-        _ = writeln!(out, " */");
-
-        out
-    }
-
-    fn extract_expected(path: &Path) -> String {
-        let mut out = String::new();
+    fn extract_expected_regs(path: &Path) -> Vec<(usize, i64)> {
+        let mut out = Vec::new();
         let src = fs::read_to_string(path).unwrap();
         let mut lines = src.lines();
 
         while let Some(mut line) = lines.next() {
             if line == "/*" {
                 loop {
-                    _ = writeln!(out, "{}", line);
+                    line = lines.next().unwrap();
 
                     if line == " */" {
                         break;
                     }
 
-                    line = lines.next().unwrap();
+                    out.push({
+                        let (reg_name, reg_value) =
+                            line.split_once('=').unwrap();
+
+                        let reg_id = reg_name
+                            .trim()
+                            .strip_prefix("* x")
+                            .unwrap()
+                            .parse()
+                            .unwrap();
+
+                        let reg_value = reg_value.trim().parse().unwrap();
+
+                        (reg_id, reg_value)
+                    });
                 }
             }
         }

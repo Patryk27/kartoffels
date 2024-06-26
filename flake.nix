@@ -21,7 +21,7 @@
     };
 
     nixpkgs = {
-      url = "github:nixos/nixpkgs/nixpkgs-unstable";
+      url = "github:nixos/nixpkgs/nixos-24.05";
     };
 
     rust-overlay = {
@@ -63,6 +63,11 @@
         {
           packages = {
             inherit backend frontend;
+
+            default = pkgs.linkFarm "kartoffels" [
+              { name = "backend"; path = backend; }
+              { name = "frontend"; path = frontend; }
+            ];
           };
 
           devShells = {

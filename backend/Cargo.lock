@@ -757,7 +757,6 @@ dependencies = [
  "anyhow",
  "elf",
  "itertools",
- "pretty_assertions",
  "serde",
  "serde_bytes",
 ]

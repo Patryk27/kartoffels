@@ -11,4 +11,3 @@ serde_bytes = { workspace = true }
 
 [dev-dependencies]
 itertools = { workspace = true }
-pretty_assertions = { workspace = true }

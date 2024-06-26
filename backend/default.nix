@@ -1,22 +1,24 @@
 { crane, pkgs }:
 
 let
-  crane' = (crane.mkLib pkgs).overrideToolchain (
-    pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml
-  );
-
-  src = crane'.cleanCargoSource ./.;
+  toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+  crane' = (crane.mkLib pkgs).overrideToolchain toolchain;
 
 in
 crane'.buildPackage {
-  inherit src;
-
-  # TODO
-  doCheck = false;
-
+  src = ./.;
   cargoBuildCommand = "cargo build -p kartoffels-server --release";
 
-  cargoArtifacts = crane'.buildDepsOnly {
-    inherit src;
+  cargoVendorDir = crane'.vendorMultipleCargoDeps {
+    inherit (crane'.findCargoFiles ./.) cargoConfigs;
+
+    cargoLockList = [
+      ./Cargo.lock
+
+      # Over kartoffels-vm's tests we build a couple of RISC-V test fixtures
+      # using `cargo -Z build-std`, so we need to pull compiler_builtins and
+      # other libraries that rust-src depends on:
+      "${toolchain.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/Cargo.lock"
+    ];
   };
 }
