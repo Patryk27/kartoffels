@@ -13,6 +13,10 @@ impl DeadBots {
         self.entries.insert(id, bot);
     }
 
+    pub fn remove(&mut self, id: BotId) {
+        self.entries.remove(&id);
+    }
+
     pub fn has(&self, id: BotId) -> bool {
         self.entries.contains_key(&id)
     }

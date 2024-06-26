@@ -38,6 +38,7 @@ impl Persistencer {
             name: MaybeOwned::Borrowed(&world.name),
             mode: MaybeOwned::Borrowed(&world.mode),
             theme: MaybeOwned::Borrowed(&world.theme),
+            policy: MaybeOwned::Borrowed(&world.policy),
             map: MaybeOwned::Borrowed(&world.map),
             bots: MaybeOwned::Borrowed(&world.bots),
         };

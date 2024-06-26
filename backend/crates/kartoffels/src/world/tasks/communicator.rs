@@ -36,7 +36,7 @@ impl Communicator {
                         let vm = vm::Runtime::new(fw);
                         let bot = AliveBot::new(rng, vm);
 
-                        world.bots.create(rng, &world.map, bot)?
+                        world.bots.add(rng, &world.policy, bot)?
                     },
                 );
             }

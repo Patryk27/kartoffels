@@ -16,6 +16,13 @@ impl Id {
     }
 }
 
+#[cfg(test)]
+impl From<u64> for Id {
+    fn from(value: u64) -> Self {
+        Self(value.try_into().unwrap())
+    }
+}
+
 impl FromStr for Id {
     type Err = Error;
 

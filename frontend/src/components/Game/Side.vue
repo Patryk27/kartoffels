@@ -21,16 +21,21 @@
     for (const [id, bot] of Object.entries(props.bots ?? { })) {
       result.push({
         id,
+        age: bot.age,
         score: (props.mode ?? { }).scores[id] ?? 0,
       });
     }
 
     result.sort((a, b) => {
-      if (a.score == b.score) {
-        return b.id.localeCompare(a.id);
-      } else {
+      if (a.score != b.score) {
         return b.score - a.score;
       }
+
+      if (a.age == b.age) {
+        return b.age - a.age;
+      }
+
+      return b.id.localeCompare(a.id);
     });
 
     for (let i = 0; i < result.length; i += 1) {

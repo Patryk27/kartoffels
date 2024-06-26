@@ -3,9 +3,10 @@ use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Default))]
 pub struct BotTimer {
     pub seed: u32,
-    pub ticks: u32,
+    pub ticks: u32, // TOOD overflows after ~18h
 }
 
 impl BotTimer {

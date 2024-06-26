@@ -134,6 +134,11 @@
 
       resize();
       refresh();
+
+      // TODO consider using resize observer
+      setTimeout(() => {
+        resize();
+      }, 100);
     });
   });
 </script>

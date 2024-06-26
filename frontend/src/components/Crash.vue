@@ -7,7 +7,7 @@
 </script>
 
 <template>
-  <main class="component">
+  <main class="crash">
     <p>
       whoopsie, kartoffels have fell out of pot and ✨ crashed ✨:
     </p>
@@ -23,7 +23,7 @@
 </template>
 
 <style scoped>
-  .component {
+  .crash {
     padding: 1em;
     border: 1px solid #ff0000;
     border-radius: 5px;

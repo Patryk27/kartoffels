@@ -26,20 +26,14 @@ impl Controller {
 
             match bot.tick(&world.map, &bots, pos) {
                 Ok(state) => {
-                    state.apply(
-                        rng,
-                        &mut world.mode,
-                        &mut world.map,
-                        &mut world.bots,
-                        id,
-                        pos,
-                    );
+                    state.apply(rng, world, id, pos);
                 }
 
                 Err(err) => {
                     world.bots.kill(
                         rng,
                         &mut world.mode,
+                        &world.policy,
                         id,
                         &format!("{:?}", err),
                         None,

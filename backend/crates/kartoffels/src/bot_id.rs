@@ -27,6 +27,13 @@ impl BotId {
     }
 }
 
+#[cfg(test)]
+impl From<u64> for BotId {
+    fn from(value: u64) -> Self {
+        Self(Id::from(value))
+    }
+}
+
 impl FromStr for BotId {
     type Err = Error;
 

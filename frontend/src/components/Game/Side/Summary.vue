@@ -1,5 +1,6 @@
 <script setup>
   import { botIdToColor } from '@/utils/bot.ts';
+  import { durationToHuman } from '@/utils/other.ts';
 
   const emit = defineEmits(['close']);
   const props = defineProps(['opened', 'sortedBots']);
@@ -18,7 +19,7 @@
         <tr>
           <th>place</th>
           <th>bot</th>
-          <th>status</th>
+          <th>age</th>
           <th>score</th>
         </tr>
       </thead>
@@ -36,7 +37,7 @@
           </td>
 
           <td>
-            alive
+            {{ durationToHuman(Math.round(entry.age)) }}
           </td>
 
           <td>
@@ -53,13 +54,13 @@
     table {
       th {
         &:not(:last-child) {
-          padding-right: 0.5em;
+          padding-right: 1em;
         }
       }
 
       td {
         &:not(:last-child) {
-          padding-right: 0.5em;
+          padding-right: 1em;
         }
 
         &:nth-child(4) {

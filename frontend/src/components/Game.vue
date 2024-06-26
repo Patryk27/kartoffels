@@ -102,8 +102,14 @@
       }
 
       if (bot.value != null) {
-        bot.value.idx = data.bot ? data.bot.idx : null;
-        bot.value.serial = data.bot ? data.bot.serial : null;
+        const props = bot.value;
+
+        bot.value = {
+          id: props.id,
+          age: props.age,
+          is_followed: props.is_followed,
+          ...data.bot
+        };
       }
     };
 
@@ -176,8 +182,6 @@
 
   // ---
 
-  join(props.botId);
-
   onMounted(() => {
     document.onkeydown = () => {
       const moveCamera = (dx, dy) => {
@@ -218,10 +222,12 @@
       }
     };
   });
+
+  join(props.botId);
 </script>
 
 <template>
-  <div class="component">
+  <div class="game">
     <Nav
       :paused="paused"
       @leave="emit('leave')"
@@ -250,7 +256,7 @@
 </template>
 
 <style scoped>
-  .component {
+  .game {
     display: flex;
     flex-direction: column;
     flex-grow: 1;

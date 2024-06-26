@@ -9,7 +9,9 @@ use self::metronome::*;
 use self::serialize::*;
 use self::tasks::*;
 pub use self::update::*;
-use crate::{BotId, Bots, Map, Mode, Theme, WorldConfig, WorldId, WorldName};
+use crate::{
+    BotId, Bots, Map, Mode, Policy, Theme, WorldConfig, WorldId, WorldName,
+};
 use anyhow::Result;
 use derivative::Derivative;
 use std::path::{Path, PathBuf};
@@ -21,18 +23,19 @@ use tracing::{info, span, Level};
 
 #[derive(Debug)]
 pub struct World {
-    id: WorldId,
-    name: Arc<WorldName>,
-    mode: Mode,
-    theme: Theme,
-    map: Map,
-    bots: Bots,
-    path: Option<PathBuf>,
+    pub(crate) id: WorldId,
+    pub(crate) name: Arc<WorldName>,
+    pub(crate) mode: Mode,
+    pub(crate) theme: Theme,
+    pub(crate) policy: Policy,
+    pub(crate) map: Map,
+    pub(crate) bots: Bots,
+    pub(crate) path: Option<PathBuf>,
 }
 
 impl World {
-    const SIM_HZ: u32 = 64_000; // TODO make configurable
-    const SIM_TICKS: u32 = 256; // TODO make configurable
+    pub const SIM_HZ: u32 = 64_000;
+    pub const SIM_TICKS: u32 = 256;
 
     pub fn create(
         id: WorldId,
@@ -42,6 +45,7 @@ impl World {
         let mut rng = rand::thread_rng();
         let mode = config.mode.create();
         let theme = config.theme.create();
+        let policy = config.policy;
 
         info!(
             ?id,
@@ -58,11 +62,14 @@ impl World {
             name: Arc::new(config.name),
             mode,
             theme,
+            policy,
             map,
             bots: Default::default(),
             path,
         };
 
+        // Insta-save to make sure we've got appropriate file permissions
+        // (if not, better to fail fast)
         Persistencer::save(&this)?;
 
         Ok(this.spawn())
@@ -84,10 +91,15 @@ impl World {
             name: Arc::new(this.name.into_owned()),
             mode: this.mode.into_owned(),
             theme: this.theme.into_owned(),
+            policy: this.policy.into_owned(),
             map: this.map.into_owned(),
             bots: this.bots.into_owned(),
             path: Some(path.to_owned()),
         };
+
+        // Insta-save to make sure we've got appropriate file permissions
+        // (if not, better to fail fast)
+        Persistencer::save(&this)?;
 
         Ok(this.spawn())
     }

@@ -14,18 +14,28 @@ pub struct WorldUpdate {
     pub map: Option<Arc<Map>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bots: Option<Arc<BTreeMap<BotId, AnyBotUpdate>>>,
+    pub bots: Option<Arc<BTreeMap<BotId, BotUpdate>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<BotUpdate>,
+    pub bot: Option<ConnectedBotUpdate>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct BotUpdate {
-    pub serial: String,
+    pub pos: IVec2,
+    pub age: f32,
 }
 
 #[derive(Debug, Serialize)]
-pub struct AnyBotUpdate {
-    pub pos: IVec2,
+#[serde(tag = "status")]
+pub enum ConnectedBotUpdate {
+    #[serde(rename = "alive")]
+    Alive { age: f32, serial: String },
+
+    #[serde(rename = "queued")]
+    Queued {
+        queue_place: usize,
+        queue_len: usize,
+        requeued: bool,
+    },
 }

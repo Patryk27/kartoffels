@@ -138,14 +138,16 @@ async fn init(data: Option<PathBuf>) -> Result<AppState> {
                             .parse()
                             .context("couldn't extract world id from path")?;
 
-                        let world = World::resume(id, &entry_path)
-                            .context("couldn't resume the world")?;
+                        let world = World::resume(id, &entry_path)?;
 
                         worlds.insert(id, world);
                     };
 
                     result.with_context(|| {
-                        format!("couldn't load: {}", entry_path.display())
+                        format!(
+                            "couldn't resume world: {}",
+                            entry_path.display()
+                        )
                     })?;
                 }
 

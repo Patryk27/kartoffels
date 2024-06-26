@@ -1,5 +1,6 @@
 <script setup>
   import { botIdToColor } from '@/utils/bot.ts';
+  import { durationToHuman } from '@/utils/other.ts';
 
   const emit = defineEmits([
     'botUpload',
@@ -57,26 +58,51 @@
         </span>
       </p>
 
-      <p>
-        serial port:
-      </p>
+      <template v-if="bot.status == 'alive'">
+        <p>
+          status: <br />
+
+          <span class="status-alive">
+            alive
+          </span>
+
+          ({{ durationToHuman(Math.round(bot.age)) }})
+        </p>
+
+        <p>
+          serial port:
+        </p>
+      </template>
+
+      <template v-else-if="bot.status == 'queued'">
+        <p>
+          status: <br />
+
+          <span class="status-queued">
+            {{ bot.requeued ? 'requeued' : 'queued' }}
+            ({{ bot.queue_place + 1 }} / {{ bot.queue_len }})
+          </span>
+        </p>
+      </template>
     </div>
 
-    <textarea
-      readonly :value="bot.serial"
-      style="resize: none" />
+    <template v-if="bot.status == 'alive'">
+      <textarea
+        readonly :value="bot.serial"
+        style="resize: none" />
 
-    <div>
-      <input
-        id="bot-follow"
-        type="checkbox"
-        v-model="bot.is_followed"
-        :disabled="paused" />
+      <div>
+        <input
+          id="bot-follow"
+          type="checkbox"
+          v-model="bot.is_followed"
+          :disabled="paused" />
 
-      <label for="bot-follow">
-        follow with camera
-      </label>
-    </div>
+        <label for="bot-follow">
+          follow with camera
+        </label>
+      </div>
+    </template>
   </div>
 </template>
 

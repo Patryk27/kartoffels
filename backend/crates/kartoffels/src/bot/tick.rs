@@ -1,4 +1,4 @@
-use crate::{BotId, Bots, Map, Mode};
+use crate::{BotId, World};
 use glam::IVec2;
 use rand::RngCore;
 
@@ -12,17 +12,16 @@ impl AliveBotTick {
     pub fn apply(
         self,
         rng: &mut impl RngCore,
-        mode: &mut Mode,
-        map: &mut Map,
-        bots: &mut Bots,
+        world: &mut World,
         id: BotId,
         pos: IVec2,
     ) {
         if let Some(dir) = self.stab_dir {
-            if let Some(killed_id) = bots.alive.lookup_by_pos(pos + dir) {
-                bots.kill(
+            if let Some(killed_id) = world.bots.alive.lookup_by_pos(pos + dir) {
+                world.bots.kill(
                     rng,
-                    mode,
+                    &mut world.mode,
+                    &world.policy,
                     killed_id,
                     "stabbed out of existence",
                     Some(id),
@@ -32,13 +31,21 @@ impl AliveBotTick {
 
         if let Some(dir) = self.move_dir {
             let pos = pos + dir;
-            let tile = map.get(pos);
+            let tile = world.map.get(pos);
 
             if tile.is_void() {
-                bots.kill(rng, mode, id, "fell into the void", None);
-            } else if tile.is_floor() && bots.alive.lookup_by_pos(pos).is_none()
+                world.bots.kill(
+                    rng,
+                    &mut world.mode,
+                    &world.policy,
+                    id,
+                    "fell into the void",
+                    None,
+                );
+            } else if tile.is_floor()
+                && world.bots.alive.lookup_by_pos(pos).is_none()
             {
-                bots.alive.relocate(id, pos);
+                world.bots.alive.relocate(id, pos);
             }
         }
     }

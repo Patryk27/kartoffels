@@ -122,3 +122,11 @@ dialog {
   width: 100%;
   height: 100%;
 }
+
+.status-alive {
+  color: #00ff80;
+}
+
+.status-queued {
+  color: #ff0080;
+}

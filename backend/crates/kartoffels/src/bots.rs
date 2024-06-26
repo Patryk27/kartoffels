@@ -5,8 +5,8 @@ mod queued;
 pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
-use crate::{AliveBot, BotId, DeadBot, Map, Mode, QueuedBot};
-use anyhow::{anyhow, Context, Result};
+use crate::{AliveBot, BotId, DeadBot, Map, Mode, Policy, QueuedBot};
+use anyhow::{anyhow, Result};
 use glam::IVec2;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -20,46 +20,36 @@ pub struct Bots {
 }
 
 impl Bots {
-    pub fn create(
+    pub fn add(
         &mut self,
         rng: &mut impl RngCore,
-        map: &Map,
+        policy: &Policy,
         bot: AliveBot,
     ) -> Result<BotId> {
         let id = self.random_unoccupied_id(rng);
 
-        let pos = self
-            .random_unoccupied_pos(map)
-            .context("couldn't squeeze any space for the bot")?;
+        if self.queued.len() < policy.max_queued_bots {
+            self.queued.push(QueuedBot {
+                id,
+                bot,
+                requeued: false,
+            });
 
-        // TODO make limit configurable
-        if self.alive.len() < 64 {
-            self.alive.add(id, pos, bot);
+            debug!(?id, "bot queued");
 
-            debug!(?id, ?pos, "bot created");
+            Ok(id)
         } else {
-            match self.queued.push(QueuedBot { id, bot }) {
-                Ok(()) => {
-                    debug!(?id, "bot queued");
-                }
+            debug!(?id, "bot discarded (queue full)");
 
-                Err(()) => {
-                    debug!(?id, "bot discarded (queue full)");
-
-                    return Err(anyhow!(
-                        "too many robots queued, try again later"
-                    ));
-                }
-            }
+            Err(anyhow!("too many robots queued, try again in a moment"))
         }
-
-        Ok(id)
     }
 
     pub fn kill(
         &mut self,
         rng: &mut impl RngCore,
         mode: &mut Mode,
+        policy: &Policy,
         id: BotId,
         reason: &str,
         killer: Option<BotId>,
@@ -78,14 +68,16 @@ impl Bots {
         mode.on_bot_killed(id, killer);
 
         if let Some(bot) = bot.reset(rng) {
-            match self.queued.push(QueuedBot { id, bot }) {
-                Ok(()) => {
-                    debug!(?id, "bot requeued");
-                }
+            if self.queued.len() < policy.max_queued_bots {
+                debug!(?id, "bot requeued");
 
-                Err(()) => {
-                    debug!(?id, "bot discarded (queue is full)");
-                }
+                self.queued.push(QueuedBot {
+                    id,
+                    bot,
+                    requeued: true,
+                });
+            } else {
+                debug!(?id, "bot discarded (queue is full)");
             }
         } else {
             debug!(?id, "bot discarded (couldn't be reset)");

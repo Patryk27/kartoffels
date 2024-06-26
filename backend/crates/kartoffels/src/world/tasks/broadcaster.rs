@@ -1,4 +1,4 @@
-use crate::{AnyBotUpdate, BotId, BotUpdate, World, WorldUpdate};
+use crate::{BotId, BotUpdate, ConnectedBotUpdate, World, WorldUpdate};
 use std::collections::BTreeMap;
 use std::mem;
 use std::sync::Arc;
@@ -53,7 +53,12 @@ impl Broadcaster {
                 .bots
                 .alive
                 .iter()
-                .map(|bot| (bot.id, AnyBotUpdate { pos: bot.pos }))
+                .map(|entry| {
+                    let pos = entry.pos;
+                    let age = entry.bot.age();
+
+                    (entry.id, BotUpdate { pos, age })
+                })
                 .collect();
 
             Some(Arc::new(bots))
@@ -67,12 +72,24 @@ impl Broadcaster {
                     map.clone()
                 };
 
-                let bot = client
-                    .id
-                    .and_then(|id| world.bots.alive.try_get(id))
-                    .map(|bot| BotUpdate {
-                        serial: bot.bot.serial.to_string(),
-                    });
+                let bot = client.id.and_then(|id| {
+                    if let Some(entry) = world.bots.alive.try_get(id) {
+                        return Some(ConnectedBotUpdate::Alive {
+                            age: entry.bot.age(),
+                            serial: entry.bot.serial.to_string(),
+                        });
+                    }
+
+                    if let Some(entry) = world.bots.queued.try_get(id) {
+                        return Some(ConnectedBotUpdate::Queued {
+                            queue_place: entry.place,
+                            queue_len: entry.len,
+                            requeued: entry.requeued,
+                        });
+                    }
+
+                    None
+                });
 
                 let update = WorldUpdate {
                     mode: mode.clone(),
@@ -85,7 +102,7 @@ impl Broadcaster {
             })
             .for_each(drop);
 
-        self.next_tick_at = Instant::now() + Duration::from_millis(100);
+        self.next_tick_at = Instant::now() + Duration::from_millis(50);
     }
 }
 

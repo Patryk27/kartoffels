@@ -19,9 +19,11 @@ impl Antireaper {
             return;
         }
 
-        self.next_tick_at = Instant::now() + Duration::from_millis(125);
+        self.next_tick_at = Instant::now() + Duration::from_millis(16);
 
-        if world.bots.queued.is_empty() || world.bots.alive.len() >= 64 {
+        if world.bots.queued.is_empty()
+            || world.bots.alive.len() >= world.policy.max_alive_bots
+        {
             return;
         }
 
@@ -30,12 +32,12 @@ impl Antireaper {
             return;
         };
 
-        // Unwrap-safety: We've just make sure that queue is not empty
-        let QueuedBot { id, bot } = world.bots.queued.pop().unwrap();
+        // Unwrap-safety: We've just made sure that the queue is not empty
+        let QueuedBot { id, bot, .. } = world.bots.queued.pop().unwrap();
 
         debug!(?id, ?pos, "bot dequeued and spawned");
 
         world.bots.alive.add(id, pos, bot);
-        // TODO remove from dead bots
+        world.bots.dead.remove(id);
     }
 }

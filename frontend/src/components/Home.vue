@@ -37,7 +37,7 @@
 </script>
 
 <template>
-  <main class="component">
+  <main class="home">
     <div class="intro">
       <p>
         welcome to 🥔
@@ -124,7 +124,7 @@
 </template>
 
 <style scoped>
-  .component {
+  .home {
     display: flex;
     flex-direction: column;
     max-width: 1024px;

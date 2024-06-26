@@ -31,19 +31,25 @@ impl Statistician {
         }
 
         let msgs = [
-            format!("alive-bots = {}", world.bots.alive.len()),
-            format!("queued-bots = {}", world.bots.queued.len()),
+            format!(
+                "alive-bots = {} / {}",
+                world.bots.alive.len(),
+                world.policy.max_alive_bots
+            ),
+            format!(
+                "queued-bots = {} / {}",
+                world.bots.queued.len(),
+                world.policy.max_queued_bots
+            ),
             format!("connections = {}", bcaster.len()),
             format!("vcpu = {} khz", self.ticks / 1_000),
         ];
 
-        info!(target: "kartoffels", "<status>");
+        info!(target: "kartoffels", "status:");
 
         for msg in msgs {
-            info!(target: "kartoffels", "  {}", msg);
+            info!(target: "kartoffels", "> {}", msg);
         }
-
-        info!(target: "kartoffels", "</status>");
 
         if mtr.backlog_ms() >= 500 {
             warn!(

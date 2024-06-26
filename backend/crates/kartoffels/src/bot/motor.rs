@@ -4,6 +4,7 @@ use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Default))]
 pub struct BotMotor {
     pub dir: IVec2,
     pub vel: u8,

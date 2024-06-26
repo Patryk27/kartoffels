@@ -53,13 +53,17 @@ POST http://localhost:1313/worlds
 Content-Type: application/json
 
 {
-  "name": "the arena",
+  "name": "total mayhem",
   "mode": {
     "type": "deathmatch"
   },
   "theme": {
     "type": "arena",
-    "radius": 20
+    "radius": 40
+  },
+  "policy": {
+    "max_alive_bots": 128,
+    "max_queued_bots": 256
   }
 }
 ```

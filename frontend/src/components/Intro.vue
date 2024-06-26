@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <main class="component">
+  <main class="intro">
     <p>
       hey there solder, you great piece of low-melting-point metal alloy
       🫡🫡🫡
@@ -77,7 +77,7 @@
 </template>
 
 <style scoped>
-  .component {
+  .intro {
     max-width: 1024px;
     padding: 1em;
     border: 1px solid #ff8000;

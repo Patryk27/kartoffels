@@ -13,7 +13,7 @@ pub use self::radar::*;
 pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
-use crate::{AliveBotsLocator, BotId, Map};
+use crate::{AliveBotsLocator, BotId, Map, World};
 use anyhow::{Context, Result};
 use glam::IVec2;
 use kartoffels_vm as vm;
@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::mem;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Default))]
 pub struct AliveBot {
     pub vm: Option<vm::Runtime>,
     pub timer: BotTimer,
@@ -50,6 +51,10 @@ impl AliveBot {
             arm: BotArm::default(),
             radar: BotRadar::default(),
         }
+    }
+
+    pub fn age(&self) -> f32 {
+        (self.timer.ticks as f32) / (World::SIM_HZ as f32)
     }
 
     pub fn tick(
@@ -125,6 +130,7 @@ pub struct DeadBot {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
     pub id: BotId,
+    pub requeued: bool,
 
     #[serde(flatten)]
     pub bot: AliveBot,
