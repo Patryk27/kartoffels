@@ -132,8 +132,6 @@ impl Runtime {
                 self.reg_store(rd, (lhs.wrapping_mul(rhs) >> 64) as i64);
             }
 
-            // TODO mulsu, mulu
-
             // div
             (0b0110011, 0b100, 0b0000001) => {
                 let lhs = self.regs[rs1];
@@ -414,8 +412,6 @@ impl Runtime {
 
             // -----------------------------------------------------------------
 
-            // TODO implement more atomic instructions
-
             // amoadd.w
             (0b0101111, 0b010, _) if funct5 == 0b00000 => {
                 self.do_atomic::<4>(mmio, rd, rs1, rs2, |lhs, rhs| {
@@ -535,8 +531,6 @@ impl Runtime {
         rs2: usize,
         op: fn(i64, i64) -> i64,
     ) -> Result<()> {
-        // TODO forbid atomic mmio
-
         let addr = self.regs[rs1] as u64;
         let old_val = self.mem_load::<BYTES>(mmio, addr)?;
         let new_val = op(old_val, self.regs[rs2]);
