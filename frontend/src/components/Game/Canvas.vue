@@ -46,7 +46,7 @@
   function refresh() {
     const { map, bot, bots, camera, paused } = props;
 
-    if (ctxt == null) {
+    if (ctxt == null || canvas.value == null) {
       return;
     }
 
@@ -74,9 +74,14 @@
         let tileOffsetY;
 
         if (tileBot) {
-          tileChar = '@';
           tileColor = botIdToColor(tileBot.id);
           tileOffsetY = -0.15;
+
+          if (bot != null && tileBot.id == bot.id) {
+            tileChar = Date.now() % 1000 <= 500 ? '@' : '&';
+          } else {
+            tileChar = '@';
+          }
         } else {
           tileChar = String.fromCharCode(tile >> 24);
           tileColor = 'rgb(80, 80, 80)';
@@ -103,7 +108,7 @@
         ctxt.fillText(
           tileChar,
           textMetrics.width * x,
-          textMetrics.height * (y + tileOffsetY),
+          textMetrics.height * (y + tileOffsetY + 1),
         );
       }
     }
@@ -130,6 +135,7 @@
 
       window.onresize = () => {
         resize();
+        refresh();
       };
 
       resize();
@@ -138,6 +144,7 @@
       // TODO consider using resize observer
       setTimeout(() => {
         resize();
+        refresh();
       }, 100);
     });
   });
