@@ -5,36 +5,25 @@
 <template>
   <main class="intro">
     <p>
-      hey there solder, you great piece of low-melting-point metal alloy
+      hey there solder, you great piece of low melting point metal alloy
       🫡🫡🫡
     </p>
 
     <p>
-      in kartoffels you're not just a spool of lead metal anymore, you're the
-      lead programmer responsible for leading your bots into the victory
-    </p>
-
-    <p>
-      here's a couple of things you need to know to get started:
+      in kartoffels you're the lead programmer responsible for leading your
+      bot into the victory - in this house:
     </p>
 
     <p>
       - maps are two-dimensional and vary in type (arena, dungeon etc.)
-      <br>
-      - robots are represented with the <i>@</i> sign (you'll see later)
-      <br>
-      - robots contain peripherals (radar, motors etc.) which your code can
-        play with
-      <br>
-      - every tick each robot in randomized order executes a single CPU
-        instruction
-      <br>
-      - there's 64k ticks per bot per second
-      <br>
-      - the game is simulated on a central server, so you're playing against
-        other players
-      <br>
-      - also, the game is anonymous - let meritocracy thrive
+      <br />
+      - robots contain peripherals (radar, motors etc.) that your code
+        (aka firmware) controls
+      <br />
+      - firmwares run on emulated RISC-V CPUs clocked at 64 KHz
+      <br />
+      - game is simulated on a central server and it's anonymous - let the
+        meritocracy thrive
     </p>
 
     <p>
@@ -42,36 +31,34 @@
     </p>
 
     <p>
-      now, much too much talk, grug wants start
+      now, much too much talk, grug wants start:
     </p>
 
     <pre>
       $ git clone github.com/patryk27/kartoffels-bot
       $ cd kartoffels-bot
-      $ cargo build --release
-    </pre>
+      $ cargo build --release</pre>
 
     <p>
-      having this ready, go back to the main page, select any map and start
-      playing, improving your bot as you go!
+      then go back, select any map, upload
+      <i>`target/release/riscv64-unknown-bot/bot`</i> and play with the code!
     </p>
 
     <p>
-      (( controls boil down to arrow keys (or WASD) and the up-front visible
-      buttons ))
+      (( in-game controls boil down to arrow keys (or WASD) and the mouse ))
     </p>
 
     <div style="text-align: center; padding: 2.0em 0">
       <button @click="emit('leave')">
-        i'm ready captain*
+        so help me dog i'm ready<span style="color: #ff0000">*</span>
       </button>
     </div>
 
     <p style="color: #505050; font-style: italic; text-align: right">
-      * kartoffels ltd is not responsible and can't be held liable for loss of
-      hearing, loss of sight, spilling all your matcha onto the floor, sudden
-      feeling of the flight and fight syndrome, wanting to do origami but
-      being unable to etc. etc. etc.
+      <span style="color: #ff0000">*</span> kartoffels ltd is not responsible
+      and can't be held liable for loss of hearing, loss of sight, spilling all
+      your matcha onto floor, sudden feeling of the flight and fight syndrome,
+      wanting to do origami but being unable to etc. etc. etc.
     </p>
   </main>
 </template>
