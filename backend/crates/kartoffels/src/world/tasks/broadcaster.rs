@@ -73,18 +73,32 @@ impl Broadcaster {
                 };
 
                 let bot = client.id.and_then(|id| {
-                    if let Some(entry) = world.bots.alive.try_get(id) {
+                    if let Some(entry) = world.bots.alive.get(id) {
                         return Some(ConnectedBotUpdate::Alive {
                             age: entry.bot.age(),
                             serial: entry.bot.serial.to_string(),
                         });
                     }
 
-                    if let Some(entry) = world.bots.queued.try_get(id) {
+                    if let Some(entry) = world.bots.queued.get(id) {
+                        let msg = world
+                            .bots
+                            .dead
+                            .get(id)
+                            .map(|entry| entry.reason.clone());
+
                         return Some(ConnectedBotUpdate::Queued {
                             queue_place: entry.place,
                             queue_len: entry.len,
                             requeued: entry.requeued,
+                            msg,
+                        });
+                    }
+
+                    if let Some(entry) = world.bots.dead.get(id) {
+                        return Some(ConnectedBotUpdate::Dead {
+                            msg: entry.reason.clone(),
+                            killed_at: entry.killed_at,
                         });
                     }
 

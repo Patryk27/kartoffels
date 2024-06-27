@@ -13,6 +13,7 @@ derivative = { workspace = true }
 futures-util = { workspace = true }
 glam = { workspace = true }
 itertools = { workspace = true }
+lru = { workspace = true }
 maybe-owned = { workspace = true }
 rand = { workspace = true }
 serde = { workspace = true }

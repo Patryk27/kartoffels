@@ -74,6 +74,24 @@
         </p>
       </template>
 
+      <template v-if="bot.status == 'dead'">
+        <p>
+          status: <br />
+
+          <span class="status-dead">
+            dead
+          </span>
+
+          <br />
+
+          (since {{ (new Date(bot.killed_at)).toLocaleString() }})
+        </p>
+
+        <p>
+          message:
+        </p>
+      </template>
+
       <template v-else-if="bot.status == 'queued'">
         <p>
           status: <br />
@@ -83,13 +101,19 @@
             ({{ bot.queue_place + 1 }} / {{ bot.queue_len }})
           </span>
         </p>
+
+        <p>
+          message:
+        </p>
       </template>
     </div>
 
+    <template v-if="bot.status == 'dead' || bot.status == 'queued'">
+      <textarea readonly style="resize: none" :value="bot.msg" />
+    </template>
+
     <template v-if="bot.status == 'alive'">
-      <textarea
-        readonly :value="bot.serial"
-        style="resize: none" />
+      <textarea readonly style="resize: none" :value="bot.serial" />
 
       <div>
         <input

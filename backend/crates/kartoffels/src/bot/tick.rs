@@ -23,7 +23,7 @@ impl AliveBotTick {
                     &mut world.mode,
                     &world.policy,
                     killed_id,
-                    "stabbed out of existence",
+                    &format!("stabbed out of existence by {}", id),
                     Some(id),
                 );
             }

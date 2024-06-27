@@ -57,7 +57,7 @@ impl AliveBots {
         self.entries.contains_key(&id)
     }
 
-    pub fn try_get(&self, id: BotId) -> Option<AliveBotEntry> {
+    pub fn get(&self, id: BotId) -> Option<AliveBotEntry> {
         Some(AliveBotEntry {
             id,
             pos: *self.id_to_pos.get(&id)?,
@@ -65,7 +65,7 @@ impl AliveBots {
         })
     }
 
-    pub fn try_get_mut(
+    pub fn get_mut(
         &mut self,
         id: BotId,
     ) -> Option<(AliveBotEntryMut, AliveBotsLocator)> {

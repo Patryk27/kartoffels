@@ -1,4 +1,5 @@
 use crate::{BotId, Map};
+use chrono::{DateTime, Utc};
 use glam::IVec2;
 use serde::Serialize;
 use serde_json::Value;
@@ -32,10 +33,17 @@ pub enum ConnectedBotUpdate {
     #[serde(rename = "alive")]
     Alive { age: f32, serial: String },
 
+    #[serde(rename = "dead")]
+    Dead {
+        msg: Arc<String>,
+        killed_at: DateTime<Utc>,
+    },
+
     #[serde(rename = "queued")]
     Queued {
         queue_place: usize,
         queue_len: usize,
         requeued: bool,
+        msg: Option<Arc<String>>,
     },
 }

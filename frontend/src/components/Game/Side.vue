@@ -73,6 +73,7 @@
     <Summary
       :opened="isSummaryOpened"
       :sortedBots="sortedBots"
+      @bot-click="id => { emit('botClick', id); handleCloseSummary(); }"
       @close="handleCloseSummary()" />
   </div>
 </template>

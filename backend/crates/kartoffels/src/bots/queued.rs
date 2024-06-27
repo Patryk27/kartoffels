@@ -25,7 +25,7 @@ impl QueuedBots {
         }
     }
 
-    pub fn try_get(&self, id: BotId) -> Option<QueuedBotEntry> {
+    pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
         let place = *self.id_to_idx.get(&id)?;
 
         Some(QueuedBotEntry {
@@ -131,11 +131,11 @@ mod tests {
             requeued: false,
         };
 
-        assert_eq!(Some(entry(0)), target.try_get(10.into()));
-        assert_eq!(Some(entry(1)), target.try_get(20.into()));
-        assert_eq!(Some(entry(2)), target.try_get(30.into()));
-        assert_eq!(Some(entry(3)), target.try_get(40.into()));
-        assert_eq!(Some(entry(4)), target.try_get(50.into()));
+        assert_eq!(Some(entry(0)), target.get(10.into()));
+        assert_eq!(Some(entry(1)), target.get(20.into()));
+        assert_eq!(Some(entry(2)), target.get(30.into()));
+        assert_eq!(Some(entry(3)), target.get(40.into()));
+        assert_eq!(Some(entry(4)), target.get(50.into()));
 
         // ---
 
@@ -143,8 +143,8 @@ mod tests {
         assert_eq!(BotId::from(20), target.pop().unwrap().id);
         assert_eq!(BotId::from(30), target.pop().unwrap().id);
 
-        assert_eq!(None, target.try_get(10.into()));
-        assert_eq!(None, target.try_get(30.into()));
+        assert_eq!(None, target.get(10.into()));
+        assert_eq!(None, target.get(30.into()));
 
         let entry = |place: usize| QueuedBotEntry {
             place,
@@ -152,8 +152,8 @@ mod tests {
             requeued: false,
         };
 
-        assert_eq!(Some(entry(0)), target.try_get(40.into()));
-        assert_eq!(Some(entry(1)), target.try_get(50.into()));
+        assert_eq!(Some(entry(0)), target.get(40.into()));
+        assert_eq!(Some(entry(1)), target.get(50.into()));
 
         // ---
 

@@ -20,7 +20,7 @@ name = "kartoffels-backend"
 [workspace.dependencies]
 anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
-chrono = "0.4.38"
+chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 clap = { version = "4.5.4", features = ["derive"] }
 derivative = "2.2.0"
@@ -29,6 +29,7 @@ futures-util = "0.3.30"
 glam = { version = "0.27.0", features = ["serde"] }
 indoc = "2.0.5"
 itertools = "0.12.1"
+lru = "0.12.3"
 maybe-owned = { version = "0.3.4", features = ["serde"] }
 pretty_assertions = "1.4.0"
 rand = "0.8.5"

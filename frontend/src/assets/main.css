@@ -127,6 +127,10 @@ dialog {
   color: #00ff80;
 }
 
+.status-dead {
+  color: #ff0000;
+}
+
 .status-queued {
   color: #ff0080;
 }

@@ -7,9 +7,11 @@ pub use self::dead::*;
 pub use self::queued::*;
 use crate::{AliveBot, BotId, DeadBot, Map, Mode, Policy, QueuedBot};
 use anyhow::{anyhow, Result};
+use chrono::Utc;
 use glam::IVec2;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tracing::debug;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -61,7 +63,8 @@ impl Bots {
         self.dead.add(
             id,
             DeadBot {
-                reason: reason.into(),
+                reason: Arc::new(reason.into()),
+                killed_at: Utc::now(),
             },
         );
 

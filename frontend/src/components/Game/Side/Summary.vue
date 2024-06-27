@@ -2,7 +2,7 @@
   import { botIdToColor } from '@/utils/bot.ts';
   import { durationToHuman } from '@/utils/other.ts';
 
-  const emit = defineEmits(['close']);
+  const emit = defineEmits(['botClock', 'close']);
   const props = defineProps(['opened', 'sortedBots']);
 </script>
 
@@ -31,9 +31,10 @@
           </td>
 
           <td>
-            <span :style="`color: ${botIdToColor(entry.id)}`">
+            <a @click="emit('botClick', entry.id)"
+               :style="`color: ${botIdToColor(entry.id)}`">
               {{ entry.id }}
-            </span>
+            </a>
           </td>
 
           <td>

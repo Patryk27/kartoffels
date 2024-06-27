@@ -15,11 +15,13 @@ pub use self::tick::*;
 pub use self::timer::*;
 use crate::{AliveBotsLocator, BotId, Map, World};
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use glam::IVec2;
 use kartoffels_vm as vm;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::mem;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -124,7 +126,8 @@ impl vm::Mmio for AliveBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeadBot {
-    pub reason: String,
+    pub reason: Arc<String>,
+    pub killed_at: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

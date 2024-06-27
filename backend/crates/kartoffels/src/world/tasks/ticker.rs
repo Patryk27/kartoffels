@@ -18,7 +18,7 @@ impl Controller {
     fn tick_once(&mut self, world: &mut World, rng: &mut impl RngCore) {
         for id in world.bots.alive.pick_ids(rng) {
             let Some((AliveBotEntryMut { pos, bot }, bots)) =
-                world.bots.alive.try_get_mut(id)
+                world.bots.alive.get_mut(id)
             else {
                 // Our bot got killed in the meantime, happens
                 continue;

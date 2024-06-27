@@ -1,24 +1,41 @@
 use crate::{BotId, DeadBot};
+use lru::LruCache;
 use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::HashMap;
+use std::num::NonZeroUsize;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct DeadBots {
-    entries: HashMap<BotId, DeadBot>,
+    entries: LruCache<BotId, DeadBot>,
 }
 
 impl DeadBots {
+    const MAX_ENTRIES: usize = 32 * 1024;
+
     pub fn add(&mut self, id: BotId, bot: DeadBot) {
-        self.entries.insert(id, bot);
+        self.entries.put(id, bot);
+    }
+
+    pub fn get(&self, id: BotId) -> Option<&DeadBot> {
+        self.entries.peek(&id)
     }
 
     pub fn remove(&mut self, id: BotId) {
-        self.entries.remove(&id);
+        self.entries.pop_entry(&id);
     }
 
     pub fn has(&self, id: BotId) -> bool {
-        self.entries.contains_key(&id)
+        self.entries.contains(&id)
+    }
+}
+
+impl Default for DeadBots {
+    fn default() -> Self {
+        Self {
+            entries: LruCache::new(
+                NonZeroUsize::new(Self::MAX_ENTRIES).unwrap(),
+            ),
+        }
     }
 }
 
