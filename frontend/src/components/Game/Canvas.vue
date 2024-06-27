@@ -142,7 +142,7 @@
       refresh();
 
       // TODO consider using resize observer
-      setTimeout(() => {
+      setInterval(() => {
         resize();
         refresh();
       }, 100);
