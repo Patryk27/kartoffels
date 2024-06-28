@@ -18,16 +18,18 @@
       if (response.worlds.length > 0) {
         world.value = response.worlds[0].id;
 
-        for (const world of response.worlds) {
-          if (world.id == session.value.worldId) {
-            session.value.worldName = world.name;
+        if (session.value != null) {
+          for (const world of response.worlds) {
+            if (world.id == session.value.worldId) {
+              session.value.worldName = world.name;
+            }
           }
-        }
 
-        // If the world this session refers to got deleted, no point in offering
-        // to restore the session
-        if (session.value.worldName == null) {
-          session.value = null;
+          // If the world this session refers to got deleted, no point in
+          // offering to restore the session
+          if (session.value.worldName == null) {
+            session.value = null;
+          }
         }
       }
     } catch (err) {
