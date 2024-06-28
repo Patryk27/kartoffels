@@ -35,13 +35,14 @@
     </p>
 
     <pre>
-      $ git clone github.com/patryk27/kartoffel
+      $ git clone https://github.com/patryk27/kartoffel
       $ cd kartoffel
       $ cargo build --release</pre>
 
     <p>
       then go back, select any map, upload
-      <i>`target/release/riscv64-kartoffel-bot/bot`</i> and play with the code!
+      <i>`./target/riscv64-kartoffel-bot/release/kartoffel`</i> and play with
+      the code!
     </p>
 
     <p>
