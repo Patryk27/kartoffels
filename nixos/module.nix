@@ -26,6 +26,16 @@ in
           type = types.str;
           default = "/var/kartoffels/data";
         };
+
+        secret = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+        };
+
+        debug = mkOption {
+          type = types.bool;
+          default = false;
+        };
       };
 
       frontend = {
@@ -78,7 +88,9 @@ in
 
         ${cfg.backend.package}/bin/kartoffels-server \
             --listen ${cfg.backend.listen} \
-            --data ${cfg.backend.data}
+            --data ${cfg.backend.data} \
+            ${optionalString (cfg.backend.secret != null) "--secret '${cfg.backend.secret}'"} \
+            ${optionalString cfg.backend.debug "--debug"}
       '';
 
       wantedBy = [ "multi-user.target" ];

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 pub struct AppState {
     pub data: Option<PathBuf>,
     pub worlds: HashMap<WorldId, WorldHandle>,
+    pub secret: Option<String>,
 }
 
 impl AppState {

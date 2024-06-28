@@ -14,10 +14,8 @@ use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::sync::Arc;
 use tokio::fs;
 use tokio::net::TcpListener;
-use tokio::sync::RwLock;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{debug, info, warn};
@@ -38,6 +36,9 @@ struct AppArgs {
 
     #[clap(long)]
     data: Option<PathBuf>,
+
+    #[clap(long)]
+    secret: Option<String>,
 
     #[clap(long)]
     debug: bool,
@@ -68,9 +69,7 @@ async fn main() -> Result<()> {
     info!("");
     info!(?args, "initializing");
 
-    let state = init(args.data).await?;
-    let state = Arc::new(RwLock::new(state));
-
+    let state = init(args.data, args.secret).await?;
     let listener = TcpListener::bind(&args.listen).await?;
 
     let app = {
@@ -82,10 +81,7 @@ async fn main() -> Result<()> {
         let trace = TraceLayer::new_for_http()
             .make_span_with(DefaultMakeSpan::default());
 
-        endpoints::router()
-            .layer(cors)
-            .layer(trace)
-            .with_state(state)
+        endpoints::router(state).layer(cors).layer(trace)
     };
 
     info!("ready");
@@ -95,7 +91,10 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn init(data: Option<PathBuf>) -> Result<AppState> {
+async fn init(
+    data: Option<PathBuf>,
+    secret: Option<String>,
+) -> Result<AppState> {
     let mut worlds = HashMap::new();
 
     if let Some(data) = &data {
@@ -165,5 +164,9 @@ async fn init(data: Option<PathBuf>) -> Result<AppState> {
         warn!("running without any data directory");
     }
 
-    Ok(AppState { data, worlds })
+    Ok(AppState {
+        data,
+        worlds,
+        secret,
+    })
 }

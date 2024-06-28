@@ -9,13 +9,25 @@ use axum::routing::{get, post};
 use axum::Router;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tower_http::validate_request::ValidateRequestHeaderLayer;
 
-pub fn router() -> Router<Arc<RwLock<AppState>>> {
-    Router::new()
+pub fn router(state: AppState) -> Router<()> {
+    let public_routes = Router::new()
         .route("/worlds", get(get_worlds::handle))
-        .route("/worlds", post(create_world::handle))
         .route("/worlds/:world", get(get_world::handle1))
         .route("/worlds/:world/bots", post(create_bot::handle))
-        .route("/worlds/:world/bots/:bot", get(get_world::handle2))
+        .route("/worlds/:world/bots/:bot", get(get_world::handle2));
+
+    let mut admin_routes =
+        Router::new().route("/worlds", post(create_world::handle));
+
+    if let Some(secret) = &state.secret {
+        admin_routes =
+            admin_routes.layer(ValidateRequestHeaderLayer::bearer(secret));
+    }
+
+    public_routes
+        .merge(admin_routes)
         .layer(DefaultBodyLimit::max(512 * 1024))
+        .with_state(Arc::new(RwLock::new(state)))
 }

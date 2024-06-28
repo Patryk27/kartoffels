@@ -42,6 +42,6 @@ talc = "4.4.1"
 test-case = "3.3.1"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-stream = "0.1.15"
-tower-http = { version = "0.5.2", features = ["cors", "trace"] }
+tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

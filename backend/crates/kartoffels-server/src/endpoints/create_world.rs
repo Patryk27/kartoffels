@@ -10,7 +10,6 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
 
-// TODO must be password-protected
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
     request: Json<WorldConfig>,
