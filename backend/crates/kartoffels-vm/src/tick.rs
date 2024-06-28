@@ -5,7 +5,7 @@ macro_rules! op {
     ($self:ident, $word:ident, $( $tt:tt )*) => {
         #[cfg(test)]
         eprintln!(
-            "    {} # word=0x{:08x} pc=0x{:04x}",
+            "    {} # 0x{:08x} @ 0x{:04x}",
             format!($($tt)*),
             $word,
             $self.pc,
@@ -322,6 +322,15 @@ impl Runtime {
                 self.reg_store(rd, lhs.wrapping_shr(rhs));
             }
 
+            (0b0011011, 0b101, _) if (i_imm & (1 << 10)) > 0 => {
+                op!(self, word, "sraiw x{rd}, x{rs1}, {i_imm}");
+
+                let lhs = self.regs[rs1] as u32;
+                let rhs = (i_imm as u32) & 0x3f;
+
+                self.reg_store(rd, lhs.wrapping_shr(rhs) as i32 as i64);
+            }
+
             (0b0110011, 0b010, 0b0000000) => {
                 op!(self, word, "slt x{rd}, x{rs1}, x{rs2}");
 
@@ -557,8 +566,8 @@ impl Runtime {
             _ => {
                 #[cfg(test)]
                 eprintln!(
-                    "0x{:04x}: 0x{:08x} ({:032b} - {:07b}:{:03b}:{:07b})",
-                    self.pc, word, word, op, funct3, funct7
+                    ">   0x{:08x} @ 0x{:04x} ({:032b} - {:07b}:{:03b}:{:07b})",
+                    word, self.pc, word, op, funct3, funct7
                 );
 
                 return Err(anyhow!("unknown instruction: 0x{:08x}", word));

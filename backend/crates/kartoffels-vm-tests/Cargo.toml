@@ -38,6 +38,7 @@ bin = [
     { name = "op-sltu", path = "src/op-sltu.rs" },
     { name = "op-sra", path = "src/op-sra.rs" },
     { name = "op-srai", path = "src/op-srai.rs" },
+    { name = "op-sraiw", path = "src/op-sraiw.rs" },
     { name = "op-srl", path = "src/op-srl.rs" },
     { name = "op-srli", path = "src/op-srli.rs" },
     { name = "op-srliw", path = "src/op-srliw.rs" },
