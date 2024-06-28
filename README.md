@@ -22,7 +22,7 @@ kartoffel (🇩🇪)
 Flake already contains an example configuration, so it's as easy as:
 
 ```
-$ sudo nixos-container create demo
+$ sudo nixos-container create demo --flake '.'
 $ sudo nixos-container start demo
 ```
 
@@ -67,6 +67,9 @@ Content-Type: application/json
   }
 }
 ```
+
+(if you're using Nix containers, the endpoint will most likely be
+`POST http://10.233.1.2/api/worlds`)
 
 Enjoy!
 
