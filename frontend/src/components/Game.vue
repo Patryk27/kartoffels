@@ -115,6 +115,7 @@
 
     socket.onerror = event => {
       if (newBotId == null) {
+        socket.onclose = null;
         window.onerror(`couldn't join world ${props.worldId}`);
       } else {
         alert(`couldn't find bot ${newBotId} - maybe it got killed?`);
