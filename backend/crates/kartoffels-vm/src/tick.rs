@@ -126,8 +126,8 @@ impl Runtime {
 
             // mulhu
             (0b0110011, 0b011, 0b0000001) => {
-                let lhs = self.regs[rs1] as u128;
-                let rhs = self.regs[rs2] as u128;
+                let lhs = self.regs[rs1] as u64 as u128;
+                let rhs = self.regs[rs2] as u64 as u128;
 
                 self.reg_store(rd, (lhs.wrapping_mul(rhs) >> 64) as i64);
             }
@@ -231,7 +231,7 @@ impl Runtime {
                 let lhs = self.regs[rs1] as u32;
                 let rhs = self.regs[rs2] as u32;
 
-                self.reg_store(rd, lhs.wrapping_shl(rhs) as i64);
+                self.reg_store(rd, lhs.wrapping_shl(rhs) as i32 as i64);
             }
 
             // slli
@@ -255,7 +255,7 @@ impl Runtime {
                 let lhs = self.regs[rs1] as u32;
                 let rhs = self.regs[rs2] as u32;
 
-                self.reg_store(rd, lhs.wrapping_shr(rhs) as i64);
+                self.reg_store(rd, lhs.wrapping_shr(rhs) as i32 as i64);
             }
 
             // srli
