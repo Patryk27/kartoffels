@@ -6,7 +6,7 @@ kartoffels_vm_tests::test! {
     .attribute arch, "rv64ia"
 
     _start:
-        li x1, 0x00101000
+        li x1, 0x00102000
         li x2, 123
         sh x2, 0(x1)
         li x2, 321
@@ -17,7 +17,6 @@ kartoffels_vm_tests::test! {
 }
 
 /*
- * x1 = 1052672
  * x2 = 321
  * x10 = 123
  * x11 = 379

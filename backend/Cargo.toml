@@ -2,9 +2,9 @@
 resolver = "2"
 
 members = [
+    "crates/kartoffel",
+    "crates/kartoffel-roberto",
     "crates/kartoffels",
-    "crates/kartoffels-pac",
-    "crates/kartoffels-roberto",
     "crates/kartoffels-server",
     "crates/kartoffels-vm",
     "crates/kartoffels-vm-tests",

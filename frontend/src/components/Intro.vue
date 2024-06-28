@@ -41,7 +41,7 @@
 
     <p>
       then go back, select any map, upload
-      <i>`target/release/riscv64-unknown-bot/bot`</i> and play with the code!
+      <i>`target/release/riscv64-kartoffel-bot/bot`</i> and play with the code!
     </p>
 
     <p>

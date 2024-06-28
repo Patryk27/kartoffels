@@ -19,7 +19,6 @@ kartoffels_vm_tests::test! {
 }
 
 /*
- * x1 = 1048584
  * x2 = 102
  * x3 = 103
  * x4 = 104

@@ -59,4 +59,4 @@ edition = "2021"
 [dependencies]
 spin = { workspace = true }
 talc = { workspace = true }
-kartoffels-pac = { path = "../kartoffels-pac" }
+kartoffel = { path = "../kartoffel" }

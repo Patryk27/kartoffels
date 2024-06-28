@@ -724,6 +724,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kartoffel"
+version = "0.1.0"
+dependencies = [
+ "spin",
+ "talc",
+]
+
+[[package]]
+name = "kartoffel-roberto"
+version = "0.1.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
 name = "kartoffels"
 version = "0.1.0"
 dependencies = [
@@ -747,17 +762,6 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
-]
-
-[[package]]
-name = "kartoffels-pac"
-version = "0.1.0"
-
-[[package]]
-name = "kartoffels-roberto"
-version = "0.1.0"
-dependencies = [
- "kartoffels-pac",
 ]
 
 [[package]]
@@ -795,7 +799,7 @@ dependencies = [
 name = "kartoffels-vm-tests"
 version = "0.1.0"
 dependencies = [
- "kartoffels-pac",
+ "kartoffel",
  "spin",
  "talc",
 ]

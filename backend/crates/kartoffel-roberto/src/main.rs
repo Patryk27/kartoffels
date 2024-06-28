@@ -1,9 +1,7 @@
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 use core::ops::Range;
-use kartoffels_pac::*;
-
-init!(+panic);
+use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
@@ -104,18 +102,6 @@ fn main() {
                 sample_dir_at = timer_ticks() + (rng.u32() % 20) * 5000;
             }
         }
-    }
-}
-
-fn motor_wait() {
-    while !is_motor_ready() {
-        //
-    }
-}
-
-fn radar_wait() {
-    while !is_radar_ready() {
-        //
     }
 }
 

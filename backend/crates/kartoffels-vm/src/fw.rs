@@ -1,5 +1,5 @@
 use crate::Runtime;
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, Context, Result};
 use elf::abi::PT_LOAD;
 use elf::endian::LittleEndian;
 use elf::ElfBytes;
@@ -29,17 +29,30 @@ impl Firmware {
                 let data = elf.segment_data(&seg)?;
 
                 if addr < (Runtime::RAM_BASE as u64) {
-                    return Err(err_segment_addr(seg_idx));
+                    return Err(anyhow!(
+                        "segment #{} spans outside the available memory (it \
+                         starts at 0x{:0x}, which is before 0x{:0x})",
+                        seg_idx,
+                        addr,
+                        Runtime::RAM_BASE,
+                    ));
                 }
 
-                let addr = (addr - (Runtime::RAM_BASE as u64)) as u32;
+                let beg_addr = (addr - (Runtime::RAM_BASE as u64)) as u32;
+                let end_addr = beg_addr + (data.len() as u32);
 
-                if addr + (data.len() as u32) >= Runtime::RAM_SIZE {
-                    return Err(err_segment_addr(seg_idx));
+                if end_addr >= Runtime::RAM_SIZE {
+                    return Err(anyhow!(
+                        "segment #{} spans outside the available memory (it \
+                         ends at 0x{:0x}, which is after 0x{:0x})",
+                        seg_idx,
+                        Runtime::RAM_BASE + end_addr,
+                        Runtime::RAM_SIZE,
+                    ));
                 }
 
                 segments.push(Segment {
-                    addr: addr as usize,
+                    addr: beg_addr as usize,
                     data: data.into(),
                 });
             }
@@ -54,8 +67,4 @@ pub struct Segment {
     pub(super) addr: usize,
     #[serde(with = "serde_bytes")]
     pub(super) data: Box<[u8]>,
-}
-
-fn err_segment_addr(seg_idx: usize) -> Error {
-    anyhow!("segment #{} spans outside the available memory", seg_idx)
 }

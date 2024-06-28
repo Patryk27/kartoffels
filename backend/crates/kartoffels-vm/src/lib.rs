@@ -74,7 +74,7 @@ mod tests {
         let elf_dir = Path::new("..")
             .join("..")
             .join("target")
-            .join("riscv64-unknown-bot")
+            .join("riscv64-kartoffel-bot")
             .join("release");
 
         for test in tests {

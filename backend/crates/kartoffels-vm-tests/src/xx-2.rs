@@ -1,15 +1,15 @@
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 extern crate alloc;
+extern crate kartoffel;
 
 #[cfg(target_arch = "riscv64")]
 mod test {
     use alloc::vec::Vec;
     use core::hint::black_box;
 
-    kartoffels_pac::init!(+panic, +alloc(4096));
-
-    pub fn main() -> u32 {
+    #[no_mangle]
+    fn main() -> u32 {
         let mut items = Vec::new();
 
         items.push(12345);
@@ -20,11 +20,6 @@ mod test {
 
         black_box(&items).iter().map(|item| item + 123).sum()
     }
-}
-
-#[cfg(target_arch = "riscv64")]
-fn main() -> u32 {
-    test::main()
 }
 
 #[cfg(not(target_arch = "riscv64"))]

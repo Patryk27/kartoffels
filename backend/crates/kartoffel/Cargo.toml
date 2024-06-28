@@ -1,0 +1,8 @@
+[package]
+name = "kartoffel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+spin = { workspace = true }
+talc = { workspace = true }
