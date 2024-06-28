@@ -295,6 +295,15 @@ impl Runtime {
                 self.reg_store(rd, lhs.wrapping_shr(rhs) as i64);
             }
 
+            (0b0011011, 0b101, _) if (i_imm >> 6) == 0x00 => {
+                op!(self, word, "srliw x{rd}, x{rs1}, {i_imm}");
+
+                let lhs = self.regs[rs1] as u32;
+                let rhs = i_imm as u32;
+
+                self.reg_store(rd, lhs.wrapping_shr(rhs) as i32 as i64);
+            }
+
             (0b0110011, 0b101, 0b0100000) => {
                 op!(self, word, "sra x{rd}, x{rs1}, x{rs2}");
 
