@@ -35,8 +35,8 @@
     </p>
 
     <pre>
-      $ git clone github.com/patryk27/kartoffels-bot
-      $ cd kartoffels-bot
+      $ git clone github.com/patryk27/kartoffel
+      $ cd kartoffel
       $ cargo build --release</pre>
 
     <p>
