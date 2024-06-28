@@ -76,6 +76,7 @@ in
 
             "/api/" = {
               proxyPass = "http://${cfg.backend.listen}/";
+              proxyWebsockets = true;
             };
           };
         };
