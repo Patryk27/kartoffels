@@ -304,7 +304,7 @@ impl Runtime {
                 self.reg_store(rd, lhs.wrapping_shr(rhs));
             }
 
-            (0b0010011, 0b101, _) if (i_imm >> 5) == 0x20 => {
+            (0b0010011, 0b101, _) if (i_imm >> 6) == 0x10 => {
                 let lhs = self.regs[rs1];
                 let rhs = (i_imm as u32) & 0x3f;
 

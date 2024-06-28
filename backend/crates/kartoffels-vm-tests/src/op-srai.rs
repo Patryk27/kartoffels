@@ -7,6 +7,7 @@ kartoffels_vm_tests::test! {
     _start:
         li x1, 123
         srai x2, x1, 4
+        srai x3, x1, 63
         ebreak
     "#
 }
@@ -14,4 +15,5 @@ kartoffels_vm_tests::test! {
 /*
  * x1 = 123
  * x2 = 7
+ * x3 = 0
  */
