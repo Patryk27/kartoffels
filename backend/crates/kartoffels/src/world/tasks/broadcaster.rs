@@ -76,7 +76,7 @@ impl Broadcaster {
                     if let Some(entry) = world.bots.alive.get(id) {
                         return Some(ConnectedBotUpdate::Alive {
                             age: entry.bot.age(),
-                            serial: entry.bot.serial.to_string(),
+                            serial: entry.bot.serial.buffer.clone(),
                         });
                     }
 

@@ -1,4 +1,5 @@
 <script setup>
+  import { computed } from 'vue';
   import { botIdToColor } from '@/utils/bot.ts';
   import { durationToHuman } from '@/utils/other.ts';
 
@@ -9,6 +10,39 @@
   ]);
 
   const props = defineProps(['bot', 'paused']);
+
+  const serialStr = computed(() => {
+    if (props.bot == null || props.bot.serial == null) {
+      return null;
+    }
+
+    let out = '';
+    let buf = null;
+
+    for (const op of props.bot.serial) {
+      switch (op) {
+        case 0xffffff00:
+          buf = '';
+          break;
+
+        case 0xffffff01:
+          out = buf ?? '';
+          buf = '';
+          break;
+
+        case op:
+          const ch = String.fromCodePoint(op);
+
+          if (buf === null) {
+            out += ch;
+          } else {
+            buf += ch;
+          }
+      }
+    }
+
+    return out;
+  });
 
   function handleConnectToBot() {
     const id = prompt('enter bot id:');
@@ -116,7 +150,7 @@
     </template>
 
     <template v-if="bot.status == 'alive'">
-      <textarea readonly style="resize: none" :value="bot.serial" />
+      <textarea readonly style="resize: none" :value="serialStr" />
 
       <div>
         <input id="bot-follow"

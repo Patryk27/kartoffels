@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use glam::IVec2;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 
 #[derive(Debug, Serialize)]
@@ -31,7 +31,7 @@ pub struct BotUpdate {
 #[serde(tag = "status")]
 pub enum ConnectedBotUpdate {
     #[serde(rename = "alive")]
-    Alive { age: f32, serial: String },
+    Alive { age: f32, serial: VecDeque<u32> },
 
     #[serde(rename = "dead")]
     Dead {

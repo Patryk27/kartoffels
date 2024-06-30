@@ -1,7 +1,6 @@
 use crate::AliveBot;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
-use std::fmt;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotSerial {
@@ -33,17 +32,5 @@ impl BotSerial {
 
             _ => Err(()),
         }
-    }
-}
-
-impl fmt::Display for BotSerial {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in &self.buffer {
-            if let Some(char) = char::from_u32(*byte) {
-                write!(f, "{}", char)?;
-            }
-        }
-
-        Ok(())
     }
 }
