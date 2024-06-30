@@ -7,6 +7,9 @@ pub fn is_motor_ready() -> bool {
     rdi(MEM_MOTOR, 0) == 1
 }
 
+/// Waits for the motor to become ready.
+///
+/// See: [`is_motor_ready()`].
 #[inline(always)]
 pub fn motor_wait() {
     while !is_motor_ready() {

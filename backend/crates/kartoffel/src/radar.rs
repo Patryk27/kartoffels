@@ -8,6 +8,9 @@ pub fn is_radar_ready() -> bool {
     rdi(MEM_RADAR, 0) == 1
 }
 
+/// Waits for the radar to become ready.
+///
+/// See: [`is_radar_ready()`].
 #[inline(always)]
 pub fn radar_wait() {
     while !is_radar_ready() {

@@ -6,6 +6,9 @@ pub fn is_arm_ready() -> bool {
     rdi(MEM_ARM, 0) == 1
 }
 
+/// Waits for the arm to become ready.
+///
+/// See: [`is_arm_ready()`].
 #[inline(always)]
 pub fn arm_wait() {
     while !is_arm_ready() {
