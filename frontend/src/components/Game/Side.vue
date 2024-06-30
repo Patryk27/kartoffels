@@ -12,7 +12,7 @@
     'botClick',
   ]);
 
-  const props = defineProps(['mode', 'bot', 'bots', 'paused']);
+  const props = defineProps(['mode', 'bot', 'bots', 'status', 'paused']);
   const isSummaryOpened = ref(false);
 
   const sortedBots = computed(() => {
@@ -55,26 +55,24 @@
 </script>
 
 <template>
-  <div class="game-side">
-    <Bot
-      :bot="bot"
-      :paused="paused"
-      @bot-upload="file => emit('botUpload', file)"
-      @bot-connect="id => emit('botConnect', id)"
-      @bot-disconnect="emit('botDisconnect')" />
+  <div v-if="status == 'connected' || status == 'connecting'"
+       class="game-side">
+    <Bot :bot="bot"
+         :paused="paused"
+         @bot-upload="file => emit('botUpload', file)"
+         @bot-connect="id => emit('botConnect', id)"
+         @bot-disconnect="emit('botDisconnect')" />
 
-    <Bots
-      :bot="bot"
-      :sortedBots="sortedBots"
-      :mode="mode"
-      @bot-click="id => emit('botClick', id)"
-      @show-more="handleOpenSummary()" />
+    <Bots :bot="bot"
+          :sortedBots="sortedBots"
+          :mode="mode"
+          @bot-click="id => emit('botClick', id)"
+          @show-more="handleOpenSummary()" />
 
-    <Summary
-      :opened="isSummaryOpened"
-      :sortedBots="sortedBots"
-      @bot-click="id => { emit('botClick', id); handleCloseSummary(); }"
-      @close="handleCloseSummary()" />
+    <Summary :opened="isSummaryOpened"
+             :sortedBots="sortedBots"
+             @bot-click="id => { emit('botClick', id); handleCloseSummary(); }"
+             @close="handleCloseSummary()" />
   </div>
 </template>
 

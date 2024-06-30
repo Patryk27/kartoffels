@@ -12,6 +12,7 @@
   const bot = ref(null);
   const bots = ref(null);
   const camera = ref(null);
+  const status = ref('connecting');
   const paused = ref(false);
 
   let socket = null;
@@ -27,6 +28,7 @@
     bot.value = null;
     bots.value = null;
     camera.value = null;
+    status.value = status.value == 'reconnecting' ? 'reconnecting' : 'connecting';
     paused.value = false;
 
     // ---
@@ -45,6 +47,8 @@
     );
 
     socket.onopen = () => {
+      status.value = 'connected';
+
       storeSession({
         worldId: props.worldId,
         botId: bot.value?.id,
@@ -52,7 +56,13 @@
     };
 
     socket.onclose = () => {
-      window.onerror('lost connection to the server');
+      if (status.value == 'connected' || status.value == 'connecting') {
+        status.value = 'reconnecting';
+
+        setTimeout(() => {
+          join(newBotId);
+        }, 250);
+      }
     };
 
     socket.onmessage = event => {
@@ -114,13 +124,19 @@
     };
 
     socket.onerror = event => {
-      if (newBotId == null) {
-        socket.onclose = null;
-        window.onerror(`couldn't join world ${props.worldId}`);
+      if (status.value == 'reconnecting') {
+        setTimeout(() => {
+          join(newBotId);
+        }, 250);
       } else {
-        alert(`couldn't find bot ${newBotId} - maybe it got killed?`);
+        if (newBotId == null) {
+          socket.onclose = null;
+          window.onerror(`couldn't join world ${props.worldId}`);
+        } else {
+          alert(`couldn't find bot ${newBotId} - maybe it got killed?`);
 
-        join(null);
+          join(null);
+        }
       }
     };
   }
@@ -222,6 +238,10 @@
           break;
       }
     };
+
+    window.onbeforeunload = () => {
+      status.value = 'closing';
+    };
   });
 
   join(props.botId);
@@ -229,29 +249,29 @@
 
 <template>
   <div class="game">
-    <Nav
-      :paused="paused"
-      @leave="emit('leave')"
-      @pause="handlePause"
-      @open-intro="emit('openIntro')" />
+    <Nav :status="status"
+         :paused="paused"
+         @leave="emit('leave')"
+         @pause="handlePause"
+         @open-intro="emit('openIntro')" />
 
     <main>
-      <Canvas
-        :map="map"
-        :bot="bot"
-        :bots="bots"
-        :camera="camera"
-        :paused="paused" />
+      <Canvas :map="map"
+              :bot="bot"
+              :bots="bots"
+              :camera="camera"
+              :status="status"
+              :paused="paused" />
 
-      <Side
-        :mode="mode"
-        :bot="bot"
-        :bots="bots"
-        :paused="paused"
-        @bot-upload="handleBotUpload"
-        @bot-connect="handleBotConnect"
-        @bot-disconnect="handleBotDisconnect"
-        @bot-click="handleBotClick" />
+      <Side :mode="mode"
+            :bot="bot"
+            :bots="bots"
+            :status="status"
+            :paused="paused"
+            @bot-upload="handleBotUpload"
+            @bot-connect="handleBotConnect"
+            @bot-disconnect="handleBotDisconnect"
+            @bot-click="handleBotClick" />
     </main>
   </div>
 </template>

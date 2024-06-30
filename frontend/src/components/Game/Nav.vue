@@ -1,6 +1,6 @@
 <script setup>
   const emit = defineEmits(['leave', 'pause', 'openIntro']);
-  const props = defineProps(['paused']);
+  const props = defineProps(['status', 'paused']);
 </script>
 
 <template>
@@ -12,14 +12,14 @@
     </div>
 
     <div>
-      <button @click="emit('openIntro')">
+      <button :disabled="status == 'reconnecting'"
+              @click="emit('openIntro')">
         help
       </button>
 
-      <button
-          class="pause"
-          :class="paused ? 'paused' : ''"
-          @click="emit('pause')">
+      <button :class="{ paused }"
+              :disabled="status == 'reconnecting'"
+              @click="emit('pause')">
         <template v-if="paused">
           resume
         </template>

@@ -34,11 +34,13 @@
 <template>
   <div v-if="bot == null" class="game-side-bot">
     <div>
-      <button :disabled="paused" @click="paused ? null : handleConnectToBot()">
+      <button :disabled="paused"
+              @click="paused ? null : handleConnectToBot()">
         connect to bot
       </button>
 
-      <button :disabled="paused" @click="paused ? null : handleUploadBot()">
+      <button :disabled="paused"
+              @click="paused ? null : handleUploadBot()">
         upload bot
       </button>
     </div>
@@ -46,7 +48,8 @@
 
   <div v-else class="game-side-bot">
     <div>
-      <button @click="emit('botDisconnect')" style="width: 100%">
+      <button style="width: 100%"
+              @click="emit('botDisconnect')">
         disconnect from bot
       </button>
 
@@ -116,11 +119,10 @@
       <textarea readonly style="resize: none" :value="bot.serial" />
 
       <div>
-        <input
-          id="bot-follow"
-          type="checkbox"
-          v-model="bot.is_followed"
-          :disabled="paused" />
+        <input id="bot-follow"
+               type="checkbox"
+               v-model="bot.is_followed"
+               :disabled="paused" />
 
         <label for="bot-follow">
           follow with camera

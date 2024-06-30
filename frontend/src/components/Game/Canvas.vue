@@ -2,7 +2,15 @@
   import { ref, onMounted, watch } from 'vue';
   import { botIdToColor } from '@/utils/bot.ts';
 
-  const props = defineProps(['map', 'bot', 'bots', 'camera', 'paused']);
+  const props = defineProps([
+    'map',
+    'bot',
+    'bots',
+    'camera',
+    'status',
+    'paused',
+  ]);
+
   const canvas = ref(null);
   const canvasWrapper = ref(null);
 
@@ -44,13 +52,26 @@
   }
 
   function refresh() {
-    const { map, bot, bots, camera, paused } = props;
+    const { map, bot, bots, camera, status, paused } = props;
 
     if (ctxt == null || canvas.value == null) {
       return;
     }
 
     ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
+
+    if (status == 'connecting' || status == 'reconnecting') {
+      ctxt.fillStyle = 'rgb(0, 255, 128)';
+
+      const text =
+        (status == 'connecting')
+        ? 'connecting...'
+        : 'connection lost, reconnecting...';
+
+      ctxt.fillText(text, 8, textMetrics.height + 8);
+
+      return;
+    }
 
     if (map == null || camera == null) {
       return;
@@ -116,7 +137,7 @@
 
   // ---
 
-  watch(() => [props.map, props.paused], _ => {
+  watch(() => [props.map, props.status, props.paused], _ => {
     refresh();
   });
 

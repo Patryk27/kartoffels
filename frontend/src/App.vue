@@ -23,34 +23,30 @@
 
   onMounted(() => {
     window.onerror = (msg) => {
-      route.value = { id: 'bsod', msg };
+      route.value = { id: 'crash', msg };
     };
   });
 </script>
 
 <template>
   <template v-if="route.id == 'home'">
-    <Home
-      @join="handleJoinOrRestore"
-      @restore="handleJoinOrRestore"
-      @open-intro="handleOpenIntro" />
+    <Home @join="handleJoinOrRestore"
+          @restore="handleJoinOrRestore"
+          @open-intro="handleOpenIntro" />
   </template>
 
   <template v-if="route.id == 'game'">
-    <Game
-      :worldId="route.worldId"
-      :botId="route.botId"
-      @leave="handleLeave"
-      @open-intro="handleOpenIntro" />
+    <Game :worldId="route.worldId"
+          :botId="route.botId"
+          @leave="handleLeave"
+          @open-intro="handleOpenIntro" />
   </template>
 
   <template v-if="route.id == 'intro'">
-    <Intro
-      @leave="handleLeave" />
+    <Intro @leave="handleLeave" />
   </template>
 
-  <template v-if="route.id == 'bsod'">
-    <Crash
-      :msg="route.msg" />
+  <template v-if="route.id == 'crash'">
+    <Crash :msg="route.msg" />
   </template>
 </template>
