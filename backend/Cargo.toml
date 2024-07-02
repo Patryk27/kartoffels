@@ -3,12 +3,12 @@ resolver = "2"
 
 members = [
     "crates/kartoffel",
-    "crates/kartoffel-roberto",
     "crates/kartoffels",
     "crates/kartoffels-dbg",
     "crates/kartoffels-server",
     "crates/kartoffels-vm",
     "crates/kartoffels-vm-tests",
+    "crates/roberto",
 ]
 
 [workspace.package]
