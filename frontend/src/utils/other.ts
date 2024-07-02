@@ -8,3 +8,19 @@ export function durationToHuman(sec) {
     return `${mins}m ${secs}s`;
   }
 }
+
+export function ordinal(nth) {
+  switch (nth % 10) {
+    case 3:
+      return "rd";
+
+    case 2:
+      return "nd";
+
+    case 1:
+      return "st";
+
+    default:
+      return "th";
+  }
+}

@@ -89,8 +89,7 @@ impl Broadcaster {
                             .map(|entry| entry.reason.clone());
 
                         return Some(ConnectedBotUpdate::Queued {
-                            queue_place: entry.place,
-                            queue_len: entry.len,
+                            place: entry.place + 1,
                             requeued: entry.requeued,
                             msg,
                         });

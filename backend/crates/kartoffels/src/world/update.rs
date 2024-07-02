@@ -42,8 +42,7 @@ pub enum ConnectedBotUpdate {
 
     #[serde(rename = "queued")]
     Queued {
-        queue_place: usize,
-        queue_len: usize,
+        place: usize,
         requeued: bool,
         msg: Option<Arc<String>>,
     },

@@ -31,7 +31,6 @@ impl QueuedBots {
 
         Some(QueuedBotEntry {
             place,
-            len: self.entries.len(),
             requeued: self.entries[place].requeued,
         })
     }
@@ -94,7 +93,6 @@ impl<'de> Deserialize<'de> for QueuedBots {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct QueuedBotEntry {
     pub place: usize,
-    pub len: usize,
     pub requeued: bool,
 }
 
@@ -128,7 +126,6 @@ mod tests {
 
         let entry = |place: usize| QueuedBotEntry {
             place,
-            len: 5,
             requeued: false,
         };
 
@@ -146,12 +143,6 @@ mod tests {
 
         assert_eq!(None, target.get(10.into()));
         assert_eq!(None, target.get(30.into()));
-
-        let entry = |place: usize| QueuedBotEntry {
-            place,
-            len: 2,
-            requeued: false,
-        };
 
         assert_eq!(Some(entry(0)), target.get(40.into()));
         assert_eq!(Some(entry(1)), target.get(50.into()));

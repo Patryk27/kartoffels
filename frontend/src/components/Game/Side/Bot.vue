@@ -1,7 +1,7 @@
 <script setup>
   import { computed } from 'vue';
   import { botIdToColor } from '@/utils/bot.ts';
-  import { durationToHuman } from '@/utils/other.ts';
+  import { durationToHuman, ordinal } from '@/utils/other.ts';
 
   const emit = defineEmits([
     'botUpload',
@@ -135,17 +135,17 @@
 
           <span class="status-queued">
             {{ bot.requeued ? 'requeued' : 'queued' }}
-            ({{ bot.queue_place + 1 }} / {{ bot.queue_len }})
+            ({{ bot.place }}{{ ordinal(bot.place) }})
           </span>
         </p>
 
-        <p>
+        <p v-if="bot.requeued">
           message:
         </p>
       </template>
     </div>
 
-    <template v-if="bot.status == 'dead' || bot.status == 'queued'">
+    <template v-if="bot.status == 'dead' || (bot.status == 'queued' && bot.requeued)">
       <textarea readonly style="resize: none" :value="bot.msg" />
     </template>
 
