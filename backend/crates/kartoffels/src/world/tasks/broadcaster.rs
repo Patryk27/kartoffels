@@ -55,9 +55,10 @@ impl Broadcaster {
                 .iter()
                 .map(|entry| {
                     let pos = entry.pos;
-                    let age = entry.bot.age();
+                    let dir = entry.bot.motor.dir;
+                    let age = entry.bot.timer.age();
 
-                    (entry.id, BotUpdate { pos, age })
+                    (entry.id, BotUpdate { pos, dir, age })
                 })
                 .collect();
 
@@ -75,7 +76,7 @@ impl Broadcaster {
                 let bot = client.id.and_then(|id| {
                     if let Some(entry) = world.bots.alive.get(id) {
                         return Some(ConnectedBotUpdate::Alive {
-                            age: entry.bot.age(),
+                            age: entry.bot.timer.age(),
                             serial: entry.bot.serial.buffer.clone(),
                         });
                     }

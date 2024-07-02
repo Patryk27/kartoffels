@@ -13,11 +13,12 @@
 
   const canvas = ref(null);
   const canvasWrapper = ref(null);
+  const pausedColor = 'rgb(40, 40, 40)';
 
   let ctxt = null;
   let scale = 1.0;
   let textScale = 1.0;
-  let textMetrics = null;
+  let charMetrics = null;
   let chars = { x: 0, y: 0 };
 
   function resize() {
@@ -38,21 +39,21 @@
     canvas.value.height = canvasWrapper.value.clientHeight;
     ctxt.font = `${textScale}px Sono`;
 
-    textMetrics = ctxt.measureText('@');
+    charMetrics = ctxt.measureText('@');
 
-    textMetrics.height =
-      textMetrics.actualBoundingBoxAscent
-      + textMetrics.actualBoundingBoxDescent
+    charMetrics.height =
+      charMetrics.actualBoundingBoxAscent
+      + charMetrics.actualBoundingBoxDescent
       + 2.0;
 
     chars = {
-      x: Math.round(canvasWrapper.value.clientWidth / textMetrics.width),
-      y: Math.round(canvasWrapper.value.clientHeight / textMetrics.height),
+      x: Math.round(canvasWrapper.value.clientWidth / charMetrics.width),
+      y: Math.round(canvasWrapper.value.clientHeight / charMetrics.height),
     };
   }
 
-  function refresh() {
-    const { map, bot, bots, camera, status, paused } = props;
+  function draw() {
+    const { camera, map, status } = props;
 
     if (ctxt == null || canvas.value == null) {
       return;
@@ -60,22 +61,45 @@
 
     ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-    if (status == 'connecting' || status == 'reconnecting') {
-      ctxt.fillStyle = 'rgb(0, 255, 128)';
+    switch (status) {
+      case 'connecting':
+      case 'reconnecting':
+        drawStatus();
+        break;
 
-      const text =
-        (status == 'connecting')
-        ? 'connecting...'
-        : 'connection lost, reconnecting...';
+      case 'connected':
+        if (map == null || camera == null) {
+          break;
+        }
 
-      ctxt.fillText(text, 8, textMetrics.height + 8);
-
-      return;
+        drawTiles();
+        drawBots();
+        break;
     }
+  }
 
-    if (map == null || camera == null) {
-      return;
+  function drawStatus() {
+    const { status } = props;
+    const x = 8;
+    const y = charMetrics.height + 8;
+
+    switch (status) {
+      case 'connecting':
+        ctxt.fillStyle = 'rgb(0, 255, 128)';
+        ctxt.fillText('connecting...', x, y);
+        break;
+
+      case 'reconnecting':
+        ctxt.fillStyle = 'rgb(0, 255, 128)';
+        ctxt.fillText('connection lost, reconnecting...', x, y);
+        break;
     }
+  }
+
+  function drawTiles() {
+    const { map, bot, bots, camera, paused } = props;
+    const cw = charMetrics.width;
+    const ch = charMetrics.height;
 
     for (let y = 0; y <= chars.y; y += 1) {
       for (let x = 0; x <= chars.x; x += 1) {
@@ -95,18 +119,17 @@
         let tileOffsetY;
 
         if (tileBot) {
+          tileChar = '@';
           tileColor = botIdToColor(tileBot.id);
-          tileOffsetY = -0.15;
+          tileOffsetY = -0.1;
 
-          if (bot != null && tileBot.id == bot.id) {
-            tileChar = Date.now() % 1000 <= 500 ? '@' : '&';
-          } else {
-            tileChar = '@';
+          if (tileBot.id == bot?.id) {
+            tileChar = '&';
           }
         } else {
           tileChar = String.fromCharCode(tile >> 24);
           tileColor = 'rgb(80, 80, 80)';
-          tileOffsetY = 0.0;
+          tileOffsetY = -0.0;
 
           switch (tileChar) {
             case '.':
@@ -120,29 +143,70 @@
           }
         }
 
-        if (paused) {
-          tileColor = 'rgb(40, 40, 40)';
-        }
-
-        ctxt.fillStyle = tileColor;
-
-        ctxt.fillText(
-          tileChar,
-          textMetrics.width * x,
-          textMetrics.height * (y + tileOffsetY + 1),
-        );
+        ctxt.fillStyle = paused ? pausedColor : tileColor;
+        ctxt.fillText(tileChar, cw * x, ch * (y + tileOffsetY + 1));
       }
     }
   }
 
+  function drawBots() {
+    const { map, bot, bots, camera, paused } = props;
+    const cw = charMetrics.width;
+    const ch = charMetrics.height;
+
+    ctxt.save();
+
+    ctxt.translate(
+      (Math.round(chars.x / 2) - camera.x) * cw,
+      (Math.round(chars.y / 2) - camera.y) * ch,
+    );
+
+    for (const [botId, bot] of Object.entries(bots)) {
+      const botColor = paused ? pausedColor : botIdToColor(botId);
+
+      ctxt.save();
+      ctxt.translate(cw * bot.pos[0], ch * (bot.pos[1] + 1));
+      ctxt.translate(cw / 2, -ch / 2);
+
+      switch (bot.dir) {
+        case '<':
+          ctxt.rotate(-Math.PI / 2);
+          break;
+
+        case '>':
+          ctxt.rotate(Math.PI / 2);
+          break;
+
+        case 'v':
+          ctxt.rotate(Math.PI);
+          break;
+      }
+
+      ctxt.translate(0, -ch * 0.9);
+
+      ctxt.beginPath();
+      ctxt.moveTo(-0.4 * cw, 0.3 * ch);
+      ctxt.lineTo(0, 0);
+      ctxt.lineTo(0.4 * cw, 0.3 * ch);
+
+      ctxt.strokeStyle = botColor;
+      ctxt.lineWidth = 2;
+      ctxt.stroke();
+
+      ctxt.restore();
+    }
+
+    ctxt.restore();
+  }
+
   // ---
 
-  watch(() => [props.map, props.status, props.paused], _ => {
-    refresh();
+  watch(() => [props.map, props.bots, props.status, props.paused], _ => {
+    draw();
   });
 
-  watch(() => [props.bot, props.bots, props.camera], _ => {
-    refresh();
+  watch(() => [props.bot, props.camera], _ => {
+    draw();
   }, { deep: true });
 
   onMounted(() => {
@@ -154,18 +218,13 @@
         window.devicePixelRatio || 1,
       );
 
-      window.onresize = () => {
-        resize();
-        refresh();
-      };
-
       resize();
-      refresh();
+      draw();
 
       // TODO consider using resize observer
       setInterval(() => {
         resize();
-        refresh();
+        draw();
       }, 100);
     });
   });

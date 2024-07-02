@@ -5,6 +5,7 @@ members = [
     "crates/kartoffel",
     "crates/kartoffel-roberto",
     "crates/kartoffels",
+    "crates/kartoffels-dbg",
     "crates/kartoffels-server",
     "crates/kartoffels-vm",
     "crates/kartoffels-vm-tests",

@@ -118,13 +118,6 @@ impl Tile {
         }
     }
 
-    pub const fn bot(idx: u8) -> Self {
-        Self {
-            base: TileBase::BOT,
-            meta: [idx, 0, 0],
-        }
-    }
-
     pub const fn is_void(&self) -> bool {
         self.base == TileBase::VOID
     }

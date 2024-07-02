@@ -1,0 +1,11 @@
+[package]
+name = "kartoffels-dbg"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+ciborium = { workspace = true }
+clap = { workspace = true }
+kartoffels = { path = "../kartoffels" }
+serde_json = { workspace = true }

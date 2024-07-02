@@ -1,4 +1,4 @@
-use crate::{AliveBot, AliveBotsLocator, Map, TileBase};
+use crate::{AliveBot, AliveBotsLocator, Dir, Map, TileBase};
 use glam::{ivec2, IVec2};
 use serde::{Deserialize, Serialize};
 
@@ -15,7 +15,7 @@ impl BotRadar {
         map: &Map,
         bots: &AliveBotsLocator,
         pos: IVec2,
-        dir: IVec2,
+        dir: Dir,
     ) {
         self.cooldown = self.cooldown.saturating_sub(1);
 
@@ -36,7 +36,7 @@ impl BotRadar {
             for dy in -dist..=dist {
                 for dx in -dist..=dist {
                     self.payload[idx] =
-                        tile(pos + dir.rotate(ivec2(dx, dy).perp()));
+                        tile(pos + dir.as_ivec2().rotate(ivec2(dx, dy).perp()));
 
                     idx += 1;
                 }
@@ -164,7 +164,7 @@ mod tests {
 
         radar.mmio_store(AliveBot::MEM_RADAR, 3).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), ivec2(0, -1));
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
 
         radar.assert::<3>(indoc! {"
             . @ .
@@ -176,7 +176,7 @@ mod tests {
 
         radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), ivec2(0, -1));
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
 
         radar.assert::<5>(indoc! {"
             . . = . .
@@ -190,7 +190,7 @@ mod tests {
 
         radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), ivec2(1, 0));
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::Right);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -204,7 +204,7 @@ mod tests {
 
         radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), ivec2(-1, 0));
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::Left);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -218,7 +218,7 @@ mod tests {
 
         radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), ivec2(0, 1));
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::Down);
 
         radar.assert::<5>(indoc! {"
             . . . . .

@@ -1,4 +1,4 @@
-use crate::{BotId, Map};
+use crate::{BotId, Dir, Map};
 use chrono::{DateTime, Utc};
 use glam::IVec2;
 use serde::Serialize;
@@ -24,6 +24,7 @@ pub struct WorldUpdate {
 #[derive(Debug, Serialize)]
 pub struct BotUpdate {
     pub pos: IVec2,
+    pub dir: Dir,
     pub age: f32,
 }
 

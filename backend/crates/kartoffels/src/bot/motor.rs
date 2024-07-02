@@ -1,28 +1,18 @@
-use crate::AliveBot;
-use glam::{ivec2, IVec2};
+use crate::{AliveBot, Dir};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(test, derive(Default))]
 pub struct BotMotor {
-    pub dir: IVec2,
+    pub dir: Dir,
     pub vel: u8,
     pub cooldown: u32,
 }
 
 impl BotMotor {
     pub fn new(rng: &mut impl RngCore) -> Self {
-        let dir = match rng.gen_range(0..4) {
-            0 => ivec2(-1, 0),
-            1 => ivec2(1, 0),
-            2 => ivec2(0, -1),
-            3 => ivec2(0, 1),
-            _ => unreachable!(),
-        };
-
         Self {
-            dir,
+            dir: rng.gen(),
             vel: 0,
             cooldown: 0,
         }
@@ -57,10 +47,10 @@ impl BotMotor {
 
                     #[allow(clippy::comparison_chain)]
                     if val < 0 {
-                        self.dir = -self.dir.perp();
+                        self.dir = self.dir.turned_left();
                         self.cooldown = 10000;
                     } else if val > 0 {
-                        self.dir = self.dir.perp();
+                        self.dir = self.dir.turned_right();
                         self.cooldown = 10000;
                     }
                 }
@@ -69,6 +59,17 @@ impl BotMotor {
             }
 
             _ => Err(()),
+        }
+    }
+}
+
+#[cfg(test)]
+impl Default for BotMotor {
+    fn default() -> Self {
+        Self {
+            dir: Dir::Up,
+            vel: Default::default(),
+            cooldown: Default::default(),
         }
     }
 }

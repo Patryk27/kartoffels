@@ -116,6 +116,7 @@
 
         bot.value = {
           id: props.id,
+          dir: props.dir,
           age: props.age,
           is_followed: props.is_followed,
           ...data.bot

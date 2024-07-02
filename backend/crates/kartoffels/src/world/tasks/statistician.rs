@@ -1,6 +1,5 @@
 use super::Broadcaster;
-use crate::world::Metronome;
-use crate::World;
+use crate::{Metronome, World};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 

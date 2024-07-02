@@ -1,5 +1,4 @@
-use crate::world::SerializedWorld;
-use crate::World;
+use crate::{SerializedWorld, World};
 use anyhow::{Context, Result};
 use maybe_owned::MaybeOwned;
 use std::time::{Duration, Instant};

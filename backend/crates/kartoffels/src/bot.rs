@@ -13,7 +13,7 @@ pub use self::radar::*;
 pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
-use crate::{AliveBotsLocator, BotId, Map, World};
+use crate::{AliveBotsLocator, BotId, Map};
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use glam::IVec2;
@@ -53,10 +53,6 @@ impl AliveBot {
             arm: BotArm::default(),
             radar: BotRadar::default(),
         }
-    }
-
-    pub fn age(&self) -> f32 {
-        (self.timer.ticks as f32) / (World::SIM_HZ as f32)
     }
 
     pub fn tick(

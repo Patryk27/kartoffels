@@ -765,6 +765,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kartoffels-dbg"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ciborium",
+ "clap",
+ "kartoffels",
+ "serde_json",
+]
+
+[[package]]
 name = "kartoffels-server"
 version = "0.1.0"
 dependencies = [

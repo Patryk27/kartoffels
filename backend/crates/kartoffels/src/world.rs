@@ -1,16 +1,13 @@
 mod handle;
-mod metronome;
-mod serialize;
 mod tasks;
 mod update;
 
 pub use self::handle::*;
-use self::metronome::*;
-use self::serialize::*;
 use self::tasks::*;
 pub use self::update::*;
 use crate::{
-    BotId, Bots, Map, Mode, Policy, Theme, WorldConfig, WorldId, WorldName,
+    BotId, Bots, Map, Metronome, Mode, Policy, SerializedWorld, Theme,
+    WorldConfig, WorldId, WorldName,
 };
 use anyhow::Result;
 use derivative::Derivative;
@@ -112,11 +109,8 @@ impl World {
         let (tx, rx) = mpsc::channel(16 * 1024);
 
         thread::spawn({
-            let span = span!(
-                Level::INFO,
-                "kartoffels",
-                world = format!("{}/{}", self.id, self.name)
-            );
+            let span =
+                span!(Level::INFO, "kartoffels", world = self.id.to_string());
 
             move || {
                 let _span = span.enter();
