@@ -28,7 +28,7 @@ $ sudo nixos-container start demo
 
 ... and then just open the listed IP in your web browser.
 
-### On other machines
+### On other systems
 
 Start backend:
 
