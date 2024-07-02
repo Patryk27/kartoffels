@@ -99,7 +99,7 @@
         bots.value = data.bots;
         map.value.bots = mapBots;
 
-        if (bot.value != null && bot.value.is_followed) {
+        if (bot.value?.is_followed) {
           const botEntry = data.bots[bot.value.id];
 
           if (botEntry != null) {
@@ -190,7 +190,7 @@
   }
 
   function handleBotClick(id) {
-    if (bot.value != null && bot.value.id == id && !paused.value) {
+    if (bot.value?.id == id && !paused.value) {
       join(null);
     } else {
       join(id);

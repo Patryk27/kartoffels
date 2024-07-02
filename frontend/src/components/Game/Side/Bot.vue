@@ -12,7 +12,7 @@
   const props = defineProps(['bot', 'paused']);
 
   const serialStr = computed(() => {
-    if (props.bot == null || props.bot.serial == null) {
+    if (props.bot?.serial == null) {
       return null;
     }
 
