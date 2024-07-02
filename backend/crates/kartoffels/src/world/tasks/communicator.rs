@@ -22,27 +22,25 @@ impl Communicator {
         rng: &mut impl RngCore,
         bcaster: &mut Broadcaster,
     ) {
-        let Ok(msg) = self.rx.try_recv() else {
-            return;
-        };
+        while let Ok(msg) = self.rx.try_recv() {
+            debug!(?msg, "processing message");
 
-        debug!(?msg, "processing message");
+            match msg {
+                WorldRequest::CreateBot { src, tx } => {
+                    _ = tx.send(
+                        try {
+                            let fw = vm::Firmware::new(&src)?;
+                            let vm = vm::Runtime::new(fw);
+                            let bot = AliveBot::new(rng, vm);
 
-        match msg {
-            WorldRequest::CreateBot { src, tx } => {
-                _ = tx.send(
-                    try {
-                        let fw = vm::Firmware::new(&src)?;
-                        let vm = vm::Runtime::new(fw);
-                        let bot = AliveBot::new(rng, vm);
+                            world.bots.add(rng, &world.policy, bot)?
+                        },
+                    );
+                }
 
-                        world.bots.add(rng, &world.policy, bot)?
-                    },
-                );
-            }
-
-            WorldRequest::Join { id, tx } => {
-                _ = tx.send(bcaster.add(id));
+                WorldRequest::Join { id, tx } => {
+                    _ = tx.send(bcaster.add(id));
+                }
             }
         }
     }

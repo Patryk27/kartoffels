@@ -1,6 +1,5 @@
 #![feature(array_chunks)]
 #![feature(extract_if)]
-#![feature(hash_raw_entry)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
 #![feature(try_blocks)]

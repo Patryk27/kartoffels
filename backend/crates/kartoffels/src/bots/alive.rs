@@ -1,18 +1,18 @@
 use crate::{AliveBot, BotId};
+use ahash::AHashMap;
 use anyhow::Result;
 use glam::IVec2;
 use maybe_owned::MaybeOwned;
 use rand::prelude::SliceRandom;
 use rand::RngCore;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{hash_map, HashMap};
 use std::mem;
 
 #[derive(Clone, Debug, Default)]
 pub struct AliveBots {
-    entries: HashMap<BotId, AliveBot>,
-    pos_to_id: HashMap<IVec2, BotId>,
-    id_to_pos: HashMap<BotId, IVec2>,
+    entries: AHashMap<BotId, AliveBot>,
+    pos_to_id: AHashMap<IVec2, BotId>,
+    id_to_pos: AHashMap<BotId, IVec2>,
 }
 
 impl AliveBots {
@@ -26,15 +26,11 @@ impl AliveBots {
     }
 
     pub fn relocate(&mut self, id: BotId, new_pos: IVec2) {
-        assert!(!self.pos_to_id.contains_key(&new_pos),);
+        assert!(!self.pos_to_id.contains_key(&new_pos));
 
-        let hash_map::RawEntryMut::Occupied(entry) =
-            self.id_to_pos.raw_entry_mut().from_key(&id)
-        else {
-            unreachable!();
-        };
+        let old_pos =
+            mem::replace(self.id_to_pos.get_mut(&id).unwrap(), new_pos);
 
-        let old_pos = mem::replace(entry.into_mut(), new_pos);
         let id = self.pos_to_id.remove(&old_pos).unwrap();
 
         self.pos_to_id.insert(new_pos, id);
@@ -126,7 +122,7 @@ pub struct AliveBotEntryMut<'a> {
 
 #[derive(Debug)]
 pub struct AliveBotsLocator<'a> {
-    pos_to_id: &'a HashMap<IVec2, BotId>,
+    pos_to_id: &'a AHashMap<IVec2, BotId>,
 }
 
 impl AliveBotsLocator<'_> {

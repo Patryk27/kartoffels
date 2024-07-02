@@ -6,6 +6,7 @@ edition = { workspace = true }
 [dependencies]
 kartoffels-vm = { path = "../kartoffels-vm" }
 
+ahash = { workspace = true }
 anyhow = { workspace = true }
 chrono = { workspace = true }
 ciborium = { workspace = true }

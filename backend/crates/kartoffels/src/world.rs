@@ -32,7 +32,7 @@ pub struct World {
 
 impl World {
     pub const SIM_HZ: u32 = 64_000;
-    pub const SIM_TICKS: u32 = 256;
+    pub const SIM_TICKS: u32 = 1024;
 
     pub fn create(
         id: WorldId,

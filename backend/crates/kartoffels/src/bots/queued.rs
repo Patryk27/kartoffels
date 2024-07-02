@@ -1,12 +1,13 @@
 use crate::{BotId, QueuedBot};
+use ahash::AHashMap;
 use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 #[derive(Clone, Debug, Default)]
 pub struct QueuedBots {
     entries: VecDeque<QueuedBot>,
-    id_to_idx: HashMap<BotId, usize>,
+    id_to_idx: AHashMap<BotId, usize>,
 }
 
 impl QueuedBots {
