@@ -19,6 +19,7 @@ use tokio::net::TcpListener;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{debug, info, warn};
+use tracing_subscriber::fmt;
 
 const LOGO: &str = indoc! {r#"
      _              _         __  __     _
@@ -30,7 +31,7 @@ const LOGO: &str = indoc! {r#"
 "#};
 
 #[derive(Debug, Parser)]
-struct AppArgs {
+struct Args {
     #[clap(long, default_value = "127.0.0.1:1313")]
     listen: SocketAddr,
 
@@ -46,7 +47,7 @@ struct AppArgs {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = AppArgs::parse();
+    let args = Args::parse();
 
     let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
         let filter = if args.debug {
@@ -58,7 +59,10 @@ async fn main() -> Result<()> {
         filter.to_owned()
     });
 
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .event_format(fmt::format::Format::default().without_time())
+        .init();
 
     // ---
 
