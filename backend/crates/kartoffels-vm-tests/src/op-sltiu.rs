@@ -17,4 +17,5 @@ kartoffels_vm_tests::test! {
  * x1 = 10
  * x2 = 20
  * x3 = 1
+ * x4 = 0
  */

@@ -33,6 +33,7 @@ indoc = "2.0.5"
 itertools = "0.12.1"
 lru = "0.12.3"
 maybe-owned = { version = "0.3.4", features = ["serde"] }
+num-traits = { version = "0.2.19", default-features = false }
 pretty_assertions = "1.4.0"
 rand = "0.8.5"
 rand_chacha = "0.3.1"

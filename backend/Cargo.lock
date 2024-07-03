@@ -806,6 +806,7 @@ name = "kartoffels-vm-tests"
 version = "0.1.0"
 dependencies = [
  "kartoffel",
+ "num-traits",
  "spin",
  "talc",
 ]

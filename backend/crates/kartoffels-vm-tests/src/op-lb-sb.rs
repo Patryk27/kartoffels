@@ -19,4 +19,5 @@ kartoffels_vm_tests::test! {
  * x1 = 1052672
  * x2 = 125
  * x4 = 125
+ * x5 = 16
  */

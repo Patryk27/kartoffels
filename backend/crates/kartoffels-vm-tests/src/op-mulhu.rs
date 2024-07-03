@@ -8,31 +8,26 @@ kartoffels_vm_tests::test! {
     _start:
         li x1, 0x100000001
         li x2, 0x1
-        divu x3, x1, x2
+        mulhu x3, x1, x2
 
         li x1, 0xffffffffffffffff
         li x2, 0xffffffffffffffff
-        divu x4, x1, x2
+        mulhu x4, x1, x2
 
         li x1, 0x0
         li x2, 0x100000001
-        divu x5, x1, x2
+        mulhu x5, x1, x2
 
-        li x1, 0xffffbfffffffffff
+        li x1, 0x100000001
         li x2, 0x100000001
-        divu x6, x1, x2
-
-        li x1, 0x1
-        li x2, 0x0
-        divu x7, x1, x2
+        mulhu x6, x1, x2
         ebreak
     "#
 }
 
 /*
- * x3 = 0x100000001
- * x4 = 0x1
+ * x3 = 0x0
+ * x4 = 0xfffffffffffffffe
  * x5 = 0x0
- * x6 = 0xffffbfff
- * x7 = -1
+ * x6 = 0x1
  */

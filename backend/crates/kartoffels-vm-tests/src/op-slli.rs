@@ -5,13 +5,13 @@ kartoffels_vm_tests::test! {
     .global _start
 
     _start:
-        li x1, 123
-        slli x2, x1, 4
+        li x1, 0xffffffff
+        slli x2, x1, 1
         ebreak
     "#
 }
 
 /*
- * x1 = 123
- * x2 = 1968
+ * x1 = 0xffffffff
+ * x2 = 0x1fffffffe
  */

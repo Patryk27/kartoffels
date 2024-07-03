@@ -146,10 +146,12 @@ mod tests {
 
             assert!(
                 reg_val_exp == reg_val_act,
-                "mismatch: x{} says {}, but we expected {}",
+                "assertion failed: x{} = {} != {} (0x{:x} != 0x{:x})",
                 reg_id,
+                reg_val_exp,
                 reg_val_act,
                 reg_val_exp,
+                reg_val_act,
             );
         }
 
@@ -173,25 +175,42 @@ mod tests {
                     }
 
                     out.push({
-                        let (reg_name, reg_value) =
-                            line.split_once('=').unwrap();
+                        let (id, val) = line.split_once('=').unwrap();
+                        let id = parse_reg_id(id);
+                        let val = parse_reg_val(val);
 
-                        let reg_id = reg_name
-                            .trim()
-                            .strip_prefix("* x")
-                            .unwrap()
-                            .parse()
-                            .unwrap();
-
-                        let reg_value = reg_value.trim().parse().unwrap();
-
-                        (reg_id, reg_value)
+                        (id, val)
                     });
                 }
             }
         }
 
         out
+    }
+
+    fn parse_reg_id(s: &str) -> usize {
+        s.trim().strip_prefix("* x").unwrap().parse().unwrap()
+    }
+
+    fn parse_reg_val(s: &str) -> i64 {
+        let mut s = s.trim();
+        let mut neg = false;
+
+        if let Some(s2) = s.strip_prefix("-") {
+            s = s2;
+            neg = true;
+        }
+
+        let val = s
+            .strip_prefix("0x")
+            .map(|val| u64::from_str_radix(val, 16).unwrap() as i64)
+            .unwrap_or_else(|| s.parse().unwrap());
+
+        if neg {
+            -val
+        } else {
+            val
+        }
     }
 
     #[derive(Debug, Default)]

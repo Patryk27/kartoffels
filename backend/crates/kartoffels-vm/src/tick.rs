@@ -4,12 +4,14 @@ use anyhow::{anyhow, Context, Result};
 macro_rules! op {
     ($self:ident, $word:ident, $( $tt:tt )*) => {
         #[cfg(test)]
-        eprintln!(
-            "    {} # 0x{:08x} @ 0x{:04x}",
-            format!($($tt)*),
-            $word,
-            $self.pc,
-        );
+        if std::env::var("KVM_DUMP_OPS").is_ok() {
+            eprintln!(
+                "    {} # 0x{:08x} @ 0x{:04x}",
+                format!($($tt)*),
+                $word,
+                $self.pc,
+            );
+        }
     };
 }
 
@@ -136,6 +138,15 @@ impl Runtime {
                 self.reg_store(rd, (lhs.wrapping_mul(rhs) >> 64) as i64);
             }
 
+            (0b0110011, 0b010, 0b0000001) => {
+                op!(self, word, "mulhsu x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as i128 as u128;
+                let rhs = self.regs[rs2] as u64 as u128;
+
+                self.reg_store(rd, (lhs.wrapping_mul(rhs) >> 64) as u64 as i64);
+            }
+
             (0b0110011, 0b011, 0b0000001) => {
                 op!(self, word, "mulhu x{rd}, x{rs1}, x{rs2}");
 
@@ -145,6 +156,15 @@ impl Runtime {
                 self.reg_store(rd, (lhs.wrapping_mul(rhs) >> 64) as i64);
             }
 
+            (0b0111011, 0b000, 0b0000001) => {
+                op!(self, word, "mulw x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1];
+                let rhs = self.regs[rs2];
+
+                self.reg_store(rd, lhs.wrapping_mul(rhs) as i32 as i64);
+            }
+
             (0b0110011, 0b100, 0b0000001) => {
                 op!(self, word, "div x{rd}, x{rs1}, x{rs2}");
 
@@ -152,6 +172,15 @@ impl Runtime {
                 let rhs = self.regs[rs2];
 
                 self.reg_store(rd, lhs.checked_div(rhs).unwrap_or(-1));
+            }
+
+            (0b0111011, 0b100, 0b0000001) => {
+                op!(self, word, "divw x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as i32;
+                let rhs = self.regs[rs2] as i32;
+
+                self.reg_store(rd, lhs.checked_div(rhs).unwrap_or(-1) as i64);
             }
 
             (0b0110011, 0b101, 0b0000001) => {
@@ -166,6 +195,20 @@ impl Runtime {
                 );
             }
 
+            (0b0111011, 0b101, 0b0000001) => {
+                op!(self, word, "divuv x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as u32;
+                let rhs = self.regs[rs2] as u32;
+
+                self.reg_store(
+                    rd,
+                    lhs.checked_div(rhs)
+                        .map(|val| val as i32 as i64)
+                        .unwrap_or(-1),
+                );
+            }
+
             (0b0110011, 0b110, 0b0000001) => {
                 op!(self, word, "rem x{rd}, x{rs1}, x{rs2}");
 
@@ -173,6 +216,15 @@ impl Runtime {
                 let rhs = self.regs[rs2];
 
                 self.reg_store(rd, lhs.checked_rem(rhs).unwrap_or(-1));
+            }
+
+            (0b0111011, 0b110, 0b0000001) => {
+                op!(self, word, "remw x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as i32;
+                let rhs = self.regs[rs2] as i32;
+
+                self.reg_store(rd, lhs.checked_rem(rhs).unwrap_or(-1) as i64);
             }
 
             (0b0110011, 0b111, 0b0000001) => {
@@ -184,6 +236,20 @@ impl Runtime {
                 self.reg_store(
                     rd,
                     lhs.checked_rem(rhs).unwrap_or(-1i64 as u64) as i64,
+                );
+            }
+
+            (0b0111011, 0b111, 0b0000001) => {
+                op!(self, word, "remuw x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as u32;
+                let rhs = self.regs[rs2] as u32;
+
+                self.reg_store(
+                    rd,
+                    lhs.checked_rem(rhs)
+                        .map(|val| val as i32 as i64)
+                        .unwrap_or(-1),
                 );
             }
 
@@ -268,6 +334,15 @@ impl Runtime {
                 self.reg_store(rd, lhs.wrapping_shl(rhs) as i64);
             }
 
+            (0b0011011, 0b001, _) if (i_imm >> 6) == 0x00 => {
+                op!(self, word, "slliw x{rd}, x{rs1}, {i_imm}");
+
+                let lhs = self.regs[rs1] as u64;
+                let rhs = i_imm as u32;
+
+                self.reg_store(rd, lhs.wrapping_shl(rhs) as i32 as i64);
+            }
+
             (0b0110011, 0b101, 0b0000000) => {
                 op!(self, word, "srl x{rd}, x{rs1}, x{rs2}");
 
@@ -313,6 +388,15 @@ impl Runtime {
                 self.reg_store(rd, lhs.wrapping_shr(rhs));
             }
 
+            (0b0111011, 0b101, 0b0100000) => {
+                op!(self, word, "sraw x{rd}, x{rs1}, x{rs2}");
+
+                let lhs = self.regs[rs1] as i32;
+                let rhs = self.regs[rs2] as u32;
+
+                self.reg_store(rd, lhs.wrapping_shr(rhs) as i64);
+            }
+
             (0b0010011, 0b101, _) if (i_imm >> 6) == 0x10 => {
                 let lhs = self.regs[rs1];
                 let rhs = (i_imm as u32) & 0x3f;
@@ -325,10 +409,10 @@ impl Runtime {
             (0b0011011, 0b101, _) if (i_imm & (1 << 10)) > 0 => {
                 op!(self, word, "sraiw x{rd}, x{rs1}, {i_imm}");
 
-                let lhs = self.regs[rs1] as u32;
+                let lhs = self.regs[rs1] as i32;
                 let rhs = (i_imm as u32) & 0x3f;
 
-                self.reg_store(rd, lhs.wrapping_shr(rhs) as i32 as i64);
+                self.reg_store(rd, lhs.wrapping_shr(rhs) as i64);
             }
 
             (0b0110011, 0b010, 0b0000000) => {
