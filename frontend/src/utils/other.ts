@@ -10,6 +10,13 @@ export function durationToHuman(sec) {
 }
 
 export function ordinal(nth) {
+  switch (nth % 100) {
+    case 11:
+    case 12:
+    case 13:
+      return "th";
+  }
+
   switch (nth % 10) {
     case 3:
       return "rd";
