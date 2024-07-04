@@ -1,5 +1,6 @@
 mod arm;
 mod battery;
+mod events;
 mod motor;
 mod radar;
 mod serial;
@@ -8,20 +9,21 @@ mod timer;
 
 pub use self::arm::*;
 pub use self::battery::*;
+pub use self::events::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
-use crate::{AliveBotsLocator, BotId, Map};
-use anyhow::{Context, Result};
-use chrono::{DateTime, Utc};
+use crate::{AliveBotsLocator, Id, Map};
+use anyhow::{Context, Error, Result};
+use derivative::Derivative;
 use glam::IVec2;
 use kartoffels_vm as vm;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::mem;
-use std::sync::Arc;
+use std::str::FromStr;
+use std::{fmt, mem};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -33,6 +35,7 @@ pub struct AliveBot {
     pub motor: BotMotor,
     pub arm: BotArm,
     pub radar: BotRadar,
+    pub events: BotEvents,
 }
 
 impl AliveBot {
@@ -52,7 +55,12 @@ impl AliveBot {
             motor: BotMotor::new(rng),
             arm: BotArm::default(),
             radar: BotRadar::default(),
+            events: BotEvents::default(),
         }
+    }
+
+    pub fn log(&mut self, msg: String) {
+        self.events.add(msg);
     }
 
     pub fn tick(
@@ -93,8 +101,18 @@ impl AliveBot {
         Ok(AliveBotTick { stab_dir, move_dir })
     }
 
-    pub fn reset(mut self, rng: &mut impl RngCore) -> Option<Self> {
-        Some(Self::new(rng, self.vm.take()?.reset()))
+    pub fn reset(mut self, rng: &mut impl RngCore) -> Result<Self, Self> {
+        if let Some(vm) = self.vm.take() {
+            let vm = vm.reset();
+            let this = Self::new(rng, vm);
+
+            Ok(Self {
+                events: self.events,
+                ..this
+            })
+        } else {
+            Err(self)
+        }
     }
 }
 
@@ -122,8 +140,7 @@ impl vm::Mmio for AliveBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeadBot {
-    pub reason: Arc<String>,
-    pub killed_at: DateTime<Utc>,
+    pub events: BotEvents,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -133,4 +150,46 @@ pub struct QueuedBot {
 
     #[serde(flatten)]
     pub bot: AliveBot,
+}
+
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Derivative,
+)]
+#[derivative(Debug = "transparent")]
+pub struct BotId(Id);
+
+impl BotId {
+    pub fn new(rng: &mut impl RngCore) -> Self {
+        Self(Id::new(rng))
+    }
+}
+
+#[cfg(test)]
+impl From<u64> for BotId {
+    fn from(value: u64) -> Self {
+        Self(Id::from(value))
+    }
+}
+
+impl FromStr for BotId {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.parse()?))
+    }
+}
+
+impl fmt::Display for BotId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }

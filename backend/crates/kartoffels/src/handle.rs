@@ -1,20 +1,20 @@
-use super::WorldRequest;
-use crate::{BotId, WorldName, WorldUpdate};
+use crate::{BotId, Update, UpdateRx, WorldName};
 use anyhow::{anyhow, Context, Result};
+use derivative::Derivative;
 use futures_util::Stream;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
 use tokio_stream::wrappers::ReceiverStream;
 
 #[derive(Clone, Debug)]
-pub struct WorldHandle {
+pub struct Handle {
     pub(super) name: Arc<WorldName>,
     pub(super) mode: &'static str,
     pub(super) theme: &'static str,
-    pub(super) tx: mpsc::Sender<WorldRequest>,
+    pub(super) tx: RequestTx,
 }
 
-impl WorldHandle {
+impl Handle {
     const ERR_DIED: &'static str = "world actor has died";
 
     pub fn name(&self) -> &WorldName {
@@ -29,11 +29,11 @@ impl WorldHandle {
         self.theme
     }
 
-    pub async fn create_bot(&self, src: Vec<u8>) -> Result<BotId> {
+    pub async fn upload(&self, src: Vec<u8>) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
         self.tx
-            .send(WorldRequest::CreateBot { src, tx })
+            .send(Request::Upload { src, tx })
             .await
             .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
 
@@ -43,11 +43,11 @@ impl WorldHandle {
     pub async fn join(
         &self,
         id: Option<BotId>,
-    ) -> Result<impl Stream<Item = WorldUpdate>> {
+    ) -> Result<impl Stream<Item = Update>> {
         let (tx, rx) = oneshot::channel();
 
         self.tx
-            .send(WorldRequest::Join { id, tx })
+            .send(Request::Join { id, tx })
             .await
             .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
 
@@ -55,4 +55,26 @@ impl WorldHandle {
 
         Ok(ReceiverStream::new(rx))
     }
+}
+
+pub type RequestTx = mpsc::Sender<Request>;
+pub type RequestRx = mpsc::Receiver<Request>;
+
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub(crate) enum Request {
+    Upload {
+        #[derivative(Debug = "ignore")]
+        src: Vec<u8>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<Result<BotId>>,
+    },
+
+    Join {
+        id: Option<BotId>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<UpdateRx>,
+    },
 }

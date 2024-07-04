@@ -1,4 +1,5 @@
 use ciborium::Value;
+use std::iter;
 
 pub trait CborValueExt {
     fn query_mut<'a>(
@@ -23,41 +24,64 @@ impl CborValueExt for Value {
                         .flat_map(|this| this.query_mut(query)),
                 ),
 
-                key if key.starts_with('{') => {
-                    let key = key.strip_prefix('{').unwrap();
-                    let key = key.strip_suffix('}').unwrap();
-                    let keys = key.split(',').collect();
-
-                    Box::new(
-                        lookup_mut(self, keys)
-                            .flat_map(|this| this.query_mut(query)),
-                    )
-                }
-
                 key => Box::new(
-                    lookup_mut(self, vec![key])
+                    lookup_mut(self, key)
                         .flat_map(|this| this.query_mut(query)),
                 ),
             },
 
-            None => Box::new(lookup_mut(self, vec![query])),
+            None => Box::new(lookup_mut(self, query)),
         }
     }
 }
 
 fn lookup_mut<'a>(
-    val: &'a mut Value,
-    keys: Vec<&'a str>,
-) -> impl Iterator<Item = &'a mut Value> + 'a {
-    val.as_map_mut().into_iter().flatten().filter_map(
-        move |(curr_key, curr_val)| {
-            let curr_key = curr_key.as_text().unwrap_or_default();
+    value: &'a mut Value,
+    query: &'a str,
+) -> Box<dyn Iterator<Item = &'a mut Value> + 'a> {
+    match value {
+        Value::Array(value) => Box::new(lookup_mut_array(value, query)),
+        Value::Map(value) => Box::new(lookup_mut_map(value, query)),
+        _ => Box::new(iter::empty()),
+    }
+}
 
-            if keys.contains(&curr_key) {
-                Some(curr_val)
-            } else {
-                None
-            }
-        },
-    )
+fn lookup_mut_array<'a>(
+    value: &'a mut [Value],
+    query: &'a str,
+) -> impl Iterator<Item = &'a mut Value> {
+    if query == "*" {
+        value.iter_mut()
+    } else {
+        todo!();
+    }
+}
+
+fn lookup_mut_map<'a>(
+    value: &'a mut [(Value, Value)],
+    query: &'a str,
+) -> impl Iterator<Item = &'a mut Value> + 'a {
+    let keys = if query == "*" {
+        None
+    } else if query.starts_with('{') {
+        let key = query.strip_prefix('{').unwrap();
+        let key = key.strip_suffix('}').unwrap();
+
+        Some(key.split(',').collect())
+    } else {
+        Some(vec![query])
+    };
+
+    value.iter_mut().filter_map(move |(curr_key, curr_val)| {
+        let curr_key = curr_key.as_text().unwrap_or_default();
+
+        let curr_key_matches =
+            keys.as_ref().map_or(true, |keys| keys.contains(&curr_key));
+
+        if curr_key_matches {
+            Some(curr_val)
+        } else {
+            None
+        }
+    })
 }

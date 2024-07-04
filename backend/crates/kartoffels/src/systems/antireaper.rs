@@ -33,11 +33,20 @@ impl Antireaper {
         };
 
         // Unwrap-safety: We've just made sure that the queue is not empty
-        let QueuedBot { id, bot, .. } = world.bots.queued.pop().unwrap();
+        let QueuedBot {
+            id,
+            requeued,
+            mut bot,
+        } = world.bots.queued.pop().unwrap();
 
         debug!(?id, ?pos, "bot dequeued and spawned");
 
+        bot.log(if requeued {
+            "respawned".into()
+        } else {
+            "spawned".into()
+        });
+
         world.bots.alive.add(id, pos, bot);
-        world.bots.dead.remove(id);
     }
 }

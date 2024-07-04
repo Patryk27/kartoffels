@@ -11,7 +11,7 @@
 
   const props = defineProps(['bot', 'paused']);
 
-  const serialStr = computed(() => {
+  const serial = computed(() => {
     if (props.bot?.serial == null) {
       return null;
     }
@@ -44,6 +44,32 @@
     return out;
   });
 
+  const events = computed(() => {
+    const now = new Date();
+    let out = '';
+
+    for (const event of props.bot?.events ?? []) {
+      let eventAt;
+
+      if (event.at.getYear() == now.getYear()
+          && event.at.getMonth() == now.getMonth()
+          && event.at.getDay() == now.getDay()) {
+        eventAt = event.at.toLocaleTimeString();
+      } else {
+        eventAt = event.at.toLocaleString();
+      }
+
+      out += `> ${eventAt}\n${event.msg}\n`;
+      out += '\n';
+    }
+
+    if (out.length == 0) {
+      return 'nothing here yet';
+    } else {
+      return out;
+    }
+  });
+
   function handleConnectToBot() {
     const id = prompt('enter bot id:');
 
@@ -67,7 +93,7 @@
 
 <template>
   <div v-if="bot == null" class="game-side-bot">
-    <div>
+    <div class="buttons">
       <button :disabled="paused"
               @click="paused ? null : handleConnectToBot()">
         connect to bot
@@ -81,104 +107,105 @@
   </div>
 
   <div v-else class="game-side-bot">
-    <div>
-      <button style="width: 100%"
-              @click="emit('botDisconnect')">
-        disconnect from bot
-      </button>
+    <button style="width: 100%"
+            @click="emit('botDisconnect')">
+      disconnect from bot
+    </button>
 
-      <p>
-        id: <br />
+    <p>
+      id: <br />
 
-        <span :style="`color: ${botIdToColor(bot.id)}`">
-          {{ bot.id }}
-        </span>
-      </p>
-
-      <template v-if="bot.status == 'alive'">
-        <p>
-          status: <br />
-
-          <span class="status-alive">
-            alive
-          </span>
-
-          ({{ durationToHuman(Math.round(bot.age)) }})
-        </p>
-
-        <p>
-          serial port:
-        </p>
-      </template>
-
-      <template v-if="bot.status == 'dead'">
-        <p>
-          status: <br />
-
-          <span class="status-dead">
-            dead
-          </span>
-
-          <br />
-
-          (since {{ (new Date(bot.killed_at)).toLocaleString() }})
-        </p>
-
-        <p>
-          message:
-        </p>
-      </template>
-
-      <template v-else-if="bot.status == 'queued'">
-        <p>
-          status: <br />
-
-          <span class="status-queued">
-            {{ bot.requeued ? 'requeued' : 'queued' }}
-            ({{ bot.place }}{{ ordinal(bot.place) }})
-          </span>
-        </p>
-
-        <p v-if="bot.requeued">
-          message:
-        </p>
-      </template>
-    </div>
-
-    <template v-if="bot.status == 'dead' || (bot.status == 'queued' && bot.requeued)">
-      <textarea readonly style="resize: none" :value="bot.msg" />
-    </template>
+      <span :style="`color: ${botIdToColor(bot.id)}`">
+        {{ bot.id }}
+      </span>
+    </p>
 
     <template v-if="bot.status == 'alive'">
-      <textarea readonly style="resize: none" :value="serialStr" />
+      <p>
+        status: <br />
 
-      <div>
-        <input id="bot-follow"
-               type="checkbox"
-               v-model="bot.is_followed"
-               :disabled="paused" />
+        <span class="status-alive">
+          alive
+        </span>
 
-        <label for="bot-follow">
-          follow with camera
-        </label>
-      </div>
+        ({{ durationToHuman(Math.round(bot.age)) }})
+      </p>
+
+      <p>
+        serial port:
+      </p>
+
+      <textarea v-if="bot.status == 'alive'"
+                :value="serial"
+                readonly />
     </template>
+
+    <p v-if="bot.status == 'dead'">
+      status: <br />
+
+      <span class="status-dead">
+        dead
+      </span>
+
+      <br />
+
+      (since {{ (new Date(bot.killed_at)).toLocaleString() }})
+    </p>
+
+    <p v-else-if="bot.status == 'queued'">
+      status: <br />
+
+      <span class="status-queued">
+        {{ bot.requeued ? 'requeued' : 'queued' }}
+        ({{ bot.place }}{{ ordinal(bot.place) }})
+      </span>
+    </p>
+
+    <p>
+      history:
+    </p>
+
+    <textarea readonly :value="events" />
+
+    <div v-if="bot.status == 'alive'">
+      <input id="bot-follow"
+             type="checkbox"
+             v-model="bot.following"
+             :disabled="paused" />
+
+      <label for="bot-follow">
+        follow with camera
+      </label>
+    </div>
   </div>
 </template>
 
 <style scoped>
   .game-side-bot {
     display: flex;
-    flex-direction: column;
+    width: 32ch;
     flex-grow: 1;
+    flex-direction: column;
     padding-bottom: 1em;
 
-    button + button {
-      margin-left: 1em;
+    .buttons {
+      display: flex;
+
+      button {
+        flex-grow: 1;
+
+        & + button {
+          margin-left: 1em;
+        }
+      }
     }
 
     p {
       &:first-child {
+        margin-top: 0;
+      }
+
+      & + p {
         margin-top: 0;
       }
     }
@@ -186,6 +213,14 @@
     textarea {
       flex-grow: 1;
       margin-bottom: 1em;
+    }
+
+    textarea + p {
+      margin-top: 0;
+    }
+
+    p:has(+textarea) {
+      margin-bottom: 0.4em;
     }
   }
 </style>

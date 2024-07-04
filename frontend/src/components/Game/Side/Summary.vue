@@ -64,6 +64,10 @@
           padding-right: 1em;
         }
 
+        &:nth-child(3) {
+          text-align: right;
+        }
+
         &:nth-child(4) {
           text-align: right;
         }

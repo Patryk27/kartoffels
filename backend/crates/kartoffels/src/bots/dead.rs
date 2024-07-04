@@ -10,7 +10,7 @@ pub struct DeadBots {
 }
 
 impl DeadBots {
-    const MAX_ENTRIES: usize = 32 * 1024;
+    const MAX_ENTRIES: usize = 4 * 1024;
 
     pub fn add(&mut self, id: BotId, bot: DeadBot) {
         self.entries.put(id, bot);
@@ -18,6 +18,10 @@ impl DeadBots {
 
     pub fn get(&self, id: BotId) -> Option<&DeadBot> {
         self.entries.peek(&id)
+    }
+
+    pub fn get_mut(&mut self, id: BotId) -> Option<&mut DeadBot> {
+        self.entries.peek_mut(&id)
     }
 
     pub fn remove(&mut self, id: BotId) {
@@ -44,18 +48,12 @@ impl Serialize for DeadBots {
     where
         S: Serializer,
     {
-        let proxy = SerializedDeadBots {
-            bots: self
-                .entries
-                .iter()
-                .map(|(id, bot)| SerializedDeadBot {
-                    id: *id,
-                    bot: MaybeOwned::Borrowed(bot),
-                })
-                .collect(),
-        };
-
-        proxy.serialize(serializer)
+        serializer.collect_seq(self.entries.iter().map(|(id, bot)| {
+            SerializedDeadBot {
+                id: *id,
+                bot: MaybeOwned::Borrowed(bot),
+            }
+        }))
     }
 }
 
@@ -65,20 +63,14 @@ impl<'de> Deserialize<'de> for DeadBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let proxy = SerializedDeadBots::deserialize(deserializer)?;
+        let bots = Vec::<SerializedDeadBot>::deserialize(deserializer)?;
 
-        for entry in proxy.bots {
-            this.add(entry.id, entry.bot.into_owned());
+        for bot in bots {
+            this.add(bot.id, bot.bot.into_owned());
         }
 
         Ok(this)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(transparent)]
-struct SerializedDeadBots<'a> {
-    bots: Vec<SerializedDeadBot<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

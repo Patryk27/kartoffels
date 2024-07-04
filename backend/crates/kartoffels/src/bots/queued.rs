@@ -1,6 +1,5 @@
 use crate::{BotId, QueuedBot};
 use ahash::AHashMap;
-use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::VecDeque;
 
@@ -28,11 +27,15 @@ impl QueuedBots {
 
     pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
         let place = *self.id_to_idx.get(&id)?;
+        let bot = &self.entries[place];
 
-        Some(QueuedBotEntry {
-            place,
-            requeued: self.entries[place].requeued,
-        })
+        Some(QueuedBotEntry { bot, place })
+    }
+
+    pub fn get_mut(&mut self, id: BotId) -> Option<&mut QueuedBot> {
+        let place = *self.id_to_idx.get(&id)?;
+
+        Some(&mut self.entries[place])
     }
 
     pub fn has(&self, id: BotId) -> bool {
@@ -64,11 +67,7 @@ impl Serialize for QueuedBots {
     where
         S: Serializer,
     {
-        let proxy = SerializedQueuedBots {
-            bots: self.entries.iter().map(MaybeOwned::Borrowed).collect(),
-        };
-
-        proxy.serialize(serializer)
+        serializer.collect_seq(self.entries.iter())
     }
 }
 
@@ -78,10 +77,10 @@ impl<'de> Deserialize<'de> for QueuedBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let proxy = SerializedQueuedBots::deserialize(deserializer)?;
+        let bots = Vec::deserialize(deserializer)?;
 
-        for entry in proxy.bots {
-            this.entries.push_back(entry.into_owned());
+        for bot in bots {
+            this.entries.push_back(bot);
         }
 
         this.index();
@@ -90,23 +89,17 @@ impl<'de> Deserialize<'de> for QueuedBots {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct QueuedBotEntry {
+#[derive(Debug)]
+pub struct QueuedBotEntry<'a> {
+    pub bot: &'a QueuedBot,
     pub place: usize,
-    pub requeued: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(transparent)]
-struct SerializedQueuedBots<'a> {
-    bots: Vec<MaybeOwned<'a, QueuedBot>>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn qbot(id: u64) -> QueuedBot {
+    fn bot(id: u64) -> QueuedBot {
         QueuedBot {
             id: id.into(),
             requeued: false,
@@ -118,22 +111,17 @@ mod tests {
     fn smoke() {
         let mut target = QueuedBots::default();
 
-        target.push(qbot(10));
-        target.push(qbot(20));
-        target.push(qbot(30));
-        target.push(qbot(40));
-        target.push(qbot(50));
+        target.push(bot(10));
+        target.push(bot(20));
+        target.push(bot(30));
+        target.push(bot(40));
+        target.push(bot(50));
 
-        let entry = |place: usize| QueuedBotEntry {
-            place,
-            requeued: false,
-        };
+        for id in [10, 20, 30, 40, 50] {
+            let id = BotId::from(id);
 
-        assert_eq!(Some(entry(0)), target.get(10.into()));
-        assert_eq!(Some(entry(1)), target.get(20.into()));
-        assert_eq!(Some(entry(2)), target.get(30.into()));
-        assert_eq!(Some(entry(3)), target.get(40.into()));
-        assert_eq!(Some(entry(4)), target.get(50.into()));
+            assert_eq!(id, target.get(id).unwrap().bot.id);
+        }
 
         // ---
 
@@ -141,11 +129,11 @@ mod tests {
         assert_eq!(BotId::from(20), target.pop().unwrap().id);
         assert_eq!(BotId::from(30), target.pop().unwrap().id);
 
-        assert_eq!(None, target.get(10.into()));
-        assert_eq!(None, target.get(30.into()));
+        assert!(target.get(10.into()).is_none());
+        assert!(target.get(30.into()).is_none());
 
-        assert_eq!(Some(entry(0)), target.get(40.into()));
-        assert_eq!(Some(entry(1)), target.get(50.into()));
+        assert_eq!(BotId::from(40), target.get(40.into()).unwrap().bot.id);
+        assert_eq!(BotId::from(50), target.get(50.into()).unwrap().bot.id);
 
         // ---
 

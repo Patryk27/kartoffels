@@ -123,8 +123,8 @@
           tileColor = botIdToColor(tileBot.id);
           tileOffsetY = -0.1;
 
-          if (tileBot.id == bot?.id) {
-            tileChar = '&';
+          if (tileBot.id == bot?.id && Date.now() % 1000 <= 500) {
+            tileColor = '#ffffff';
           }
         } else {
           tileChar = String.fromCharCode(tile >> 24);
@@ -153,6 +153,7 @@
     const { map, bot, bots, camera, paused } = props;
     const cw = charMetrics.width;
     const ch = charMetrics.height;
+    const selectedBotId = bot?.id;
 
     ctxt.save();
 
@@ -162,7 +163,11 @@
     );
 
     for (const [botId, bot] of Object.entries(bots)) {
-      const botColor = paused ? pausedColor : botIdToColor(botId);
+      let botColor = paused ? pausedColor : botIdToColor(botId);
+
+      if (botId == selectedBotId && Date.now() % 1000 <= 500) {
+        botColor = '#ffffff';
+      }
 
       ctxt.save();
       ctxt.translate(cw * bot.pos[0], ch * (bot.pos[1] + 1));

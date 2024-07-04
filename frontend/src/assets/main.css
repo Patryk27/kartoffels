@@ -72,6 +72,8 @@ label {
 }
 
 textarea {
+  resize: none;
+
   &:read-only {
     cursor: default;
 

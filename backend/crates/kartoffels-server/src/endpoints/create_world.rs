@@ -4,7 +4,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::Json;
-use kartoffels::{World, WorldConfig, WorldId};
+use kartoffels::iface::{Config, WorldId};
 use serde::Serialize;
 use std::sync::Arc;
 use tokio::runtime;
@@ -13,7 +13,7 @@ use tracing::info;
 
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
-    request: Json<WorldConfig>,
+    request: Json<Config>,
 ) -> AppResult<impl IntoResponse> {
     let mut state = state.write().await;
     let id = WorldId::new(&mut rand::thread_rng());
@@ -33,7 +33,9 @@ pub async fn handle(
         .as_ref()
         .map(|data| data.join(id.to_string()).with_extension("world"));
 
-    let world = World::create(runtime::Handle::current(), id, config, path)
+    let rt = runtime::Handle::current();
+
+    let world = kartoffels::create(rt, id, config, path)
         .map_err(AppError::MAP_HTTP_400)?;
 
     state.worlds.insert(id, world);

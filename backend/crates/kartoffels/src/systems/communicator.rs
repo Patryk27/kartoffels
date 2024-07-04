@@ -1,6 +1,5 @@
 use super::Broadcaster;
-use crate::world::WorldRequest;
-use crate::{AliveBot, World};
+use crate::{AliveBot, Request, World};
 use kartoffels_vm as vm;
 use rand::RngCore;
 use tokio::sync::mpsc::Receiver;
@@ -8,11 +7,11 @@ use tracing::debug;
 
 #[derive(Debug)]
 pub struct Communicator {
-    rx: Receiver<WorldRequest>,
+    rx: Receiver<Request>,
 }
 
 impl Communicator {
-    pub fn new(rx: Receiver<WorldRequest>) -> Self {
+    pub fn new(rx: Receiver<Request>) -> Self {
         Self { rx }
     }
 
@@ -26,20 +25,21 @@ impl Communicator {
             debug!(?msg, "processing message");
 
             match msg {
-                WorldRequest::CreateBot { src, tx } => {
+                Request::Upload { src, tx } => {
                     _ = tx.send(
                         try {
                             let fw = vm::Firmware::new(&src)?;
                             let vm = vm::Runtime::new(fw);
-                            let bot = AliveBot::new(rng, vm);
+                            let mut bot = AliveBot::new(rng, vm);
 
+                            bot.log("uploaded and queued".into());
                             world.bots.add(rng, &world.policy, bot)?
                         },
                     );
                 }
 
-                WorldRequest::Join { id, tx } => {
-                    _ = tx.send(bcaster.add(id));
+                Request::Join { id, tx } => {
+                    _ = tx.send(bcaster.add(world, id));
                 }
             }
         }

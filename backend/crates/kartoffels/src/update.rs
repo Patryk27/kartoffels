@@ -1,13 +1,16 @@
-use crate::{BotId, Dir, Map};
-use chrono::{DateTime, Utc};
+use crate::{BotEvent, BotId, Dir, Map};
 use glam::IVec2;
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
+use tokio::sync::mpsc;
 
-#[derive(Debug, Serialize)]
-pub struct WorldUpdate {
+pub type UpdateTx = mpsc::Sender<Update>;
+pub type UpdateRx = mpsc::Receiver<Update>;
+
+#[derive(Clone, Debug, Serialize)]
+pub struct Update {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<Arc<Value>>,
 
@@ -28,22 +31,23 @@ pub struct BotUpdate {
     pub age: f32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(tag = "status")]
 pub enum ConnectedBotUpdate {
-    #[serde(rename = "alive")]
-    Alive { age: f32, serial: VecDeque<u32> },
-
-    #[serde(rename = "dead")]
-    Dead {
-        msg: Arc<String>,
-        killed_at: DateTime<Utc>,
-    },
-
     #[serde(rename = "queued")]
     Queued {
         place: usize,
         requeued: bool,
-        msg: Option<Arc<String>>,
+        events: Vec<Arc<BotEvent>>,
     },
+
+    #[serde(rename = "alive")]
+    Alive {
+        age: f32,
+        serial: VecDeque<u32>,
+        events: Vec<Arc<BotEvent>>,
+    },
+
+    #[serde(rename = "dead")]
+    Dead { events: Vec<Arc<BotEvent>> },
 }

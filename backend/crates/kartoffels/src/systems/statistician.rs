@@ -1,5 +1,5 @@
 use super::Broadcaster;
-use crate::{Metronome, World};
+use crate::{cfg, Metronome, World};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -23,7 +23,7 @@ impl Statistician {
         mtr: &Metronome,
         bcaster: &Broadcaster,
     ) {
-        self.ticks += World::SIM_TICKS;
+        self.ticks += cfg::SIM_TICKS;
 
         if Instant::now() < self.next_tick_at {
             return;

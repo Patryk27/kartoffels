@@ -36,7 +36,7 @@
     if (newBotId != null) {
       bot.value = {
         id: newBotId,
-        is_followed: true,
+        following: true,
       };
     }
 
@@ -99,7 +99,7 @@
         bots.value = data.bots;
         map.value.bots = mapBots;
 
-        if (bot.value?.is_followed) {
+        if (bot.value?.following) {
           const botEntry = data.bots[bot.value.id];
 
           if (botEntry != null) {
@@ -112,15 +112,29 @@
       }
 
       if (bot.value != null) {
-        const props = bot.value;
+        const old = bot.value;
+
+        const events = (data.bot.events ?? []).map((event) => {
+          return {
+            at: new Date(event.at),
+            msg: event.msg,
+          };
+        });
 
         bot.value = {
-          id: props.id,
-          dir: props.dir,
-          age: props.age,
-          is_followed: props.is_followed,
-          ...data.bot
+          ...data.bot,
+          ... {
+            id: old.id,
+            events: (old.events ?? []).concat(events),
+            following: old.following,
+          }
         };
+
+        bot.value.events.sort((a, b) => {
+          return b.at - a.at;
+        });
+
+        bot.value.events = bot.value.events.slice(0, 64);
       }
     };
 
@@ -208,7 +222,7 @@
           camera.value.y += dy;
 
           if (bot.value != null) {
-            bot.value.is_followed = false;
+            bot.value.following = false;
           }
         }
       };

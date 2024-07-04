@@ -5,7 +5,7 @@ use axum::extract::ws::Message;
 use axum::extract::{Path, State, WebSocketUpgrade};
 use axum::response::IntoResponse;
 use futures_util::{StreamExt, TryStreamExt};
-use kartoffels::{BotId, WorldId};
+use kartoffels::iface::{BotId, WorldId};
 use std::sync::Arc;
 use tokio::select;
 use tokio::sync::RwLock;

@@ -4,7 +4,7 @@ use axum::body::Bytes;
 use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::Json;
-use kartoffels::{BotId, WorldId};
+use kartoffels::iface::{BotId, WorldId};
 use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -17,7 +17,7 @@ pub async fn handle(
     let world = state.read().await.world(world_id)?;
 
     let id = world
-        .create_bot(body.to_vec())
+        .upload(body.to_vec())
         .await
         .map_err(AppError::MAP_HTTP_400)?;
 

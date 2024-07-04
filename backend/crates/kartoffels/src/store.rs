@@ -2,7 +2,7 @@ mod header;
 mod migrations;
 
 use self::header::*;
-use crate::{Bots, Map, Metronome, Mode, Policy, Theme, WorldName};
+use crate::{cfg, Bots, Map, Metronome, Mode, Policy, Theme, WorldName};
 use anyhow::{Context, Result};
 use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Serialize};
@@ -36,7 +36,7 @@ impl SerializedWorld<'_> {
         let this =
             ciborium::from_reader(&mut file).context("couldn't read state")?;
 
-        let this = migrations::run(header.version(), Header::VERSION, this)
+        let this = migrations::run(header.version(), cfg::VERSION, this)
             .context("couldn't migrate state")?;
 
         let this = ciborium::from_reader({

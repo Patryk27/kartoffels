@@ -113,13 +113,9 @@
     border-top: 1px solid #444444;
     padding-top: 1em;
 
-    select {
-      width: 100%;
-      margin-bottom: 1em;
-      text-align: center;
-    }
-
     table {
+      width: 100%;
+
       tr {
         &.connected-bot {
           background-color: #202020;

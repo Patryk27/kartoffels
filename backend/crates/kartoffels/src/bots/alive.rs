@@ -61,20 +61,14 @@ impl AliveBots {
         })
     }
 
-    pub fn get_mut(
-        &mut self,
-        id: BotId,
-    ) -> Option<(AliveBotEntryMut, AliveBotsLocator)> {
-        let entry = AliveBotEntryMut {
+    pub fn get_mut(&mut self, id: BotId) -> Option<AliveBotEntryMut> {
+        Some(AliveBotEntryMut {
             pos: *self.id_to_pos.get(&id)?,
             bot: self.entries.get_mut(&id)?,
-        };
-
-        let locator = AliveBotsLocator {
-            pos_to_id: &self.pos_to_id,
-        };
-
-        Some((entry, locator))
+            locator: AliveBotsLocator {
+                pos_to_id: &self.pos_to_id,
+            },
+        })
     }
 
     pub fn iter(&self) -> impl Iterator<Item = AliveBotEntry> + '_ {
@@ -118,6 +112,7 @@ pub struct AliveBotEntry<'a> {
 pub struct AliveBotEntryMut<'a> {
     pub pos: IVec2,
     pub bot: &'a mut AliveBot,
+    pub locator: AliveBotsLocator<'a>,
 }
 
 #[derive(Debug)]
@@ -136,19 +131,13 @@ impl Serialize for AliveBots {
     where
         S: Serializer,
     {
-        let proxy = SerializedAliveBots {
-            bots: self
-                .entries
-                .iter()
-                .map(|(id, bot)| SerializedAliveBot {
-                    id: *id,
-                    pos: self.id_to_pos[id],
-                    bot: MaybeOwned::Borrowed(bot),
-                })
-                .collect(),
-        };
-
-        proxy.serialize(serializer)
+        serializer.collect_seq(self.entries.iter().map(|(id, bot)| {
+            SerializedAliveBot {
+                id: *id,
+                pos: self.id_to_pos[id],
+                bot: MaybeOwned::Borrowed(bot),
+            }
+        }))
     }
 }
 
@@ -158,20 +147,14 @@ impl<'de> Deserialize<'de> for AliveBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let proxy = SerializedAliveBots::deserialize(deserializer)?;
+        let bots = Vec::<SerializedAliveBot>::deserialize(deserializer)?;
 
-        for entry in proxy.bots {
-            this.add(entry.id, entry.pos, entry.bot.into_owned());
+        for bot in bots {
+            this.add(bot.id, bot.pos, bot.bot.into_owned());
         }
 
         Ok(this)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(transparent)]
-struct SerializedAliveBots<'a> {
-    bots: Vec<SerializedAliveBot<'a>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

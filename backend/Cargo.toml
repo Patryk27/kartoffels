@@ -19,7 +19,7 @@ edition = "2021"
 name = "kartoffels-backend"
 
 [workspace.dependencies]
-ahash = "0.8.11"
+ahash = { version = "0.8.11", features = ["serde"] }
 anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
 chrono = { version = "0.4.38", features = ["serde"] }

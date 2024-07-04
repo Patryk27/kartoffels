@@ -1,15 +1,15 @@
 use crate::{BotId, Map, Theme};
+use ahash::AHashMap;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use tracing::info;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeathmatchMode {
     config: DeathmatchModeConfig,
-    scores: HashMap<BotId, u32>,
+    scores: AHashMap<BotId, u32>,
 
     #[serde(with = "crate::serde::instant_opt")]
     next_round_at: Option<Instant>,
@@ -29,7 +29,7 @@ impl DeathmatchMode {
     pub(crate) fn state(&self) -> Value {
         #[derive(Debug, Serialize)]
         struct State<'a> {
-            scores: &'a HashMap<BotId, u32>,
+            scores: &'a AHashMap<BotId, u32>,
             next_round_in: Option<u64>,
         }
 

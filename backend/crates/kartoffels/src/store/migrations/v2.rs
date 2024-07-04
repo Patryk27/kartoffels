@@ -13,17 +13,17 @@ pub fn run(mut world: Value) -> Result<Value> {
     let left = Value::Array(vec![i1n.clone(), i0.clone()]);
     let right = Value::Array(vec![i1p.clone(), i0.clone()]);
 
-    for entry in world.query_mut("/bots/{alive,queued}/*/motor/dir") {
-        if *entry == up {
-            *entry = Value::Text("^".into());
-        } else if *entry == down {
-            *entry = Value::Text("v".into());
-        } else if *entry == left {
-            *entry = Value::Text("<".into());
-        } else if *entry == right {
-            *entry = Value::Text(">".into());
+    for obj in world.query_mut("/bots/{alive,queued}/*/motor/dir") {
+        if *obj == up {
+            *obj = Value::Text("^".into());
+        } else if *obj == down {
+            *obj = Value::Text("v".into());
+        } else if *obj == left {
+            *obj = Value::Text("<".into());
+        } else if *obj == right {
+            *obj = Value::Text(">".into());
         } else {
-            return Err(anyhow!("invalid direction: {:?}", entry));
+            return Err(anyhow!("invalid direction: {:?}", obj));
         }
     }
 

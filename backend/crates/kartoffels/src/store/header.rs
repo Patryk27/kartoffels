@@ -1,3 +1,4 @@
+use crate::cfg;
 use anyhow::{anyhow, Result};
 use std::io::{Read, Write};
 
@@ -9,8 +10,6 @@ pub struct Header {
 }
 
 impl Header {
-    pub const VERSION: u32 = 2;
-
     pub fn read(mut reader: impl Read) -> Result<Self> {
         let mut magic = [0; 11];
         let mut version = [0; 4];
@@ -45,7 +44,7 @@ impl Header {
                 "unsupported version: world is v{}, but we support only up to \
                  v{}",
                 self.version,
-                Self::VERSION,
+                cfg::VERSION,
             ));
         }
 
@@ -65,7 +64,7 @@ impl Default for Header {
     fn default() -> Self {
         Self {
             magic: *b"kartoffels:",
-            version: Self::VERSION,
+            version: cfg::VERSION,
             padding: 0,
         }
     }

@@ -9,7 +9,6 @@ use crate::state::*;
 use anyhow::{Context, Result};
 use clap::Parser;
 use indoc::indoc;
-use kartoffels::World;
 use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
@@ -99,6 +98,7 @@ async fn init(
     data: Option<PathBuf>,
     secret: Option<String>,
 ) -> Result<AppState> {
+    let rt = runtime::Handle::current();
     let mut worlds = HashMap::new();
 
     if let Some(data) = &data {
@@ -141,11 +141,8 @@ async fn init(
                             .parse()
                             .context("couldn't extract world id from path")?;
 
-                        let world = World::resume(
-                            runtime::Handle::current(),
-                            id,
-                            &entry_path,
-                        )?;
+                        let world =
+                            kartoffels::resume(rt.clone(), id, &entry_path)?;
 
                         worlds.insert(id, world);
                     };
