@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -21,12 +22,12 @@ impl Metronome {
     }
 
     pub fn iter<T>(&mut self, f: impl FnOnce(&Self) -> T) -> T {
-        let (result, tt) = Self::measure(|| f(self));
+        let (result, tt) = Self::measure_ns(|| f(self));
 
         self.backlog += tt - self.max_iter_tt;
 
         while self.backlog <= -2_000_000 {
-            let (_, tt) = Self::measure(|| {
+            let (_, tt) = Self::measure_ns(|| {
                 thread::sleep(Duration::from_millis(1));
             });
 
@@ -48,11 +49,24 @@ impl Metronome {
         }
     }
 
-    fn measure<T>(f: impl FnOnce() -> T) -> (T, i64) {
+    pub fn measure<T>(f: impl FnOnce() -> T) -> (T, Duration) {
         let tt = Instant::now();
         let result = f();
-        let tt = tt.elapsed().as_nanos() as i64;
 
-        (result, tt)
+        (result, tt.elapsed())
+    }
+
+    pub fn try_measure<T>(
+        f: impl FnOnce() -> Result<T>,
+    ) -> Result<(T, Duration)> {
+        let (result, tt) = Self::measure(f);
+
+        Ok((result?, tt))
+    }
+
+    fn measure_ns<T>(f: impl FnOnce() -> T) -> (T, i64) {
+        let (result, tt) = Self::measure(f);
+
+        (result, tt.as_nanos() as i64)
     }
 }

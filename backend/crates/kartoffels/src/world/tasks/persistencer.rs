@@ -1,37 +1,40 @@
 use crate::{SerializedWorld, World};
 use anyhow::{Context, Result};
+use futures_util::FutureExt;
 use maybe_owned::MaybeOwned;
+use std::future::Future;
 use std::time::{Duration, Instant};
 use tracing::{debug, info};
 
-#[derive(Debug)]
 pub struct Persistencer {
+    task: Option<Box<dyn Future<Output = Result<()>> + Unpin>>,
     next_tick_at: Instant,
 }
 
 impl Persistencer {
     pub fn new() -> Self {
         Self {
+            task: None,
             next_tick_at: Self::next_tick(),
         }
     }
 
     pub fn tick(&mut self, world: &World) {
+        let Some(path) = &world.path else {
+            return;
+        };
+
         if Instant::now() < self.next_tick_at {
             return;
         }
 
-        Self::save(world).unwrap();
-
-        self.next_tick_at = Self::next_tick();
-    }
-
-    pub fn save(world: &World) -> Result<()> {
-        let Some(path) = &world.path else {
-            return Ok(());
-        };
-
         debug!("saving world");
+
+        if let Some(task) = self.task.take() {
+            task.now_or_never()
+                .expect("the previous save is still in progress - has the I/O stalled?")
+                .unwrap();
+        }
 
         let world = SerializedWorld {
             name: MaybeOwned::Borrowed(&world.name),
@@ -42,16 +45,22 @@ impl Persistencer {
             bots: MaybeOwned::Borrowed(&world.bots),
         };
 
-        let tt = Instant::now();
+        let task = world.store(path).expect("couldn't save the world");
 
-        world.store(path).context("couldn't save the world")?;
+        let task = tokio::spawn(async move {
+            let (tt_ser, tt_io) = task.await?;
 
-        info!(tt = ?tt.elapsed(), "world saved");
+            info!(?tt_ser, ?tt_io, "world saved");
 
-        Ok(())
+            Ok(())
+        })
+        .map(|result| result.context("task crashed")?);
+
+        self.task = Some(Box::new(task));
+        self.next_tick_at = Self::next_tick();
     }
 
     fn next_tick() -> Instant {
-        Instant::now() + Duration::from_secs(30)
+        Instant::now() + Duration::from_secs(15)
     }
 }

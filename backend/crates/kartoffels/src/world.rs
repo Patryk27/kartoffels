@@ -14,6 +14,7 @@ use derivative::Derivative;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
+use tokio::runtime;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{mpsc, oneshot};
 use tracing::{info, span, Level};
@@ -35,6 +36,7 @@ impl World {
     pub const SIM_TICKS: u32 = 1024;
 
     pub fn create(
+        rt: runtime::Handle,
         id: WorldId,
         config: WorldConfig,
         path: Option<PathBuf>,
@@ -65,14 +67,14 @@ impl World {
             path,
         };
 
-        // Insta-save to make sure we've got appropriate file permissions
-        // (if not, better to fail fast)
-        Persistencer::save(&this)?;
-
-        Ok(this.spawn())
+        Ok(this.spawn(rt))
     }
 
-    pub fn resume(id: WorldId, path: &Path) -> Result<WorldHandle> {
+    pub fn resume(
+        rt: runtime::Handle,
+        id: WorldId,
+        path: &Path,
+    ) -> Result<WorldHandle> {
         let this = SerializedWorld::load(path)?;
 
         info!(
@@ -94,14 +96,10 @@ impl World {
             path: Some(path.to_owned()),
         };
 
-        // Insta-save to make sure we've got appropriate file permissions
-        // (if not, better to fail fast)
-        Persistencer::save(&this)?;
-
-        Ok(this.spawn())
+        Ok(this.spawn(rt))
     }
 
-    fn spawn(self) -> WorldHandle {
+    fn spawn(self, rt: runtime::Handle) -> WorldHandle {
         let name = self.name.clone();
         let mode = self.mode.ty();
         let theme = self.theme.ty();
@@ -109,10 +107,10 @@ impl World {
         let (tx, rx) = mpsc::channel(16 * 1024);
 
         thread::spawn({
-            let span =
-                span!(Level::INFO, "kartoffels", world = self.id.to_string());
+            let span = span!(Level::INFO, "", world = self.id.to_string());
 
             move || {
+                let _rt = rt.enter();
                 let _span = span.enter();
 
                 self.main(rx)

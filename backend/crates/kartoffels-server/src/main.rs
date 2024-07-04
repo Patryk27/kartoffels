@@ -14,8 +14,8 @@ use std::collections::HashMap;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use tokio::fs;
 use tokio::net::TcpListener;
+use tokio::{fs, runtime};
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{debug, info, warn};
@@ -141,7 +141,11 @@ async fn init(
                             .parse()
                             .context("couldn't extract world id from path")?;
 
-                        let world = World::resume(id, &entry_path)?;
+                        let world = World::resume(
+                            runtime::Handle::current(),
+                            id,
+                            &entry_path,
+                        )?;
 
                         worlds.insert(id, world);
                     };
