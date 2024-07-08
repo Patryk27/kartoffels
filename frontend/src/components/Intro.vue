@@ -20,9 +20,9 @@ const emit = defineEmits<{
       <br />
       - robots contain peripherals that your code controls
       <br />
-      - your code runs on an emulated RISC-V CPU clocked at 64 KHz
+      - codes are executed on emulated RISC-V CPUs clocked at 64 KHz
       <br />
-      - the game is simulated on a central server - let the meritocracy thrive
+      - the game is simulated on a central server -- let the meritocracy thrive
     </p>
 
     <p>now, much too much talk, grug wants start:</p>
@@ -35,7 +35,7 @@ const emit = defineEmits<{
 
     <p>
       ... and then go back, select any map, upload <kbd>./kartoffel</kbd> and
-      thrive!
+      have fun!
     </p>
 
     <p>
@@ -46,7 +46,7 @@ const emit = defineEmits<{
     <p class="note">
       <b>note, soldier!</b> if you want to practice without actually submitting
       your bot yet, choose the <kbd>sandbox</kbd> map - it is simulated in your
-      browser and allows you to debug bots etc.
+      browser and allows to debug bots etc.
     </p>
 
     <div style="text-align: center; padding: 2em 0">
