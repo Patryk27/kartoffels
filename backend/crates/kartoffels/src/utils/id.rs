@@ -11,6 +11,8 @@ use std::str::FromStr;
 pub struct Id(NonZeroU64);
 
 impl Id {
+    pub(crate) const ONE: Self = Id(NonZeroU64::new(1).unwrap());
+
     pub fn new(rng: &mut impl RngCore) -> Self {
         Self(rng.gen())
     }

@@ -1,41 +1,73 @@
-<script setup>
-  import { ref, watch, onMounted } from 'vue';
-  import { loadSession } from '@/utils/session.ts';
+<script setup lang="ts">
+import { ref, onMounted, type Ref } from "vue";
+import { loadSession, type Session } from "@/logic/Session";
+import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
-  const emit = defineEmits(['join', 'restore', 'openIntro']);
-  const world = ref(null);
-  const worlds = ref(null);
-  const session = ref(loadSession());
-  const error = ref(null);
+const emit = defineEmits<{
+  start: [string, string, string?];
+  openIntro: [];
+}>();
 
-  onMounted(async () => {
-    try {
-      var response = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
-      var response = await response.json();
+const worldId = ref<string>(null);
+const worlds = ref<ServerWorld[]>(null);
+const session: Ref<Session & { worldName?: string }> = ref(loadSession());
+const error = ref(null);
 
-      worlds.value = response.worlds;
+function getWorldName(id: string): string {
+  if (id == "sandbox") {
+    return "sandbox";
+  }
 
-      if (response.worlds.length > 0) {
-        world.value = response.worlds[0].id;
+  for (const world of worlds.value) {
+    if (world.id == id) {
+      return world.name;
+    }
+  }
 
-        if (session.value != null) {
-          for (const world of response.worlds) {
-            if (world.id == session.value.worldId) {
-              session.value.worldName = world.name;
-            }
-          }
+  throw `unknown world: ${id}`;
+}
 
-          // If the world this session refers to got deleted, no point in
-          // offering to restore the session
-          if (session.value.worldName == null) {
-            session.value = null;
+function handleJoin(worldId: string): void {
+  emit("start", worldId, getWorldName(worldId), undefined);
+}
+
+function handleRestore(): void {
+  emit(
+    "start",
+    session.value.worldId,
+    session.value.worldName,
+    session.value.botId,
+  );
+}
+
+onMounted(async () => {
+  try {
+    var request = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
+    var response: ServerGetWorldsResponse = await request.json();
+
+    worlds.value = response.worlds;
+
+    if (response.worlds.length > 0) {
+      worldId.value = response.worlds[0].id;
+
+      if (session.value) {
+        for (const world of response.worlds) {
+          if (world.id == session.value.worldId) {
+            session.value.worldName = world.name;
           }
         }
+
+        // If the world this session refers to got deleted, no point in
+        // offering to restore the session
+        if (session.value.worldName == null) {
+          session.value = null;
+        }
       }
-    } catch (err) {
-      error.value = err;
     }
-  });
+  } catch (err) {
+    error.value = err;
+  }
+});
 </script>
 
 <template>
@@ -44,7 +76,8 @@
       <p>
         welcome to 🥔
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
-          kartoffels</a>
+          kartoffels</a
+        >
         🥔, an online robot combat arena!
       </p>
 
@@ -53,9 +86,7 @@
         other bots <span class="rainbow">in real time</span>
       </p>
 
-      <p>
-        the rules are simple -- have fun and let the best bot win!
-      </p>
+      <p>the rules are simple -- have fun and let the best bot win!</p>
 
       <p v-if="error == null" style="text-align: center; padding: 0.5em">
         👉 <a @click="emit('openIntro')">getting started</a> 👈
@@ -68,48 +99,42 @@
 
     <div class="menu">
       <template v-if="error == null">
-        <template v-if="worlds == null || worlds.length > 0">
-          <div class="world-selection">
-            <label for="world">
-              choose world and click join:
-            </label>
+        <template v-if="worlds == null">loading...</template>
 
-            <select v-model="world">
+        <template v-else>
+          <div class="world-selection">
+            <label for="world">choose world and click join:</label>
+
+            <select v-model="worldId">
               <option v-for="world in worlds" :value="world.id">
-                {{ world.name }} ({{ world.mode }}; {{ world.theme }})
+                {{ world.name }} ({{ world.mode }} + {{ world.theme }})
               </option>
+
+              <option value="sandbox">sandbox 🕵️ (private)</option>
             </select>
 
-            <button @click="emit('join', world)">
-              join!
-            </button>
+            <button @click="handleJoin(worldId)">join!</button>
           </div>
 
-          <div v-if="session != null" class="session-restore">
-            <div class="or">
-              or
-            </div>
+          <div v-if="worldId == 'sandbox'" class="sandbox-info">
+            <p><b>note, soldier!</b></p>
 
-            <button @click="emit('restore', session.worldId, session.botId)">
+            <p>
+              sandbox is an ephemeral, private world - it is simulated only in
+              your browser and it is removed when you close or refresh the page
+            </p>
+          </div>
+
+          <div v-if="session" class="session-restore">
+            <div class="or">or</div>
+
+            <button @click="handleRestore()">
               restore your previous session
             </button>
 
-            <p>
-              (world: {{ session.worldName }})
-            </p>
+            <p>(world: {{ session.worldName }})</p>
           </div>
         </template>
-
-        <div v-else>
-          <p>
-            it looks like this server has no worlds configured, so unfortunately
-            you can't join the game at this moment
-          </p>
-
-          <p>
-            if you're the administrator of this server, please consult readme.md
-          </p>
-        </div>
       </template>
 
       <div v-else>
@@ -126,104 +151,114 @@
 </template>
 
 <style scoped>
-  .home {
-    display: flex;
-    flex-direction: column;
-    max-width: 1024px;
+.home {
+  display: flex;
+  flex-direction: column;
+  max-width: 1024px;
+  padding: 1em;
+
+  .intro {
     padding: 1em;
+    margin-bottom: 1em;
+    border: 1px solid #00ff80;
+    border-radius: 5px;
 
-    .intro {
-      padding: 1em;
-      margin-bottom: 1em;
-      border: 1px solid #00ff80;
-      border-radius: 5px;
-
-      p {
-        &:first-child {
-          margin-top: 0;
-        }
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-
-        &.quote {
-          color: #606060;
-          text-align: right;
-        }
-      }
-    }
-
-    .menu {
-      text-align: center;
-    }
-
-    .world-selection {
-      margin-top: 1em;
-
-      label {
-        display: block;
-        margin-bottom: 0.25em;
+    p {
+      &:first-child {
+        margin-top: 0;
       }
 
-      button {
-        margin-left: 0.5em;
-      }
-    }
-
-    .session-restore {
-      margin-top: 1.5em;
-
-      .or {
-        margin-bottom: 1.5em;
+      &:last-child {
+        margin-bottom: 0;
       }
 
-      button {
-        font-weight: 600;
-      }
-
-      button + p {
-        margin-top: 0.5em;
+      &.quote {
         color: #606060;
+        text-align: right;
       }
     }
+  }
 
-    .rainbow {
-      display: inline-block;
+  .menu {
+    text-align: center;
+  }
 
-      animation:
-        rainbow-color 0.5s linear 0s infinite,
-        rainbow-rotate 1.8s ease-in-out 0s infinite;
+  .world-selection {
+    margin-top: 1em;
+
+    label {
+      display: block;
+      margin-bottom: 0.25em;
+    }
+
+    button {
+      margin-left: 0.5em;
     }
   }
 
-  @keyframes rainbow-color {
-    from {
-      color: #6666ff;
-    }
-    10% {
-      color: #0099ff;
-    }
-    50% {
-      color: #00ff00;
-    }
-    75% {
-      color: #ff3399;
-    }
-    100% {
-      color: #6666ff;
+  .sandbox-info {
+    margin-top: 1.5em;
+    border-top: 1px dashed #444444;
+    border-bottom: 1px dashed #444444;
+
+    b {
+      color: #ff8000;
     }
   }
 
-  @keyframes rainbow-rotate {
-    from {
-      transform: rotate(-2deg);
+  .session-restore {
+    margin-top: 1.5em;
+
+    .or {
+      margin-bottom: 1.5em;
     }
-    50% {
-      transform: rotate(2deg);
+
+    button {
+      font-weight: 600;
     }
-    to {
-      transform: rotate(-2deg);
+
+    button + p {
+      margin-top: 0.5em;
+      color: #606060;
     }
   }
+
+  .rainbow {
+    display: inline-block;
+
+    animation:
+      rainbow-color 0.5s linear 0s infinite,
+      rainbow-rotate 1.8s ease-in-out 0s infinite;
+  }
+}
+
+@keyframes rainbow-color {
+  from {
+    color: #6666ff;
+  }
+  10% {
+    color: #0099ff;
+  }
+  50% {
+    color: #00ff00;
+  }
+  75% {
+    color: #ff3399;
+  }
+  100% {
+    color: #6666ff;
+  }
+}
+
+@keyframes rainbow-rotate {
+  from {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+  to {
+    transform: rotate(-2deg);
+  }
+}
 </style>

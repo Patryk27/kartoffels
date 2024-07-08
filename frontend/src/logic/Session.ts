@@ -1,11 +1,11 @@
 // TODO store camera position as well
-interface Session {
-  worldId: int;
-  botId?: int;
+export interface Session {
+  worldId: string;
+  botId?: string;
 }
 
 export function loadSession(): Session | null {
-  const session = localStorage.getItem('session');
+  const session = localStorage.getItem("session");
 
   if (session == null) {
     return null;
@@ -15,5 +15,5 @@ export function loadSession(): Session | null {
 }
 
 export function storeSession(session: Session): void {
-  localStorage.setItem('session', JSON.stringify(session));
+  localStorage.setItem("session", JSON.stringify(session));
 }

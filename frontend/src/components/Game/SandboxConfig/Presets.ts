@@ -1,0 +1,77 @@
+export const worlds = [
+  {
+    id: "small-arena-deathmatch",
+    name: "small arena (deathmatch)",
+    config: {
+      name: "sandbox",
+      mode: {
+        type: "deathmatch",
+      },
+      theme: {
+        type: "arena",
+        radius: 20,
+      },
+      policy: {
+        max_alive_bots: 32,
+        max_queued_bots: 64,
+      },
+    },
+  },
+
+  {
+    id: "large-arena-deathmatch",
+    name: "large arena (deathmatch)",
+    config: {
+      name: "sandbox",
+      mode: {
+        type: "deathmatch",
+      },
+      theme: {
+        type: "arena",
+        radius: 40,
+      },
+      policy: {
+        max_alive_bots: 64,
+        max_queued_bots: 128,
+      },
+    },
+  },
+
+  {
+    id: "small-dungeon-deathmatch",
+    name: "small dungeon (deathmatch)",
+    config: {
+      name: "sandbox",
+      mode: {
+        type: "deathmatch",
+      },
+      theme: {
+        type: "dungeon",
+        size: [40, 40],
+      },
+      policy: {
+        max_alive_bots: 32,
+        max_queued_bots: 64,
+      },
+    },
+  },
+
+  {
+    id: "large-dungeon-deathmatch",
+    name: "large dungeon (deathmatch)",
+    config: {
+      name: "sandbox",
+      mode: {
+        type: "deathmatch",
+      },
+      theme: {
+        type: "dungeon",
+        size: [120, 120],
+      },
+      policy: {
+        max_alive_bots: 64,
+        max_queued_bots: 128,
+      },
+    },
+  },
+];

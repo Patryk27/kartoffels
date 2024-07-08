@@ -1,5 +1,5 @@
-/.tmp
-/result
-/backend/target
-/frontend/node_modules
 *.new
+/backend/target
+/data
+/frontend/node_modules
+/result

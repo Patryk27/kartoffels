@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use kartoffels::iface::{Handle, WorldId, WorldName};
+use kartoffels::prelude::{Handle, WorldId, WorldName};
 use std::collections::HashMap;
 use std::path::PathBuf;
 

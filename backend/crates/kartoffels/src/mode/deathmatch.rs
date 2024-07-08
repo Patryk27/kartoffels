@@ -3,8 +3,8 @@ use ahash::AHashMap;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::time::{Duration, Instant};
 use tracing::info;
+use web_time::{Duration, Instant};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeathmatchMode {

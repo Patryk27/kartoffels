@@ -1,17 +1,27 @@
-<script setup>
-  import { botIdToColor } from '@/utils/bot.ts';
-  import { durationToHuman } from '@/utils/other.ts';
+<script setup lang="ts">
+import { botIdToColor } from "@/utils/bot";
+import { durationToHuman } from "@/utils/other";
+import type { GameSideBot } from "../Side.vue";
 
-  const emit = defineEmits(['botClock', 'close']);
-  const props = defineProps(['opened', 'sortedBots']);
+const emit = defineEmits<{
+  botClick: [string];
+  close: [];
+}>();
+
+defineProps<{
+  open: boolean;
+  bots: GameSideBot[];
+}>();
 </script>
 
 <template>
-  <dialog class="game-side-summary" :open="opened">
+  <dialog class="game-side-summary" :open="open">
     <nav>
-      <button @click="emit('close')">
-        close
-      </button>
+      <div class="dialog-title">summary</div>
+
+      <div class="dialog-buttons">
+        <button @click="emit('close')">close</button>
+      </div>
     </nav>
 
     <table>
@@ -25,14 +35,14 @@
       </thead>
 
       <tbody>
-        <tr v-for="entry in sortedBots">
-          <td>
-            #{{ entry.nth }}&nbsp;
-          </td>
+        <tr v-for="entry in bots">
+          <td>#{{ entry.nth }}&nbsp;</td>
 
           <td>
-            <a @click="emit('botClick', entry.id)"
-               :style="`color: ${botIdToColor(entry.id)}`">
+            <a
+              @click="emit('botClick', entry.id)"
+              :style="`color: ${botIdToColor(entry.id)}`"
+            >
               {{ entry.id }}
             </a>
           </td>
@@ -51,27 +61,27 @@
 </template>
 
 <style scoped>
-  .game-side-summary {
-    table {
-      th {
-        &:not(:last-child) {
-          padding-right: 1em;
-        }
+.game-side-summary {
+  table {
+    th {
+      &:not(:last-child) {
+        padding-right: 1em;
+      }
+    }
+
+    td {
+      &:not(:last-child) {
+        padding-right: 1em;
       }
 
-      td {
-        &:not(:last-child) {
-          padding-right: 1em;
-        }
+      &:nth-child(3) {
+        text-align: right;
+      }
 
-        &:nth-child(3) {
-          text-align: right;
-        }
-
-        &:nth-child(4) {
-          text-align: right;
-        }
+      &:nth-child(4) {
+        text-align: right;
       }
     }
   }
+}
 </style>

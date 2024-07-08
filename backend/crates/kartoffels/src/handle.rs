@@ -1,4 +1,6 @@
-use crate::{BotId, Update, UpdateRx, WorldName};
+pub mod systems;
+
+use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use futures_util::Stream;
@@ -17,6 +19,15 @@ pub struct Handle {
 impl Handle {
     const ERR_DIED: &'static str = "world actor has died";
 
+    pub(crate) fn new(world: &World, tx: RequestTx) -> Self {
+        Self {
+            name: world.name.clone(),
+            mode: world.mode.ty(),
+            theme: world.theme.ty(),
+            tx,
+        }
+    }
+
     pub fn name(&self) -> &WorldName {
         &self.name
     }
@@ -29,31 +40,46 @@ impl Handle {
         self.theme
     }
 
-    pub async fn upload(&self, src: Vec<u8>) -> Result<BotId> {
-        let (tx, rx) = oneshot::channel();
-
-        self.tx
-            .send(Request::Upload { src, tx })
-            .await
-            .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
-
-        rx.await.context(Self::ERR_DIED)?
-    }
-
     pub async fn join(
         &self,
         id: Option<BotId>,
-    ) -> Result<impl Stream<Item = Update>> {
+    ) -> Result<impl Stream<Item = ClientUpdate>> {
         let (tx, rx) = oneshot::channel();
 
-        self.tx
-            .send(Request::Join { id, tx })
-            .await
-            .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
+        self.send(Request::Join { id, tx }).await?;
 
         let rx = rx.await.context(Self::ERR_DIED)?;
 
         Ok(ReceiverStream::new(rx))
+    }
+
+    pub async fn upload_bot(&self, src: Vec<u8>) -> Result<BotId> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::UploadBot { src, tx }).await?;
+
+        rx.await.context(Self::ERR_DIED)?
+    }
+
+    pub async fn restart_bot(&self, id: BotId) -> Result<()> {
+        self.send(Request::RestartBot { id }).await?;
+
+        Ok(())
+    }
+
+    pub async fn destroy_bot(&self, id: BotId) -> Result<()> {
+        self.send(Request::DestroyBot { id }).await?;
+
+        Ok(())
+    }
+
+    async fn send(&self, request: Request) -> Result<()> {
+        self.tx
+            .send(request)
+            .await
+            .map_err(|_| anyhow!("{}", Self::ERR_DIED))?;
+
+        Ok(())
     }
 }
 
@@ -62,8 +88,15 @@ pub type RequestRx = mpsc::Receiver<Request>;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub(crate) enum Request {
-    Upload {
+pub enum Request {
+    Join {
+        id: Option<BotId>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<ClientUpdateRx>,
+    },
+
+    UploadBot {
         #[derivative(Debug = "ignore")]
         src: Vec<u8>,
 
@@ -71,10 +104,11 @@ pub(crate) enum Request {
         tx: oneshot::Sender<Result<BotId>>,
     },
 
-    Join {
-        id: Option<BotId>,
+    RestartBot {
+        id: BotId,
+    },
 
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<UpdateRx>,
+    DestroyBot {
+        id: BotId,
     },
 }

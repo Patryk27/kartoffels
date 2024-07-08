@@ -24,6 +24,7 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::{fmt, mem};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -152,6 +153,7 @@ pub struct QueuedBot {
     pub bot: AliveBot,
 }
 
+#[wasm_bindgen]
 #[derive(
     Clone,
     Copy,

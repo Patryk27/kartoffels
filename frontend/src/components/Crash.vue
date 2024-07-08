@@ -1,16 +1,16 @@
-<script setup>
-  const props = defineProps(['msg']);
+<script setup lang="ts">
+defineProps<{
+  msg: string;
+}>();
 
-  function refresh() {
-    location.reload();
-  }
+function refresh() {
+  location.reload();
+}
 </script>
 
 <template>
   <main class="crash">
-    <p>
-      whoopsie, kartoffels have fell out of pot and ✨ crashed ✨:
-    </p>
+    <p>whoopsie, kartoffels have fell out of pot and ✨ crashed ✨:</p>
 
     <p>
       {{ msg }}
@@ -23,19 +23,19 @@
 </template>
 
 <style scoped>
-  .crash {
-    padding: 1em;
-    border: 1px solid #ff0000;
-    border-radius: 5px;
+.crash {
+  padding: 1em;
+  border: 1px solid #ff0000;
+  border-radius: 5px;
 
-    p {
-      &:first-child {
-        margin-top: 0;
-      }
+  p {
+    &:first-child {
+      margin-top: 0;
+    }
 
-      &:last-child {
-        margin-bottom: 0;
-      }
+    &:last-child {
+      margin-bottom: 0;
     }
   }
+}
 </style>

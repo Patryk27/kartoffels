@@ -1,52 +1,56 @@
 use anyhow::Result;
+use chrono::TimeDelta;
 use std::thread;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
 pub struct Metronome {
-    max_iter_tt: i64,
-    backlog: i64,
+    interval: Duration,
+    backlog: TimeDelta,
+    now: Instant,
 }
 
 impl Metronome {
-    const ONE_SECOND_NS: i64 = Duration::from_secs(1).as_nanos() as i64;
-
     pub fn new(hz: u32, ticks: u32) -> Self {
-        let max_iter_tt =
-            Duration::from_secs(1).as_nanos() / (hz as u128) * (ticks as u128);
+        let interval = Duration::from_nanos(
+            Duration::from_secs(1).as_nanos() as u64 / (hz as u64)
+                * (ticks as u64),
+        );
 
         Self {
-            max_iter_tt: max_iter_tt as i64,
-            backlog: 0,
+            interval,
+            backlog: Default::default(),
+            now: Instant::now(),
         }
     }
 
-    pub fn iter<T>(&mut self, f: impl FnOnce(&Self) -> T) -> T {
-        let (result, tt) = Self::measure_ns(|| f(self));
+    pub fn tick(&mut self) {
+        self.backlog += TimeDelta::nanoseconds(
+            self.interval.as_nanos() as i64
+                - self.now.elapsed().as_nanos() as i64,
+        );
 
-        self.backlog += tt - self.max_iter_tt;
+        if self.backlog.num_seconds() != 0 {
+            self.backlog =
+                TimeDelta::seconds(self.backlog.num_seconds().signum());
+        }
+    }
 
-        while self.backlog <= -2_000_000 {
-            let (_, tt) = Self::measure_ns(|| {
-                thread::sleep(Duration::from_millis(1));
+    pub fn wait(&mut self) {
+        if self.backlog.num_milliseconds() >= 2 {
+            let (_, tt) = Self::measure(|| {
+                thread::sleep(self.backlog.to_std().unwrap());
             });
 
-            self.backlog += tt;
+            self.backlog -= TimeDelta::from_std(tt).unwrap();
+            self.tick();
         }
 
-        self.backlog = self
-            .backlog
-            .clamp(-Self::ONE_SECOND_NS, Self::ONE_SECOND_NS);
-
-        result
+        self.now = Instant::now();
     }
 
-    pub fn backlog_ms(&self) -> i64 {
-        if self.backlog.abs() > 2_000_000 {
-            self.backlog / 1_000_000
-        } else {
-            0
-        }
+    pub fn interval(&self) -> Duration {
+        self.interval
     }
 
     pub fn measure<T>(f: impl FnOnce() -> T) -> (T, Duration) {
@@ -62,11 +66,5 @@ impl Metronome {
         let (result, tt) = Self::measure(f);
 
         Ok((result?, tt))
-    }
-
-    fn measure_ns<T>(f: impl FnOnce() -> T) -> (T, i64) {
-        let (result, tt) = Self::measure(f);
-
-        (result, tt.as_nanos() as i64)
     }
 }

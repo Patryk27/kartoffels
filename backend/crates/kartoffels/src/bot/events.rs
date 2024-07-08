@@ -16,7 +16,7 @@ pub struct BotEvents {
 impl BotEvents {
     const LENGTH: usize = 128;
 
-    pub(super) fn add(&mut self, msg: String) {
+    pub fn add(&mut self, msg: String) {
         while self.entries.len() >= Self::LENGTH {
             self.entries.pop_front();
         }
