@@ -7,7 +7,12 @@ wasm:
 front:
     cd frontend && nix develop -c npm run dev
 
-tsc:
+fmt:
+    cd backend && cargo fmt
+    cd frontend && prettier . --write
+
+check:
+    cd backend && cargo check
     cd frontend && nix develop -c npm exec vue-tsc
 
 roberto:
