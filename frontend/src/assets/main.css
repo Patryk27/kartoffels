@@ -76,6 +76,7 @@ label {
 
 textarea {
   resize: none;
+  scrollbar-color: #444444 #090909;
 
   &:read-only {
     cursor: default;
