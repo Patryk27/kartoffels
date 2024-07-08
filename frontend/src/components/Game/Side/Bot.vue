@@ -120,8 +120,13 @@ function handleUploadBot() {
       </div>
 
       <div v-if="worldId == 'sandbox'" class="buttons-row">
-        <button @click="emit('botDestroy')">destroy bot</button>
-        <button @click="emit('botRestart')">restart bot</button>
+        <button :disabled="paused" @click="emit('botDestroy')">
+          destroy bot
+        </button>
+
+        <button :disabled="paused" @click="emit('botRestart')">
+          restart bot
+        </button>
       </div>
     </div>
 

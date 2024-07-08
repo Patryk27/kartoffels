@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman } from "@/utils/other";
-import type { GameSideBot } from "../Side.vue";
+import type { GameTableBot } from "../Game.vue";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -10,12 +10,12 @@ const emit = defineEmits<{
 
 defineProps<{
   open: boolean;
-  bots: GameSideBot[];
+  bots: GameTableBot[];
 }>();
 </script>
 
 <template>
-  <dialog class="game-side-summary" :open="open">
+  <dialog class="game-summary" :open="open">
     <nav>
       <div class="dialog-title">summary</div>
 
@@ -61,7 +61,7 @@ defineProps<{
 </template>
 
 <style scoped>
-.game-side-summary {
+.game-summary {
   table {
     th {
       &:not(:last-child) {

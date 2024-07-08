@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
-import type { GameBot } from "@/components/Game.vue";
-import type { GameSideBot } from "../Side.vue";
+import type { GameBot, GameTableBot } from "@/components/Game.vue";
 
 const emit = defineEmits<{
   botClick: [string];
-  showMore: [];
+  openSummary: [];
 }>();
 
 const props = defineProps<{
   bot?: GameBot;
-  bots: GameSideBot[];
+  bots: GameTableBot[];
   mode: any;
 }>();
 
@@ -87,17 +86,13 @@ const filteredBots = computed(() => {
 
           <template v-else-if="entry?.ty == 'sep'">
             <td></td>
-
             <td style="text-align: center">...</td>
-
             <td></td>
           </template>
 
           <template v-else>
             <td>-</td>
-
             <td style="text-align: center">-</td>
-
             <td>-</td>
           </template>
         </tr>
@@ -105,7 +100,7 @@ const filteredBots = computed(() => {
     </table>
 
     <div style="text-align: right; margin-top: 1em">
-      <button @click="emit('showMore')">show more</button>
+      <button @click="emit('openSummary')">show more</button>
     </div>
   </div>
 </template>

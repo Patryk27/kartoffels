@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { storeSession } from "@/logic/Session";
 import {
   LocalServer,
@@ -10,8 +10,9 @@ import {
 } from "@/logic/Server";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
-import Side from "./Game/Side.vue";
 import SandboxConfig from "./Game/SandboxConfig.vue";
+import Side from "./Game/Side.vue";
+import Summary from "./Game/Summary.vue";
 
 export interface GameMap {
   size: [number, number];
@@ -23,6 +24,13 @@ export type GameBot = {
   id: string;
   following: boolean;
 } & (ServerConnectedBotUpdate | { status: "unknown"; events: BotEvent[] });
+
+export interface GameTableBot {
+  id: string;
+  age: number;
+  score: number;
+  nth: number;
+}
 
 export type GameBots = ServerBotsUpdate;
 
@@ -37,7 +45,7 @@ export type GameStatus =
   | "connected"
   | "closing";
 
-export type GameDialog = "sandbox-config" | "summary";
+export type GameDialogId = "sandbox-config" | "summary";
 
 // ---
 
@@ -60,9 +68,40 @@ const bots = ref<GameBots>(null);
 const camera = ref<GameCamera>(null);
 const status = ref<GameStatus>("connecting");
 const paused = ref(false);
-const dialog = ref<GameDialog>(null);
+const dialog = ref<GameDialogId>(null);
 
 const server: Server = props.server;
+
+const tableBots = computed(() => {
+  let result: GameTableBot[] = [];
+
+  for (const [id, bot] of Object.entries(bots.value ?? {})) {
+    result.push({
+      id,
+      age: bot.age,
+      score: (mode.value ?? {}).scores[id] ?? 0,
+      nth: 0,
+    });
+  }
+
+  result.sort((a, b) => {
+    if (a.score != b.score) {
+      return b.score - a.score;
+    }
+
+    if (a.age == b.age) {
+      return b.age - a.age;
+    }
+
+    return b.id.localeCompare(a.id);
+  });
+
+  for (let i = 0; i < result.length; i += 1) {
+    result[i].nth = i + 1;
+  }
+
+  return result;
+});
 
 function join(newBotId?: string): void {
   server.onClose(null);
@@ -252,9 +291,8 @@ function handleBotRestart(): void {
   }
 }
 
-function handleOpenSandboxConfig(): void {
-  dialog.value =
-    dialog.value == "sandbox-config" ? undefined : "sandbox-config";
+function openDialog(id: GameDialogId): void {
+  dialog.value = dialog.value == id ? undefined : id;
 }
 
 function handleRecreateSandbox(config: any): void {
@@ -330,7 +368,7 @@ join(props.botId);
       @leave="emit('leave')"
       @pause="handlePause"
       @open-intro="emit('openIntro')"
-      @open-sandbox-config="handleOpenSandboxConfig"
+      @open-sandbox-config="openDialog('sandbox-config')"
     />
 
     <main>
@@ -347,7 +385,7 @@ join(props.botId);
         :worldId="worldId"
         :mode="mode"
         :bot="bot"
-        :bots="bots"
+        :bots="tableBots"
         :status="status"
         :paused="paused"
         @bot-upload="handleBotUpload"
@@ -356,6 +394,14 @@ join(props.botId);
         @bot-click="handleBotClick"
         @bot-destroy="handleBotDestroy"
         @bot-restart="handleBotRestart"
+        @open-summary="openDialog('summary')"
+      />
+
+      <Summary
+        :open="dialog == 'summary'"
+        :bots="tableBots"
+        @close="dialog = undefined"
+        @bot-click="handleBotClick"
       />
 
       <SandboxConfig

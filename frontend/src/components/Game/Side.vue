@@ -1,16 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
 import Bot from "./Side/Bot.vue";
 import Bots from "./Side/Bots.vue";
-import Summary from "./Side/Summary.vue";
-import type { GameBot, GameBots, GameStatus } from "../Game.vue";
-
-export interface GameSideBot {
-  id: string;
-  age: number;
-  score: number;
-  nth: number;
-}
+import type { GameBot, GameStatus, GameTableBot } from "../Game.vue";
 
 const emit = defineEmits<{
   botUpload: [File];
@@ -19,57 +10,17 @@ const emit = defineEmits<{
   botClick: [string];
   botDestroy: [];
   botRestart: [];
+  openSummary: [];
 }>();
 
-const props = defineProps<{
+defineProps<{
   worldId: string;
   mode: any;
   bot?: GameBot;
-  bots?: GameBots;
+  bots?: GameTableBot[];
   status: GameStatus;
   paused: boolean;
 }>();
-
-const isSummaryOpen = ref(false);
-
-const sideBots = computed(() => {
-  let result: GameSideBot[] = [];
-
-  for (const [id, bot] of Object.entries(props.bots ?? {})) {
-    result.push({
-      id,
-      age: bot.age,
-      score: (props.mode ?? {}).scores[id] ?? 0,
-      nth: 0,
-    });
-  }
-
-  result.sort((a, b) => {
-    if (a.score != b.score) {
-      return b.score - a.score;
-    }
-
-    if (a.age == b.age) {
-      return b.age - a.age;
-    }
-
-    return b.id.localeCompare(a.id);
-  });
-
-  for (let i = 0; i < result.length; i += 1) {
-    result[i].nth = i + 1;
-  }
-
-  return result;
-});
-
-function handleOpenSummary() {
-  isSummaryOpen.value = !isSummaryOpen.value;
-}
-
-function handleCloseSummary() {
-  isSummaryOpen.value = false;
-}
 </script>
 
 <template>
@@ -87,22 +38,10 @@ function handleCloseSummary() {
 
     <Bots
       :bot="bot"
-      :bots="sideBots"
+      :bots="bots"
       :mode="mode"
       @bot-click="(id) => emit('botClick', id)"
-      @show-more="handleOpenSummary()"
-    />
-
-    <Summary
-      :open="isSummaryOpen"
-      :bots="sideBots"
-      @bot-click="
-        (id) => {
-          emit('botClick', id);
-          handleCloseSummary();
-        }
-      "
-      @close="handleCloseSummary()"
+      @open-summary="emit('openSummary')"
     />
   </div>
 </template>
