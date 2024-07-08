@@ -19,7 +19,7 @@ fn tick(world: &mut World) {
             continue;
         };
 
-        let kill = match bot.tick(&world.map, &locator, pos) {
+        let kill = match bot.tick(&mut world.rng, &world.map, &locator, pos) {
             Ok(state) => state.apply(world, id, pos),
 
             Err(err) => Some(KillBot {

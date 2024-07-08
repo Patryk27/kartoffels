@@ -1,10 +1,10 @@
-backend:
+back:
     cd backend && cargo run --release -p kartoffels-server -- --data ../data
 
-backend-wasm:
+wasm:
     cd backend && nix develop -c wasm-pack build ./crates/kartoffels-sandbox --target web
 
-frontend:
+front:
     cd frontend && nix develop -c npm run dev
 
 tsc:

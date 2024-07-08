@@ -23,14 +23,14 @@ defineProps<{
     </div>
 
     <div class="game-nav-world">
-      <span v-if="worldId == 'sandbox'">
-        <span style="color: #ff8000">🕵️ sandbox 🕵️</span>
+      <template v-if="worldId == 'sandbox'">
+        <span style="color: #ff8000">🕵️ sandbox 🕵️ </span>
         <button @click="emit('openSandboxConfig')">configure</button>
-      </span>
+      </template>
 
-      <span v-else>
+      <template v-else>
         {{ worldName }}
-      </span>
+      </template>
     </div>
 
     <div class="game-nav-control">

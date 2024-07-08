@@ -1,6 +1,7 @@
 mod arm;
 mod battery;
 mod events;
+mod id;
 mod motor;
 mod radar;
 mod serial;
@@ -10,21 +11,19 @@ mod timer;
 pub use self::arm::*;
 pub use self::battery::*;
 pub use self::events::*;
+pub use self::id::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
-use crate::{AliveBotsLocator, Id, Map};
-use anyhow::{Context, Error, Result};
-use derivative::Derivative;
+use crate::{AliveBotsLocator, Map};
+use anyhow::{Context, Result};
 use glam::IVec2;
 use kartoffels_vm as vm;
-use rand::RngCore;
+use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
-use std::{fmt, mem};
-use wasm_bindgen::prelude::wasm_bindgen;
+use std::mem;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -66,6 +65,7 @@ impl AliveBot {
 
     pub fn tick(
         &mut self,
+        rng: &mut impl RngCore,
         map: &Map,
         bots: &AliveBotsLocator,
         pos: IVec2,
@@ -81,7 +81,11 @@ impl AliveBot {
         let mut vm =
             mem::take(&mut self.vm).context("tried to tick() a crashed bot")?;
 
-        vm.tick(self).context("firmware crashed")?;
+        vm.tick(&mut BotMmio {
+            bot: self,
+            ctxt: BotMmioContext { rng: &mut *rng },
+        })
+        .context("firmware crashed")?;
 
         self.vm = Some(vm);
 
@@ -117,25 +121,46 @@ impl AliveBot {
     }
 }
 
-impl vm::Mmio for AliveBot {
+pub struct BotMmio<'a> {
+    pub bot: &'a mut AliveBot,
+    pub ctxt: BotMmioContext<'a>,
+}
+
+impl<'a> vm::Mmio for BotMmio<'a> {
     fn load(&self, addr: u32) -> Result<u32, ()> {
-        self.timer
+        self.bot
+            .timer
             .mmio_load(addr)
-            .or_else(|_| self.battery.mmio_load(addr))
-            .or_else(|_| self.serial.mmio_load(addr))
-            .or_else(|_| self.motor.mmio_load(addr))
-            .or_else(|_| self.arm.mmio_load(addr))
-            .or_else(|_| self.radar.mmio_load(addr))
+            .or_else(|_| self.bot.battery.mmio_load(addr))
+            .or_else(|_| self.bot.serial.mmio_load(addr))
+            .or_else(|_| self.bot.motor.mmio_load(addr))
+            .or_else(|_| self.bot.arm.mmio_load(addr))
+            .or_else(|_| self.bot.radar.mmio_load(addr))
     }
 
     fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
-        self.timer
+        self.bot
+            .timer
             .mmio_store(addr, val)
-            .or_else(|_| self.battery.mmio_store(addr, val))
-            .or_else(|_| self.serial.mmio_store(addr, val))
-            .or_else(|_| self.motor.mmio_store(addr, val))
-            .or_else(|_| self.arm.mmio_store(addr, val))
-            .or_else(|_| self.radar.mmio_store(addr, val))
+            .or_else(|_| self.bot.battery.mmio_store(addr, val))
+            .or_else(|_| self.bot.serial.mmio_store(addr, val))
+            .or_else(|_| self.bot.motor.mmio_store(&mut self.ctxt, addr, val))
+            .or_else(|_| self.bot.arm.mmio_store(&mut self.ctxt, addr, val))
+            .or_else(|_| self.bot.radar.mmio_store(&mut self.ctxt, addr, val))
+    }
+}
+
+pub struct BotMmioContext<'a> {
+    pub rng: &'a mut dyn RngCore,
+}
+
+impl BotMmioContext<'_> {
+    fn cooldown(&mut self, base: u32, off_percentage: u32) -> u32 {
+        let off = base * off_percentage / 100;
+        let min = base - off;
+        let max = base + off;
+
+        self.rng.gen_range(min..=max)
     }
 }
 
@@ -151,47 +176,4 @@ pub struct QueuedBot {
 
     #[serde(flatten)]
     pub bot: AliveBot,
-}
-
-#[wasm_bindgen]
-#[derive(
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Serialize,
-    Deserialize,
-    Derivative,
-)]
-#[derivative(Debug = "transparent")]
-pub struct BotId(Id);
-
-impl BotId {
-    pub fn new(rng: &mut impl RngCore) -> Self {
-        Self(Id::new(rng))
-    }
-}
-
-#[cfg(test)]
-impl From<u64> for BotId {
-    fn from(value: u64) -> Self {
-        Self(Id::from(value))
-    }
-}
-
-impl FromStr for BotId {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.parse()?))
-    }
-}
-
-impl fmt::Display for BotId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
 }

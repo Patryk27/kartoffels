@@ -18,8 +18,10 @@ pub fn arm_wait() {
 
 /// Stabs the bot in front of us (if any), killing it.
 ///
-/// Note that this function has a cooldown period of 15000 ticks, see:
-/// [`is_arm_ready()`].
+/// # Cooldown
+///
+/// This function introduces a cooldown period of 60_000 +- 15% ticks (~930 ms)
+/// - see: [`is_arm_ready()`].
 #[inline(always)]
 pub fn arm_stab() {
     wri(MEM_ARM, 0, 1)
