@@ -121,7 +121,7 @@ onMounted(async () => {
 
             <p>
               sandbox is an ephemeral, private world - it is simulated only in
-              your browser and it is removed when you close or refresh the page
+              your browser and it disappears once you close or refresh the page
             </p>
           </div>
 
