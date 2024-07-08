@@ -32,18 +32,18 @@ pub fn motor_step() {
 
 /// Turns the bot in place:
 ///
-/// - given angle < 0, counterclockwise ("to left"),
-/// - given angle > 0, clockwise ("to right"),
-/// - given angle = 0, does nothing.
+/// - given dir < 0, counterclockwise ("to left"),
+/// - given dir > 0, clockwise ("to right"),
+/// - given dir = 0, does nothing.
 ///
-/// Only the sign of `angle` matters, i.e. `motor_turn(-123)` is the same as
-/// just `motor_turn(-1)`.
+/// Only the sign of `dir` matters, i.e. `motor_turn(-123)` is the same as just
+/// `motor_turn(-1)`.
 ///
 /// # Cooldown
 ///
 /// This function introduces a cooldown of 10_000 +- 15% ticks (~150 ms) - see:
 /// [`is_motor_ready()`].
 #[inline(always)]
-pub fn motor_turn(angle: i32) {
-    wri(MEM_MOTOR, 1, angle as u32);
+pub fn motor_turn(dir: i32) {
+    wri(MEM_MOTOR, 1, dir as u32);
 }
