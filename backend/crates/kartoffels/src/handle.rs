@@ -4,6 +4,7 @@ use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use futures_util::Stream;
+use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
 use tokio_stream::wrappers::ReceiverStream;
@@ -53,7 +54,7 @@ impl Handle {
         Ok(ReceiverStream::new(rx))
     }
 
-    pub async fn upload_bot(&self, src: Vec<u8>) -> Result<BotId> {
+    pub async fn upload_bot(&self, src: Cow<'static, [u8]>) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::UploadBot { src, tx }).await?;
@@ -98,7 +99,7 @@ pub enum Request {
 
     UploadBot {
         #[derivative(Debug = "ignore")]
-        src: Vec<u8>,
+        src: Cow<'static, [u8]>,
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,

@@ -6,6 +6,7 @@ import type { GameBot } from "@/components/Game.vue";
 
 const emit = defineEmits<{
   botUpload: [File];
+  botSpawnPrefab: [string];
   botConnect: [string];
   botDisconnect: [];
   botDestroy: [];
@@ -99,15 +100,20 @@ function handleUploadBot() {
   <div v-if="bot == null" class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
-        <button
-          :disabled="paused"
-          @click="paused ? null : handleConnectToBot()"
-        >
+        <button :disabled="paused" @click="handleConnectToBot">
           connect to bot
         </button>
 
-        <button :disabled="paused" @click="paused ? null : handleUploadBot()">
-          upload bot
+        <button :disabled="paused" @click="handleUploadBot">upload bot</button>
+      </div>
+
+      <div v-if="worldId == 'sandbox'" class="buttons-row">
+        <button
+          :disabled="paused"
+          @click="emit('botSpawnPrefab', 'roberto')"
+          title="roberto is a built-in moderately challenging bot written by kartoffels' author"
+        >
+          spawn roberto
         </button>
       </div>
     </div>

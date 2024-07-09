@@ -5,6 +5,7 @@ import type { GameBot, GameStatus, GameTableBot } from "../Game.vue";
 
 const emit = defineEmits<{
   botUpload: [File];
+  botSpawnPrefab: [string];
   botConnect: [string];
   botDisconnect: [];
   botClick: [string];
@@ -30,6 +31,7 @@ defineProps<{
       :bot="bot"
       :paused="paused"
       @bot-upload="(file) => emit('botUpload', file)"
+      @bot-spawn-prefab="(id) => emit('botSpawnPrefab', id)"
       @bot-connect="(id) => emit('botConnect', id)"
       @bot-disconnect="emit('botDisconnect')"
       @bot-destroy="emit('botDestroy')"

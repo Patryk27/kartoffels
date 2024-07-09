@@ -161,7 +161,7 @@ impl Display {
 
     fn send(&self) {
         serial_send_ctrl(SerialCtrlChar::StartBuffering);
-        serial_send_str("roberto 🔪\n\n");
+        serial_send_str("i'm roberto 🔪\n\n");
 
         for log in &self.logs {
             serial_send(*log);

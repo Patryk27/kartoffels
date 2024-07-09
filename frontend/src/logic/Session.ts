@@ -7,10 +7,10 @@ export interface Session {
 export function loadSession(): Session | null {
   const session = localStorage.getItem("session");
 
-  if (session == null) {
-    return null;
-  } else {
+  if (session) {
     return JSON.parse(session);
+  } else {
+    return null;
   }
 }
 

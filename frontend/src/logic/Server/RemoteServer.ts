@@ -14,6 +14,16 @@ export class RemoteServer implements Server {
     this.worldId = worldId;
   }
 
+  leave(): void {
+    this.close();
+  }
+
+  close(): void {
+    if (this.socket) {
+      this.socket.close();
+    }
+  }
+
   async uploadBot(file: File): Promise<{ id: string }> {
     var response = await fetch(
       `${import.meta.env.VITE_HTTP_URL}/worlds/${this.worldId}/bots`,
@@ -27,16 +37,6 @@ export class RemoteServer implements Server {
       return await response.json();
     } else {
       throw await response.text();
-    }
-  }
-
-  leave(): void {
-    this.close();
-  }
-
-  close(): void {
-    if (this.socket) {
-      this.socket.close();
     }
   }
 

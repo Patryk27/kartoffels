@@ -28,6 +28,13 @@ $ sudo nixos-container start demo
 
 ### Building on other systems
 
+Build roberto, an example bot required for UI:
+
+```
+$ cd backend
+$ cargo build -p roberto --release --target misc/riscv64-kartoffel-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem
+```
+
 Build the sandbox:
 
 ```
@@ -51,7 +58,7 @@ $ npm install
 $ npm run dev
 ```
 
-... and then proceed below.
+... and then proceed to the section below.
 
 ### Creating a new map
 

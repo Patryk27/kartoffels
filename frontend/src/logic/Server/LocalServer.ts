@@ -10,6 +10,7 @@ export class LocalServer implements Server {
   private joinResponseFn?: (response: any) => void;
   private joinListenerIdx?: number;
   private uploadBotResponseFn?: (response: any) => void;
+  private spawnPrefabBotResponseFn?: (response: any) => void;
 
   private worker: Worker;
 
@@ -55,20 +56,17 @@ export class LocalServer implements Server {
           }
 
           break;
+
+        case "spawnPrefabBot.response":
+          if (this.spawnPrefabBotResponseFn) {
+            this.spawnPrefabBotResponseFn(msg.response);
+            this.spawnPrefabBotResponseFn = undefined;
+          }
       }
     };
   }
 
   join(_: string, botId?: string): void {
-    // Control flow might seem a bit arbitrary in here, but just keep in mind we
-    // are trying to replicate how `RemoteServer` works, which - in turn - works
-    // the way it works, because WebSockets.
-    //
-    // So:
-    // - a successful join will fire `openFn` once and then it will continuously
-    //   fire `messageFn`,
-    // - a failing join will fire `errorFn` once.
-
     this.worker.postMessage({
       op: "join",
       botId,
@@ -87,6 +85,25 @@ export class LocalServer implements Server {
         }
       }
     };
+  }
+
+  leave(): void {
+    this.worker.postMessage({
+      op: "leave",
+    });
+
+    if (this.closeFn) {
+      this.closeFn();
+    }
+
+    this.openFn = undefined;
+    this.closeFn = undefined;
+    this.updateFn = undefined;
+    this.joinListenerIdx = undefined;
+  }
+
+  close(): void {
+    this.worker.terminate();
   }
 
   uploadBot(file: File): Promise<{ id: string }> {
@@ -114,6 +131,23 @@ export class LocalServer implements Server {
     });
   }
 
+  spawnPrefabBot(ty: string): Promise<{ id: string }> {
+    this.worker.postMessage({
+      op: "spawnPrefabBot",
+      ty,
+    });
+
+    return new Promise((resolve, reject) => {
+      this.spawnPrefabBotResponseFn = (response) => {
+        if (response.status == "ok") {
+          resolve(response.result);
+        } else {
+          reject(response.error);
+        }
+      };
+    });
+  }
+
   destroyBot(id: string): void {
     this.worker.postMessage({
       op: "destroyBot",
@@ -126,25 +160,6 @@ export class LocalServer implements Server {
       op: "restartBot",
       id,
     });
-  }
-
-  leave(): void {
-    this.worker.postMessage({
-      op: "leave",
-    });
-
-    if (this.closeFn) {
-      this.closeFn();
-    }
-
-    this.openFn = undefined;
-    this.closeFn = undefined;
-    this.updateFn = undefined;
-    this.joinListenerIdx = undefined;
-  }
-
-  close(): void {
-    this.worker.terminate();
   }
 
   onOpen(f: () => void): void {

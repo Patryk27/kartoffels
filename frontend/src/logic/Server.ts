@@ -1,15 +1,17 @@
 import { LocalServer } from "./Server/LocalServer";
 import { RemoteServer } from "./Server/RemoteServer";
 
+// Connection, either to the remote server (via Web Sockets) or simualted within
+// the web browser (aka sandbox).
+//
+// @see kartoffels::Handle
+//
+// TODO clean-up the control flow (make `join()` return just a Promise?)
 export interface Server {
-  // @see kartoffels::Handle::join()
   join(worldId: string, botId?: string): void;
-
-  // @see kartoffels::Handle::uploadBot()
-  uploadBot(file: File): Promise<{ id: string }>;
-
   leave(): void;
   close(): void;
+  uploadBot(file: File): Promise<{ id: string }>;
 
   onOpen(f: () => void): void;
   onClose(f: () => void): void;

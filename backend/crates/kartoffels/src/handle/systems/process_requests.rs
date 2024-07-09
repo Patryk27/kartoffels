@@ -3,6 +3,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use kartoffels_vm as vm;
+use std::borrow::Cow;
 use tokio::sync::mpsc;
 use tracing::debug;
 
@@ -37,7 +38,7 @@ pub fn run(world: &mut World) {
     }
 }
 
-fn do_upload_bot(world: &mut World, src: Vec<u8>) -> Result<BotId> {
+fn do_upload_bot(world: &mut World, src: Cow<'static, [u8]>) -> Result<BotId> {
     let fw = vm::Firmware::new(&src)?;
     let vm = vm::Runtime::new(fw);
     let mut bot = AliveBot::new(&mut world.rng, vm);

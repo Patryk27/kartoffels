@@ -1,6 +1,9 @@
 [alias]
 build-vm-tests = "build -p kartoffels-vm-tests --release --target ../../misc/riscv64-kartoffel-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
 
+[env]
+KARTOFFELS_ROBERTO = "../../../target/riscv64-kartoffel-bot/release/roberto"
+
 [target.riscv64-kartoffel-bot]
 rustflags = [
     "-C", "link-arg=-Tmisc/riscv64-kartoffel-bot.ld",

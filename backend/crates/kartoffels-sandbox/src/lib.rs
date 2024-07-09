@@ -3,6 +3,7 @@ use futures::StreamExt;
 use kartoffels::prelude::*;
 use serde::ser::Serialize;
 use serde_wasm_bindgen::Serializer;
+use std::borrow::Cow;
 use std::panic;
 use wasm_bindgen::prelude::*;
 use wasm_streams::readable::sys;
@@ -27,10 +28,50 @@ impl Sandbox {
         Ok(Self { handle })
     }
 
+    pub async fn join(
+        &self,
+        id: Option<String>,
+    ) -> Result<sys::ReadableStream, JsError> {
+        let id = id.map(|id| id.parse()).transpose().wrap_err()?;
+
+        let stream = self
+            .handle
+            .join(id)
+            .await
+            .wrap_err()?
+            .map(|val| Ok(val.into_js_value()));
+
+        Ok(ReadableStream::from_stream(stream).into_raw())
+    }
+
     pub async fn upload_bot(&self, src: Vec<u8>) -> Result<JsValue, JsError> {
         let id = self
             .handle
-            .upload_bot(src)
+            .upload_bot(Cow::Owned(src))
+            .await
+            .wrap_err()?
+            .into_js_value();
+
+        Ok(id)
+    }
+
+    pub async fn spawn_prefab_bot(
+        &self,
+        ty: String,
+    ) -> Result<JsValue, JsError> {
+        let src = match ty.as_str() {
+            "roberto" => {
+                include_bytes!(env!("KARTOFFELS_ROBERTO"))
+            }
+
+            _ => {
+                return Err(JsError::new("unknown prefab"));
+            }
+        };
+
+        let id = self
+            .handle
+            .upload_bot(Cow::Borrowed(src))
             .await
             .wrap_err()?
             .into_js_value();
@@ -52,22 +93,6 @@ impl Sandbox {
         self.handle.destroy_bot(id).await.wrap_err()?;
 
         Ok(())
-    }
-
-    pub async fn join(
-        &self,
-        id: Option<String>,
-    ) -> Result<sys::ReadableStream, JsError> {
-        let id = id.map(|id| id.parse()).transpose().wrap_err()?;
-
-        let stream = self
-            .handle
-            .join(id)
-            .await
-            .wrap_err()?
-            .map(|val| Ok(val.into_js_value()));
-
-        Ok(ReadableStream::from_stream(stream).into_raw())
     }
 }
 

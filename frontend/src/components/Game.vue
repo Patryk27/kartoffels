@@ -146,20 +146,23 @@ function join(newBotId?: string): void {
   });
 
   server.onError(() => {
+    server.onError(null);
+    server.onClose(null);
+
     if (status.value == "reconnecting") {
       setTimeout(() => {
         join(newBotId);
       }, 250);
     } else {
-      if (newBotId == null) {
-        server.onClose(null);
-        window.onerror(`couldn't join world ${props.worldId}`);
-      } else {
-        alert(`couldn't find bot ${newBotId} - maybe it got killed?`);
+      if (newBotId) {
+        alert(`couldn't find bot ${newBotId}`);
 
+        // LocalServer needs an extra tick before we're able to join() again
         setTimeout(() => {
           join(null);
-        }, 125);
+        }, 0);
+      } else {
+        window.onerror(`couldn't join world ${props.worldId}`);
       }
     }
   });
@@ -250,11 +253,37 @@ function handlePause(): void {
 
 async function handleBotUpload(src: File): Promise<void> {
   try {
-    const result = await server.uploadBot(src);
+    const bot = await server.uploadBot(src);
 
-    join(result.id);
+    join(bot.id);
   } catch (error) {
     alert("err, your bot couldn't be uploaded:\n\n" + error);
+  }
+}
+
+async function handleBotSpawnPrefab(ty: string): Promise<void> {
+  if (!(server instanceof LocalServer)) {
+    return;
+  }
+
+  const instances = parseInt(
+    prompt(
+      `how many instances of ${ty} you'd like to spawn? (0, 1, 2, etc.)`,
+      "1",
+    ),
+  );
+
+  for (let i = 0; i < instances; i += 1) {
+    try {
+      const bot = await server.spawnPrefabBot(ty);
+
+      if (instances == 1) {
+        join(bot.id);
+      }
+    } catch (error) {
+      alert("err, prefab couldn't be spawned:\n\n" + error);
+      break;
+    }
   }
 }
 
@@ -275,19 +304,23 @@ function handleBotClick(id?: string): void {
 }
 
 function handleBotDestroy(): void {
-  if (server instanceof LocalServer) {
-    if (bot.value?.id) {
-      server.destroyBot(bot.value.id);
-      bot.value = null;
-    }
+  if (!(server instanceof LocalServer)) {
+    return;
+  }
+
+  if (bot.value?.id) {
+    server.destroyBot(bot.value.id);
+    bot.value = null;
   }
 }
 
 function handleBotRestart(): void {
-  if (server instanceof LocalServer) {
-    if (bot.value?.id) {
-      server.restartBot(bot.value.id);
-    }
+  if (!(server instanceof LocalServer)) {
+    return;
+  }
+
+  if (bot.value?.id) {
+    server.restartBot(bot.value.id);
   }
 }
 
@@ -296,12 +329,14 @@ function openDialog(id: GameDialogId): void {
 }
 
 function handleRecreateSandbox(config: any): void {
-  if (server instanceof LocalServer) {
-    dialog.value = undefined;
-    server.recreate(config);
-
-    join(null);
+  if (!(server instanceof LocalServer)) {
+    return;
   }
+
+  dialog.value = undefined;
+  server.recreate(config);
+
+  join(null);
 }
 
 // ---
@@ -389,6 +424,7 @@ join(props.botId);
         :status="status"
         :paused="paused"
         @bot-upload="handleBotUpload"
+        @bot-spawn-prefab="handleBotSpawnPrefab"
         @bot-connect="handleBotConnect"
         @bot-disconnect="handleBotDisconnect"
         @bot-click="handleBotClick"
