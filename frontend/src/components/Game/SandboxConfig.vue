@@ -6,7 +6,7 @@ const emit = defineEmits<{
   recreateSandbox: [any];
 }>();
 
-const worldIdx = 0;
+let worldIdx = 0;
 </script>
 
 <template>
