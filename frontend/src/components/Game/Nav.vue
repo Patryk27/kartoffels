@@ -4,7 +4,7 @@ import type { GameStatus } from "../Game.vue";
 const emit = defineEmits<{
   leave: [];
   pause: [];
-  openIntro: [];
+  openHelp: [];
   openSandboxConfig: [];
 }>();
 
@@ -34,7 +34,7 @@ defineProps<{
     </div>
 
     <div class="game-nav-control">
-      <button :disabled="status == 'reconnecting'" @click="emit('openIntro')">
+      <button :disabled="status == 'reconnecting'" @click="emit('openHelp')">
         help
       </button>
 

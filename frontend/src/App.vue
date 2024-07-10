@@ -3,12 +3,12 @@ import { ref, onMounted } from "vue";
 import Crash from "./components/Crash.vue";
 import Game from "./components/Game.vue";
 import Home from "./components/Home.vue";
-import Intro from "./components/Intro.vue";
+import Help from "./components/Help.vue";
 import { type Server, RemoteServer, LocalServer } from "./logic/Server";
 
 type Route =
   | { id: "home"; worldId?: string }
-  | { id: "intro" }
+  | { id: "help"; prev: Route }
   | { id: "game"; worldId: string; worldName: string; botId?: string }
   | { id: "crash"; msg: string };
 
@@ -57,12 +57,15 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
 }
 
 function handleLeave() {
-  route.value = { id: "home" };
+  if (route.value.id == "help") {
+    route.value = route.value.prev;
+  } else {
+    route.value = { id: "home" };
+  }
 }
 
-function handleOpenIntro() {
-  route.value = { id: "intro" };
-  server = null;
+function handleOpenHelp() {
+  route.value = { id: "help", prev: route.value };
 }
 
 onMounted(() => {
@@ -81,7 +84,7 @@ onMounted(() => {
     <Home
       :worldId="route.worldId"
       @start="handleStart"
-      @open-intro="handleOpenIntro"
+      @open-help="handleOpenHelp"
     />
   </template>
 
@@ -92,12 +95,12 @@ onMounted(() => {
       :botId="route.botId"
       :server="server"
       @leave="handleLeave"
-      @open-intro="handleOpenIntro"
+      @open-help="handleOpenHelp"
     />
   </template>
 
-  <template v-if="route.id == 'intro'">
-    <Intro @leave="handleLeave" />
+  <template v-if="route.id == 'help'">
+    <Help @leave="handleLeave" />
   </template>
 
   <template v-if="route.id == 'crash'">

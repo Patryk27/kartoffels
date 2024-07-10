@@ -51,7 +51,7 @@ export type GameDialogId = "sandbox-config" | "summary";
 
 const emit = defineEmits<{
   leave: [];
-  openIntro: [];
+  openHelp: [];
 }>();
 
 const props = defineProps<{
@@ -402,7 +402,7 @@ join(props.botId);
       :paused="paused"
       @leave="emit('leave')"
       @pause="handlePause"
-      @open-intro="emit('openIntro')"
+      @open-help="emit('openHelp')"
       @open-sandbox-config="openDialog('sandbox-config')"
     />
 

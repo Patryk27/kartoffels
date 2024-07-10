@@ -5,7 +5,7 @@ import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
 const emit = defineEmits<{
   start: [string, string, string?];
-  openIntro: [];
+  openHelp: [];
 }>();
 
 const worldId = ref<string>(null);
@@ -72,7 +72,7 @@ onMounted(async () => {
 
 <template>
   <main class="home">
-    <div class="intro">
+    <div class="lead">
       <p>
         welcome to 🥔
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
@@ -89,7 +89,7 @@ onMounted(async () => {
       <p>the rules are simple -- have fun and let the best bot win!</p>
 
       <p v-if="error == null" style="text-align: center; padding: 0.5em">
-        👉 <a @click="emit('openIntro')">getting started</a> 👈
+        👉 <a @click="emit('openHelp')">getting started</a> 👈
       </p>
 
       <p class="quote">
@@ -110,7 +110,7 @@ onMounted(async () => {
                 {{ world.name }} ({{ world.mode }} + {{ world.theme }})
               </option>
 
-              <option value="sandbox">sandbox 🕵️ (private)</option>
+              <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
             </select>
 
             <button @click="handleJoin(worldId)">join!</button>
@@ -120,8 +120,9 @@ onMounted(async () => {
             <p><b>note, soldier!</b></p>
 
             <p>
-              sandbox is an ephemeral, private world - it is simulated only in
-              your browser and it disappears once you close or refresh the page
+              sandbox is a temporary, private world - it is simulated only in
+              your browser and so and it disappears once you close or refresh
+              the page
             </p>
           </div>
 
@@ -157,11 +158,10 @@ onMounted(async () => {
   max-width: 1024px;
   padding: 1em;
 
-  .intro {
+  .lead {
     padding: 1em;
     margin-bottom: 1em;
     border: 1px solid #00ff80;
-    border-radius: 5px;
 
     p {
       &:first-child {
