@@ -775,7 +775,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffel"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "spin",
  "talc",
@@ -783,7 +783,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ahash",
  "anyhow",
@@ -814,7 +814,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-dbg"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "ciborium",
@@ -825,7 +825,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-sandbox"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "console_error_panic_hook",
@@ -842,7 +842,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -862,7 +862,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-vm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "elf",
@@ -873,7 +873,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-vm-tests"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "kartoffel",
  "num-traits",
@@ -1172,7 +1172,7 @@ checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
 
 [[package]]
 name = "roberto"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "kartoffel",
 ]
