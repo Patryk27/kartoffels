@@ -10,6 +10,7 @@ import {
 } from "@/logic/Server";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
+import SandboxHelp from "./Game/SandboxHelp.vue";
 import SandboxConfig from "./Game/SandboxConfig.vue";
 import Side from "./Game/Side.vue";
 import Summary from "./Game/Summary.vue";
@@ -45,7 +46,7 @@ export type GameStatus =
   | "connected"
   | "closing";
 
-export type GameDialogId = "sandbox-config" | "summary";
+export type GameDialogId = "sandboxConfig" | "sandboxHelp" | "summary";
 
 // ---
 
@@ -251,6 +252,14 @@ function handlePause(): void {
   }
 }
 
+function handleOpenHelp(): void {
+  if (props.worldId == "sandbox") {
+    toggleDialog("sandboxHelp");
+  } else {
+    emit("openHelp");
+  }
+}
+
 async function handleBotUpload(src: File): Promise<void> {
   try {
     const bot = await server.uploadBot(src);
@@ -321,7 +330,7 @@ function handleBotRestart(): void {
   }
 }
 
-function openDialog(id: GameDialogId): void {
+function toggleDialog(id: GameDialogId): void {
   dialog.value = dialog.value == id ? undefined : id;
 }
 
@@ -399,8 +408,8 @@ join(props.botId);
       :paused="paused"
       @leave="emit('leave')"
       @pause="handlePause"
-      @open-help="emit('openHelp')"
-      @open-sandbox-config="openDialog('sandbox-config')"
+      @open-help="handleOpenHelp"
+      @open-sandboxConfig="toggleDialog('sandboxConfig')"
     />
 
     <main>
@@ -427,7 +436,7 @@ join(props.botId);
         @bot-click="handleBotClick"
         @bot-destroy="handleBotDestroy"
         @bot-restart="handleBotRestart"
-        @open-summary="openDialog('summary')"
+        @open-summary="toggleDialog('summary')"
       />
 
       <Summary
@@ -437,8 +446,13 @@ join(props.botId);
         @bot-click="handleBotClick"
       />
 
+      <SandboxHelp
+        :open="dialog == 'sandboxHelp'"
+        @close="dialog = undefined"
+      />
+
       <SandboxConfig
-        :open="dialog == 'sandbox-config'"
+        :open="dialog == 'sandboxConfig'"
         @close="dialog = undefined"
         @recreate-sandbox="handleRecreateSandbox"
       />
