@@ -13,6 +13,7 @@ body {
 
 a {
   color: #0080ff;
+  text-decoration: none;
 
   &:hover {
     cursor: pointer;
