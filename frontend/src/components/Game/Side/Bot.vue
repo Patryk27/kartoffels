@@ -74,7 +74,7 @@ const events = computed(() => {
 });
 
 function handleConnectToBot() {
-  const id = prompt("enter bot id:");
+  const id = prompt("bot id to connect to:");
 
   if (id) {
     emit("botConnect", id);
