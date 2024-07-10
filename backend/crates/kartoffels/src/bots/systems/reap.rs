@@ -43,7 +43,7 @@ pub fn run_now(world: &mut World, KillBot { id, reason, killer }: KillBot) {
         }
 
         Err(mut bot) => {
-            let msg = "discarded (couldn't be reset)";
+            let msg = "discarded (firmware crashed)";
 
             bot.log(msg.into());
             debug!(?id, "bot {}", msg);
