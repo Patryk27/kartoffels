@@ -136,7 +136,7 @@ function drawTiles(isBlinking: boolean): void {
         tileChar = "@";
         tileColor = botIdToColor(tileBot.id);
         tileOffsetX = -0.025;
-        tileOffsetY = -0.05;
+        tileOffsetY = -0.125;
 
         if (tileBot.id == bot?.id && isBlinking) {
           tileColor = "#ffffff";
