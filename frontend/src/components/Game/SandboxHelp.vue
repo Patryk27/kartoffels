@@ -74,7 +74,7 @@ const emit = defineEmits<{
   pre {
     margin-top: 1em;
     padding-top: 1em;
-    border-top: 1px dashed #00ff80;
+    border-top: 1px dashed #444444;
   }
 }
 </style>
