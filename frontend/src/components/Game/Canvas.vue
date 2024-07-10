@@ -40,6 +40,8 @@ function resize() {
   textScale = scale * 2.0;
   canvas.value.width = width;
   canvas.value.height = height;
+
+  ctxt.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
   ctxt.font = `${textScale}px Sono`;
 
   charMetrics = ctxt.measureText("@");
@@ -232,18 +234,18 @@ watch(
 );
 
 onMounted(() => {
-  document.fonts.ready.then(() => {
-    ctxt = canvas.value.getContext("2d");
-    ctxt.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctxt = canvas.value.getContext("2d");
 
+  const observer = new ResizeObserver(() => {
     resize();
     draw();
+  });
 
-    // TODO consider using resize observer
-    setInterval(() => {
-      resize();
-      draw();
-    }, 100);
+  observer.observe(canvasWrapper.value);
+
+  document.fonts.ready.then(() => {
+    resize();
+    draw();
   });
 });
 </script>
@@ -259,8 +261,10 @@ onMounted(() => {
   position: relative;
   border: 1px dashed #444444;
   flex-grow: 1;
+  overflow: hidden;
 
   canvas {
+    display: block;
     position: absolute;
   }
 }
