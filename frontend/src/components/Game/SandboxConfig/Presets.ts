@@ -66,11 +66,11 @@ export const worlds = [
       },
       theme: {
         type: "dungeon",
-        size: [120, 120],
+        size: [80, 80],
       },
       policy: {
-        max_alive_bots: 64,
-        max_queued_bots: 128,
+        max_alive_bots: 128,
+        max_queued_bots: 256,
       },
     },
   },
