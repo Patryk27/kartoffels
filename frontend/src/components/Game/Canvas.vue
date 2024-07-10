@@ -108,8 +108,8 @@ function drawTiles(isBlinking: boolean): void {
 
   for (let y = 0; y <= chars.y; y += 1) {
     for (let x = 0; x <= chars.x; x += 1) {
-      const tileX = camera.x - Math.round(chars.x / 2) + x;
-      const tileY = camera.y - Math.round(chars.y / 2) + y;
+      const tileX = camera.x - Math.round(chars.x / 2) + x + 1;
+      const tileY = camera.y - Math.round(chars.y / 2) + y + 1;
 
       if (
         tileX < 0 ||
@@ -168,8 +168,8 @@ function drawBots(isBlinking: boolean): void {
   ctxt.save();
 
   ctxt.translate(
-    (Math.round(chars.x / 2) - camera.x) * cw,
-    (Math.round(chars.y / 2) - camera.y) * ch,
+    (Math.round(chars.x / 2) - camera.x - 1) * cw,
+    (Math.round(chars.y / 2) - camera.y - 1) * ch,
   );
 
   for (const [botId, bot] of Object.entries(bots)) {
