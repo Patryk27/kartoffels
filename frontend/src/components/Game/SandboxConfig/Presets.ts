@@ -12,8 +12,8 @@ export const worlds = [
         radius: 20,
       },
       policy: {
-        max_alive_bots: 32,
-        max_queued_bots: 64,
+        max_alive_bots: 64,
+        max_queued_bots: 128,
       },
     },
   },
@@ -31,8 +31,8 @@ export const worlds = [
         radius: 40,
       },
       policy: {
-        max_alive_bots: 64,
-        max_queued_bots: 128,
+        max_alive_bots: 128,
+        max_queued_bots: 256,
       },
     },
   },
@@ -47,11 +47,11 @@ export const worlds = [
       },
       theme: {
         type: "dungeon",
-        size: [40, 40],
+        size: [60, 60],
       },
       policy: {
-        max_alive_bots: 32,
-        max_queued_bots: 64,
+        max_alive_bots: 64,
+        max_queued_bots: 128,
       },
     },
   },
