@@ -80,7 +80,7 @@ function draw(): void {
       }
 
       drawTiles(isBlinking);
-      drawBots(isBlinking);
+      drawCarets(isBlinking);
       break;
   }
 }
@@ -128,12 +128,14 @@ function drawTiles(isBlinking: boolean): void {
 
       let tileChar: string;
       let tileColor: string;
-      let tileOffsetY: number;
+      let tileOffsetY = 0.0;
+      let tileOffsetX = 0.0;
 
       if (tileBot) {
         tileChar = "@";
         tileColor = botIdToColor(tileBot.id);
-        tileOffsetY = -0.1;
+        tileOffsetX = -0.025;
+        tileOffsetY = -0.05;
 
         if (tileBot.id == bot?.id && isBlinking) {
           tileColor = "#ffffff";
@@ -141,11 +143,11 @@ function drawTiles(isBlinking: boolean): void {
       } else {
         tileChar = String.fromCharCode(tile >> 24);
         tileColor = "rgb(80, 80, 80)";
-        tileOffsetY = -0.0;
 
         switch (tileChar) {
           case ".":
-            tileOffsetY = -0.45;
+            tileOffsetX = 0.035;
+            tileOffsetY = -0.4;
             break;
 
           case "=":
@@ -156,12 +158,17 @@ function drawTiles(isBlinking: boolean): void {
       }
 
       ctxt.fillStyle = paused ? pausedColor : tileColor;
-      ctxt.fillText(tileChar, cw * x, ch * (y + tileOffsetY + 1));
+
+      ctxt.fillText(
+        tileChar,
+        cw * (x + tileOffsetX),
+        ch * (y + tileOffsetY + 1),
+      );
     }
   }
 }
 
-function drawBots(isBlinking: boolean): void {
+function drawCarets(isBlinking: boolean): void {
   const { bot, bots, camera, paused } = props;
   const cw = charMetrics.width;
   const ch = charMetrics.height;
@@ -199,12 +206,22 @@ function drawBots(isBlinking: boolean): void {
         break;
     }
 
-    ctxt.translate(0, -ch * 0.9);
+    let d1: number;
+    let d2: number;
 
+    if (bot.dir == "<" || bot.dir == ">") {
+      d1 = ch;
+      d2 = cw;
+    } else {
+      d1 = cw;
+      d2 = ch;
+    }
+
+    ctxt.translate(0, -d2 * 1.025);
     ctxt.beginPath();
-    ctxt.moveTo(-0.4 * cw, 0.3 * ch);
+    ctxt.moveTo(-0.4 * d1, 0.4 * d2);
     ctxt.lineTo(0, 0);
-    ctxt.lineTo(0.4 * cw, 0.3 * ch);
+    ctxt.lineTo(0.4 * d1, 0.4 * d2);
 
     ctxt.strokeStyle = botColor;
     ctxt.lineWidth = 2;
