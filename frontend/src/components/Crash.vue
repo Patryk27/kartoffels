@@ -26,7 +26,6 @@ function refresh() {
 .crash {
   padding: 1em;
   border: 1px solid #ff0000;
-  border-radius: 5px;
 
   p {
     &:first-child {

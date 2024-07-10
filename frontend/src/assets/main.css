@@ -113,7 +113,6 @@ dialog {
   color: #f0f0f0;
   background: #050505;
   border: 1px solid #00ff80;
-  border-radius: 5px;
 
   nav {
     display: flex;
