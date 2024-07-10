@@ -4,6 +4,9 @@ let
   toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
   crane' = (crane.mkLib pkgs).overrideToolchain toolchain;
 
+  # TODO use lib.cleanSourceWith
+  src = ./.;
+
   cargoVendorDir = crane'.vendorMultipleCargoDeps {
     inherit (crane'.findCargoFiles ./.) cargoConfigs;
 
@@ -17,20 +20,14 @@ in
 rec
 {
   kartoffels-server = crane'.buildPackage {
-    inherit cargoVendorDir;
+    inherit src cargoVendorDir;
 
-    src = ./.;
     cargoBuildCommand = "cargo build -p kartoffels-server --release";
-
-    # N.B. the server itself doesn't rely on roberto, but because we can't
-    #      exclude a crate from a workspace, we have to provide it anyway
-    KARTOFFELS_ROBERTO = "${roberto}/bin/roberto";
+    cargoExtraArgs = "--workspace --exclude kartoffels-sandbox";
   };
 
   kartoffels-sandbox = crane'.buildPackage {
-    inherit cargoVendorDir;
-
-    src = ./.;
+    inherit src cargoVendorDir;
 
     buildInputs = with pkgs; [
       binaryen
@@ -54,13 +51,20 @@ rec
     installPhase = ''
       mkdir $out
       cp -avr ./crates/kartoffels-sandbox/pkg/* $out
+
+      ${pkgs.removeReferencesTo}/bin/remove-references-to \
+        -t ${cargoVendorDir} \
+        $out/kartoffels_sandbox_bg.wasm
     '';
   };
 
   roberto = crane'.buildPackage {
-    inherit cargoVendorDir;
+    inherit src cargoVendorDir;
 
-    src = ./.;
+    # N.B. this is already defined in `.cargo/config.toml`, but Crane's
+    #      mkDummySrc accidentally gets rid of it
+    RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
+
     cargoCheckCommand = ":";
     cargoTestCommand = ":";
 
@@ -71,8 +75,11 @@ rec
       "--target ${./misc/riscv64-kartoffel-bot.json}"
     ];
 
-    # N.B. this is already defined within `.cargo/config.toml`, but Crane seems
-    #      to ignore it - not sure why
-    RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
+    postInstall = ''
+      ${pkgs.removeReferencesTo}/bin/remove-references-to \
+        -t ${toolchain} \
+        $out/bin/roberto
+    '';
+
   };
 }
