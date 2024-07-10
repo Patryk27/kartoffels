@@ -4,7 +4,7 @@ export function botIdToColor(id: string): string {
   return `hsl(${hue}, 100%, 50%)`;
 }
 
-function stringToHash(str: string): int {
+function stringToHash(str: string): number {
   let hash = 0;
 
   for (let i = 0; i < str.length; i++) {

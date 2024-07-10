@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap");
 
 body {
   height: 100%;
@@ -8,11 +8,12 @@ body {
   color: #f0f0f0;
 
   font-size: 18px;
-  font-family: 'Sono';
+  font-family: "Sono";
 }
 
 a {
   color: #0080ff;
+  text-decoration: none;
 
   &:hover {
     cursor: pointer;
@@ -20,7 +21,9 @@ a {
   }
 }
 
-select, button, textarea {
+select,
+button,
+textarea {
   margin: 0;
   padding: 0.25em 0.5em;
 
@@ -28,11 +31,12 @@ select, button, textarea {
   background: #090909;
   border: 1px solid #444444;
 
-  font-family: 'Sono';
+  font-family: "Sono";
   font-size: 1em;
 }
 
-select, button {
+select,
+button {
   &:hover {
     border: 1px solid #00ff80;
   }
@@ -61,7 +65,7 @@ button {
 }
 
 input {
-  &[type = "checkbox"] {
+  &[type="checkbox"] {
     padding: 0;
     margin: 0;
   }
@@ -73,6 +77,7 @@ label {
 
 textarea {
   resize: none;
+  scrollbar-color: #444444 #090909;
 
   &:read-only {
     cursor: default;
@@ -83,9 +88,10 @@ textarea {
   }
 }
 
-pre {
+pre,
+kbd {
   font-size: 18px;
-  font-family: 'Sono';
+  font-family: "Sono";
   color: #c86b85;
 }
 
@@ -110,8 +116,26 @@ dialog {
   border: 1px solid #00ff80;
 
   nav {
-    text-align: right;
-    margin-bottom: 1em;
+    display: flex;
+    margin-bottom: 1.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #444444;
+
+    .dialog-title {
+      flex-grow: 1;
+      align-self: center;
+      text-align: center;
+    }
+
+    .dialog-buttons {
+      margin-left: 1ch;
+    }
+  }
+
+  footer {
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: 1px solid #444444;
   }
 }
 

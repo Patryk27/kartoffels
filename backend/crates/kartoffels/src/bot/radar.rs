@@ -1,4 +1,4 @@
-use crate::{AliveBot, AliveBotsLocator, Dir, Map, TileBase};
+use crate::{AliveBot, AliveBotsLocator, BotMmioContext, Dir, Map, TileBase};
 use glam::{ivec2, IVec2};
 use serde::{Deserialize, Serialize};
 
@@ -19,9 +19,7 @@ impl BotRadar {
     ) {
         self.cooldown = self.cooldown.saturating_sub(1);
 
-        if self.cooldown == 0
-            && let Some(dist) = self.pending_scan.take()
-        {
+        if let Some(dist) = self.pending_scan.take() {
             let tile = |pos: IVec2| {
                 if bots.contains(pos) {
                     TileBase::BOT
@@ -30,11 +28,11 @@ impl BotRadar {
                 }
             };
 
-            let dist = dist.len();
+            let edge = dist.edge() as i32;
             let mut idx = 0;
 
-            for dy in -dist..=dist {
-                for dx in -dist..=dist {
+            for dy in -edge..=edge {
+                for dx in -edge..=edge {
                     self.payload[idx] =
                         tile(pos + dir.as_ivec2().rotate(ivec2(dx, dy).perp()));
 
@@ -61,12 +59,25 @@ impl BotRadar {
         }
     }
 
-    pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    pub fn mmio_store(
+        &mut self,
+        ctxt: &mut BotMmioContext,
+        addr: u32,
+        val: u32,
+    ) -> Result<(), ()> {
         match addr {
             AliveBot::MEM_RADAR => {
-                if let Some(dist) = BotRadarDistance::new(val) {
+                if self.cooldown == 0
+                    && let Some(dist) = BotRadarDistance::new(val)
+                {
+                    self.cooldown = match dist {
+                        BotRadarDistance::D3 => ctxt.cooldown(10_000, 10),
+                        BotRadarDistance::D5 => ctxt.cooldown(15_000, 15),
+                        BotRadarDistance::D7 => ctxt.cooldown(22_000, 25),
+                        BotRadarDistance::D9 => ctxt.cooldown(30_000, 30),
+                    };
+
                     self.pending_scan = Some(dist);
-                    self.cooldown = 5000 * (dist.len() as u32);
                 }
 
                 Ok(())
@@ -106,7 +117,7 @@ impl BotRadarDistance {
         }
     }
 
-    fn len(self) -> i32 {
+    fn edge(self) -> u32 {
         match self {
             Self::D3 => 1,
             Self::D5 => 2,
@@ -124,6 +135,8 @@ mod tests {
     use indoc::indoc;
     use itertools::Itertools;
     use pretty_assertions as pa;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
 
     impl BotRadar {
         #[track_caller]
@@ -159,10 +172,12 @@ mod tests {
         let bots = AliveBots::default();
         let bots = bots.locator();
         let mut radar = BotRadar::default();
+        let mut rng = ChaCha8Rng::from_seed(Default::default());
+        let mut ctxt = BotMmioContext { rng: &mut rng };
 
         // ---
 
-        radar.mmio_store(AliveBot::MEM_RADAR, 3).unwrap();
+        radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 3).unwrap();
         radar.cooldown = 0;
         radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
 
@@ -174,7 +189,7 @@ mod tests {
 
         // ---
 
-        radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
+        radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
         radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
 
@@ -188,7 +203,7 @@ mod tests {
 
         // ---
 
-        radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
+        radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
         radar.tick(&map, &bots, ivec2(3, 3), Dir::Right);
 
@@ -202,7 +217,7 @@ mod tests {
 
         // ---
 
-        radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
+        radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
         radar.tick(&map, &bots, ivec2(3, 3), Dir::Left);
 
@@ -216,7 +231,7 @@ mod tests {
 
         // ---
 
-        radar.mmio_store(AliveBot::MEM_RADAR, 5).unwrap();
+        radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
         radar.tick(&map, &bots, ivec2(3, 3), Dir::Down);
 

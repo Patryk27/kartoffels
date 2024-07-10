@@ -1,0 +1,21 @@
+[package]
+name = "kartoffels-sandbox"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kartoffels = { path = "../kartoffels" }
+
+anyhow = { workspace = true }
+console_error_panic_hook = { workspace = true }
+futures = { workspace = true }
+getrandom = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+tracing-wasm = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+wasm-streams = { workspace = true }

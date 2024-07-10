@@ -1,4 +1,4 @@
-use crate::{AliveBot, Dir};
+use crate::{AliveBot, BotMmioContext, Dir};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
@@ -30,12 +30,17 @@ impl BotMotor {
         }
     }
 
-    pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    pub fn mmio_store(
+        &mut self,
+        ctxt: &mut BotMmioContext,
+        addr: u32,
+        val: u32,
+    ) -> Result<(), ()> {
         match addr {
             AliveBot::MEM_MOTOR => {
                 if self.cooldown == 0 && val > 0 {
                     self.vel = 1;
-                    self.cooldown = 15000;
+                    self.cooldown = ctxt.cooldown(20_000, 15);
                 }
 
                 Ok(())
@@ -48,10 +53,12 @@ impl BotMotor {
                     #[allow(clippy::comparison_chain)]
                     if val < 0 {
                         self.dir = self.dir.turned_left();
-                        self.cooldown = 10000;
                     } else if val > 0 {
                         self.dir = self.dir.turned_right();
-                        self.cooldown = 10000;
+                    }
+
+                    if val != 0 {
+                        self.cooldown = ctxt.cooldown(15000, 15);
                     }
                 }
 

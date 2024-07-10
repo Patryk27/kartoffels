@@ -1,0 +1,54 @@
+use crate::{cfg, World};
+use tracing::info;
+use web_time::{Duration, Instant};
+
+#[derive(Debug)]
+pub struct State {
+    ticks: u32,
+    next_tick_at: Instant,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            ticks: 0,
+            next_tick_at: next_tick(),
+        }
+    }
+}
+
+pub fn run(world: &mut World, state: &mut State) {
+    state.ticks += cfg::SIM_TICKS;
+
+    if Instant::now() < state.next_tick_at {
+        return;
+    }
+
+    let msgs = [
+        format!(
+            "alive-bots = {} / {}",
+            world.bots.alive.len(),
+            world.policy.max_alive_bots
+        ),
+        format!(
+            "queued-bots = {} / {}",
+            world.bots.queued.len(),
+            world.policy.max_queued_bots
+        ),
+        format!("clients = {}", world.clients.len()),
+        format!("vcpu = {} khz", state.ticks / 1_000),
+    ];
+
+    info!(target: "kartoffels", "status:");
+
+    for msg in msgs {
+        info!(target: "kartoffels", "> {}", msg);
+    }
+
+    state.ticks = 0;
+    state.next_tick_at = next_tick();
+}
+
+fn next_tick() -> Instant {
+    Instant::now() + Duration::from_secs(1)
+}

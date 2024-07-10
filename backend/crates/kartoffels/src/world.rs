@@ -1,68 +1,125 @@
-use crate::Id;
-use anyhow::{Error, Result};
-use derivative::Derivative;
-use rand::RngCore;
-use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::str::FromStr;
+mod id;
+mod name;
 
-#[derive(
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Serialize,
-    Deserialize,
-    Derivative,
-)]
-#[derivative(Debug = "transparent")]
-pub struct WorldId(Id);
+pub use self::id::*;
+pub use self::name::*;
+use crate::{
+    bots, clients, handle, stats, store, Bots, Client, Map, Metronome, Mode,
+    Policy, RequestRx, Theme,
+};
+use ahash::AHashMap;
+use rand::rngs::SmallRng;
+use std::any::{Any, TypeId};
+use std::collections::VecDeque;
+use std::path::PathBuf;
+use std::sync::Arc;
 
-impl WorldId {
-    pub fn new(rng: &mut impl RngCore) -> Self {
-        Self(Id::new(rng))
+pub struct World {
+    pub bots: Bots,
+    pub clients: Vec<Client>,
+    pub events: Events,
+    pub map: Map,
+    pub metronome: Metronome,
+    pub mode: Mode,
+    pub name: Arc<WorldName>,
+    pub path: Option<PathBuf>,
+    pub policy: Policy,
+    pub rng: SmallRng,
+    pub rx: RequestRx,
+    pub theme: Theme,
+}
+
+impl World {
+    #[cfg(target_arch = "wasm32")]
+    pub fn spawn(mut self) {
+        use wasm_bindgen::closure::Closure;
+        use wasm_bindgen::JsCast;
+        use web_sys::WorkerGlobalScope;
+
+        let interval = self.metronome.interval().as_millis() as i32;
+        let mut cnt = Container::default();
+
+        let handler = Closure::<dyn FnMut()>::new(move || {
+            self.tick(&mut cnt);
+        });
+
+        js_sys::global()
+            .dyn_into::<WorkerGlobalScope>()
+            .expect("couldn't find WorkerGlobalScope")
+            .set_interval_with_callback_and_timeout_and_arguments(
+                &handler.into_js_value().try_into().unwrap(),
+                interval,
+                &Default::default(),
+            )
+            .expect("couldn't setup event loop");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn spawn(mut self) {
+        use std::thread;
+        use tokio::runtime::Handle as TokioHandle;
+
+        let rt = TokioHandle::current();
+
+        thread::spawn(move || {
+            let _rt = rt.enter();
+            let mut cnt = Container::default();
+
+            loop {
+                self.tick(&mut cnt);
+                self.metronome.tick();
+                self.metronome.wait();
+            }
+        });
+    }
+
+    pub fn tick(&mut self, cnt: &mut Container) {
+        handle::systems::process_requests::run(self);
+        clients::systems::create::run(self);
+        bots::systems::spawn::run(self, cnt.get_mut());
+        bots::systems::tick::run(self);
+        bots::systems::reap::run(self);
+        clients::systems::broadcast::run(self, cnt.get_mut());
+        store::systems::save::run(self, cnt.get_mut());
+        stats::run(self, cnt.get_mut());
     }
 }
 
-impl FromStr for WorldId {
-    type Err = Error;
+#[derive(Default)]
+pub struct Container {
+    values: AHashMap<TypeId, Box<dyn Any + Send>>,
+}
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.parse()?))
+impl Container {
+    fn get_mut<T>(&mut self) -> &mut T
+    where
+        T: Default + Send + 'static,
+    {
+        self.values
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(T::default()))
+            .downcast_mut()
+            .unwrap()
     }
 }
 
-impl fmt::Display for WorldId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
+#[derive(Default)]
+pub struct Events {
+    events: Container,
 }
 
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    Serialize,
-    Deserialize,
-    Derivative,
-)]
-#[derivative(Debug = "transparent")]
-pub struct WorldName(String);
-
-impl WorldName {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self(name.into())
+impl Events {
+    pub fn send<T>(&mut self, event: T)
+    where
+        T: Send + 'static,
+    {
+        self.events.get_mut::<VecDeque<_>>().push_back(event);
     }
-}
 
-impl fmt::Display for WorldName {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+    pub fn recv<T>(&mut self) -> Option<T>
+    where
+        T: Send + 'static,
+    {
+        self.events.get_mut::<VecDeque<_>>().pop_front()
     }
 }

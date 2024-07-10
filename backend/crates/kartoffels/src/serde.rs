@@ -2,7 +2,7 @@
 
 pub mod instant {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
 
     pub fn serialize<S>(
         instant: &Instant,
@@ -29,7 +29,7 @@ pub mod instant {
 
 pub mod instant_opt {
     use serde::{Deserialize, Deserializer, Serializer};
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
 
     pub fn serialize<S>(
         instant: &Option<Instant>,

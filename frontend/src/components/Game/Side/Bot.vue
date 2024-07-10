@@ -1,120 +1,144 @@
-<script setup>
-  import { computed } from 'vue';
-  import { botIdToColor } from '@/utils/bot.ts';
-  import { durationToHuman, ordinal } from '@/utils/other.ts';
+<script setup lang="ts">
+import { computed } from "vue";
+import { botIdToColor } from "@/utils/bot";
+import { durationToHuman, ordinal } from "@/utils/other";
+import type { GameBot } from "@/components/Game.vue";
 
-  const emit = defineEmits([
-    'botUpload',
-    'botConnect',
-    'botDisconnect',
-  ]);
+const emit = defineEmits<{
+  botUpload: [File];
+  botSpawnPrefab: [string];
+  botConnect: [string];
+  botDisconnect: [];
+  botDestroy: [];
+  botRestart: [];
+}>();
 
-  const props = defineProps(['bot', 'paused']);
+const props = defineProps<{
+  worldId: string;
+  bot?: GameBot;
+  paused: boolean;
+}>();
 
-  const serial = computed(() => {
-    if (props.bot?.serial == null) {
-      return null;
-    }
+const serial = computed(() => {
+  if (props.bot.status != "alive") {
+    return null;
+  }
 
-    let out = '';
-    let buf = null;
+  let out = "";
+  let buf = null;
 
-    for (const op of props.bot.serial) {
-      switch (op) {
-        case 0xffffff00:
-          buf = '';
-          break;
+  for (const op of props.bot.serial) {
+    switch (op) {
+      case 0xffffff00:
+        buf = "";
+        break;
 
-        case 0xffffff01:
-          out = buf ?? '';
-          buf = '';
-          break;
+      case 0xffffff01:
+        out = buf ?? "";
+        buf = "";
+        break;
 
-        case op:
-          const ch = String.fromCodePoint(op);
+      case op:
+        const ch = String.fromCodePoint(op);
 
-          if (buf === null) {
-            out += ch;
-          } else {
-            buf += ch;
-          }
-      }
-    }
-
-    return out;
-  });
-
-  const events = computed(() => {
-    const now = new Date();
-    let out = '';
-
-    for (const event of props.bot?.events ?? []) {
-      let eventAt;
-
-      if (event.at.getYear() == now.getYear()
-          && event.at.getMonth() == now.getMonth()
-          && event.at.getDay() == now.getDay()) {
-        eventAt = event.at.toLocaleTimeString();
-      } else {
-        eventAt = event.at.toLocaleString();
-      }
-
-      out += `> ${eventAt}\n${event.msg}\n`;
-      out += '\n';
-    }
-
-    if (out.length == 0) {
-      return 'nothing here yet';
-    } else {
-      return out;
-    }
-  });
-
-  function handleConnectToBot() {
-    const id = prompt('enter bot id:');
-
-    if (id) {
-      emit('botConnect', id);
+        if (buf === null) {
+          out += ch;
+        } else {
+          buf += ch;
+        }
     }
   }
 
-  function handleUploadBot() {
-    const input = document.createElement('input');
+  return out;
+});
 
-    input.type = 'file';
+const events = computed(() => {
+  const now = new Date();
+  let out = "";
 
-    input.onchange = event => {
-      emit('botUpload', event.target.files[0]);
-    };
+  for (const event of props.bot?.events ?? []) {
+    let eventHappenedToday =
+      event.at.getFullYear() == now.getFullYear() &&
+      event.at.getMonth() == now.getMonth() &&
+      event.at.getDay() == now.getDay();
 
-    input.click();
+    let eventAt = eventHappenedToday
+      ? event.at.toLocaleTimeString()
+      : event.at.toLocaleString();
+
+    out += `> ${eventAt}\n${event.msg}\n`;
+    out += "\n";
   }
+
+  return out;
+});
+
+function handleConnectToBot() {
+  const id = prompt("bot id to connect to:");
+
+  if (id) {
+    emit("botConnect", id);
+  }
+}
+
+function handleUploadBot() {
+  const input = document.createElement("input");
+
+  input.type = "file";
+
+  input.onchange = (event) => {
+    if (event.target instanceof HTMLInputElement) {
+      emit("botUpload", event.target.files[0]);
+    }
+  };
+
+  input.click();
+}
 </script>
 
 <template>
   <div v-if="bot == null" class="game-side-bot">
     <div class="buttons">
-      <button :disabled="paused"
-              @click="paused ? null : handleConnectToBot()">
-        connect to bot
-      </button>
+      <div class="buttons-row">
+        <button :disabled="paused" @click="handleConnectToBot">
+          connect to bot
+        </button>
 
-      <button :disabled="paused"
-              @click="paused ? null : handleUploadBot()">
-        upload bot
-      </button>
+        <button :disabled="paused" @click="handleUploadBot">upload bot</button>
+      </div>
+
+      <div v-if="worldId == 'sandbox'" class="buttons-row">
+        <button
+          :disabled="paused"
+          @click="emit('botSpawnPrefab', 'roberto')"
+          title="roberto is a built-in moderately challenging bot written by kartoffels' author"
+        >
+          spawn roberto
+        </button>
+      </div>
     </div>
   </div>
 
   <div v-else class="game-side-bot">
-    <button style="width: 100%"
-            @click="emit('botDisconnect')">
-      disconnect from bot
-    </button>
+    <div class="buttons">
+      <div class="buttons-row">
+        <button @click="emit('botDisconnect')">disconnect from bot</button>
+      </div>
+
+      <div v-if="worldId == 'sandbox'" class="buttons-row">
+        <button :disabled="paused" @click="emit('botDestroy')">
+          destroy bot
+        </button>
+
+        <button :disabled="paused" @click="emit('botRestart')">
+          restart bot
+        </button>
+      </div>
+    </div>
 
     <p>
-      id: <br />
-
+      id:
+      <br />
       <span :style="`color: ${botIdToColor(bot.id)}`">
         {{ bot.id }}
       </span>
@@ -122,76 +146,69 @@
 
     <template v-if="bot.status == 'alive'">
       <p>
-        status: <br />
-
-        <span class="status-alive">
-          alive
-        </span>
-
+        status:
+        <br />
+        <span class="status-alive">alive</span>
         ({{ durationToHuman(Math.round(bot.age)) }})
       </p>
 
-      <p>
-        serial port:
-      </p>
+      <p>serial port:</p>
 
-      <textarea v-if="bot.status == 'alive'"
-                :value="serial"
-                readonly />
+      <textarea v-if="bot.status == 'alive'" :value="serial" readonly />
     </template>
 
     <p v-if="bot.status == 'dead'">
-      status: <br />
-
-      <span class="status-dead">
-        dead
-      </span>
-
+      status:
       <br />
-
-      (since {{ (new Date(bot.killed_at)).toLocaleString() }})
+      <span class="status-dead">dead</span>
     </p>
 
     <p v-else-if="bot.status == 'queued'">
-      status: <br />
-
+      status:
+      <br />
       <span class="status-queued">
-        {{ bot.requeued ? 'requeued' : 'queued' }}
+        {{ bot.requeued ? "requeued" : "queued" }}
         ({{ bot.place }}{{ ordinal(bot.place) }})
       </span>
     </p>
 
-    <p>
-      history:
-    </p>
-
-    <textarea readonly :value="events" />
+    <template v-if="events.length > 0">
+      <p>history:</p>
+      <textarea readonly :value="events" />
+    </template>
 
     <div v-if="bot.status == 'alive'">
-      <input id="bot-follow"
-             type="checkbox"
-             v-model="bot.following"
-             :disabled="paused" />
+      <input
+        id="bot-follow"
+        type="checkbox"
+        v-model="bot.following"
+        :disabled="paused"
+      />
 
-      <label for="bot-follow">
-        follow with camera
-      </label>
+      <label for="bot-follow"> follow with camera</label>
     </div>
   </div>
 </template>
 
 <style scoped>
-  .game-side-bot {
-    display: flex;
-    width: 32ch;
-    flex-grow: 1;
-    flex-direction: column;
-    padding-bottom: 1em;
+.game-side-bot {
+  display: flex;
+  width: 32ch;
+  flex-grow: 1;
+  flex-direction: column;
+  padding-bottom: 1em;
 
-    .buttons {
+  .buttons {
+    .buttons-row {
       display: flex;
 
+      & + .buttons-row {
+        margin-top: 0.5em;
+      }
+
       button {
+        display: block;
+        width: 100%;
         flex-grow: 1;
 
         & + button {
@@ -199,28 +216,29 @@
         }
       }
     }
+  }
 
-    p {
-      &:first-child {
-        margin-top: 0;
-      }
-
-      & + p {
-        margin-top: 0;
-      }
-    }
-
-    textarea {
-      flex-grow: 1;
-      margin-bottom: 1em;
-    }
-
-    textarea + p {
+  p {
+    &:first-child {
       margin-top: 0;
     }
 
-    p:has(+textarea) {
-      margin-bottom: 0.4em;
+    & + p {
+      margin-top: 0;
     }
   }
+
+  textarea {
+    flex-grow: 1;
+    margin-bottom: 1em;
+  }
+
+  textarea + p {
+    margin-top: 0;
+  }
+
+  p:has(+ textarea) {
+    margin-bottom: 0.4em;
+  }
+}
 </style>

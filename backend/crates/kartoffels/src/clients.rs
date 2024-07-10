@@ -1,4 +1,6 @@
-use crate::{BotEvent, BotId, Dir, Map};
+pub mod systems;
+
+use crate::{BotEvent, BotEventRx, BotId, Dir, Map};
 use glam::IVec2;
 use serde::Serialize;
 use serde_json::Value;
@@ -6,11 +8,30 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 
-pub type UpdateTx = mpsc::Sender<Update>;
-pub type UpdateRx = mpsc::Receiver<Update>;
+pub type ClientUpdateTx = mpsc::Sender<ClientUpdate>;
+pub type ClientUpdateRx = mpsc::Receiver<ClientUpdate>;
+
+#[derive(Debug)]
+pub struct Client {
+    pub tx: ClientUpdateTx,
+    pub bot: Option<ClientBot>,
+    pub is_fresh: bool,
+}
+
+#[derive(Debug)]
+pub struct ClientBot {
+    pub id: BotId,
+    pub events: Option<ClientBotEvents>,
+}
+
+#[derive(Debug)]
+pub struct ClientBotEvents {
+    pub rx: BotEventRx,
+    pub init: Vec<Arc<BotEvent>>,
+}
 
 #[derive(Clone, Debug, Serialize)]
-pub struct Update {
+pub struct ClientUpdate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<Arc<Value>>,
 
@@ -18,14 +39,14 @@ pub struct Update {
     pub map: Option<Arc<Map>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bots: Option<Arc<BTreeMap<BotId, BotUpdate>>>,
+    pub bots: Option<Arc<BTreeMap<BotId, ClientBotUpdate>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<ConnectedBotUpdate>,
+    pub bot: Option<ClientConnectedBotUpdate>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct BotUpdate {
+pub struct ClientBotUpdate {
     pub pos: IVec2,
     pub dir: Dir,
     pub age: f32,
@@ -33,7 +54,7 @@ pub struct BotUpdate {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "status")]
-pub enum ConnectedBotUpdate {
+pub enum ClientConnectedBotUpdate {
     #[serde(rename = "queued")]
     Queued {
         place: usize,
@@ -50,4 +71,10 @@ pub enum ConnectedBotUpdate {
 
     #[serde(rename = "dead")]
     Dead { events: Vec<Arc<BotEvent>> },
+}
+
+#[derive(Debug)]
+pub struct CreateClient {
+    pub id: Option<BotId>,
+    pub tx: ClientUpdateTx,
 }

@@ -57,16 +57,34 @@
 
           frontend = import ./frontend {
             inherit napalm pkgs;
+
+            kartoffels-sandbox = backend.kartoffels-sandbox;
           };
 
         in
         {
           packages = {
-            inherit backend frontend;
+            inherit frontend;
+
+            backend = backend.kartoffels-server;
 
             default = pkgs.linkFarm "kartoffels" [
-              { name = "backend"; path = backend; }
-              { name = "frontend"; path = frontend; }
+              {
+                name = "kartoffels-server";
+                path = backend.kartoffels-server;
+              }
+              {
+                name = "kartoffels-sandbox";
+                path = backend.kartoffels-sandbox;
+              }
+              {
+                name = "kartoffels-frontend";
+                path = frontend;
+              }
+              {
+                name = "roberto";
+                path = backend.kartoffels-sandbox;
+              }
             ];
           };
 
@@ -75,6 +93,7 @@
               buildInputs = with pkgs; [
                 just
                 nodejs
+                wasm-pack
               ];
             };
           };

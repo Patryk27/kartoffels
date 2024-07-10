@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use kartoffels::iface::cbor_to_json;
+use kartoffels::prelude::cbor_to_json;
 use std::fs::{self, File};
 use std::io::{BufReader, Read};
 use std::path::PathBuf;

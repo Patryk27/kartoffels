@@ -1,16 +1,13 @@
 mod alive;
 mod dead;
 mod queued;
+pub mod systems;
 
 pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
-use crate::{AliveBot, BotId, DeadBot, Map, Mode, Policy, QueuedBot};
-use anyhow::{anyhow, Result};
-use glam::IVec2;
-use rand::RngCore;
+use crate::{AliveBot, BotId, DeadBot, QueuedBot};
 use serde::{Deserialize, Serialize};
-use tracing::debug;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Bots {
@@ -20,31 +17,6 @@ pub struct Bots {
 }
 
 impl Bots {
-    pub fn add(
-        &mut self,
-        rng: &mut impl RngCore,
-        policy: &Policy,
-        bot: AliveBot,
-    ) -> Result<BotId> {
-        let id = self.random_unoccupied_id(rng);
-
-        if self.queued.len() < policy.max_queued_bots {
-            self.queued.push(QueuedBot {
-                id,
-                bot,
-                requeued: false,
-            });
-
-            debug!(?id, "bot queued");
-
-            Ok(id)
-        } else {
-            debug!(?id, "bot discarded (queue full)");
-
-            Err(anyhow!("too many robots queued, try again in a moment"))
-        }
-    }
-
     pub fn get(&self, id: BotId) -> Option<BotEntry> {
         if let Some(entry) = self.queued.get(id) {
             return Some(BotEntry::Queued(entry));
@@ -77,93 +49,18 @@ impl Bots {
         None
     }
 
-    pub fn kill(
-        &mut self,
-        rng: &mut impl RngCore,
-        mode: &mut Mode,
-        policy: &Policy,
-        id: BotId,
-        reason: &str,
-        killer: Option<BotId>,
-    ) {
-        debug!(?id, ?reason, ?killer, "bot killed");
-
-        mode.on_bot_killed(id, killer);
-
-        let mut bot = self.alive.remove(id);
-
-        bot.log(reason.to_owned());
-
-        if let Some(killer) = killer {
-            if let Some(killer) = self.alive.get_mut(killer) {
-                killer.bot.log(format!("stabbed {}", id));
-            }
-        }
-
-        match bot.reset(rng) {
-            Ok(mut bot) => {
-                if self.queued.len() < policy.max_queued_bots {
-                    debug!(?id, "bot requeued");
-
-                    self.queued.push(QueuedBot {
-                        id,
-                        bot,
-                        requeued: true,
-                    });
-                } else {
-                    let msg = "discarded (queue is full)";
-
-                    bot.log(msg.into());
-                    debug!(?id, "bot {}", msg);
-
-                    self.dead.add(id, DeadBot { events: bot.events });
-                }
-            }
-
-            Err(mut bot) => {
-                let msg = "discarded (couldn't be reset)";
-
-                bot.log(msg.into());
-                debug!(?id, "bot {}", msg);
-
-                self.dead.add(id, DeadBot { events: bot.events });
-            }
+    pub fn remove(&mut self, id: BotId) {
+        if self.alive.has(id) {
+            self.alive.remove(id);
+        } else if self.dead.has(id) {
+            self.dead.remove(id);
+        } else {
+            // TODO handle queued bots as well
         }
     }
 
     pub fn has(&self, id: BotId) -> bool {
         self.alive.has(id) || self.dead.has(id) || self.queued.has(id)
-    }
-
-    pub fn random_unoccupied_id(&self, rng: &mut impl RngCore) -> BotId {
-        loop {
-            let id = BotId::new(rng);
-
-            if !self.has(id) {
-                break id;
-            }
-        }
-    }
-
-    pub fn random_unoccupied_pos(&self, map: &Map) -> Option<IVec2> {
-        let mut rng = rand::thread_rng();
-        let mut nth = 0;
-
-        loop {
-            let pos = map.rand_pos(&mut rng);
-
-            if map.get(pos).is_floor()
-                && self.alive.lookup_by_pos(pos).is_none()
-            {
-                return Some(pos);
-            }
-
-            nth += 1;
-
-            if nth >= 1024 {
-                return None;
-            }
-        }
     }
 }
 
@@ -179,4 +76,11 @@ pub enum BotEntryMut<'a> {
     Queued(&'a mut QueuedBot),
     Alive(&'a mut AliveBot),
     Dead(&'a mut DeadBot),
+}
+
+#[derive(Debug)]
+pub struct KillBot {
+    pub id: BotId,
+    pub reason: String,
+    pub killer: Option<BotId>,
 }

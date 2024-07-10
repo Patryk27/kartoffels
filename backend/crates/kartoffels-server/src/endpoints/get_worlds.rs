@@ -2,7 +2,7 @@ use crate::AppState;
 use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::Json;
-use kartoffels::iface::{WorldId, WorldName};
+use kartoffels::prelude::{WorldId, WorldName};
 use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::RwLock;

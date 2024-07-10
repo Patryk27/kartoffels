@@ -1,49 +1,106 @@
-<script setup>
-  import { ref, onMounted } from 'vue';
-  import Crash from './components/Crash.vue';
-  import Game from './components/Game.vue';
-  import Home from './components/Home.vue';
-  import Intro from './components/Intro.vue';
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import Crash from "./components/Crash.vue";
+import Game from "./components/Game.vue";
+import Home from "./components/Home.vue";
+import Help from "./components/Help.vue";
+import { type Server, RemoteServer, LocalServer } from "./logic/Server";
 
-  const route = ref({
-    id: 'home',
-  });
+type Route =
+  | { id: "home"; worldId?: string }
+  | { id: "help"; prev: Route }
+  | { id: "game"; worldId: string; worldName: string; botId?: string }
+  | { id: "crash"; msg: string };
 
-  function handleJoinOrRestore(worldId, botId) {
-    route.value = { id: 'game', worldId, botId };
+const route = ref<Route>({ id: "home" });
+
+let server: Server = undefined;
+
+function handleStart(worldId: string, worldName: string, botId?: string) {
+  if (worldId === "sandbox") {
+    if (server instanceof LocalServer) {
+      //
+    } else {
+      if (server) {
+        server.close();
+      }
+
+      server = new LocalServer({
+        name: "total mayhem",
+        mode: {
+          type: "deathmatch",
+        },
+        theme: {
+          type: "arena",
+          radius: 20,
+        },
+        policy: {
+          max_alive_bots: 32,
+          max_queued_bots: 64,
+        },
+      });
+    }
+  } else {
+    if (server) {
+      server.close();
+    }
+
+    server = new RemoteServer();
   }
 
-  function handleLeave() {
-    route.value = { id: 'home' };
-  }
+  route.value = {
+    id: "game",
+    worldId,
+    worldName,
+    botId,
+  };
+}
 
-  function handleOpenIntro() {
-    route.value = { id: 'intro' };
+function handleLeave() {
+  if (route.value.id == "help") {
+    route.value = route.value.prev;
+  } else {
+    route.value = { id: "home" };
   }
+}
 
-  onMounted(() => {
-    window.onerror = (msg) => {
-      route.value = { id: 'crash', msg };
-    };
-  });
+function handleOpenHelp() {
+  route.value = { id: "help", prev: route.value };
+}
+
+onMounted(() => {
+  window.onerror = (msg) => {
+    if (typeof msg === "string") {
+      route.value = { id: "crash", msg };
+    } else {
+      // TODO
+    }
+  };
+});
 </script>
 
 <template>
   <template v-if="route.id == 'home'">
-    <Home @join="handleJoinOrRestore"
-          @restore="handleJoinOrRestore"
-          @open-intro="handleOpenIntro" />
+    <Home
+      :worldId="route.worldId"
+      @start="handleStart"
+      @open-help="handleOpenHelp"
+    />
   </template>
 
   <template v-if="route.id == 'game'">
-    <Game :worldId="route.worldId"
-          :botId="route.botId"
-          @leave="handleLeave"
-          @open-intro="handleOpenIntro" />
+    <Game
+      :worldId="route.worldId"
+      :worldName="route.worldName"
+      :botId="route.botId"
+      :server="server"
+      @leave="handleLeave"
+      @open-help="handleOpenHelp"
+    />
   </template>
 
-  <template v-if="route.id == 'intro'">
-    <Intro @leave="handleLeave" />
+  <template v-if="route.id == 'help'">
+    <Help @leave="handleLeave" />
   </template>
 
   <template v-if="route.id == 'crash'">

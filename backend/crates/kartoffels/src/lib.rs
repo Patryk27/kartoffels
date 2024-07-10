@@ -1,4 +1,5 @@
 #![feature(array_chunks)]
+#![feature(const_option)]
 #![feature(extract_if)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
@@ -8,20 +9,20 @@
 mod bot;
 mod bots;
 mod cfg;
+mod clients;
 mod config;
 mod handle;
 mod map;
 mod mode;
 mod policy;
 mod serde;
+mod stats;
 mod store;
-mod systems;
 mod theme;
-mod update;
 mod utils;
 mod world;
 
-pub mod iface {
+pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::config::Config;
     pub use crate::handle::Handle;
@@ -31,27 +32,25 @@ pub mod iface {
 
 pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
+pub(crate) use self::clients::*;
 pub(crate) use self::config::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::store::*;
-pub(crate) use self::systems::*;
 pub(crate) use self::theme::*;
-pub(crate) use self::update::*;
 pub(crate) use self::utils::*;
 pub(crate) use self::world::*;
 use anyhow::Result;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
-use tokio::runtime;
 use tokio::sync::mpsc;
-use tracing::{info, span, Level};
+use tracing::info;
 
 pub fn create(
-    rt: runtime::Handle,
     id: WorldId,
     config: Config,
     path: Option<PathBuf>,
@@ -59,7 +58,6 @@ pub fn create(
     let mut rng = rand::thread_rng();
     let mode = config.mode.create();
     let theme = config.theme.create();
-    let policy = config.policy;
 
     info!(
         ?id,
@@ -70,22 +68,31 @@ pub fn create(
     );
 
     let map = theme.create_map(&mut rng);
+    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
 
     let world = World {
-        id,
-        name: Arc::new(config.name),
-        mode,
-        theme,
-        policy,
-        map,
         bots: Default::default(),
+        clients: Default::default(),
+        events: Default::default(),
+        map,
+        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
+        mode,
+        name: Arc::new(config.name),
         path,
+        policy: config.policy,
+        rng: SmallRng::from_entropy(),
+        rx,
+        theme,
     };
 
-    Ok(spawn(rt, world))
+    let handle = Handle::new(&world, tx);
+
+    world.spawn();
+
+    Ok(handle)
 }
 
-pub fn resume(rt: runtime::Handle, id: WorldId, path: &Path) -> Result<Handle> {
+pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
     let this = SerializedWorld::load(path)?;
 
     info!(
@@ -96,80 +103,26 @@ pub fn resume(rt: runtime::Handle, id: WorldId, path: &Path) -> Result<Handle> {
         "resuming world",
     );
 
+    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
+
     let world = World {
-        id,
-        name: Arc::new(this.name.into_owned()),
-        mode: this.mode.into_owned(),
-        theme: this.theme.into_owned(),
-        policy: this.policy.into_owned(),
-        map: this.map.into_owned(),
         bots: this.bots.into_owned(),
+        clients: Default::default(),
+        events: Default::default(),
+        map: this.map.into_owned(),
+        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
+        mode: this.mode.into_owned(),
+        name: Arc::new(this.name.into_owned()),
         path: Some(path.to_owned()),
+        policy: this.policy.into_owned(),
+        rng: SmallRng::from_entropy(),
+        rx,
+        theme: this.theme.into_owned(),
     };
 
-    Ok(spawn(rt, world))
-}
+    let handle = Handle::new(&world, tx);
 
-fn spawn(rt: runtime::Handle, world: World) -> Handle {
-    let name = world.name.clone();
-    let mode = world.mode.ty();
-    let theme = world.theme.ty();
+    world.spawn();
 
-    let (tx, rx) = mpsc::channel(16 * 1024);
-
-    thread::spawn({
-        let span = span!(Level::INFO, "", world = world.id.to_string());
-
-        move || {
-            let _rt = rt.enter();
-            let _span = span.enter();
-
-            world.main(rx)
-        }
-    });
-
-    Handle {
-        name,
-        mode,
-        theme,
-        tx,
-    }
-}
-
-#[derive(Debug)]
-struct World {
-    id: WorldId,
-    name: Arc<WorldName>,
-    mode: Mode,
-    theme: Theme,
-    policy: Policy,
-    map: Map,
-    bots: Bots,
-    path: Option<PathBuf>,
-}
-
-impl World {
-    fn main(mut self, rx: RequestRx) {
-        info!("ready");
-
-        let mut rng = rand::thread_rng();
-        let mut mtr = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
-        let mut comm = Communicator::new(rx);
-        let mut ctrl = Controller;
-        let mut stats = Statistician::new();
-        let mut persist = Persistencer::new();
-        let mut bcaster = Broadcaster::new();
-        let mut antireap = Antireaper::new();
-
-        loop {
-            mtr.iter(|mtr| {
-                comm.tick(&mut self, &mut rng, &mut bcaster);
-                ctrl.tick(&mut self, &mut rng);
-                stats.tick(&self, mtr, &bcaster);
-                persist.tick(&self);
-                bcaster.tick(&mut self);
-                antireap.tick(&mut self);
-            });
-        }
-    }
+    Ok(handle)
 }

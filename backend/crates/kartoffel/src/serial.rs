@@ -30,8 +30,8 @@ pub fn serial_send_str(str: &str) {
 ///
 /// ## Reducing flickering
 ///
-/// If you plan on displaying something animated etc., the web terminal might
-/// flicker - you can get rid of this artifact like so:
+/// If you plan on displaying something animated, the terminal might flicker -
+/// you can get rid of this like so:
 ///
 /// ```rust,no_run
 /// # use kartoffel::*;

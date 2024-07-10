@@ -1,4 +1,4 @@
-use crate::AliveBot;
+use crate::{AliveBot, BotMmioContext};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -21,12 +21,17 @@ impl BotArm {
         }
     }
 
-    pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    pub fn mmio_store(
+        &mut self,
+        ctxt: &mut BotMmioContext,
+        addr: u32,
+        val: u32,
+    ) -> Result<(), ()> {
         match addr {
             AliveBot::MEM_ARM => {
                 if self.cooldown == 0 && val > 0 {
                     self.is_stabbing = true;
-                    self.cooldown = 15000;
+                    self.cooldown = ctxt.cooldown(60_000, 15);
                 }
 
                 Ok(())

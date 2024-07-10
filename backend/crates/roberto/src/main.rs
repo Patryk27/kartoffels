@@ -1,59 +1,61 @@
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
+extern crate alloc;
+
+use alloc::collections::VecDeque;
 use core::ops::Range;
 use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
     let mut rng = Rng::new();
+    let mut display = Display::default();
     let mut sample_dir_at = 0;
 
     loop {
-        serial_send('.');
+        display.log('.');
 
-        let radar = {
+        let scan = {
             radar_wait();
-            radar_scan(5);
-            radar_wait();
-            radar_read::<5>()
+            radar_scan::<5>()
         };
 
-        if radar[1][2] == '@' {
-            serial_send('!');
+        if scan[1][2] == '@' {
+            display.log('!');
+            arm_wait();
             arm_stab();
             continue;
         }
 
-        if radar[1][2] == '.' && got_enemy_in(radar, 0..5, 0..2) {
-            serial_send('^');
+        if scan[1][2] == '.' && got_enemy_in(scan, 0..5, 0..2) {
+            display.log('^');
             motor_wait();
             motor_step();
             continue;
         }
 
-        if got_enemy_in(radar, 3..5, 0..5) {
-            serial_send('<');
+        if got_enemy_in(scan, 3..5, 0..5) {
+            display.log('<');
             motor_wait();
             motor_turn(1);
             continue;
         }
 
-        if got_enemy_in(radar, 0..2, 0..5) {
-            serial_send('>');
+        if got_enemy_in(scan, 0..2, 0..5) {
+            display.log('>');
             motor_wait();
             motor_turn(-1);
             continue;
         }
 
-        if got_enemy_in(radar, 0..5, 3..5) {
-            serial_send('v');
+        if got_enemy_in(scan, 0..5, 3..5) {
+            display.log('v');
             motor_wait();
             motor_turn(if rng.bool() { -1 } else { 1 });
             continue;
         }
 
-        if timer_ticks() < sample_dir_at && radar[1][2] != '.' {
-            serial_send('?');
+        if timer_ticks() < sample_dir_at && scan[1][2] != '.' {
             sample_dir_at = 0;
         }
 
@@ -61,58 +63,57 @@ fn main() {
             motor_wait();
             motor_step();
         } else {
-            let can_step;
+            display.log('?');
 
-            loop {
+            let can_step = loop {
                 match rng.u32() % 4 {
-                    0 if radar[2][1] == '.' => {
+                    0 if scan[2][1] == '.' => {
                         motor_wait();
                         motor_turn(-1);
-                        can_step = true;
-                        break;
+
+                        break true;
                     }
 
-                    1 if radar[1][2] == '.' => {
-                        can_step = true;
-                        break;
+                    1 if scan[1][2] == '.' => {
+                        break true;
                     }
 
-                    2 if radar[2][3] == '.' => {
+                    2 if scan[2][3] == '.' => {
                         motor_wait();
                         motor_turn(1);
-                        can_step = true;
-                        break;
+
+                        break true;
                     }
 
-                    3 if radar[3][2] == '.' => {
+                    3 if scan[3][2] == '.' => {
                         motor_wait();
                         motor_turn(if rng.bool() { -1 } else { 1 });
-                        can_step = false;
-                        break;
+
+                        break false;
                     }
 
                     _ => (),
                 }
-            }
+            };
 
             if can_step {
                 motor_wait();
                 motor_step();
 
-                sample_dir_at = timer_ticks() + (rng.u32() % 20) * 5000;
+                sample_dir_at = timer_ticks() + (rng.u32() % 20) * 8000;
             }
         }
     }
 }
 
-fn got_enemy_in<const R: usize>(
-    radar: [[char; R]; R],
+fn got_enemy_in<const D: usize>(
+    scan: [[char; D]; D],
     xs: Range<usize>,
     ys: Range<usize>,
 ) -> bool {
     for y in ys {
         for x in xs.clone() {
-            if radar[y][x] == '@' {
+            if scan[y][x] == '@' {
                 return true;
             }
         }
@@ -140,5 +141,32 @@ impl Rng {
     fn u32(&mut self) -> u32 {
         self.state = 1664525 * self.state + 1013904223;
         self.state
+    }
+}
+
+#[derive(Default)]
+struct Display {
+    logs: VecDeque<char>,
+}
+
+impl Display {
+    fn log(&mut self, log: char) {
+        if self.logs.len() >= 3 * 30 {
+            self.logs.pop_front();
+        }
+
+        self.logs.push_back(log);
+        self.send();
+    }
+
+    fn send(&self) {
+        serial_send_ctrl(SerialCtrlChar::StartBuffering);
+        serial_send_str("i'm roberto 🔪\n\n");
+
+        for log in &self.logs {
+            serial_send(*log);
+        }
+
+        serial_send_ctrl(SerialCtrlChar::FlushBuffer);
     }
 }
