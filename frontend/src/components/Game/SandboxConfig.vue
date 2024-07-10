@@ -20,7 +20,7 @@ let worldIdx = 0;
     </nav>
 
     <div class="field">
-      <label for="world">world type:</label>
+      <label for="world">world preset:</label>
 
       <select for="world" v-model="worldIdx">
         <option v-for="(world, worldIdx) in worlds" :value="worldIdx">
