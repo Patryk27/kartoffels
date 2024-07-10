@@ -9,13 +9,12 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
-  open: boolean;
   bots: GameTableBot[];
 }>();
 </script>
 
 <template>
-  <dialog class="game-summary" :open="open">
+  <dialog class="game-summary">
     <nav>
       <div class="dialog-title">summary</div>
 
