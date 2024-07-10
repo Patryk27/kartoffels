@@ -33,17 +33,13 @@ function resize() {
     return;
   }
 
-  scale = Math.max(
-    Math.min(
-      canvasWrapper.value.clientWidth,
-      canvasWrapper.value.clientHeight,
-    ) / 64.0,
-    14.0,
-  );
+  const width = canvasWrapper.value.clientWidth;
+  const height = canvasWrapper.value.clientHeight;
 
+  scale = 16.0; // TODO consider making dynamic
   textScale = scale * 2.0;
-  canvas.value.width = canvasWrapper.value.clientWidth;
-  canvas.value.height = canvasWrapper.value.clientHeight;
+  canvas.value.width = width;
+  canvas.value.height = height;
   ctxt.font = `${textScale}px Sono`;
 
   charMetrics = ctxt.measureText("@");
@@ -54,8 +50,8 @@ function resize() {
     2.0;
 
   chars = {
-    x: Math.round(canvasWrapper.value.clientWidth / charMetrics.width),
-    y: Math.round(canvasWrapper.value.clientHeight / charMetrics.height),
+    x: Math.round(width / charMetrics.width),
+    y: Math.round(height / charMetrics.height),
   };
 }
 
