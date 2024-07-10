@@ -87,6 +87,13 @@ export class LocalServer implements Server {
     };
   }
 
+  pause(paused: boolean): void {
+    this.worker.postMessage({
+      op: "pause",
+      paused,
+    });
+  }
+
   leave(): void {
     this.worker.postMessage({
       op: "leave",

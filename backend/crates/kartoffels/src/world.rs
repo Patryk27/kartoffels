@@ -23,6 +23,7 @@ pub struct World {
     pub mode: Mode,
     pub name: Arc<WorldName>,
     pub path: Option<PathBuf>,
+    pub paused: bool,
     pub policy: Policy,
     pub rng: SmallRng,
     pub rx: RequestRx,
@@ -76,9 +77,13 @@ impl World {
     pub fn tick(&mut self, cnt: &mut Container) {
         handle::systems::process_requests::run(self);
         clients::systems::create::run(self);
-        bots::systems::spawn::run(self, cnt.get_mut());
-        bots::systems::tick::run(self);
-        bots::systems::reap::run(self);
+
+        if !self.paused {
+            bots::systems::spawn::run(self, cnt.get_mut());
+            bots::systems::tick::run(self);
+            bots::systems::reap::run(self);
+        }
+
         clients::systems::broadcast::run(self, cnt.get_mut());
         store::systems::save::run(self, cnt.get_mut());
         stats::run(self, cnt.get_mut());

@@ -44,6 +44,12 @@ impl Sandbox {
         Ok(ReadableStream::from_stream(stream).into_raw())
     }
 
+    pub async fn pause(&self, paused: bool) -> Result<(), JsError> {
+        self.handle.pause(paused).await.wrap_err()?;
+
+        Ok(())
+    }
+
     pub async fn upload_bot(&self, src: Vec<u8>) -> Result<JsValue, JsError> {
         let id = self
             .handle

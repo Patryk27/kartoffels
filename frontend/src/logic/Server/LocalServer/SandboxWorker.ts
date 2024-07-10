@@ -59,6 +59,10 @@ async function handleJoin(id?: string): Promise<void> {
   }
 }
 
+async function handlePause(paused: boolean): Promise<void> {
+  await (await getSandbox()).pause(paused);
+}
+
 function handleLeave(): void {
   listenerIdx += 1;
 }
@@ -135,6 +139,10 @@ onmessage = (event) => {
 
     case "join":
       handleJoin(data.botId);
+      break;
+
+    case "pause":
+      handlePause(data.paused);
       break;
 
     case "leave":

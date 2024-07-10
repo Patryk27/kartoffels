@@ -243,12 +243,20 @@ function join(newBotId?: string): void {
 function handlePause(): void {
   paused.value = !paused.value;
 
-  if (paused.value) {
-    server.onClose(null);
-    server.leave();
+  if (server instanceof LocalServer) {
+    server.pause(paused.value);
   } else {
-    // TODO don't restart camera position
-    join(bot.value?.id);
+    // We can't pause remote connections, so in that case let's just drop the
+    // connection and transparently re-acquire it on unpausing.
+    //
+    // TODO restore camera position
+
+    if (paused.value) {
+      server.onClose(null);
+      server.leave();
+    } else {
+      join(bot.value?.id);
+    }
   }
 }
 

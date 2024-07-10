@@ -54,6 +54,12 @@ impl Handle {
         Ok(ReceiverStream::new(rx))
     }
 
+    pub async fn pause(&self, paused: bool) -> Result<()> {
+        self.send(Request::Pause { paused }).await?;
+
+        Ok(())
+    }
+
     pub async fn upload_bot(&self, src: Cow<'static, [u8]>) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
@@ -95,6 +101,10 @@ pub enum Request {
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<ClientUpdateRx>,
+    },
+
+    Pause {
+        paused: bool,
     },
 
     UploadBot {

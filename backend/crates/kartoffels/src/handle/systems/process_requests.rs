@@ -19,6 +19,10 @@ pub fn run(world: &mut World) {
                 _ = tx.send(rx2);
             }
 
+            Request::Pause { paused } => {
+                world.paused = paused;
+            }
+
             Request::UploadBot { src, tx } => {
                 _ = tx.send(do_upload_bot(world, src));
             }
