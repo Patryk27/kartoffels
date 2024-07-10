@@ -204,8 +204,8 @@ function join(newBotId?: string): void {
 
         if (botEntry) {
           camera.value = {
-            x: botEntry.pos[0],
-            y: botEntry.pos[1],
+            x: botEntry.pos[0] + 1,
+            y: botEntry.pos[1] + 1,
           };
         }
       }

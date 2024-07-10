@@ -35,13 +35,14 @@ function resize() {
 
   const width = canvasWrapper.value.clientWidth;
   const height = canvasWrapper.value.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
 
-  scale = 16.0; // TODO consider making dynamic
+  scale = 13.5;
   textScale = scale * 2.0;
   canvas.value.width = width;
   canvas.value.height = height;
 
-  ctxt.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctxt.scale(dpr, dpr);
   ctxt.font = `${textScale}px Sono`;
 
   charMetrics = ctxt.measureText("@");
@@ -52,8 +53,8 @@ function resize() {
     2.0;
 
   chars = {
-    x: Math.round(width / charMetrics.width),
-    y: Math.round(height / charMetrics.height),
+    x: Math.round(width / dpr / charMetrics.width),
+    y: Math.round(height / dpr / charMetrics.height),
   };
 }
 
@@ -110,8 +111,8 @@ function drawTiles(isBlinking: boolean): void {
 
   for (let y = 0; y <= chars.y; y += 1) {
     for (let x = 0; x <= chars.x; x += 1) {
-      const tileX = camera.x - Math.round(chars.x / 2) + x + 1;
-      const tileY = camera.y - Math.round(chars.y / 2) + y + 1;
+      const tileX = camera.x - Math.round(chars.x / 2) + x;
+      const tileY = camera.y - Math.round(chars.y / 2) + y;
 
       if (
         tileX < 0 ||
@@ -177,8 +178,8 @@ function drawCarets(isBlinking: boolean): void {
   ctxt.save();
 
   ctxt.translate(
-    (Math.round(chars.x / 2) - camera.x - 1) * cw,
-    (Math.round(chars.y / 2) - camera.y - 1) * ch,
+    (Math.round(chars.x / 2) - camera.x) * cw,
+    (Math.round(chars.y / 2) - camera.y) * ch,
   );
 
   for (const [botId, bot] of Object.entries(bots)) {
