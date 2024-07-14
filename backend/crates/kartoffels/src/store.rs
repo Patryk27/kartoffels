@@ -1,8 +1,9 @@
 mod header;
 mod migrations;
-pub mod systems;
+mod systems;
 
 use self::header::*;
+pub use self::systems::*;
 use crate::{cfg, Bots, Map, Metronome, Mode, Policy, Theme, WorldName};
 use anyhow::{Context, Result};
 use maybe_owned::MaybeOwned;

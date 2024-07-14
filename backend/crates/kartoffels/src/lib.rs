@@ -8,7 +8,6 @@
 
 mod bot;
 mod bots;
-mod cfg;
 mod clients;
 mod config;
 mod handle;
@@ -28,6 +27,13 @@ pub mod prelude {
     pub use crate::handle::Handle;
     pub use crate::utils::*;
     pub use crate::world::{WorldId, WorldName};
+}
+
+mod cfg {
+    pub const SIM_HZ: u32 = 64_000;
+    pub const SIM_TICKS: u32 = 1024;
+    pub const VERSION: u32 = 3;
+    pub const MAX_REQUEST_BACKLOG: usize = 16 * 1024;
 }
 
 pub(crate) use self::bot::*;
@@ -83,6 +89,7 @@ pub fn create(
         policy: config.policy,
         rng: SmallRng::from_entropy(),
         rx,
+        systems: Default::default(),
         theme,
     };
 
@@ -119,6 +126,7 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
         policy: this.policy.into_owned(),
         rng: SmallRng::from_entropy(),
         rx,
+        systems: Default::default(),
         theme: this.theme.into_owned(),
     };
 

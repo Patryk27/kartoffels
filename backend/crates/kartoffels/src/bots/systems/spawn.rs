@@ -4,7 +4,7 @@ use tracing::debug;
 use web_time::{Duration, Instant};
 
 #[derive(Debug)]
-pub struct State {
+struct State {
     next_tick_at: Instant,
 }
 
@@ -16,7 +16,9 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
+pub fn run(world: &mut World) {
+    let state = world.systems.get_mut::<State>();
+
     if Instant::now() < state.next_tick_at {
         return;
     }

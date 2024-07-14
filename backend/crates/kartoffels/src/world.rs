@@ -27,6 +27,7 @@ pub struct World {
     pub policy: Policy,
     pub rng: SmallRng,
     pub rx: RequestRx,
+    pub systems: Container,
     pub theme: Theme,
 }
 
@@ -38,10 +39,9 @@ impl World {
         use web_sys::WorkerGlobalScope;
 
         let interval = self.metronome.interval().as_millis() as i32;
-        let mut cnt = Container::default();
 
         let handler = Closure::<dyn FnMut()>::new(move || {
-            self.tick(&mut cnt);
+            self.tick();
         });
 
         js_sys::global()
@@ -64,29 +64,27 @@ impl World {
 
         thread::spawn(move || {
             let _rt = rt.enter();
-            let mut cnt = Container::default();
 
             loop {
-                self.tick(&mut cnt);
                 self.metronome.tick();
                 self.metronome.wait();
             }
         });
     }
 
-    pub fn tick(&mut self, cnt: &mut Container) {
-        handle::systems::process_requests::run(self);
-        clients::systems::create::run(self);
+    pub fn tick(&mut self) {
+        handle::process_requests(self);
+        clients::create(self);
 
         if !self.paused {
-            bots::systems::spawn::run(self, cnt.get_mut());
-            bots::systems::tick::run(self);
-            bots::systems::reap::run(self);
+            bots::spawn(self);
+            bots::tick(self);
+            bots::reap(self);
         }
 
-        clients::systems::broadcast::run(self, cnt.get_mut());
-        store::systems::save::run(self, cnt.get_mut());
-        stats::run(self, cnt.get_mut());
+        clients::broadcast(self);
+        store::save(self);
+        stats::run(self);
     }
 }
 
@@ -96,7 +94,7 @@ pub struct Container {
 }
 
 impl Container {
-    fn get_mut<T>(&mut self) -> &mut T
+    pub fn get_mut<T>(&mut self) -> &mut T
     where
         T: Default + Send + 'static,
     {

@@ -6,7 +6,7 @@ use std::future::Future;
 use tracing::{debug, info};
 use web_time::{Duration, Instant};
 
-pub struct State {
+struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
     next_tick_at: Instant,
 }
@@ -20,7 +20,8 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
+pub fn run(world: &mut World) {
+    let state = world.systems.get_mut::<State>();
     let shutdown = world.events.recv::<Shutdown>();
 
     let Some(path) = &world.path else {

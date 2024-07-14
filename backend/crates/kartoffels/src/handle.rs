@@ -1,5 +1,6 @@
-pub mod systems;
+mod systems;
 
+pub use self::systems::*;
 use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;

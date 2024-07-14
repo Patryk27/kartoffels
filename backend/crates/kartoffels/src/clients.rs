@@ -1,5 +1,6 @@
-pub mod systems;
+mod systems;
 
+pub use self::systems::*;
 use crate::{BotEvent, BotEventRx, BotId, Dir, Map};
 use glam::IVec2;
 use serde::Serialize;

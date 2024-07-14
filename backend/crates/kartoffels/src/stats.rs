@@ -2,8 +2,7 @@ use crate::{cfg, World};
 use tracing::info;
 use web_time::{Duration, Instant};
 
-#[derive(Debug)]
-pub struct State {
+struct State {
     ticks: u32,
     next_tick_at: Instant,
 }
@@ -17,7 +16,9 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
+pub fn run(world: &mut World) {
+    let state = world.systems.get_mut::<State>();
+
     state.ticks += cfg::SIM_TICKS;
 
     if Instant::now() < state.next_tick_at {

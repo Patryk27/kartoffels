@@ -1,13 +1,13 @@
 use crate::{
     BotEntry, Bots, BroadcastReceiverRx, Client, ClientBot, ClientBotUpdate,
-    ClientConnectedBotUpdate, ClientUpdate, Map, World,
+    ClientConnectedBotUpdate, ClientUpdate, Map, Mode, World,
 };
 use std::collections::BTreeMap;
 use std::mem;
 use std::sync::Arc;
 use web_time::{Duration, Instant};
 
-pub struct State {
+struct State {
     next_tick_at: Instant,
 }
 
@@ -19,35 +19,36 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
+pub fn run(world: &mut World) {
+    let state = world.systems.get_mut::<State>();
+
     if Instant::now() < state.next_tick_at {
         return;
     }
 
-    let update = prepare_update(world);
+    let update = prepare_update(&world.bots, &mut world.map, &world.mode);
 
     world
         .clients
         .extract_if(|client| {
-            handle_client(&world.map, &world.bots, update.clone(), client)
+            handle_client(&world.bots, &world.map, update.clone(), client)
         })
         .for_each(drop);
 
     state.next_tick_at = Instant::now() + Duration::from_millis(50);
 }
 
-fn prepare_update(world: &mut World) -> ClientUpdate {
-    let mode = Some(Arc::new(world.mode.state()));
+fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ClientUpdate {
+    let mode = Some(Arc::new(mode.state()));
 
-    let map = if world.map.take_dirty() {
-        Some(Arc::new(world.map.clone()))
+    let map = if map.take_dirty() {
+        Some(Arc::new(map.clone()))
     } else {
         None
     };
 
     let bots = {
-        let bots: BTreeMap<_, _> = world
-            .bots
+        let bots: BTreeMap<_, _> = bots
             .alive
             .iter()
             .map(|entry| {
@@ -71,8 +72,8 @@ fn prepare_update(world: &mut World) -> ClientUpdate {
 }
 
 fn handle_client(
-    map: &Map,
     bots: &Bots,
+    map: &Map,
     mut update: ClientUpdate,
     client: &mut Client,
 ) -> bool {

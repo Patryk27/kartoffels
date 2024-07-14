@@ -7,7 +7,10 @@ pub fn run(world: &mut World) {
     }
 }
 
-pub fn run_now(world: &mut World, KillBot { id, reason, killer }: KillBot) {
+pub(super) fn run_now(
+    world: &mut World,
+    KillBot { id, reason, killer }: KillBot,
+) {
     debug!(?id, ?reason, ?killer, "bot killed");
 
     world.mode.on_bot_killed(id, killer);

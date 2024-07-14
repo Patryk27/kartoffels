@@ -1,11 +1,12 @@
 mod alive;
 mod dead;
 mod queued;
-pub mod systems;
+mod systems;
 
 pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
+pub use self::systems::*;
 use crate::{AliveBot, BotId, DeadBot, QueuedBot};
 use serde::{Deserialize, Serialize};
 
