@@ -36,6 +36,7 @@ async fn handle(
     let mut updates = state
         .read()
         .await
+        .as_alive()?
         .world(world_id)?
         .join(bot_id)
         .await

@@ -15,6 +15,7 @@ pub async fn handle(
     request: Json<Config>,
 ) -> AppResult<impl IntoResponse> {
     let mut state = state.write().await;
+    let state = state.as_alive_mut()?;
     let id = WorldId::new(&mut rand::thread_rng());
     let config = request.0;
 
@@ -30,7 +31,7 @@ pub async fn handle(
     let path = state
         .data
         .as_ref()
-        .map(|data| data.join(id.to_string()).with_extension("world"));
+        .map(|dir| dir.join(id.to_string()).with_extension("world"));
 
     let world =
         kartoffels::create(id, config, path).map_err(AppError::MAP_HTTP_400)?;

@@ -1,4 +1,4 @@
-use crate::{SerializedWorld, World};
+use crate::{SerializedWorld, Shutdown, World};
 use anyhow::{Context, Result};
 use futures_util::FutureExt;
 use maybe_owned::MaybeOwned;
@@ -21,11 +21,17 @@ impl Default for State {
 }
 
 pub fn run(world: &mut World, state: &mut State) {
+    let shutdown = world.events.recv::<Shutdown>();
+
     let Some(path) = &world.path else {
+        if let Some(shutdown) = shutdown {
+            _ = shutdown.tx.send(());
+        }
+
         return;
     };
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_tick_at && shutdown.is_none() {
         return;
     }
 
@@ -54,6 +60,12 @@ pub fn run(world: &mut World, state: &mut State) {
         let (tt_ser, tt_io) = task.await?;
 
         info!(?tt_ser, ?tt_io, "world saved");
+
+        if let Some(shutdown) = shutdown {
+            info!("completing shutdown");
+
+            _ = shutdown.tx.send(());
+        }
 
         Ok(())
     })

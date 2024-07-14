@@ -11,6 +11,7 @@ use std::fs::{self, File};
 use std::future::Future;
 use std::io::{BufReader, Cursor};
 use std::path::Path;
+use tokio::sync::oneshot;
 use tokio::task;
 use web_time::Duration;
 
@@ -98,4 +99,9 @@ impl SerializedWorld<'_> {
 
         Ok(async move { task.await.context("thread has crashed")? })
     }
+}
+
+#[derive(Debug)]
+pub struct Shutdown {
+    pub tx: oneshot::Sender<()>,
 }

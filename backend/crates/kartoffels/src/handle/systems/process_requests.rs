@@ -1,11 +1,11 @@
 use crate::{
-    AliveBot, BotId, CreateClient, KillBot, QueuedBot, Request, World,
+    AliveBot, BotId, CreateClient, KillBot, QueuedBot, Request, Shutdown, World,
 };
 use anyhow::{anyhow, Result};
 use kartoffels_vm as vm;
 use std::borrow::Cow;
 use tokio::sync::mpsc;
-use tracing::debug;
+use tracing::{debug, info};
 
 pub fn run(world: &mut World) {
     while let Ok(msg) = world.rx.try_recv() {
@@ -21,6 +21,12 @@ pub fn run(world: &mut World) {
 
             Request::Pause { paused } => {
                 world.paused = paused;
+            }
+
+            Request::Shutdown { tx } => {
+                info!("starting shutdown");
+
+                world.events.send(Shutdown { tx });
             }
 
             Request::UploadBot { src, tx } => {

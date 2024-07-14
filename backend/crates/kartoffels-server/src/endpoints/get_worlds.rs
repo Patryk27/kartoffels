@@ -1,3 +1,4 @@
+use crate::error::AppResult;
 use crate::AppState;
 use axum::extract::State;
 use axum::response::IntoResponse;
@@ -9,10 +10,11 @@ use tokio::sync::RwLock;
 
 pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
-) -> impl IntoResponse {
+) -> AppResult<impl IntoResponse> {
     let state = state.read().await;
 
     let worlds = state
+        .as_alive()?
         .worlds
         .iter()
         .map(|(id, world)| ResponseWorld {
@@ -23,7 +25,7 @@ pub async fn handle(
         })
         .collect();
 
-    Json(Response { worlds }).into_response()
+    Ok(Json(Response { worlds }).into_response())
 }
 
 #[derive(Debug, Serialize)]

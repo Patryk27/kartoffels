@@ -15,7 +15,7 @@ pub async fn handle(
     Path(world_id): Path<WorldId>,
     body: Bytes,
 ) -> AppResult<impl IntoResponse> {
-    let world = state.read().await.world(world_id)?;
+    let world = state.read().await.as_alive()?.world(world_id)?;
 
     let id = world
         .upload_bot(Cow::Owned(body.to_vec()))

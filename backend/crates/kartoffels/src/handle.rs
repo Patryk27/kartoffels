@@ -60,6 +60,14 @@ impl Handle {
         Ok(())
     }
 
+    pub async fn shutdown(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Shutdown { tx }).await?;
+
+        rx.await.context(Self::ERR_DIED)
+    }
+
     pub async fn upload_bot(&self, src: Cow<'static, [u8]>) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
@@ -105,6 +113,10 @@ pub enum Request {
 
     Pause {
         paused: bool,
+    },
+
+    Shutdown {
+        tx: oneshot::Sender<()>,
     },
 
     UploadBot {
