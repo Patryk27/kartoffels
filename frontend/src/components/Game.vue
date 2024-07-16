@@ -294,9 +294,16 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
     return;
   }
 
-  const instances = parseInt(
-    prompt(`how many instances of ${ty} you'd like to spawn?`, "1").trim(),
+  const instancesStr = prompt(
+    `how many instances of ${ty} you'd like to spawn?`,
+    "1",
   );
+
+  if (!instancesStr) {
+    return;
+  }
+
+  const instances = parseInt(instancesStr.trim());
 
   for (let i = 0; i < instances; i += 1) {
     try {
