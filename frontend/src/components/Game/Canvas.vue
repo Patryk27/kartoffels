@@ -289,7 +289,7 @@ onMounted(() => {
 <style scoped>
 .game-canvas {
   position: relative;
-  border: 1px dashed #444444;
+  border: 1px solid #444444;
   flex-grow: 1;
   overflow: hidden;
 
