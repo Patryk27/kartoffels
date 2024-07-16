@@ -25,16 +25,17 @@ export class PlayerBots {
   bots: Map<String, Date>;
 
   constructor(worldId: string) {
+    this.worldId = worldId;
+    this.bots = new Map();
+
     const bots =
       worldId == "sandbox" ? null : localStorage.getItem(`${worldId}.bots`);
 
     if (bots) {
-      this.bots = new Map(JSON.parse(bots));
-    } else {
-      this.bots = new Map();
+      for (const [id, uploadedAt] of JSON.parse(bots)) {
+        this.bots.set(id, new Date(uploadedAt));
+      }
     }
-
-    this.worldId = worldId;
   }
 
   add(botId: string): void {
@@ -50,7 +51,7 @@ export class PlayerBots {
   // Removes old bots, so that we don't keep a potentially huge map in the
   // memory.
   private gc(): void {
-    while (this.bots.size >= 4096) {
+    while (this.bots.size > 4096) {
       const bots = [];
 
       for (const [id, uploadedAt] of this.bots) {
@@ -58,7 +59,7 @@ export class PlayerBots {
       }
 
       bots.sort((a, b) => {
-        return b.uploadedAt.getTime() - a.uploadedAt.getTime();
+        return a.uploadedAt.getTime() - b.uploadedAt.getTime();
       });
 
       const oldestBotId = bots[0].id;
