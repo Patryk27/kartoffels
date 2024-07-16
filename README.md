@@ -1,6 +1,6 @@
 # 🥔 Kartoffels 🥔
 
-**[Kartoffels](https://kartoffels.pwy.io) is an online robot combat arena!**
+**[Kartoffels](https://kartoffels.pwy.io) is an MMO robot combat arena!**
 
 Implement your own bot, submit it and see it fight other bots in real-time:
 

@@ -78,7 +78,7 @@ onMounted(async () => {
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
           kartoffels</a
         >
-        🥔, an online robot combat arena!
+        🥔, an mmo robot combat arena!
       </p>
 
       <p>
@@ -87,6 +87,10 @@ onMounted(async () => {
       </p>
 
       <p>the rules are simple -- have fun and let the best bot win!</p>
+
+      <p style="text-align: center">
+        <img src="./Home/bot.svg" @click="emit('openHelp')" />
+      </p>
 
       <p v-if="error == null" style="text-align: center; padding: 0.5em">
         👉 <a @click="emit('openHelp')">getting started</a> 👈
