@@ -4,7 +4,7 @@
 
 Implement your own bot, submit it and see it fight other bots in real-time:
 
-![](./readme/intro.gif)
+![](./readme/intro-v2.gif)
 
 [Play it online!](https://kartoffels.pwy.io)
 
