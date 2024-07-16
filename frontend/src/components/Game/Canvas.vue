@@ -105,9 +105,15 @@ function drawStatus(): void {
 }
 
 function drawTiles(isBlinking: boolean): void {
-  const { map, bot, camera, paused } = props;
+  let { map, bot, camera, paused } = props;
   const cw = charMetrics.width;
   const ch = charMetrics.height;
+
+  // Optimization: We're accessing those objects very frequently in here
+  map = toRaw(map);
+  bot = toRaw(bot);
+  camera = toRaw(camera);
+  paused = toRaw(paused);
 
   for (let y = 0; y <= chars.y; y += 1) {
     for (let x = 0; x <= chars.x; x += 1) {
@@ -170,10 +176,16 @@ function drawTiles(isBlinking: boolean): void {
 }
 
 function drawCarets(isBlinking: boolean): void {
-  const { bot, bots, camera, paused } = props;
+  let { bot, bots, camera, paused } = props;
   const cw = charMetrics.width;
   const ch = charMetrics.height;
   const selectedBotId = bot?.id;
+
+  // Optimization: We're accessing those objects very frequently in here
+  bot = toRaw(bot);
+  bots = toRaw(bots);
+  camera = toRaw(camera);
+  paused = toRaw(paused);
 
   ctxt.save();
 
