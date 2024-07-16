@@ -17,7 +17,7 @@ kartoffel (🇩🇪)
 
 ## Building
 
-See: <./BUILDING.md>
+See: [BUILDING.md](./BUILDING.md)
 
 ## License
 
