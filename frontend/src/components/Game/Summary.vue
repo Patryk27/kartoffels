@@ -37,7 +37,17 @@ defineProps<{
         <tr v-for="entry in bots">
           <td>#{{ entry.nth }}&nbsp;</td>
 
-          <td>
+          <td v-if="entry.known">
+            <a
+              @click="emit('botClick', entry.id)"
+              style="color: #ffffff"
+              :style="`background: ${botIdToColor(entry.id, 'bg')}`"
+            >
+              {{ entry.id }}
+            </a>
+          </td>
+
+          <td v-else>
             <a
               @click="emit('botClick', entry.id)"
               :style="`color: ${botIdToColor(entry.id)}`"

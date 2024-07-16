@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, type Ref } from "vue";
-import { loadSession, type Session } from "@/logic/Session";
+import { loadSession, type Session } from "@/logic/State";
 import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
 const emit = defineEmits<{

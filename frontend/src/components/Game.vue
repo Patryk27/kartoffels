@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { storeSession } from "@/logic/Session";
+import { storeSession, PlayerBots } from "@/logic/State";
 import {
   LocalServer,
   type BotEvent,
@@ -18,7 +18,12 @@ import Summary from "./Game/Summary.vue";
 export interface GameMap {
   size: [number, number];
   tiles: number[];
-  bots: { id: string }[];
+  bots: GameMapBot[];
+}
+
+export interface GameMapBot {
+  id: string;
+  known: boolean;
 }
 
 export type GameBot = {
@@ -30,6 +35,7 @@ export interface GameTableBot {
   id: string;
   age: number;
   score: number;
+  known: boolean;
   nth: number;
 }
 
@@ -70,8 +76,9 @@ const camera = ref<GameCamera>(null);
 const status = ref<GameStatus>("connecting");
 const paused = ref(false);
 const dialog = ref<GameDialogId>(null);
+const server = props.server;
 
-const server: Server = props.server;
+const playerBots = new PlayerBots(props.worldId);
 
 const tableBots = computed(() => {
   let result: GameTableBot[] = [];
@@ -81,6 +88,7 @@ const tableBots = computed(() => {
       id,
       age: bot.age,
       score: (mode.value ?? {}).scores[id] ?? 0,
+      known: playerBots.has(id),
       nth: 0,
     });
   }
@@ -187,13 +195,14 @@ function join(newBotId?: string): void {
     }
 
     if (msg.bots) {
-      let mapBots = [];
+      let mapBots: GameMapBot[] = [];
 
       for (const [botId, bot] of Object.entries(msg.bots)) {
         const tileIdx = bot.pos[1] * map.value.size[0] + bot.pos[0];
 
         mapBots[tileIdx] = {
           id: botId,
+          known: playerBots.has(botId),
         };
       }
 
@@ -271,6 +280,8 @@ function handleOpenHelp(): void {
 async function handleBotUpload(src: File): Promise<void> {
   try {
     const bot = await server.uploadBot(src);
+
+    playerBots.add(bot.id);
 
     join(bot.id);
   } catch (error) {

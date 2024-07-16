@@ -14,7 +14,7 @@ const props = defineProps<{
   mode: any;
 }>();
 
-const filteredBots = computed(() => {
+const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
   let result = [];
 
   for (let nth = 0; nth < 8; nth += 1) {
@@ -70,7 +70,17 @@ const filteredBots = computed(() => {
           <template v-if="entry?.ty == 'bot'">
             <td>#{{ entry.nth }}&nbsp;</td>
 
-            <td>
+            <td v-if="entry.known">
+              <a
+                @click="emit('botClick', entry.id)"
+                style="color: #ffffff"
+                :style="`background: ${botIdToColor(entry.id, 'bg')}`"
+              >
+                {{ entry.id }}
+              </a>
+            </td>
+
+            <td v-else>
               <a
                 @click="emit('botClick', entry.id)"
                 :style="`color: ${botIdToColor(entry.id)}`"
@@ -116,10 +126,6 @@ const filteredBots = computed(() => {
     tr {
       &.connected-bot {
         background-color: #202020;
-
-        a {
-          font-weight: 600;
-        }
       }
 
       td {

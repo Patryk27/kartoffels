@@ -1,7 +1,11 @@
-export function botIdToColor(id: string): string {
-  const hue = stringToHash(id) % 360;
+export function botIdToColor(id: string, mode: string = "fg"): string {
+  let hue = stringToHash(id) % 360;
 
-  return `hsl(${hue}, 100%, 50%)`;
+  if (mode == "fg") {
+    return `hsl(${hue}, 100%, 50%)`;
+  } else {
+    return `hsl(${hue}, 100%, 33%)`;
+  }
 }
 
 function stringToHash(str: string): number {

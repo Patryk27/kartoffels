@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, toRaw } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import type {
   GameBot,
@@ -67,7 +67,7 @@ function draw(): void {
 
   ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-  const isBlinking = Date.now() % 1000 <= 500;
+  const blink = Date.now() % 1000 <= 500;
 
   switch (status) {
     case "connecting":
@@ -80,8 +80,8 @@ function draw(): void {
         break;
       }
 
-      drawTiles(isBlinking);
-      drawCarets(isBlinking);
+      drawTiles();
+      drawCarets(blink);
       break;
   }
 }
@@ -104,7 +104,7 @@ function drawStatus(): void {
   }
 }
 
-function drawTiles(isBlinking: boolean): void {
+function drawTiles(): void {
   let { map, bot, camera, paused } = props;
   const cw = charMetrics.width;
   const ch = charMetrics.height;
@@ -133,49 +133,60 @@ function drawTiles(isBlinking: boolean): void {
       const tile = map.tiles[tileIdx] ?? 0;
       const tileBot = map.bots[tileIdx] ?? null;
 
+      let tileFg: string;
+      let tileBg: string = undefined;
       let tileChar: string;
-      let tileColor: string;
       let tileOffsetY = 0.0;
       let tileOffsetX = 0.0;
 
       if (tileBot) {
         tileChar = "@";
-        tileColor = botIdToColor(tileBot.id);
         tileOffsetX = -0.025;
         tileOffsetY = -0.125;
 
-        if (tileBot.id == bot?.id && isBlinking) {
-          tileColor = "#ffffff";
+        if (tileBot.known) {
+          if (paused) {
+            tileBg = pausedColor;
+            tileFg = "#000000";
+          } else {
+            tileBg = botIdToColor(tileBot.id, "bg");
+            tileFg = "#ffffff";
+          }
+        } else {
+          if (paused) {
+            tileFg = pausedColor;
+          } else {
+            tileFg = botIdToColor(tileBot.id);
+          }
         }
       } else {
+        tileFg = paused ? pausedColor : "rgb(80, 80, 80)";
         tileChar = String.fromCharCode(tile >> 24);
-        tileColor = "rgb(80, 80, 80)";
 
         switch (tileChar) {
           case ".":
             tileOffsetX = 0.035;
             tileOffsetY = -0.4;
             break;
-
-          case "=":
-            tileColor = "rgb(255, 106, 128)";
-            tileOffsetY = -0.15;
-            break;
         }
       }
 
-      ctxt.fillStyle = paused ? pausedColor : tileColor;
+      const tx = cw * (x + tileOffsetX);
+      const ty = ch * (y + tileOffsetY + 1);
 
-      ctxt.fillText(
-        tileChar,
-        cw * (x + tileOffsetX),
-        ch * (y + tileOffsetY + 1),
-      );
+      if (tileBg) {
+        ctxt.fillStyle = tileBg;
+        ctxt.fillRect(tx, ty - ch * 0.9, cw, ch);
+      }
+
+      ctxt.fillStyle = tileFg;
+      ctxt.fillText(tileChar, tx, ty);
     }
   }
 }
 
-function drawCarets(isBlinking: boolean): void {
+// Draws bot's carets - they show which way the bots are rotated.
+function drawCarets(blink: boolean): void {
   let { bot, bots, camera, paused } = props;
   const cw = charMetrics.width;
   const ch = charMetrics.height;
@@ -197,7 +208,7 @@ function drawCarets(isBlinking: boolean): void {
   for (const [botId, bot] of Object.entries(bots)) {
     let botColor = paused ? pausedColor : botIdToColor(botId);
 
-    if (botId == selectedBotId && isBlinking) {
+    if (botId == selectedBotId && blink && !paused) {
       botColor = "#ffffff";
     }
 

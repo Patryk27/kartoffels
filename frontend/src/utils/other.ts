@@ -1,4 +1,4 @@
-export function durationToHuman(sec) {
+export function durationToHuman(sec: number): string {
   if (sec < 60) {
     return `${sec}s`;
   } else {
@@ -9,7 +9,7 @@ export function durationToHuman(sec) {
   }
 }
 
-export function ordinal(nth) {
+export function ordinal(nth: number): string {
   switch (nth % 100) {
     case 11:
     case 12:
