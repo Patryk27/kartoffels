@@ -66,6 +66,7 @@ impl World {
             let _rt = rt.enter();
 
             loop {
+                self.tick();
                 self.metronome.tick();
                 self.metronome.wait();
             }
