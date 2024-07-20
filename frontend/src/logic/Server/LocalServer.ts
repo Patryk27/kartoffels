@@ -66,7 +66,7 @@ export class LocalServer implements Server {
     };
   }
 
-  join(_: string, botId?: string): void {
+  join(botId?: string): void {
     this.worker.postMessage({
       op: "join",
       botId,

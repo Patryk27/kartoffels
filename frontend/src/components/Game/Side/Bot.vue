@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman, ordinal } from "@/utils/other";
 import type { GameBot } from "@/components/Game.vue";
+import type { GameController } from "../Controller";
 
 const emit = defineEmits<{
   botUpload: [File];
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<{
+  ctrl: GameController;
   worldId: string;
   bot?: GameBot;
   paused: boolean;
@@ -100,11 +102,20 @@ function handleUploadBot() {
   <div v-if="bot == null" class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
-        <button :disabled="paused" @click="handleConnectToBot">
+        <button
+          :disabled="paused || ctrl.ui.value.btnConnectToBotDisabled"
+          @click="handleConnectToBot"
+        >
           connect to bot
         </button>
 
-        <button :disabled="paused" @click="handleUploadBot">upload bot</button>
+        <button
+          :disabled="paused || ctrl.ui.value.btnUploadBotDisabled"
+          :class="{ highlighted: ctrl.ui.value.btnUploadBotHighlighted }"
+          @click="handleUploadBot"
+        >
+          upload bot
+        </button>
       </div>
 
       <div v-if="worldId == 'sandbox'" class="buttons-row">

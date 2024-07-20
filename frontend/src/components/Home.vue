@@ -5,7 +5,11 @@ import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
 const emit = defineEmits<{
   start: [string, string, string?];
-  openHelp: [];
+  openIntro: [];
+}>();
+
+defineProps<{
+  highlightJoinButton: boolean;
 }>();
 
 const worldId = ref<string>(null);
@@ -66,13 +70,20 @@ onMounted(async () => {
     }
   } catch (err) {
     error.value = err;
+
+    // Even if there's no connection to the API, we can still offer offline
+    // play - this mostly comes handy for development, because this way you can
+    // keep the server shut down (to save laptop battery etc.) and focus on the
+    // frontend
+    session.value = null;
+    worlds.value = [];
   }
 });
 </script>
 
 <template>
   <main class="home">
-    <div class="lead">
+    <div class="intro">
       <p>
         welcome to 🥔
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
@@ -89,11 +100,11 @@ onMounted(async () => {
       <p>the rules are simple -- have fun and let the best bot win!</p>
 
       <p style="text-align: center">
-        <img src="./Home/bot.svg" @click="emit('openHelp')" />
+        <img src="./Home/bot.svg" @click="emit('openIntro')" />
       </p>
 
-      <p v-if="error == null" style="text-align: center; padding: 0.5em">
-        👉 <a @click="emit('openHelp')">getting started</a> 👈
+      <p style="text-align: center; padding: 0.5em">
+        👉 <a @click="emit('openIntro')">getting started</a> 👈
       </p>
 
       <p class="quote">
@@ -102,55 +113,60 @@ onMounted(async () => {
     </div>
 
     <div class="menu">
-      <template v-if="error == null">
-        <template v-if="worlds == null">loading...</template>
+      <template v-if="worlds == null">loading...</template>
 
-        <template v-else>
-          <div class="world-selection">
-            <label for="world">choose world and click join:</label>
+      <template v-else>
+        <div class="world-selection">
+          <label for="world">choose world and click join:</label>
 
-            <select v-model="worldId">
-              <option v-for="world in worlds" :value="world.id">
-                {{ world.name }} ({{ world.mode }} + {{ world.theme }})
-              </option>
+          <select v-model="worldId">
+            <option v-for="world in worlds" :value="world.id">
+              {{ world.name }} ({{ world.mode }} + {{ world.theme }})
+            </option>
 
-              <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
-            </select>
+            <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
+          </select>
 
-            <button @click="handleJoin(worldId)">join!</button>
-          </div>
+          <button
+            @click="handleJoin(worldId)"
+            :class="{ highlighted: highlightJoinButton }"
+          >
+            join!
+          </button>
+        </div>
 
-          <div v-if="worldId == 'sandbox'" class="sandbox-info">
-            <p><b>note, soldier!</b></p>
+        <div v-if="worldId == 'sandbox'" class="sandbox-info">
+          <p><b>note, soldier!</b></p>
 
-            <p>
-              sandbox is a temporary, private world - it is simulated only in
-              your browser and so and it disappears once you close or refresh
-              the page
-            </p>
-          </div>
+          <p>
+            sandbox is a temporary, private world - it is simulated only in your
+            browser and so and it disappears once you close or refresh the page
+          </p>
+        </div>
 
-          <div v-if="session" class="session-restore">
-            <div class="or">or</div>
+        <div v-if="session" class="session-restore">
+          <div class="or">or</div>
 
-            <button @click="handleRestore()">
-              restore your previous session
-            </button>
+          <button @click="handleRestore()">
+            restore your previous session
+          </button>
 
-            <p>(world: {{ session.worldName }})</p>
-          </div>
-        </template>
+          <p>(world: {{ session.worldName }})</p>
+        </div>
       </template>
+    </div>
 
-      <div v-else>
-        <p>
-          error: it looks like the server is down, please try again later 👉👈
-        </p>
+    <div v-if="error" class="error">
+      <p>
+        whoopsie, it looks like the server is down - you can still play offline,
+        though!
+      </p>
 
-        <p>
-          {{ error }}
-        </p>
-      </div>
+      <p>on the second day the browser said:</p>
+
+      <p>
+        {{ error }}
+      </p>
     </div>
   </main>
 </template>
@@ -162,7 +178,7 @@ onMounted(async () => {
   max-width: 1024px;
   padding: 1em;
 
-  .lead {
+  .intro {
     padding: 1em;
     margin-bottom: 1em;
     border: 1px solid #00ff80;
@@ -185,46 +201,54 @@ onMounted(async () => {
 
   .menu {
     text-align: center;
+
+    .world-selection {
+      margin-top: 1em;
+
+      label {
+        display: block;
+        margin-bottom: 0.25em;
+      }
+
+      button {
+        margin-left: 0.5em;
+      }
+    }
+
+    .sandbox-info {
+      margin-top: 1.5em;
+      padding-top: 1.25em;
+      border-top: 1px dashed #444444;
+      border-bottom: 1px dashed #444444;
+
+      b {
+        color: #ff8000;
+      }
+    }
+
+    .session-restore {
+      margin-top: 1.5em;
+
+      .or {
+        margin-bottom: 1.5em;
+      }
+
+      button {
+        font-weight: 600;
+      }
+
+      button + p {
+        margin-top: 0.5em;
+        color: #606060;
+      }
+    }
   }
 
-  .world-selection {
-    margin-top: 1em;
-
-    label {
-      display: block;
-      margin-bottom: 0.25em;
-    }
-
-    button {
-      margin-left: 0.5em;
-    }
-  }
-
-  .sandbox-info {
-    margin-top: 1.5em;
-    border-top: 1px dashed #444444;
-    border-bottom: 1px dashed #444444;
-
-    b {
-      color: #ff8000;
-    }
-  }
-
-  .session-restore {
-    margin-top: 1.5em;
-
-    .or {
-      margin-bottom: 1.5em;
-    }
-
-    button {
-      font-weight: 600;
-    }
-
-    button + p {
-      margin-top: 0.5em;
-      color: #606060;
-    }
+  .error {
+    margin-top: 2em;
+    padding-top: 2em;
+    border-top: 1px dashed #ff0000;
+    text-align: center;
   }
 
   .rainbow {

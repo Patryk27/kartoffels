@@ -8,7 +8,7 @@ import { RemoteServer } from "./Server/RemoteServer";
 //
 // TODO clean-up the control flow (make `join()` return just a Promise?)
 export interface Server {
-  join(worldId: string, botId?: string): void;
+  join(botId?: string): void;
   leave(): void;
   close(): void;
   uploadBot(file: File): Promise<{ id: string }>;

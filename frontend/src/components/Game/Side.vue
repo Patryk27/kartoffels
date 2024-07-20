@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import Bot from "./Side/Bot.vue";
 import Bots from "./Side/Bots.vue";
-import type { GameBot, GameStatus, GameTableBot } from "../Game.vue";
+import type {
+  GameBot,
+  GameController,
+  GameStatus,
+  GameTableBot,
+} from "../Game.vue";
 
 const emit = defineEmits<{
   botUpload: [File];
@@ -15,6 +20,7 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
+  ctrl: GameController;
   worldId: string;
   mode: any;
   bot?: GameBot;
@@ -27,6 +33,7 @@ defineProps<{
 <template>
   <div v-if="status == 'connected' || status == 'connecting'" class="game-side">
     <Bot
+      :ctrl="ctrl"
       :worldId="worldId"
       :bot="bot"
       :paused="paused"

@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import type { GameStatus } from "../Game.vue";
+import type { GameController } from "./Controller";
 
 const emit = defineEmits<{
   leave: [];
   pause: [];
   openHelp: [];
-  openSandboxConfig: [];
+  openConfig: [];
 }>();
 
 defineProps<{
-  worldId: string;
-  worldName: string;
+  ctrl: GameController;
+  world: { id: string; name: string };
   status: GameStatus;
   paused: boolean;
 }>();
@@ -19,28 +20,31 @@ defineProps<{
 <template>
   <nav class="game-nav">
     <div class="game-nav-back">
-      <button @click="emit('leave')">go back</button>
+      <button @click="emit('leave')">leave world</button>
     </div>
 
     <div class="game-nav-world">
-      <template v-if="worldId == 'sandbox'">
+      <template v-if="world.id == 'sandbox'">
         <span style="color: #ff8000">🕵️ sandbox 🕵️ </span>
-        <button @click="emit('openSandboxConfig')">configure</button>
+        <button @click="emit('openConfig')">configure</button>
       </template>
 
       <template v-else>
-        {{ worldName }}
+        {{ world.name }}
       </template>
     </div>
 
     <div class="game-nav-control">
-      <button :disabled="status == 'reconnecting'" @click="emit('openHelp')">
+      <button
+        :disabled="status == 'reconnecting' || ctrl.ui.value.btnHelpDisabled"
+        @click="emit('openHelp')"
+      >
         help
       </button>
 
       <button
         :class="{ paused }"
-        :disabled="status == 'reconnecting'"
+        :disabled="status == 'reconnecting' || ctrl.ui.value.btnPauseDisabled"
         @click="emit('pause')"
       >
         <template v-if="paused">resume</template>

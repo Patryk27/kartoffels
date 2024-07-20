@@ -21,6 +21,12 @@ a {
   }
 }
 
+p {
+  margin: 0;
+  margin-bottom: 1.25em;
+  padding: 0;
+}
+
 select,
 button,
 textarea {
@@ -38,7 +44,7 @@ textarea {
 select,
 button {
   &:hover {
-    border: 1px solid #00ff80;
+    border: 1px solid #00ff80 !important;
   }
 
   &:active {
@@ -62,6 +68,22 @@ button {
 
 button {
   cursor: pointer;
+
+  &.highlighted {
+    animation: button-highlighted 1s ease-in-out 0s infinite;
+  }
+}
+
+@keyframes button-highlighted {
+  from {
+    border-color: #444444;
+  }
+  50% {
+    border-color: #00ff80;
+  }
+  100% {
+    border-color: #444444;
+  }
 }
 
 input {
@@ -86,6 +108,10 @@ textarea {
       outline: none;
     }
   }
+}
+
+pre {
+  margin: 1.25em 0;
 }
 
 pre,

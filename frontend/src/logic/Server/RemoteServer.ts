@@ -4,14 +4,16 @@ export class RemoteServer implements Server {
   private socket?: WebSocket;
   private worldId?: string;
 
-  join(worldId: string, botId?: string): void {
+  constructor(worldId: string) {
+    this.worldId = worldId;
+  }
+
+  join(botId?: string): void {
     this.socket = new WebSocket(
       botId == null
-        ? `${import.meta.env.VITE_WS_URL}/worlds/${worldId}`
-        : `${import.meta.env.VITE_WS_URL}/worlds/${worldId}/bots/${botId}`,
+        ? `${import.meta.env.VITE_WS_URL}/worlds/${this.worldId}`
+        : `${import.meta.env.VITE_WS_URL}/worlds/${this.worldId}/bots/${botId}`,
     );
-
-    this.worldId = worldId;
   }
 
   leave(): void {

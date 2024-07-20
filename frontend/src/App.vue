@@ -3,12 +3,13 @@ import { ref, onMounted } from "vue";
 import Crash from "./components/Crash.vue";
 import Game from "./components/Game.vue";
 import Home from "./components/Home.vue";
-import Help from "./components/Help.vue";
+import Intro from "./components/Intro.vue";
 import { type Server, RemoteServer, LocalServer } from "./logic/Server";
+import * as SandboxPresets from "./components/Game/SandboxConfig/Presets";
 
 type Route =
-  | { id: "home"; worldId?: string }
-  | { id: "help"; prev: Route }
+  | { id: "home"; highlightJoinButton?: boolean }
+  | { id: "intro" }
   | { id: "game"; worldId: string; worldName: string; botId?: string }
   | { id: "crash"; msg: string };
 
@@ -17,35 +18,35 @@ const route = ref<Route>({ id: "home" });
 let server: Server = undefined;
 
 function handleStart(worldId: string, worldName: string, botId?: string) {
-  if (worldId === "sandbox") {
-    if (server instanceof LocalServer) {
-      //
-    } else {
+  switch (worldId) {
+    case "tutorial":
       if (server) {
         server.close();
       }
 
-      server = new LocalServer({
-        name: "total mayhem",
-        mode: {
-          type: "deathmatch",
-        },
-        theme: {
-          type: "arena",
-          radius: 20,
-        },
-        policy: {
-          max_alive_bots: 32,
-          max_queued_bots: 64,
-        },
-      });
-    }
-  } else {
-    if (server) {
-      server.close();
-    }
+      server = new LocalServer(SandboxPresets.getTutorialWorld());
+      break;
 
-    server = new RemoteServer();
+    case "sandbox":
+      if (server instanceof LocalServer) {
+        //
+      } else {
+        if (server) {
+          server.close();
+        }
+
+        server = new LocalServer(SandboxPresets.getDefaultWorld());
+      }
+
+      break;
+
+    default:
+      if (server) {
+        server.close();
+      }
+
+      server = new RemoteServer(worldId);
+      break;
   }
 
   route.value = {
@@ -56,16 +57,12 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
   };
 }
 
-function handleLeave() {
-  if (route.value.id == "help") {
-    route.value = route.value.prev;
-  } else {
-    route.value = { id: "home" };
-  }
+function handleLeave(highlightJoinButton: boolean): void {
+  route.value = { id: "home", highlightJoinButton };
 }
 
-function handleOpenHelp() {
-  route.value = { id: "help", prev: route.value };
+function handleOpenIntro(): void {
+  route.value = { id: "intro" };
 }
 
 onMounted(() => {
@@ -82,9 +79,9 @@ onMounted(() => {
 <template>
   <template v-if="route.id == 'home'">
     <Home
-      :worldId="route.worldId"
+      :highlightJoinButton="route.highlightJoinButton ?? false"
       @start="handleStart"
-      @open-help="handleOpenHelp"
+      @open-intro="handleOpenIntro"
     />
   </template>
 
@@ -94,13 +91,15 @@ onMounted(() => {
       :worldName="route.worldName"
       :botId="route.botId"
       :server="server"
-      @leave="handleLeave"
-      @open-help="handleOpenHelp"
+      @leave="handleLeave(false)"
     />
   </template>
 
-  <template v-if="route.id == 'help'">
-    <Help @leave="handleLeave" />
+  <template v-if="route.id == 'intro'">
+    <Intro
+      @leave="handleLeave(true)"
+      @start="handleStart('tutorial', 'tutorial')"
+    />
   </template>
 
   <template v-if="route.id == 'crash'">

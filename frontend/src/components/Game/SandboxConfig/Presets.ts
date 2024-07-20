@@ -75,3 +75,24 @@ export const worlds = [
     },
   },
 ];
+
+export function getTutorialWorld() {
+  return {
+    name: "tutorial",
+    mode: {
+      type: "deathmatch",
+    },
+    theme: {
+      type: "arena",
+      radius: 16,
+    },
+    policy: {
+      max_alive_bots: 8,
+      max_queued_bots: 16,
+    },
+  };
+}
+
+export function getDefaultWorld() {
+  return worlds[0].config;
+}
