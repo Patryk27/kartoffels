@@ -39,7 +39,9 @@ export class PlayerBots {
     this.bots = new Map();
 
     if (this.worldId) {
-      const bots = localStorage.getItem(`${worldId}.bots`);
+      const bots =
+        localStorage.getItem(`${worldId}.bots`) ||
+        localStorage.getItem(`worlds.${worldId}.bots`);
 
       if (bots) {
         for (const [id, uploadedAt] of JSON.parse(bots)) {
@@ -82,7 +84,7 @@ export class PlayerBots {
   private save(): void {
     if (this.worldId) {
       localStorage.setItem(
-        `${this.worldId}.bots`,
+        `worlds.${this.worldId}.bots`,
         JSON.stringify(Array.from(this.bots)),
       );
     }
