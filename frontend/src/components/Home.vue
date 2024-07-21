@@ -12,7 +12,7 @@ defineProps<{
   highlightJoinButton: boolean;
 }>();
 
-const worldId = ref<string>(null);
+const world = ref<string>(null);
 const worlds = ref<ServerWorld[]>(null);
 const session: Ref<Session & { worldName?: string }> = ref(loadSession());
 const error = ref(null);
@@ -52,7 +52,7 @@ onMounted(async () => {
     worlds.value = response.worlds;
 
     if (response.worlds.length > 0) {
-      worldId.value = response.worlds[0].id;
+      world.value = response.worlds[0].id;
 
       if (session.value) {
         for (const world of response.worlds) {
@@ -76,6 +76,7 @@ onMounted(async () => {
     // keep the server shut down (to save laptop battery etc.) and focus on the
     // frontend
     session.value = null;
+    world.value = "sandbox";
     worlds.value = [];
   }
 });
@@ -119,7 +120,7 @@ onMounted(async () => {
         <div class="world-selection">
           <label for="world">choose world and click join:</label>
 
-          <select v-model="worldId">
+          <select v-model="world">
             <option v-for="world in worlds" :value="world.id">
               {{ world.name }} ({{ world.mode }} + {{ world.theme }})
             </option>
@@ -128,14 +129,14 @@ onMounted(async () => {
           </select>
 
           <button
-            @click="handleJoin(worldId)"
+            @click="handleJoin(world)"
             :class="{ highlighted: highlightJoinButton }"
           >
             join!
           </button>
         </div>
 
-        <div v-if="worldId == 'sandbox'" class="sandbox-info">
+        <div v-if="world == 'sandbox'" class="sandbox-info">
           <p><b>note, soldier!</b></p>
 
           <p>
@@ -181,7 +182,7 @@ onMounted(async () => {
   .intro {
     padding: 1em;
     margin-bottom: 1em;
-    border: 1px solid #00ff80;
+    border: 1px solid var(--green);
 
     p {
       &:first-child {
@@ -193,7 +194,7 @@ onMounted(async () => {
       }
 
       &.quote {
-        color: #606060;
+        color: var(--gray);
         text-align: right;
       }
     }
@@ -217,12 +218,12 @@ onMounted(async () => {
 
     .sandbox-info {
       margin-top: 1.5em;
-      padding-top: 1.25em;
-      border-top: 1px dashed #444444;
-      border-bottom: 1px dashed #444444;
+      padding-top: var(--text-margin);
+      border-top: 1px dashed var(--gray);
+      border-bottom: 1px dashed var(--gray);
 
       b {
-        color: #ff8000;
+        color: var(--orange);
       }
     }
 
@@ -239,7 +240,7 @@ onMounted(async () => {
 
       button + p {
         margin-top: 0.5em;
-        color: #606060;
+        color: var(--gray);
       }
     }
   }
@@ -247,7 +248,7 @@ onMounted(async () => {
   .error {
     margin-top: 2em;
     padding-top: 2em;
-    border-top: 1px dashed #ff0000;
+    border-top: 1px dashed var(--red);
     text-align: center;
   }
 

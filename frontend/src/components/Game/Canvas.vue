@@ -1,20 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, toRaw } from "vue";
 import { botIdToColor } from "@/utils/bot";
-import type {
-  GameBot,
-  GameBots,
-  GameCamera,
-  GameMap,
-  GameStatus,
-} from "../Game.vue";
+import type { GameWorld } from "./State";
 
 const props = defineProps<{
-  map?: GameMap;
-  bot?: GameBot;
-  bots?: GameBots;
-  camera?: GameCamera;
-  status: GameStatus;
+  world: GameWorld;
   paused: boolean;
 }>();
 
@@ -28,7 +18,7 @@ let textScale = 1.0;
 let charMetrics = null;
 let chars = { x: 0, y: 0 };
 
-function resize() {
+function resize(): void {
   if (canvasWrapper.value == null) {
     return;
   }
@@ -59,7 +49,9 @@ function resize() {
 }
 
 function draw(): void {
-  const { camera, map, status } = props;
+  const camera = props.world.camera.value;
+  const map = props.world.map.value;
+  const status = props.world.status.value;
 
   if (ctxt == null || canvas.value == null) {
     return;
@@ -76,18 +68,19 @@ function draw(): void {
       break;
 
     case "connected":
-      if (map == null || camera == null) {
-        break;
+      if (map && camera) {
+        drawTiles();
+        drawCarets(blink);
+      } else {
+        // Should be unreachable
       }
 
-      drawTiles();
-      drawCarets(blink);
       break;
   }
 }
 
 function drawStatus(): void {
-  const { status } = props;
+  const status = props.world.status.value;
   const x = 8;
   const y = charMetrics.height + 8;
 
@@ -105,15 +98,11 @@ function drawStatus(): void {
 }
 
 function drawTiles(): void {
-  let { map, bot, camera, paused } = props;
+  const map = toRaw(props.world.map.value);
+  const camera = toRaw(props.world.camera.value);
+  const paused = toRaw(props.paused);
   const cw = charMetrics.width;
   const ch = charMetrics.height;
-
-  // Optimization: We're accessing those objects very frequently in here
-  map = toRaw(map);
-  bot = toRaw(bot);
-  camera = toRaw(camera);
-  paused = toRaw(paused);
 
   for (let y = 0; y <= chars.y; y += 1) {
     for (let x = 0; x <= chars.x; x += 1) {
@@ -185,18 +174,14 @@ function drawTiles(): void {
   }
 }
 
-// Draws bot's carets - they show which way the bots are rotated.
 function drawCarets(blink: boolean): void {
-  let { bot, bots, camera, paused } = props;
+  const bot = toRaw(props.world.bot.value);
+  const bots = toRaw(props.world.bots.value);
+  const camera = toRaw(props.world.camera.value);
+  const paused = toRaw(props.paused);
   const cw = charMetrics.width;
   const ch = charMetrics.height;
   const selectedBotId = bot?.id;
-
-  // Optimization: We're accessing those objects very frequently in here
-  bot = toRaw(bot);
-  bots = toRaw(bots);
-  camera = toRaw(camera);
-  paused = toRaw(paused);
 
   ctxt.save();
 
@@ -259,19 +244,23 @@ function drawCarets(blink: boolean): void {
 
 // ---
 
-watch(
-  () => [props.map, props.bots, props.status, props.paused],
-  (_) => {
-    draw();
-  },
-);
+watch([props.world.map, props.world.bots, props.world.status], () => {
+  draw();
+});
 
 watch(
-  () => [props.bot, props.camera],
-  (_) => {
+  [props.world.bot, props.world.camera],
+  () => {
     draw();
   },
   { deep: true },
+);
+
+watch(
+  () => props.paused,
+  () => {
+    draw();
+  },
 );
 
 onMounted(() => {
@@ -300,7 +289,7 @@ onMounted(() => {
 <style scoped>
 .game-canvas {
   position: relative;
-  border: 1px solid #444444;
+  border: 1px solid var(--gray);
   flex-grow: 1;
   overflow: hidden;
 

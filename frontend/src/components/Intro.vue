@@ -12,8 +12,8 @@ const emit = defineEmits<{
     </p>
 
     <p>
-      in kartoffels you're a programmer responsible developing a killer robot -
-      in this house:
+      in kartoffels you're the lead programmer developing a killer robot - in
+      this house:
     </p>
 
     <p>
@@ -24,19 +24,17 @@ const emit = defineEmits<{
       - your code runs on an emulated RISC-V CPU clocked at 64 KHZ (+ you've got
       128 KB RAM)
       <br />
-      - the game is simulated on a central server -- let the meritocracy thrive
+      - the game is simulated on a central server -- let the meritocracy thrive!
     </p>
 
     <p>now, enough talk - decide:</p>
 
     <div class="buttons">
       <button @click="emit('leave')">
-        i want to:<br />
         go straight into the game<span style="color: #ff0000">*</span>
       </button>
 
       <button class="highlighted" @click="emit('start')">
-        i want to:<br />
         start tutorial<span style="color: #ff0000">*</span>
       </button>
     </div>
@@ -54,7 +52,7 @@ const emit = defineEmits<{
 .help {
   max-width: 1024px;
   padding: 1em;
-  border: 1px solid #ff8000;
+  border: 1px solid var(--orange);
 
   p {
     &:first-child {
@@ -66,23 +64,23 @@ const emit = defineEmits<{
     }
 
     &.fine-print {
-      color: #505050;
+      color: var(--gray);
+      padding-top: var(--text-margin);
+      border-top: 1px dashed var(--gray);
       font-style: italic;
       text-align: right;
     }
   }
 
-  pre {
-    padding: 1.25em 0;
-    border-top: 1px dashed #ff8000;
-    border-bottom: 1px dashed #ff8000;
-  }
-
   .buttons {
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     margin: 2em 0;
-    gap: 5ch;
+
+    button {
+      width: 32ch;
+      height: 2.5em;
+    }
   }
 }
 </style>

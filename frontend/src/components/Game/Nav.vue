@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { GameStatus } from "../Game.vue";
 import type { GameController } from "./Controller";
+import type { GameWorld } from "./State";
 
 const emit = defineEmits<{
   leave: [];
@@ -11,8 +11,7 @@ const emit = defineEmits<{
 
 defineProps<{
   ctrl: GameController;
-  world: { id: string; name: string };
-  status: GameStatus;
+  world: GameWorld;
   paused: boolean;
 }>();
 </script>
@@ -20,12 +19,12 @@ defineProps<{
 <template>
   <nav class="game-nav">
     <div class="game-nav-back">
-      <button @click="emit('leave')">leave world</button>
+      <button @click="emit('leave')">leave</button>
     </div>
 
     <div class="game-nav-world">
       <template v-if="world.id == 'sandbox'">
-        <span style="color: #ff8000">🕵️ sandbox 🕵️ </span>
+        <span style="color: var(--orange)">🕵️ sandbox 🕵️ </span>
         <button @click="emit('openConfig')">configure</button>
       </template>
 
@@ -36,7 +35,9 @@ defineProps<{
 
     <div class="game-nav-control">
       <button
-        :disabled="status == 'reconnecting' || ctrl.ui.value.btnHelpDisabled"
+        :disabled="
+          world.costatusalue == 'reconnecting' || ctrl.ui.value.btnHelpDisabled
+        "
         @click="emit('openHelp')"
       >
         help
@@ -44,7 +45,9 @@ defineProps<{
 
       <button
         :class="{ paused }"
-        :disabled="status == 'reconnecting' || ctrl.ui.value.btnPauseDisabled"
+        :disabled="
+          world.costatusalue == 'reconnecting' || ctrl.ui.value.btnPauseDisabled
+        "
         @click="emit('pause')"
       >
         <template v-if="paused">resume</template>
@@ -70,7 +73,7 @@ defineProps<{
 
   button {
     &.paused {
-      border: 1px solid red;
+      border: 1px solid var(--red);
     }
 
     & + button {

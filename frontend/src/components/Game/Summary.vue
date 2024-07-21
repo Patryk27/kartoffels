@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman } from "@/utils/other";
-import type { GameTableBot } from "../Game.vue";
+import type { GameWorld } from "./State";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -9,7 +9,7 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
-  bots: GameTableBot[];
+  world: GameWorld;
 }>();
 </script>
 
@@ -34,7 +34,7 @@ defineProps<{
       </thead>
 
       <tbody>
-        <tr v-for="entry in bots">
+        <tr v-for="entry in world.botsTable.value">
           <td>#{{ entry.nth }}&nbsp;</td>
 
           <td v-if="entry.known">

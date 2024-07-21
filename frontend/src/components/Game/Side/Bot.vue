@@ -2,8 +2,8 @@
 import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman, ordinal } from "@/utils/other";
-import type { GameBot } from "@/components/Game.vue";
 import type { GameController } from "../Controller";
+import type { GameWorld } from "../State";
 
 const emit = defineEmits<{
   botUpload: [File];
@@ -16,20 +16,21 @@ const emit = defineEmits<{
 
 const props = defineProps<{
   ctrl: GameController;
-  worldId: string;
-  bot?: GameBot;
+  world: GameWorld;
   paused: boolean;
 }>();
 
 const serial = computed(() => {
-  if (props.bot.status != "alive") {
+  const world = props.world;
+
+  if (world.bot.value.status != "alive") {
     return null;
   }
 
   let out = "";
   let buf = null;
 
-  for (const op of props.bot.serial) {
+  for (const op of world.bot.value.serial) {
     switch (op) {
       case 0xffffff00:
         buf = "";
@@ -55,10 +56,12 @@ const serial = computed(() => {
 });
 
 const events = computed(() => {
+  const world = props.world;
   const now = new Date();
+
   let out = "";
 
-  for (const event of props.bot?.events ?? []) {
+  for (const event of world.bot.value?.events ?? []) {
     let eventHappenedToday =
       event.at.getFullYear() == now.getFullYear() &&
       event.at.getMonth() == now.getMonth() &&
@@ -99,7 +102,7 @@ function handleUploadBot() {
 </script>
 
 <template>
-  <div v-if="bot == null" class="game-side-bot">
+  <div v-if="world.bot.value == null" class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
         <button
@@ -118,7 +121,7 @@ function handleUploadBot() {
         </button>
       </div>
 
-      <div v-if="worldId == 'sandbox'" class="buttons-row">
+      <div v-if="world.id == 'sandbox'" class="buttons-row">
         <button
           :disabled="paused"
           @click="emit('botSpawnPrefab', 'roberto')"
@@ -136,7 +139,7 @@ function handleUploadBot() {
         <button @click="emit('botDisconnect')">disconnect from bot</button>
       </div>
 
-      <div v-if="worldId == 'sandbox'" class="buttons-row">
+      <div v-if="world.id == 'sandbox'" class="buttons-row">
         <button :disabled="paused" @click="emit('botDestroy')">
           destroy bot
         </button>
@@ -150,36 +153,40 @@ function handleUploadBot() {
     <p>
       id:
       <br />
-      <span :style="`color: ${botIdToColor(bot.id)}`">
-        {{ bot.id }}
+      <span :style="`color: ${botIdToColor(world.bot.value.id)}`">
+        {{ world.bot.value.id }}
       </span>
     </p>
 
-    <template v-if="bot.status == 'alive'">
+    <template v-if="world.bot.value.status == 'alive'">
       <p>
         status:
         <br />
         <span class="status-alive">alive</span>
-        ({{ durationToHuman(Math.round(bot.age)) }})
+        ({{ durationToHuman(Math.round(world.bot.value.age)) }})
       </p>
 
       <p>serial port:</p>
 
-      <textarea v-if="bot.status == 'alive'" :value="serial" readonly />
+      <textarea
+        v-if="world.bot.value.status == 'alive'"
+        :value="serial"
+        readonly
+      />
     </template>
 
-    <p v-if="bot.status == 'dead'">
+    <p v-if="world.bot.value.status == 'dead'">
       status:
       <br />
       <span class="status-dead">dead</span>
     </p>
 
-    <p v-else-if="bot.status == 'queued'">
+    <p v-else-if="world.bot.value.status == 'queued'">
       status:
       <br />
       <span class="status-queued">
-        {{ bot.requeued ? "requeued" : "queued" }}
-        ({{ bot.place }}{{ ordinal(bot.place) }})
+        {{ world.bot.value.requeued ? "requeued" : "queued" }}
+        ({{ world.bot.value.place }}{{ ordinal(world.bot.value.place) }})
       </span>
     </p>
 
@@ -188,11 +195,11 @@ function handleUploadBot() {
       <textarea readonly :value="events" />
     </template>
 
-    <div v-if="bot.status == 'alive'">
+    <div v-if="world.bot.value.status == 'alive'">
       <input
         id="bot-follow"
         type="checkbox"
-        v-model="bot.following"
+        v-model="world.bot.value.following"
         :disabled="paused"
       />
 
@@ -210,6 +217,8 @@ function handleUploadBot() {
   padding-bottom: 1em;
 
   .buttons {
+    margin-bottom: var(--text-margin);
+
     .buttons-row {
       display: flex;
 
@@ -230,10 +239,6 @@ function handleUploadBot() {
   }
 
   p {
-    &:first-child {
-      margin-top: 0;
-    }
-
     & + p {
       margin-top: 0;
     }

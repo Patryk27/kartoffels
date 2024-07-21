@@ -1,16 +1,29 @@
 <script setup lang="ts">
+import type { GameWorld } from "./State";
+
 const emit = defineEmits<{
   close: [];
 }>();
 
 defineProps<{
-  worldId: string;
+  world: GameWorld;
 }>();
+
+function handleDisableSandboxHelp(): void {
+  localStorage.setItem("popups.sandboxHelp", "disabled");
+  emit("close");
+}
+</script>
+
+<script lang="ts">
+export function canOpenSandboxHelp(): boolean {
+  return localStorage.getItem("popups.sandboxHelp") == null;
+}
 </script>
 
 <template>
   <dialog class="game-help">
-    <template v-if="worldId == 'sandbox'">
+    <template v-if="world.id == 'sandbox'">
       <nav>
         <div class="dialog-title">help</div>
 
@@ -35,8 +48,8 @@ defineProps<{
         </li>
 
         <li>
-          you can spawn <kbd>roberto 🔪</kbd>, the kartoffels' built-in
-          moderately challenging bot
+          you can <kbd>[spawn roberto]</kbd>, the built-in moderately
+          challenging bot
         </li>
 
         <li>you can destroy and kill bots</li>
@@ -44,7 +57,7 @@ defineProps<{
 
       <p>
         not sure what all this means? no problem, i don't either! -- the
-        eggheads left some extra instructions, though:
+        eggheads left some extra instructions:
       </p>
 
       <pre>
@@ -57,6 +70,13 @@ defineProps<{
         ... and then go back, click <kbd>[upload bot]</kbd> and pick
         <kbd>./kartoffel</kbd>
       </p>
+
+      <footer>
+        <button @click="handleDisableSandboxHelp()">
+          ok, don't show this again
+        </button>
+        <button @click="emit('close')">ok, got it</button>
+      </footer>
     </template>
 
     <template v-else> TODO </template>
@@ -79,10 +99,9 @@ defineProps<{
     }
   }
 
-  pre {
-    margin-top: 1em;
-    padding-top: 1em;
-    border-top: 1px dashed #444444;
+  footer {
+    display: flex;
+    justify-content: space-between;
   }
 }
 </style>

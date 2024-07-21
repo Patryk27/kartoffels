@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { PlayerBots, storeSession } from "@/logic/State";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
-import Help from "./Game/Help.vue";
+import Help, * as help from "./Game/Help.vue";
 import SandboxConfig from "./Game/SandboxConfig.vue";
 import Side from "./Game/Side.vue";
 import Summary from "./Game/Summary.vue";
 import GameTutorial, * as tutorial from "./Game/Tutorial.vue";
 import { LocalServer, type Server } from "@/logic/Server";
-import type { GameDialogId, GameTableBot } from "./Game/State";
+import type { GameDialogId } from "./Game/State";
 import { GameController } from "./Game/Controller";
 import { GameWorld } from "./Game/State";
 
@@ -25,48 +25,24 @@ const props = defineProps<{
 }>();
 
 const ctrl = new GameController();
-const world = new GameWorld();
-const server = props.server;
 const playerBots = new PlayerBots(props.worldId);
-
+const world = new GameWorld(props.worldId, props.worldName, playerBots);
+const server = props.server;
 const paused = ref(false);
 const dialog = ref<GameDialogId>(null);
 
-if (props.worldId == "tutorial") {
-  tutorial.setup(ctrl);
+switch (props.worldId) {
+  case "tutorial":
+    tutorial.setup(ctrl);
+    break;
+
+  case "sandbox":
+    if (help.canOpenSandboxHelp()) {
+      dialog.value = "help";
+    }
+
+    break;
 }
-
-const tableBots = computed(() => {
-  let result: GameTableBot[] = [];
-
-  for (const [id, bot] of Object.entries(world.bots.value ?? {})) {
-    result.push({
-      id,
-      age: bot.age,
-      score: (world.mode.value ?? {}).scores[id] ?? 0,
-      known: playerBots.has(id),
-      nth: 0,
-    });
-  }
-
-  result.sort((a, b) => {
-    if (a.score != b.score) {
-      return b.score - a.score;
-    }
-
-    if (a.age == b.age) {
-      return b.age - a.age;
-    }
-
-    return b.id.localeCompare(a.id);
-  });
-
-  for (let i = 0; i < result.length; i += 1) {
-    result[i].nth = i + 1;
-  }
-
-  return result;
-});
 
 async function join(newBotId?: string): Promise<void> {
   paused.value = false;
@@ -100,7 +76,7 @@ function handlePause(): void {
       server.onClose(null);
       server.leave();
     } else {
-      join(bot.value?.id);
+      join(world.bot.value?.id);
     }
   }
 }
@@ -156,7 +132,7 @@ function handleBotDisconnect(): void {
 }
 
 function handleBotClick(id?: string): void {
-  if (bot.value?.id == id && !paused.value) {
+  if (world.bot.value?.id == id && !paused.value) {
     join(null);
   } else {
     join(id);
@@ -168,9 +144,9 @@ function handleBotDestroy(): void {
     return;
   }
 
-  if (bot.value?.id) {
-    server.destroyBot(bot.value.id);
-    bot.value = null;
+  if (world.bot.value?.id) {
+    server.destroyBot(world.bot.value.id);
+    world.bot.value = null;
   }
 }
 
@@ -179,8 +155,8 @@ function handleBotRestart(): void {
     return;
   }
 
-  if (bot.value?.id) {
-    server.restartBot(bot.value.id);
+  if (world.bot.value?.id) {
+    server.restartBot(world.bot.value.id);
   }
 }
 
@@ -204,12 +180,12 @@ function handleRecreateSandbox(config: any): void {
 onMounted(() => {
   document.onkeydown = (event) => {
     const moveCamera = (dx: number, dy: number): void => {
-      if (camera.value) {
-        camera.value.x += dx;
-        camera.value.y += dy;
+      if (world.camera.value) {
+        world.camera.value.x += dx;
+        world.camera.value.y += dy;
 
-        if (bot.value) {
-          bot.value.following = false;
+        if (world.bot.value) {
+          world.bot.value.following = false;
         }
       }
     };
@@ -246,7 +222,7 @@ onMounted(() => {
   };
 
   window.onbeforeunload = () => {
-    status.value = "closing";
+    world.status.value = "closing";
   };
 });
 
@@ -257,8 +233,7 @@ join(props.botId);
   <div class="game">
     <Nav
       :ctrl="ctrl"
-      :world="{ id: worldId, name: worldName }"
-      :status="status"
+      :world="world"
       :paused="paused"
       @leave="emit('leave')"
       @pause="handlePause"
@@ -267,22 +242,11 @@ join(props.botId);
     />
 
     <main>
-      <Canvas
-        :map="map"
-        :bot="bot"
-        :bots="bots"
-        :camera="camera"
-        :status="status"
-        :paused="paused"
-      />
+      <Canvas :world="world" :paused="paused" />
 
       <Side
         :ctrl="ctrl"
-        :worldId="worldId"
-        :mode="mode"
-        :bot="bot"
-        :bots="tableBots"
-        :status="status"
+        :world="world"
         :paused="paused"
         @bot-upload="handleBotUpload"
         @bot-spawn-prefab="handleBotSpawnPrefab"
@@ -295,8 +259,8 @@ join(props.botId);
       />
 
       <Help
-        :worldId="worldId"
         :open="dialog == 'help'"
+        :world="world"
         @close="dialog = undefined"
       />
 
@@ -304,7 +268,7 @@ join(props.botId);
 
       <Summary
         :open="dialog == 'summary'"
-        :bots="tableBots"
+        :world="world"
         @close="dialog = undefined"
         @bot-click="handleBotClick"
       />

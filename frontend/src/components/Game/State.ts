@@ -6,23 +6,61 @@ import {
   type ServerUpdate,
 } from "@/logic/Server";
 import type { PlayerBots } from "@/logic/State";
-import { ref, type Ref } from "vue";
+import type { ComputedRef } from "vue";
+import { computed, ref, type Ref } from "vue";
 
 export class GameWorld {
+  public id: string;
+  public name: string;
   public map: Ref<GameMap>;
   public mode: Ref<any>;
   public bot: Ref<GameBot>;
   public bots: Ref<GameBots>;
+  public botsTable: ComputedRef<GameTableBot[]>;
   public camera: Ref<GameCamera>;
-  public status: Ref<GameStatus>;
+  public status: Ref<GameConnectionStatus>;
 
-  constructor() {
+  constructor(id: string, name: string, playerBots: PlayerBots) {
+    this.id = id;
+    this.name = name;
     this.map = ref<GameMap>(null);
     this.mode = ref(null);
     this.bot = ref<GameBot>(null);
     this.bots = ref<GameBots>(null);
     this.camera = ref<GameCamera>(null);
-    this.status = ref<GameStatus>("connecting");
+    this.status = ref<GameConnectionStatus>("connecting");
+
+    this.botsTable = computed(() => {
+      let result: GameTableBot[] = [];
+
+      for (const [id, bot] of Object.entries(this.bots.value ?? {})) {
+        result.push({
+          id,
+          age: bot.age,
+          score: (this.mode.value ?? {}).scores[id] ?? 0,
+          known: playerBots.has(id),
+          nth: 0,
+        });
+      }
+
+      result.sort((a, b) => {
+        if (a.score != b.score) {
+          return b.score - a.score;
+        }
+
+        if (a.age == b.age) {
+          return b.age - a.age;
+        }
+
+        return b.id.localeCompare(a.id);
+      });
+
+      for (let i = 0; i < result.length; i += 1) {
+        result[i].nth = i + 1;
+      }
+
+      return result;
+    });
   }
 
   join(server: Server, playerBots: PlayerBots, botId?: string): Promise<void> {
@@ -213,7 +251,7 @@ export interface GameCamera {
   y: number;
 }
 
-export type GameStatus =
+export type GameConnectionStatus =
   | "connecting"
   | "reconnecting"
   | "connected"

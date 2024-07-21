@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
-import type { GameBot, GameTableBot } from "@/components/Game.vue";
+import type { GameTableBot, GameWorld } from "../State";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -9,16 +9,17 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<{
-  bot?: GameBot;
-  bots: GameTableBot[];
-  mode: any;
+  world: GameWorld;
 }>();
 
 const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
+  const bot = props.world.bot.value;
+  const bots = props.world.botsTable.value;
+
   let result = [];
 
   for (let nth = 0; nth < 8; nth += 1) {
-    const entry = props.bots[nth];
+    const entry = bots[nth];
 
     if (entry) {
       result.push({
@@ -30,9 +31,9 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
     }
   }
 
-  if (props.bot) {
-    const connectedBotNth = props.bots.findIndex((entry) => {
-      return entry.id == props.bot.id;
+  if (bot) {
+    const connectedBotNth = bots.findIndex((entry) => {
+      return entry.id == bot.id;
     });
 
     if (connectedBotNth >= result.length) {
@@ -42,7 +43,7 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
 
       result[result.length - 1] = {
         ty: "bot",
-        ...props.bots[connectedBotNth],
+        ...bots[connectedBotNth],
       };
     }
   }
@@ -52,7 +53,7 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
 </script>
 
 <template>
-  <div v-if="bots.length > 0" class="game-side-bots">
+  <div v-if="world.botsTable.value.length > 0" class="game-side-bots">
     <table>
       <thead>
         <tr>
@@ -65,7 +66,9 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
       <tbody>
         <tr
           v-for="entry in filteredBots"
-          :class="entry && entry.id == bot?.id ? 'connected-bot' : ''"
+          :class="
+            entry && entry.id == world.bot.value?.id ? 'connected-bot' : ''
+          "
         >
           <template v-if="entry?.ty == 'bot'">
             <td>#{{ entry.nth }}&nbsp;</td>
@@ -117,7 +120,7 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
 
 <style scoped>
 .game-side-bots {
-  border-top: 1px solid #444444;
+  border-top: 1px solid var(--gray);
   padding-top: 1em;
 
   table {

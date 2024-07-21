@@ -1,12 +1,8 @@
 <script setup lang="ts">
+import type { GameController } from "./Controller";
 import Bot from "./Side/Bot.vue";
 import Bots from "./Side/Bots.vue";
-import type {
-  GameBot,
-  GameController,
-  GameStatus,
-  GameTableBot,
-} from "../Game.vue";
+import type { GameWorld } from "./State";
 
 const emit = defineEmits<{
   botUpload: [File];
@@ -21,21 +17,21 @@ const emit = defineEmits<{
 
 defineProps<{
   ctrl: GameController;
-  worldId: string;
-  mode: any;
-  bot?: GameBot;
-  bots?: GameTableBot[];
-  status: GameStatus;
+  world: GameWorld;
   paused: boolean;
 }>();
 </script>
 
 <template>
-  <div v-if="status == 'connected' || status == 'connecting'" class="game-side">
+  <div
+    v-if="
+      world.status.value == 'connected' || world.status.value == 'connecting'
+    "
+    class="game-side"
+  >
     <Bot
       :ctrl="ctrl"
-      :worldId="worldId"
-      :bot="bot"
+      :world="world"
       :paused="paused"
       @bot-upload="(file) => emit('botUpload', file)"
       @bot-spawn-prefab="(id) => emit('botSpawnPrefab', id)"
@@ -46,9 +42,7 @@ defineProps<{
     />
 
     <Bots
-      :bot="bot"
-      :bots="bots"
-      :mode="mode"
+      :world="world"
       @bot-click="(id) => emit('botClick', id)"
       @open-summary="emit('openSummary')"
     />
