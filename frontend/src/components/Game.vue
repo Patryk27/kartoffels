@@ -12,6 +12,7 @@ import { LocalServer, type Server } from "@/logic/Server";
 import type { GameDialogId } from "./Game/State";
 import { GameController } from "./Game/Controller";
 import { GameWorld } from "./Game/State";
+import { isValidBotId } from "@/utils/bot";
 
 const emit = defineEmits<{
   leave: [];
@@ -48,6 +49,11 @@ async function join(newBotId?: string): Promise<void> {
   paused.value = false;
 
   try {
+    if (newBotId && !isValidBotId(newBotId)) {
+      alert(`\`${newBotId}\` is not a valid bot id`);
+      newBotId = null;
+    }
+
     await world.join(server, playerBots, newBotId);
 
     storeSession({
@@ -58,6 +64,7 @@ async function join(newBotId?: string): Promise<void> {
     ctrl.emit("server.ready");
   } catch (err) {
     window.onerror(`couldn't join world ${props.worldId}`);
+    console.log(err);
   }
 }
 
@@ -67,13 +74,12 @@ function handlePause(): void {
   if (server instanceof LocalServer) {
     server.pause(paused.value);
   } else {
-    // We can't pause remote connections, so in that case let's just drop the
-    // connection and transparently re-acquire it on unpausing.
+    // Since can't pause remote connections, just drop the connection and
+    // transparently reacquire it on unpausing.
     //
     // TODO restore camera position
 
     if (paused.value) {
-      server.onClose(null);
       server.leave();
     } else {
       join(world.bot.value?.id);

@@ -1,25 +1,21 @@
 import { LocalServer } from "./Server/LocalServer";
 import { RemoteServer } from "./Server/RemoteServer";
 
-// Connection, either to the remote server (via Web Sockets) or simualted within
-// the web browser (aka sandbox).
+// Connection, either to the remote server (via Web Sockets) or simulated within
+// the browser (aka sandbox).
 //
 // @see kartoffels::Handle
-//
-// TODO clean-up the control flow (make `join()` return just a Promise?)
 export interface Server {
-  join(botId?: string): void;
+  join(botId?: string): Promise<void>;
   leave(): void;
   close(): void;
   uploadBot(file: File): Promise<{ id: string }>;
 
-  onOpen(f: () => void): void;
-  onClose(f: () => void): void;
-  onError(f: () => void): void;
-  onUpdate(f: (msg: ServerUpdate) => void): void;
+  onMessage(f: (msg: ServerMessage) => void): void;
+  onStatusChange(f: (status: string) => void): void;
 }
 
-export interface ServerUpdate {
+export interface ServerMessage {
   map?: ServerMapUpdate;
   mode?: ServerModeUpdate;
   bots?: ServerBotsUpdate;

@@ -36,7 +36,7 @@ defineProps<{
     <div class="game-nav-control">
       <button
         :disabled="
-          world.costatusalue == 'reconnecting' || ctrl.ui.value.btnHelpDisabled
+          world.status.value == 'reconnecting' || ctrl.ui.value.btnHelpDisabled
         "
         @click="emit('openHelp')"
       >
@@ -46,7 +46,7 @@ defineProps<{
       <button
         :class="{ paused }"
         :disabled="
-          world.costatusalue == 'reconnecting' || ctrl.ui.value.btnPauseDisabled
+          world.status.value == 'reconnecting' || ctrl.ui.value.btnPauseDisabled
         "
         @click="emit('pause')"
       >

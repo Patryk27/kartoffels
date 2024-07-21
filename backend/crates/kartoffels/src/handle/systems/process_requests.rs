@@ -16,6 +16,7 @@ pub fn run(world: &mut World) {
                 let (tx2, rx2) = mpsc::channel(32);
 
                 world.events.send(CreateClient { id, tx: tx2 });
+
                 _ = tx.send(rx2);
             }
 

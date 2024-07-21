@@ -3,7 +3,7 @@ import {
   type Server,
   type ServerBotsUpdate,
   type ServerConnectedBotUpdate,
-  type ServerUpdate,
+  type ServerMessage,
 } from "@/logic/Server";
 import type { PlayerBots } from "@/logic/State";
 import type { ComputedRef } from "vue";
@@ -63,83 +63,58 @@ export class GameWorld {
     });
   }
 
-  join(server: Server, playerBots: PlayerBots, botId?: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const retryJoin = () => {
-        this.join(server, playerBots, botId).then(resolve).catch(reject);
-      };
-
-      server.onClose(null);
-      server.leave();
-
-      this.map.value = null;
-      this.mode.value = null;
-      this.bot.value = null;
-      this.bots.value = null;
-      this.camera.value = null;
-
-      this.status.value =
-        this.status.value == "reconnecting" ? "reconnecting" : "connecting";
-
-      if (botId) {
-        this.bot.value = {
-          id: botId,
-          following: true,
-          status: "unknown",
-          events: [],
-        };
-      }
-
-      server.join(botId);
-
-      server.onOpen(() => {
-        this.handleServerOpen(resolve);
-      });
-
-      server.onError(() => {
-        this.handleServerError(server, botId, reject, retryJoin);
-      });
-
-      server.onUpdate((msg) => {
-        this.handleServerUpdate(playerBots, msg);
-      });
-
-      server.onClose(() => {
-        this.handleServerClose(retryJoin);
-      });
-    });
-  }
-
-  private handleServerOpen(resolve: () => void): void {
-    this.status.value = "connected";
-
-    resolve();
-  }
-
-  private handleServerError(
+  async join(
     server: Server,
-    botId: string,
-    reject: () => void,
-    retryJoin: () => void,
-  ): void {
-    server.onError(null);
-    server.onClose(null);
+    playerBots: PlayerBots,
+    botId?: string,
+  ): Promise<void> {
+    server.leave();
 
-    if (this.status.value == "reconnecting") {
-      setTimeout(retryJoin, 250);
-    } else {
-      if (botId) {
-        alert(`couldn't find bot ${botId}`);
+    this.map.value = null;
+    this.mode.value = null;
+    this.bot.value = null;
+    this.bots.value = null;
+    this.camera.value = null;
 
-        // LocalServer needs an extra tick before we're able to join() again
-        setTimeout(retryJoin, 0);
-      } else {
-        reject();
-      }
+    this.status.value =
+      this.status.value == "reconnecting" ? "reconnecting" : "connecting";
+
+    if (botId) {
+      this.bot.value = {
+        id: botId,
+        following: true,
+        status: "unknown",
+        events: [],
+      };
     }
+
+    server.onMessage((msg) => {
+      // This is a bit sideways, but currently the backend isn't able to
+      // directly tell us whether our bot exists or not - we can only infer this
+      // by looking at the first message we get: if it contains the bot, the bot
+      // exists; otherwise it doesn't.
+      if (this.bot.value?.status == "unknown" && !msg.bot) {
+        alert(`couldn't find bot \`${botId}\``);
+        this.bot.value = null;
+      }
+
+      this.handleMessage(playerBots, msg);
+    });
+
+    server.onStatusChange((status) => {
+      if (status == "reconnecting") {
+        this.status.value = "reconnecting";
+      } else {
+        this.status.value = "connected";
+      }
+    });
+
+    await server.join(botId);
+
+    this.status.value = "connected";
   }
 
-  private handleServerUpdate(playerBots: PlayerBots, msg: ServerUpdate): void {
+  private handleMessage(playerBots: PlayerBots, msg: ServerMessage): void {
     if (msg.map) {
       this.map.value = {
         size: msg.map.size,
@@ -208,14 +183,6 @@ export class GameWorld {
       });
 
       this.bot.value.events = this.bot.value.events.slice(0, 64);
-    }
-  }
-
-  private handleServerClose(retryJoin: () => void): void {
-    if (this.status.value == "connected" || this.status.value == "connecting") {
-      this.status.value = "reconnecting";
-
-      setTimeout(retryJoin, 250);
     }
   }
 }

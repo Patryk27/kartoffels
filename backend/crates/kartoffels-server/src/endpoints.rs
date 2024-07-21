@@ -17,9 +17,9 @@ pub fn router(
 ) -> Router<()> {
     let public_routes = Router::new()
         .route("/worlds", get(get_worlds::handle))
-        .route("/worlds/:world", get(get_world::handle1))
+        .route("/worlds/:world", get(get_world::handle))
         .route("/worlds/:world/bots", post(create_bot::handle))
-        .route("/worlds/:world/bots/:bot", get(get_world::handle2));
+        .route("/worlds/:world/bots/:bot", get(get_world::handle_with_bot));
 
     let mut admin_routes =
         Router::new().route("/worlds", post(create_world::handle));

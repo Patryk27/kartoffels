@@ -1,11 +1,8 @@
 import SandboxWorker from "./LocalServer/SandboxWorker?worker";
-import type { Server, ServerUpdate } from "@/logic/Server";
+import type { Server, ServerMessage } from "@/logic/Server";
 
 export class LocalServer implements Server {
-  private openFn?: () => void;
-  private closeFn?: () => void;
-  private errorFn?: () => void;
-  private updateFn?: (msg: ServerUpdate) => void;
+  private messageFn?: (msg: ServerMessage) => void;
 
   private joinResponseFn?: (response: any) => void;
   private joinListenerIdx?: number;
@@ -43,8 +40,8 @@ export class LocalServer implements Server {
           break;
 
         case "join.update":
-          if (this.updateFn && this.joinListenerIdx == msg.listenerIdx) {
-            this.updateFn(msg.event);
+          if (this.messageFn && this.joinListenerIdx == msg.listenerIdx) {
+            this.messageFn(msg.event);
           }
 
           break;
@@ -66,25 +63,23 @@ export class LocalServer implements Server {
     };
   }
 
-  join(botId?: string): void {
+  async join(botId?: string): Promise<void> {
     this.worker.postMessage({
       op: "join",
       botId,
     });
 
-    this.joinResponseFn = (response) => {
-      if (response.status == "ok") {
-        this.joinListenerIdx = response.result.listenerIdx;
+    return new Promise((resolve, reject) => {
+      this.joinResponseFn = (response) => {
+        if (response.status == "ok") {
+          this.joinListenerIdx = response.result.listenerIdx;
 
-        if (this.openFn) {
-          this.openFn();
+          resolve();
+        } else {
+          reject();
         }
-      } else {
-        if (this.errorFn) {
-          this.errorFn();
-        }
-      }
-    };
+      };
+    });
   }
 
   pause(paused: boolean): void {
@@ -99,13 +94,7 @@ export class LocalServer implements Server {
       op: "leave",
     });
 
-    if (this.closeFn) {
-      this.closeFn();
-    }
-
-    this.openFn = undefined;
-    this.closeFn = undefined;
-    this.updateFn = undefined;
+    this.messageFn = undefined;
     this.joinListenerIdx = undefined;
   }
 
@@ -169,19 +158,11 @@ export class LocalServer implements Server {
     });
   }
 
-  onOpen(f: () => void): void {
-    this.openFn = f;
+  onMessage(f: (msg: ServerMessage) => void) {
+    this.messageFn = f;
   }
 
-  onClose(f: () => void): void {
-    this.closeFn = f;
-  }
-
-  onError(f: () => void): void {
-    this.errorFn = f;
-  }
-
-  onUpdate(f: (msg: ServerUpdate) => void) {
-    this.updateFn = f;
+  onStatusChange(_: (status: string) => void): void {
+    // no-op
   }
 }
