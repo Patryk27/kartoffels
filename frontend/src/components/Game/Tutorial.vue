@@ -38,6 +38,10 @@ export async function setup(ctrl: GameController): Promise<void> {
 
     await ctrl.waitFor("tutorial.continue");
 
+    ctrl.openHelp(5);
+
+    await ctrl.waitFor("tutorial.continue");
+
     ctrl.enableButton("uploadBot");
     ctrl.highlightButton("uploadBot");
 
@@ -77,14 +81,13 @@ $ cd kartoffel</pre
         <button class="highlighted" @click="ctrl.emit('tutorial.continue')">
           continue
         </button>
-        once you're set up.
+        once you're ready.
       </p>
 
       <footer>
         <p>
-          <b>cool bear's hot tip:</b>
-          you can leave the tutorial at any time by using the
-          <kbd>[leave]</kbd> button in the top left corner
+          <b>cool bear's hot tip:</b> you can leave the tutorial at any time by
+          using the <kbd>[leave]</kbd> button in the top left corner
         </p>
       </footer>
     </template>
@@ -118,7 +121,7 @@ $ cd kartoffel</pre
     </template>
 
     <template v-else-if="ctrl.helpId.value == 3">
-      <p>here's a quick introduction, then:</p>
+      <p>in this case, here's a quick introduction:</p>
 
       <ul>
         <li>
@@ -148,15 +151,16 @@ $ cd kartoffel</pre
       <p style="text-align: center">good luck and have fun!</p>
 
       <p style="text-align: right">
-        <button @click="ctrl.emit('tutorial.continue')">i'm ready</button>
+        <button @click="ctrl.emit('tutorial.continue')" class="highlighted">
+          i'm ready
+        </button>
       </p>
     </template>
 
     <template v-else-if="ctrl.helpId.value == 4">
       <p>
-        so, for the purposes of this tutorial, we'll be starting from scratch -
-        open
-        <kbd>src/main.rs</kbd> and replace the code there with:
+        in this case, for the purposes of this tutorial, we'll be starting from
+        scratch - open <kbd>src/main.rs</kbd> and replace the code there with:
       </p>
 
       <pre>
@@ -175,13 +179,32 @@ fn main() {
 
       <p>
         first, as compared to usual rust code, implementing a firmware is a bit
-        different - what's most important is that there's no standard library
-        (<kbd>#![no_std]</kbd>), so you can't, say, access <kbd>std::fs</kbd>
+        funky - what's most important is that there's no standard library
+        (<kbd>#![no_std]</kbd>), so you can't access
+        <kbd>std::fs</kbd> etc.
       </p>
 
       <p>
-        that's because the firmware will run inside a virtual machine of sorts -
+        that's because the game simulates an actual small robot, with limited
+        CPU and RAM, and without access to the external world (besides specific
+        emulated peripherals such as the radar)
       </p>
+
+      <p>
+        you <i>can</i> use all language constructs, though - functions, traits
+        etc. all work; you can even allocate, just remember to import
+        <kbd>Vec</kbd> from the <kbd>alloc</kbd> crate instead of <kbd>std</kbd>
+      </p>
+
+      <p style="text-align: right">
+        <button @click="ctrl.emit('tutorial.continue')" class="highlighted">
+          got it
+        </button>
+      </p>
+    </template>
+
+    <template v-else-if="ctrl.helpId.value == 5">
+      <p>alright, with theory in mind let's make the robot do something now</p>
     </template>
   </dialog>
 </template>
