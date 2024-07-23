@@ -76,6 +76,12 @@ export class RemoteServer implements Server {
 
   close(): void {
     if (this.socket) {
+      // Usually when a socket closes, we'd like to reconnect (because most
+      // likely a socket closing means the server's getting restarted and will
+      // be online again shortly) - but when it's us killing the connection, we
+      // don't want for the reconnection logic to trigger.
+      this.socket.onclose = null;
+
       this.socket.close();
       this.socket = null;
     }
