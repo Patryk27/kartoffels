@@ -138,11 +138,7 @@ function handleBotDisconnect(): void {
 }
 
 function handleBotClick(id?: string): void {
-  if (world.bot.value?.id == id && !paused.value) {
-    join(null);
-  } else {
-    join(id);
-  }
+  join(id);
 }
 
 function handleBotDestroy(): void {
