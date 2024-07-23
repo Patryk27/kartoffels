@@ -45,6 +45,8 @@ ul {
   margin-left: 4ch;
 
   li {
+    margin-bottom: 0.1em;
+
     + p {
       margin-top: var(--text-margin);
     }

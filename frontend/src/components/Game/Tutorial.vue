@@ -31,8 +31,13 @@ export async function setup(ctrl: GameController): Promise<void> {
 
   if (route == "A") {
     ctrl.openHelp(3);
+
+    await ctrl.waitFor("tutorial.continue");
   } else {
     ctrl.openHelp(4);
+
+    await ctrl.waitFor("tutorial.continue");
+
     ctrl.enableButton("uploadBot");
     ctrl.highlightButton("uploadBot");
 
@@ -100,9 +105,7 @@ $ cd kartoffel</pre
           <button @click="ctrl.emit('tutorial.routeA')">click here</button>
         </li>
 
-        <p>
-          or
-        </p>
+        <p>or</p>
 
         <li>
           if you're more into step-by-step tutorials,
@@ -115,13 +118,45 @@ $ cd kartoffel</pre
     </template>
 
     <template v-else-if="ctrl.helpId.value == 3">
-      <p>TODO</p>
+      <p>here's a quick introduction, then:</p>
+
+      <ul>
+        <li>
+          see <kbd>README.md</kbd> in the repository for building instructions
+        </li>
+
+        <li>use the <kbd>[upload bot]</kbd> button to upload the binary</li>
+        <li>navigate map using W/A/S/D or arrow keys</li>
+        <li>bots are represented with the @ char</li>
+
+        <li>
+          bots uploaded by you will have
+          <span class="inverted">inverted colors</span>
+        </li>
+
+        <li>
+          use your ide's <kbd>go to definition</kbd> feature to discover how
+          functions (such as <kbd>radar_scan()</kbd>) work
+        </li>
+      </ul>
+
+      <p>
+        when you press the button below, you'll be redirected back to the home
+        page - from there, just choose any world and start playing
+      </p>
+
+      <p style="text-align: center">good luck and have fun!</p>
+
+      <p style="text-align: right">
+        <button @click="ctrl.emit('tutorial.continue')">i'm ready</button>
+      </p>
     </template>
 
     <template v-else-if="ctrl.helpId.value == 4">
       <p>
-        so, for the purposes of this tutorial, we'll be starting from scratch - open
-        <kbd>src/main.rs</kbd> and replace the code with:
+        so, for the purposes of this tutorial, we'll be starting from scratch -
+        open
+        <kbd>src/main.rs</kbd> and replace the code there with:
       </p>
 
       <pre>
@@ -136,8 +171,10 @@ fn main() {
 }</pre
       >
 
+      <p>this doesn't do anything yet, but baby steps</p>
+
       <p>
-        as compared to usual rust code, implementing a firmware is a bit
+        first, as compared to usual rust code, implementing a firmware is a bit
         different - what's most important is that there's no standard library
         (<kbd>#![no_std]</kbd>), so you can't, say, access <kbd>std::fs</kbd>
       </p>
@@ -153,7 +190,8 @@ fn main() {
 .game-tutorial {
   width: 768px;
 
-  p, ul {
+  p,
+  ul {
     &:last-child {
       margin-bottom: 0;
     }
@@ -161,6 +199,11 @@ fn main() {
 
   pre {
     margin-left: 4ch;
+  }
+
+  .inverted {
+    background: white;
+    color: black;
   }
 }
 </style>

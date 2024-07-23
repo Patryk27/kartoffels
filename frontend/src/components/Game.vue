@@ -34,7 +34,10 @@ const dialog = ref<GameDialogId>(null);
 
 switch (props.worldId) {
   case "tutorial":
-    tutorial.setup(ctrl);
+    tutorial.setup(ctrl).then(() => {
+      emit("leave");
+    });
+
     break;
 
   case "sandbox":
@@ -264,11 +267,7 @@ join(props.botId);
         @open-summary="toggleDialog('summary')"
       />
 
-      <Help
-        :open="dialog == 'help'"
-        :world="world"
-        @close="dialog = null"
-      />
+      <Help :open="dialog == 'help'" :world="world" @close="dialog = null" />
 
       <GameTutorial :ctrl="ctrl" />
 

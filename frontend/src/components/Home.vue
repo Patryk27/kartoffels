@@ -75,14 +75,6 @@ onMounted(async () => {
     }
   } catch (err) {
     error.value = err;
-
-    // Even if there's no connection to the API, we can still offer offline
-    // play - this mostly comes handy for development, because this way you can
-    // keep the server shut down (to save laptop battery etc.) and focus on the
-    // frontend
-    session.value = null;
-    world.value = "sandbox";
-    worlds.value = [];
   }
 });
 </script>
@@ -110,18 +102,16 @@ onMounted(async () => {
       <p>
         ... and your objective is to implement <b>a firmware</b> controlling
         this robot - developing the best, the longest surviving, the most deadly
-        machine imaginable, in rust.
+        machine imaginable, in rust
       </p>
 
       <p>
-        robots are limited to <b>64 khz cpu</b> and <b>128 kb of ram</b> and the
-        game happens entirely online - you can see your bot fighting bots
+        robots are limited to <b>64 khz cpu</b> and <b>128 kb of ram</b>, and
+        the game happens entirely online - you can see your bot fighting bots
         submitted from other players and you can learn from their behavior
       </p>
 
-      <p>
-        feeling up to the game?
-      </p>
+      <p>feeling up to the challenge?</p>
 
       <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
         <span class="hand">👉 </span>
@@ -132,7 +122,7 @@ onMounted(async () => {
       <p class="testimonial">> {{ testimonial }}</p>
     </div>
 
-    <div class="menu">
+    <div v-if="!error" class="menu">
       <template v-if="worlds == null">loading...</template>
 
       <template v-else>
@@ -172,12 +162,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="error" class="error">
-      <p>
-        whoopsie, it looks like the server is down - you can still play offline,
-        though!
-      </p>
-
-      <p>on the second day the browser said:</p>
+      <p>whoopsie, it looks like the server is down:</p>
 
       <p>
         {{ error }}
@@ -289,10 +274,15 @@ onMounted(async () => {
   }
 
   .error {
-    margin-top: 2em;
-    padding-top: 2em;
-    border-top: 1px dashed var(--red);
+    padding: 1em;
+    border: 1px dashed var(--red);
     text-align: center;
+
+    p {
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 }
 
