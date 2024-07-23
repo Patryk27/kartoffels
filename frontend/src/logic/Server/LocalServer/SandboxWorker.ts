@@ -1,7 +1,7 @@
 import init, { Sandbox } from "kartoffels-sandbox";
 import wasmUrl from "kartoffels-sandbox/kartoffels_sandbox_bg.wasm?url";
 
-let sandbox: Promise<any> | Sandbox | undefined = undefined;
+let sandbox: Promise<any> | Sandbox | null = null;
 let listenerIdx = 0;
 
 function handleInit(config: any): void {

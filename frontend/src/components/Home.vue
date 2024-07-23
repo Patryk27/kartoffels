@@ -5,17 +5,22 @@ import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
 const emit = defineEmits<{
   start: [string, string, string?];
-  openIntro: [];
-}>();
-
-defineProps<{
-  highlightJoinButton: boolean;
 }>();
 
 const world = ref<string>(null);
 const worlds = ref<ServerWorld[]>(null);
 const session: Ref<Session & { worldName?: string }> = ref(loadSession());
 const error = ref(null);
+
+const testimonials = [
+  "senator, you're no kartoffel! -- jack kennedy, 2024",
+  "amazing piece of technology! -- lewis carroll, 2024",
+  "super fun! -- the pope, 2024",
+  "better than almond water! -- the entity, 1990",
+];
+
+const testimonial =
+  testimonials[Math.floor(Math.random() * testimonials.length)];
 
 function getWorldName(id: string): string {
   if (id == "sandbox") {
@@ -32,7 +37,7 @@ function getWorldName(id: string): string {
 }
 
 function handleJoin(worldId: string): void {
-  emit("start", worldId, getWorldName(worldId), undefined);
+  emit("start", worldId, getWorldName(worldId), null);
 }
 
 function handleRestore(): void {
@@ -90,27 +95,41 @@ onMounted(async () => {
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
           kartoffels</a
         >
-        🥔, an mmo robot combat arena!
+        🥔, a game where everyone's killed and everyone's the killer!
       </p>
 
       <p>
-        it's an online game where you implement your own bot and see it fight
-        other bots <span class="rainbow">in real time</span>
+        this is an mmo arena where every robot is equipped with
+        <b>motors</b>, <b>a radar</b> and <b>an arm</b>:
       </p>
 
-      <p>the rules are simple -- have fun and let the best bot win!</p>
-
-      <p style="text-align: center">
-        <img src="./Home/bot.svg" @click="emit('openIntro')" />
+      <p class="bot">
+        <img src="./Home/bot.svg" />
       </p>
 
-      <p style="text-align: center; padding: 0.5em">
-        👉 <a @click="emit('openIntro')">getting started</a> 👈
+      <p>
+        ... and your objective is to implement <b>a firmware</b> controlling
+        this robot - developing the best, the longest surviving, the most deadly
+        machine imaginable, in rust.
       </p>
 
-      <p class="quote">
-        > senator, you're no kartoffel -- jack kennedy, anno domini 2024
+      <p>
+        robots are limited to <b>64 khz cpu</b> and <b>128 kb of ram</b> and the
+        game happens entirely online - you can see your bot fighting bots
+        submitted from other players and you can learn from their behavior
       </p>
+
+      <p>
+        feeling up to the game?
+      </p>
+
+      <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
+        <span class="hand">👉 </span>
+        <a href="#">start tutorial</a>
+        <span class="hand"> 👈</span>
+      </p>
+
+      <p class="testimonial">> {{ testimonial }}</p>
     </div>
 
     <div class="menu">
@@ -128,12 +147,7 @@ onMounted(async () => {
             <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
           </select>
 
-          <button
-            @click="handleJoin(world)"
-            :class="{ highlighted: highlightJoinButton }"
-          >
-            join!
-          </button>
+          <button @click="handleJoin(world)">join!</button>
         </div>
 
         <div v-if="world == 'sandbox'" class="sandbox-info">
@@ -193,7 +207,36 @@ onMounted(async () => {
         margin-bottom: 0;
       }
 
-      &.quote {
+      &.bot {
+        text-align: center;
+        margin-top: 0.8em;
+        margin-bottom: 0;
+        padding: 0.5em 0;
+
+        img {
+          animation: bot-anim 2s ease-in-out 0s infinite;
+        }
+      }
+
+      &.tutorial {
+        cursor: pointer;
+        padding: 0.33em 0;
+        text-align: center;
+
+        &:hover {
+          a {
+            text-decoration: underline;
+          }
+        }
+
+        .hand {
+          position: relative;
+          top: 0.12em;
+          animation: hand-anim 1s ease-in-out 0s infinite;
+        }
+      }
+
+      &.testimonial {
         color: var(--gray);
         text-align: right;
       }
@@ -251,43 +294,32 @@ onMounted(async () => {
     border-top: 1px dashed var(--red);
     text-align: center;
   }
-
-  .rainbow {
-    display: inline-block;
-
-    animation:
-      rainbow-color 0.5s linear 0s infinite,
-      rainbow-rotate 1.8s ease-in-out 0s infinite;
-  }
 }
 
-@keyframes rainbow-color {
+@keyframes bot-anim {
   from {
-    color: #6666ff;
-  }
-  10% {
-    color: #0099ff;
+    transform: rotate(-4deg);
   }
   50% {
-    color: #00ff00;
-  }
-  75% {
-    color: #ff3399;
-  }
-  100% {
-    color: #6666ff;
-  }
-}
-
-@keyframes rainbow-rotate {
-  from {
-    transform: rotate(-2deg);
-  }
-  50% {
-    transform: rotate(2deg);
+    transform: rotate(8deg);
   }
   to {
-    transform: rotate(-2deg);
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes hand-anim {
+  from {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  50% {
+    margin-left: 0.75ch;
+    margin-right: 0.75ch;
+  }
+  to {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 </style>

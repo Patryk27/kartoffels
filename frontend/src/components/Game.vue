@@ -163,7 +163,7 @@ function handleBotRestart(): void {
 }
 
 function toggleDialog(id: GameDialogId): void {
-  dialog.value = dialog.value == id ? undefined : id;
+  dialog.value = dialog.value == id ? null : id;
 }
 
 function handleRecreateSandbox(config: any): void {
@@ -171,7 +171,7 @@ function handleRecreateSandbox(config: any): void {
     return;
   }
 
-  dialog.value = undefined;
+  dialog.value = null;
   server.recreate(config);
 
   join(null);
@@ -182,6 +182,10 @@ function handleRecreateSandbox(config: any): void {
 onMounted(() => {
   document.onkeydown = (event) => {
     const moveCamera = (dx: number, dy: number): void => {
+      if (ctrl.helpId.value) {
+        return;
+      }
+
       if (world.camera.value) {
         world.camera.value.x += dx;
         world.camera.value.y += dy;
@@ -218,7 +222,7 @@ onMounted(() => {
         break;
 
       case "Escape":
-        dialog.value = undefined;
+        dialog.value = null;
         break;
     }
   };
@@ -263,7 +267,7 @@ join(props.botId);
       <Help
         :open="dialog == 'help'"
         :world="world"
-        @close="dialog = undefined"
+        @close="dialog = null"
       />
 
       <GameTutorial :ctrl="ctrl" />
@@ -271,13 +275,13 @@ join(props.botId);
       <Summary
         :open="dialog == 'summary'"
         :world="world"
-        @close="dialog = undefined"
+        @close="dialog = null"
         @bot-click="handleBotClick"
       />
 
       <SandboxConfig
         :open="dialog == 'sandboxConfig'"
-        @close="dialog = undefined"
+        @close="dialog = null"
         @recreate-sandbox="handleRecreateSandbox"
       />
     </main>

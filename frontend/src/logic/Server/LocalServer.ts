@@ -34,7 +34,7 @@ export class LocalServer implements Server {
         case "join.response":
           if (this.joinResponseFn) {
             this.joinResponseFn(msg.response);
-            this.joinResponseFn = undefined;
+            this.joinResponseFn = null;
           }
 
           break;
@@ -49,7 +49,7 @@ export class LocalServer implements Server {
         case "uploadBot.response":
           if (this.uploadBotResponseFn) {
             this.uploadBotResponseFn(msg.response);
-            this.uploadBotResponseFn = undefined;
+            this.uploadBotResponseFn = null;
           }
 
           break;
@@ -57,7 +57,7 @@ export class LocalServer implements Server {
         case "spawnPrefabBot.response":
           if (this.spawnPrefabBotResponseFn) {
             this.spawnPrefabBotResponseFn(msg.response);
-            this.spawnPrefabBotResponseFn = undefined;
+            this.spawnPrefabBotResponseFn = null;
           }
       }
     };
@@ -94,8 +94,8 @@ export class LocalServer implements Server {
       op: "leave",
     });
 
-    this.messageFn = undefined;
-    this.joinListenerIdx = undefined;
+    this.messageFn = null;
+    this.joinListenerIdx = null;
   }
 
   close(): void {

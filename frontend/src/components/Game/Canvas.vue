@@ -123,7 +123,7 @@ function drawTiles(): void {
       const tileBot = map.bots[tileIdx] ?? null;
 
       let tileFg: string;
-      let tileBg: string = undefined;
+      let tileBg: string = null;
       let tileChar: string;
       let tileOffsetY = 0.0;
       let tileOffsetX = 0.0;

@@ -3,7 +3,7 @@
 :root {
   --green: #00ff80;
   --orange: #ff8000;
-  --gray: #444444;
+  --gray: #555555;
   --washed-pink: #c86b85;
   --pink: #ff0080;
   --red: #ff0000;
@@ -34,10 +34,21 @@ a {
   }
 }
 
-p {
+p,
+ul {
   margin: 0;
   margin-bottom: var(--text-margin);
   padding: 0;
+}
+
+ul {
+  margin-left: 4ch;
+
+  li {
+    + p {
+      margin-top: var(--text-margin);
+    }
+  }
 }
 
 select,

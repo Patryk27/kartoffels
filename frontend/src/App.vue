@@ -3,19 +3,17 @@ import { ref, onMounted } from "vue";
 import Crash from "./components/Crash.vue";
 import Game from "./components/Game.vue";
 import Home from "./components/Home.vue";
-import Intro from "./components/Intro.vue";
 import { type Server, RemoteServer, LocalServer } from "./logic/Server";
 import * as SandboxPresets from "./components/Game/SandboxConfig/Presets";
 
 type Route =
-  | { id: "home"; highlightJoinButton?: boolean }
-  | { id: "intro" }
+  | { id: "home" }
   | { id: "game"; worldId: string; worldName: string; botId?: string }
   | { id: "crash"; msg: string };
 
 const route = ref<Route>({ id: "home" });
 
-let server: Server = undefined;
+let server: Server = null;
 
 function handleStart(worldId: string, worldName: string, botId?: string) {
   switch (worldId) {
@@ -57,12 +55,8 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
   };
 }
 
-function handleLeave(highlightJoinButton: boolean): void {
-  route.value = { id: "home", highlightJoinButton };
-}
-
-function handleOpenIntro(): void {
-  route.value = { id: "intro" };
+function handleLeave(): void {
+  route.value = { id: "home" };
 }
 
 onMounted(() => {
@@ -78,11 +72,7 @@ onMounted(() => {
 
 <template>
   <template v-if="route.id == 'home'">
-    <Home
-      :highlightJoinButton="route.highlightJoinButton ?? false"
-      @start="handleStart"
-      @open-intro="handleOpenIntro"
-    />
+    <Home @start="handleStart" />
   </template>
 
   <template v-if="route.id == 'game'">
@@ -91,14 +81,7 @@ onMounted(() => {
       :worldName="route.worldName"
       :botId="route.botId"
       :server="server"
-      @leave="handleLeave(false)"
-    />
-  </template>
-
-  <template v-if="route.id == 'intro'">
-    <Intro
-      @leave="handleLeave(true)"
-      @start="handleStart('tutorial', 'tutorial')"
+      @leave="handleLeave()"
     />
   </template>
 
