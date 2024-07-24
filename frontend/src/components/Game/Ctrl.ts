@@ -8,12 +8,14 @@ export interface GameUi {
   btnUploadBotHighlighted: boolean;
 }
 
-export class GameController {
+export class GameCtrl {
   ui: Ref<GameUi>;
   events: Map<String, () => void>;
-  helpId: Ref<number>;
+  postponedEmits: Set<String>;
+  paused: Ref<boolean>;
+  tutorialSlide: Ref<number>;
 
-  constructor() {
+  constructor(paused: Ref<boolean>) {
     this.ui = ref({
       btnHelpDisabled: false,
       btnPauseDisabled: false,
@@ -23,16 +25,41 @@ export class GameController {
     });
 
     this.events = new Map();
-    this.helpId = ref(null);
+    this.postponedEmits = new Set();
+    this.paused = paused;
+    this.tutorialSlide = ref(null);
   }
 
-  on(event: string, handler: () => void) {
+  on(event: string, handler: () => void): void {
     this.events.set(event, handler);
+
+    if (this.postponedEmits.delete(event)) {
+      handler();
+    }
   }
 
-  emit(event: string): void {
+  onSlide(id: number, handler: () => void): void {
+    this.on(`tutorial.slide.${id}`, handler);
+  }
+
+  emit(event: string, canPostpone: boolean = false): void {
     if (this.events.has(event)) {
       this.events.get(event)();
+    } else {
+      // Postponing is a hacky approach to solve a tiiiny race condition between
+      // slide transitions.
+      //
+      // When we call `openSlide()`, we do two things: change the currently
+      // active slide and emit an event, so that the next slide can prepare its
+      // environment.
+      //
+      // But slides only get setup once the `tutorialSlide` is changed, so
+      // without this postponing mechanism, we wouldn't be able to get beyond
+      // the first slide (i.e. changing the slide number only activates the
+      // slide, and thus makes it register the event, on the next frame).
+      if (canPostpone) {
+        this.postponedEmits.add(event);
+      }
     }
   }
 
@@ -40,6 +67,11 @@ export class GameController {
     return new Promise((resolve, _) => {
       this.on(event, resolve);
     });
+  }
+
+  openSlide(id: number): void {
+    this.tutorialSlide.value = id;
+    this.emit(`tutorial.slide.${id}`, true);
   }
 
   disableButton(id: string): void {
@@ -86,7 +118,11 @@ export class GameController {
     }
   }
 
-  openHelp(id: number): void {
-    this.helpId.value = id;
+  pause(): void {
+    this.paused.value = true;
+  }
+
+  resume(): void {
+    this.paused.value = false;
   }
 }

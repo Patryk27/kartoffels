@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman, ordinal } from "@/utils/other";
-import type { GameController } from "../Controller";
+import type { GameCtrl } from "../Ctrl";
 import type { GameWorld } from "../State";
 
 const emit = defineEmits<{
@@ -15,7 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<{
-  ctrl: GameController;
+  ctrl: GameCtrl;
   world: GameWorld;
   paused: boolean;
 }>();

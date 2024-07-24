@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { PlayerBots, storeSession } from "@/logic/State";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
@@ -10,7 +10,7 @@ import Summary from "./Game/Summary.vue";
 import GameTutorial, * as tutorial from "./Game/Tutorial.vue";
 import { LocalServer, type Server } from "@/logic/Server";
 import type { GameDialogId } from "./Game/State";
-import { GameController } from "./Game/Controller";
+import { GameCtrl } from "./Game/Ctrl";
 import { GameWorld } from "./Game/State";
 import { isValidBotId } from "@/utils/bot";
 
@@ -18,23 +18,46 @@ const emit = defineEmits<{
   leave: [];
 }>();
 
-const props = defineProps<{
+const { worldId, worldName, botId, server } = defineProps<{
   worldId: string;
   worldName: string;
   botId?: string;
   server: Server;
 }>();
 
-const ctrl = new GameController();
-const playerBots = new PlayerBots(props.worldId);
-const world = new GameWorld(props.worldId, props.worldName, playerBots);
-const server = props.server;
 const paused = ref(false);
 const dialog = ref<GameDialogId>(null);
 
-switch (props.worldId) {
+const ctrl = new GameCtrl(paused);
+const playerBots = new PlayerBots(worldId);
+const world = new GameWorld(worldId, worldName, playerBots);
+
+// TODO this is cursed, but currently there's no better way to have this logic
+//      available both when user pauses and when the GameCtrl wants to pause
+watch(paused, (oldValue, newValue) => {
+  if (oldValue == newValue) {
+    return;
+  }
+
+  if (server instanceof LocalServer) {
+    server.pause(paused.value);
+  } else {
+    // Since can't pause remote connections, just drop the connection and
+    // transparently reacquire it on unpausing.
+    //
+    // TODO restore camera position
+
+    if (paused.value) {
+      server.leave();
+    } else {
+      join(world.bot.value?.id);
+    }
+  }
+});
+
+switch (worldId) {
   case "tutorial":
-    tutorial.setup(ctrl).then(() => {
+    tutorial.start(ctrl).then(() => {
       emit("leave");
     });
 
@@ -60,34 +83,19 @@ async function join(newBotId?: string): Promise<void> {
     await world.join(server, playerBots, newBotId);
 
     storeSession({
-      worldId: props.worldId,
+      worldId: worldId,
       botId: newBotId,
     });
 
     ctrl.emit("server.ready");
   } catch (err) {
-    window.onerror(`couldn't join world ${props.worldId}`);
+    window.onerror(`couldn't join world ${worldId}`);
     console.log(err);
   }
 }
 
 function handlePause(): void {
   paused.value = !paused.value;
-
-  if (server instanceof LocalServer) {
-    server.pause(paused.value);
-  } else {
-    // Since can't pause remote connections, just drop the connection and
-    // transparently reacquire it on unpausing.
-    //
-    // TODO restore camera position
-
-    if (paused.value) {
-      server.leave();
-    } else {
-      join(world.bot.value?.id);
-    }
-  }
 }
 
 async function handleBotUpload(src: File): Promise<void> {
@@ -96,7 +104,9 @@ async function handleBotUpload(src: File): Promise<void> {
 
     playerBots.add(bot.id);
 
-    join(bot.id);
+    await join(bot.id);
+
+    ctrl.emit("join");
   } catch (error) {
     alert("err, your bot couldn't be uploaded:\n\n" + error);
   }
@@ -185,7 +195,7 @@ function handleRecreateSandbox(config: any): void {
 onMounted(() => {
   document.onkeydown = (event) => {
     const moveCamera = (dx: number, dy: number): void => {
-      if (ctrl.helpId.value) {
+      if (ctrl.tutorialSlide.value) {
         return;
       }
 
@@ -235,7 +245,7 @@ onMounted(() => {
   };
 });
 
-join(props.botId);
+join(botId);
 </script>
 
 <template>

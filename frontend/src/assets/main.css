@@ -166,13 +166,12 @@ dialog {
 
   color: var(--fg);
   background: #050505;
-
   border: 1px solid var(--green);
 
   nav {
     display: flex;
-    margin-bottom: 1.5em;
-    padding-bottom: 0.5em;
+    margin-bottom: 1em;
+    padding-bottom: 0.55em;
     border-bottom: 1px solid var(--gray);
 
     .dialog-title {
@@ -187,7 +186,7 @@ dialog {
   }
 
   footer {
-    margin-top: 1.5em;
+    margin-top: 1em;
     padding-top: 1em;
     border-top: 1px solid var(--gray);
   }

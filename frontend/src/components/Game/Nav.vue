@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GameController } from "./Controller";
+import type { GameCtrl } from "./Ctrl";
 import type { GameWorld } from "./State";
 
 const emit = defineEmits<{
@@ -10,7 +10,7 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
-  ctrl: GameController;
+  ctrl: GameCtrl;
   world: GameWorld;
   paused: boolean;
 }>();
