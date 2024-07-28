@@ -12,5 +12,5 @@ ctrl.onSlide(7, () => {
 </script>
 
 <template>
-  <p>nice! -- let's see how your bot's doing:</p>
+  <p>nice, the bot is ready!</p>
 </template>

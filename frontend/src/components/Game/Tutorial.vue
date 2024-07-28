@@ -24,7 +24,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
     ctrl.disableButton("connectToBot");
     ctrl.disableButton("uploadBot");
 
-    ctrl.on("server.ready", () => {
+    ctrl.onOnce("server.ready", () => {
       ctrl.openSlide(1);
     });
 

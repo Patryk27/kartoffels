@@ -14,7 +14,7 @@ export class GameCtrl {
   paused: Ref<boolean>;
 
   ui: Ref<GameUi>;
-  events: Map<String, () => void>;
+  events: Map<String, Array<EventHandler>>;
   postponedEmits: Set<String>;
   tutorialSlide: Ref<number>;
 
@@ -35,14 +35,26 @@ export class GameCtrl {
     this.tutorialSlide = ref(null);
   }
 
-  on(event: string, handler: () => void): void {
-    log("on()", event, handler);
-
-    this.events.set(event, handler);
+  on(event: string, fn: () => void, once: boolean = false): void {
+    log("on()", event, fn, once);
 
     if (this.postponedEmits.delete(event)) {
-      handler();
+      fn();
+
+      if (once) {
+        return;
+      }
     }
+
+    if (!this.events.has(event)) {
+      this.events.set(event, []);
+    }
+
+    this.events.get(event).push({ fn, once });
+  }
+
+  onOnce(event: string, handler: () => void): void {
+    this.on(event, handler, true);
   }
 
   onSlide(id: number, handler: () => void): void {
@@ -59,7 +71,17 @@ export class GameCtrl {
     log("emit()", event, canPostpone);
 
     if (this.events.has(event)) {
-      this.events.get(event)();
+      let handlers = this.events.get(event);
+
+      for (const handler of handlers) {
+        handler.fn();
+      }
+
+      handlers = handlers.filter((handler) => {
+        return !handler.once;
+      });
+
+      this.events.set(event, handlers);
     } else {
       // Postponing is a hacky approach to solve a tiiiny race condition between
       // slide transitions.
@@ -76,6 +98,10 @@ export class GameCtrl {
         this.postponedEmits.add(event);
       }
     }
+  }
+
+  removeEventHandlersFor(event: string): void {
+    this.events.delete(event);
   }
 
   openSlide(id: number): void {
@@ -144,6 +170,11 @@ export class GameCtrl {
       throw "called getLocalServer() on a server that's not local";
     }
   }
+}
+
+interface EventHandler {
+  fn: () => void;
+  once: boolean;
 }
 
 function log(...data: any[]) {

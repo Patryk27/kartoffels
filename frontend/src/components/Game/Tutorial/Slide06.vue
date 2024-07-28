@@ -10,8 +10,10 @@ ctrl.onSlide(6, () => {
   ctrl.highlightButton("uploadBot");
   ctrl.getLocalServer().setSpawnPoint(16, 16);
 
-  // TODO wait just once
-  ctrl.on("join", () => {
+  ctrl.removeEventHandlersFor("join");
+
+  ctrl.onOnce("server.join", () => {
+    ctrl.pause();
     ctrl.openSlide(7);
   });
 });

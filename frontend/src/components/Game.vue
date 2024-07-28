@@ -106,7 +106,7 @@ async function handleBotUpload(src: File): Promise<void> {
 
     await join(bot.id);
 
-    ctrl.emit("join");
+    ctrl.emit("server.join");
   } catch (error) {
     alert("err, your bot couldn't be uploaded:\n\n" + error);
   }
