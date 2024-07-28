@@ -79,7 +79,7 @@ export class LocalServer implements Server {
     const sandbox = await this.getSandbox();
     const id = await sandbox.spawn_prefab_bot(ty);
 
-    return id;
+    return { id };
   }
 
   async destroyBot(id: string): Promise<void> {

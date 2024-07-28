@@ -128,7 +128,9 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
     try {
       const bot = await ctrl.getLocalServer().spawnPrefabBot(ty);
 
-      if (instances == 1) {
+      // If the user isn't currently connected to any robot, join the first
+      // spawned prefab, for convenience
+      if (!world.bot.value && i == 0) {
         join(bot.id);
       }
     } catch (error) {
