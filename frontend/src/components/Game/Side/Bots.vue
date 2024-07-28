@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { botIdToColor } from "@/utils/bot";
 import type { GameTableBot, GameWorld } from "../State";
+import BotLink from "../Common/BotLink.vue";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -66,30 +66,13 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
       <tbody>
         <tr
           v-for="entry in filteredBots"
-          :class="
-            entry && entry.id == world.bot.value?.id ? 'connected-bot' : ''
-          "
+          :class="{ 'connected-bot': entry && entry.id == world.bot.value?.id }"
         >
           <template v-if="entry?.ty == 'bot'">
             <td>#{{ entry.nth }}&nbsp;</td>
 
-            <td v-if="entry.known">
-              <a
-                @click="emit('botClick', entry.id)"
-                style="color: #ffffff"
-                :style="`background: ${botIdToColor(entry.id, 'bg')}`"
-              >
-                {{ entry.id }}
-              </a>
-            </td>
-
-            <td v-else>
-              <a
-                @click="emit('botClick', entry.id)"
-                :style="`color: ${botIdToColor(entry.id)}`"
-              >
-                {{ entry.id }}
-              </a>
+            <td>
+              <BotLink :bot="entry" @click="emit('botClick', entry.id)" />
             </td>
 
             <td>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { botIdToColor } from "@/utils/bot";
 import { durationToHuman } from "@/utils/other";
 import type { GameWorld } from "./State";
+import BotLink from "./Common/BotLink.vue";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -34,26 +34,14 @@ defineProps<{
       </thead>
 
       <tbody>
-        <tr v-for="entry in world.botsTable.value">
-          <td>#{{ entry.nth }}&nbsp;</td>
+        <tr
+          v-for="entry in world.botsTable.value"
+          :class="{ 'connected-bot': entry.id == world.bot.value?.id }"
+        >
+          <td>#{{ entry.nth }}</td>
 
-          <td v-if="entry.known">
-            <a
-              @click="emit('botClick', entry.id)"
-              style="color: #ffffff"
-              :style="`background: ${botIdToColor(entry.id, 'bg')}`"
-            >
-              {{ entry.id }}
-            </a>
-          </td>
-
-          <td v-else>
-            <a
-              @click="emit('botClick', entry.id)"
-              :style="`color: ${botIdToColor(entry.id)}`"
-            >
-              {{ entry.id }}
-            </a>
+          <td>
+            <BotLink :bot="entry" @click="emit('botClick', entry.id)" />
           </td>
 
           <td>
@@ -78,17 +66,23 @@ defineProps<{
       }
     }
 
-    td {
-      &:not(:last-child) {
-        padding-right: 1em;
+    tr {
+      &.connected-bot {
+        background-color: #202020;
       }
 
-      &:nth-child(3) {
-        text-align: right;
-      }
+      td {
+        &:not(:last-child) {
+          padding-right: 1em;
+        }
 
-      &:nth-child(4) {
-        text-align: right;
+        &:nth-child(3) {
+          text-align: right;
+        }
+
+        &:nth-child(4) {
+          text-align: right;
+        }
       }
     }
   }
