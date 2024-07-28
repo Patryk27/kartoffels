@@ -1,19 +1,21 @@
 import type { Server, ServerMsg } from "@/logic/Server";
 
 export class RemoteServer implements Server {
-  private url: string;
+  private httpUrl: string;
+  private wsUrl: string;
   private socket?: MyWebSocket;
   private reconnectFn?: (status: string) => void;
 
   constructor(worldId: string) {
-    this.url = `${import.meta.env.VITE_WS_URL}/worlds/${worldId}`;
+    this.httpUrl = `${import.meta.env.VITE_HTTP_URL}/worlds/${worldId}`;
+    this.wsUrl = `${import.meta.env.VITE_WS_URL}/worlds/${worldId}`;
   }
 
   async join(botId?: string): Promise<ReadableStream<ServerMsg>> {
     log("join()", botId);
 
     const socket = new MyWebSocket(
-      botId == null ? `${this.url}` : `${this.url}/bots/${botId}`,
+      botId == null ? `${this.wsUrl}` : `${this.wsUrl}/bots/${botId}`,
     );
 
     const msgs = new ReadableStream({
@@ -77,12 +79,12 @@ export class RemoteServer implements Server {
     }
   }
 
-  async uploadBot(file: File): Promise<{ id: string }> {
+  async uploadBot(src: File): Promise<{ id: string }> {
     log("uploadBot()");
 
-    const response = await fetch(`${this.url}/bots`, {
+    const response = await fetch(`${this.httpUrl}/bots`, {
       method: "POST",
-      body: file,
+      body: src,
     });
 
     if (response.status == 200) {

@@ -47,7 +47,7 @@ export class LocalServer implements Server {
     this.sandbox = null;
   }
 
-  uploadBot(file: File): Promise<{ id: string }> {
+  uploadBot(src: File): Promise<{ id: string }> {
     log("uploadBot()");
 
     return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ export class LocalServer implements Server {
           .catch(reject);
       };
 
-      reader.readAsArrayBuffer(file);
+      reader.readAsArrayBuffer(src);
     });
   }
 
