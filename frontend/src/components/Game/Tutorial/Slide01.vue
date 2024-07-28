@@ -6,7 +6,7 @@ const { ctrl } = defineProps<{
 }>();
 
 ctrl.onSlide(1, () => {
-  ctrl.waitFor("tutorial.continue").then(() => {
+  ctrl.on("tutorial.continue", () => {
     ctrl.openSlide(2);
   });
 });
@@ -21,10 +21,10 @@ ctrl.onSlide(1, () => {
   </p>
 
   <p>
-    <b>note:</b> if you'd like to see how the game looks like without uploading
-    your own robot just yet, simply
+    <b>note:</b> if you would like to see how the game looks like without
+    submitting your own bot just yet, simply
     <a href="#" @click="ctrl.emit('tutorial.done')">go back</a>, choose any
-    world and play around as long as you want
+    world and take a look around
   </p>
 
   <p>otherwise:</p>

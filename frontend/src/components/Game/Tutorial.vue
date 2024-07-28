@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import type { GameCtrl } from "./Ctrl";
 import Slide01 from "./Tutorial/Slide01.vue";
 import Slide02 from "./Tutorial/Slide02.vue";
@@ -23,11 +24,19 @@ export function start(ctrl: GameCtrl): Promise<void> {
     ctrl.disableButton("connectToBot");
     ctrl.disableButton("uploadBot");
 
-    ctrl.waitFor("server.ready").then(() => {
+    ctrl.on("server.ready", () => {
       ctrl.openSlide(1);
     });
 
-    ctrl.waitFor("tutorial.done").then(resolve);
+    ctrl.on("tutorial.before-slide", () => {
+      const dialog = document.querySelector(".game-tutorial");
+
+      if (dialog) {
+        dialog.scrollTop = 0;
+      }
+    });
+
+    ctrl.on("tutorial.done", resolve);
   });
 }
 </script>

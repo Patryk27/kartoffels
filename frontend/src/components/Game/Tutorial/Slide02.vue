@@ -6,11 +6,11 @@ const { ctrl } = defineProps<{
 }>();
 
 ctrl.onSlide(2, () => {
-  ctrl.waitFor("tutorial.continue.a").then(() => {
+  ctrl.on("tutorial.continue.a", () => {
     ctrl.openSlide(3);
   });
 
-  ctrl.waitFor("tutorial.continue.b").then(() => {
+  ctrl.on("tutorial.continue.b", () => {
     ctrl.openSlide(4);
   });
 });

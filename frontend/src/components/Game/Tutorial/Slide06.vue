@@ -11,7 +11,7 @@ ctrl.onSlide(6, () => {
   ctrl.getLocalServer().setSpawnPoint(16, 16);
 
   // TODO wait just once
-  ctrl.waitFor("join").then(() => {
+  ctrl.on("join", () => {
     ctrl.openSlide(7);
   });
 });

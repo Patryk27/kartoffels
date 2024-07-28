@@ -49,6 +49,12 @@ export class GameCtrl {
     this.on(`tutorial.slide.${id}`, handler);
   }
 
+  waitFor(event: string): Promise<void> {
+    return new Promise((resolve, _) => {
+      this.on(event, resolve);
+    });
+  }
+
   emit(event: string, canPostpone: boolean = false): void {
     log("emit()", event, canPostpone);
 
@@ -72,14 +78,10 @@ export class GameCtrl {
     }
   }
 
-  waitFor(event: string): Promise<void> {
-    return new Promise((resolve, _) => {
-      this.on(event, resolve);
-    });
-  }
-
   openSlide(id: number): void {
     this.tutorialSlide.value = id;
+
+    this.emit("tutorial.before-slide");
     this.emit(`tutorial.slide.${id}`, true);
   }
 

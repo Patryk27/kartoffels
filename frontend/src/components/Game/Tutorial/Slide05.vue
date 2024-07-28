@@ -6,7 +6,7 @@ const { ctrl } = defineProps<{
 }>();
 
 ctrl.onSlide(5, () => {
-  ctrl.waitFor("tutorial.continue").then(() => {
+  ctrl.on("tutorial.continue", () => {
     ctrl.openSlide(6);
   });
 });
