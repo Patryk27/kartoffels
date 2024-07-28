@@ -36,6 +36,8 @@ export class GameCtrl {
   }
 
   on(event: string, handler: () => void): void {
+    log("on()", event, handler);
+
     this.events.set(event, handler);
 
     if (this.postponedEmits.delete(event)) {
@@ -48,6 +50,8 @@ export class GameCtrl {
   }
 
   emit(event: string, canPostpone: boolean = false): void {
+    log("emit()", event, canPostpone);
+
     if (this.events.has(event)) {
       this.events.get(event)();
     } else {
@@ -138,4 +142,8 @@ export class GameCtrl {
       throw "called getLocalServer() on a server that's not local";
     }
   }
+}
+
+function log(...data: any[]) {
+  console.log("[ctrl]", ...data);
 }

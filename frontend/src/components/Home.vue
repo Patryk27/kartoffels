@@ -49,8 +49,14 @@ function handleRestore(): void {
   );
 }
 
+function log(...data: any[]) {
+  console.log("[home]", ...data);
+}
+
 onMounted(async () => {
   try {
+    log("fetching worlds");
+
     var request = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
     var response: ServerGetWorldsResponse = await request.json();
 
@@ -60,6 +66,8 @@ onMounted(async () => {
       world.value = response.worlds[0].id;
 
       if (session.value) {
+        log("loading session");
+
         for (const world of response.worlds) {
           if (world.id == session.value.worldId) {
             session.value.worldName = world.name;

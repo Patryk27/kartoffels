@@ -9,6 +9,9 @@ export class RemoteServer implements Server {
   constructor(worldId: string) {
     this.httpUrl = `${import.meta.env.VITE_HTTP_URL}/worlds/${worldId}`;
     this.wsUrl = `${import.meta.env.VITE_WS_URL}/worlds/${worldId}`;
+
+    log(`httpUrl = ${this.httpUrl}`);
+    log(`wsUrl = ${this.wsUrl}`);
   }
 
   async join(botId?: string): Promise<ReadableStream<ServerMsg>> {

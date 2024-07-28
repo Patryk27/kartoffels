@@ -20,6 +20,8 @@ type Route =
 const route = ref<Route>({ id: "home" });
 
 function handleStart(worldId: string, worldName: string, botId?: string) {
+  log("handleStart()", worldId, worldName, botId);
+
   if (route.value.id == "game") {
     route.value.server.close();
     route.value.server = null;
@@ -51,6 +53,8 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
 }
 
 function handleLeave(): void {
+  log("handleLeave()");
+
   if (route.value.id == "game") {
     route.value.server.close();
     route.value.server = null;
@@ -59,7 +63,13 @@ function handleLeave(): void {
   route.value = { id: "home" };
 }
 
+function log(...data: any[]) {
+  console.log("[app]", ...data);
+}
+
 onMounted(() => {
+  log("i'm alive!");
+
   window.onerror = (msg) => {
     route.value = { id: "crash", msg: msg.toString() };
   };
