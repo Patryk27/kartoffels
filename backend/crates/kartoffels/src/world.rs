@@ -15,6 +15,9 @@ use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+#[cfg(target_arch = "wasm32")]
+use std::{cell::RefCell, rc::Rc};
+
 pub struct World {
     pub bots: Bots,
     pub clients: Vec<Client>,
@@ -31,30 +34,33 @@ pub struct World {
     pub spawn_point: Option<IVec2>,
     pub systems: Container,
     pub theme: Theme,
+
+    #[cfg(target_arch = "wasm32")]
+    pub web_interval_handle: Rc<RefCell<Option<i32>>>,
 }
 
 impl World {
     #[cfg(target_arch = "wasm32")]
     pub fn spawn(mut self) {
         use wasm_bindgen::closure::Closure;
-        use wasm_bindgen::JsCast;
-        use web_sys::WorkerGlobalScope;
 
         let interval = self.metronome.interval().as_millis() as i32;
+        let interval_handle = self.web_interval_handle.clone();
 
         let handler = Closure::<dyn FnMut()>::new(move || {
             self.tick();
         });
 
-        js_sys::global()
-            .dyn_into::<WorkerGlobalScope>()
-            .expect("couldn't find WorkerGlobalScope")
-            .set_interval_with_callback_and_timeout_and_arguments(
-                &handler.into_js_value().try_into().unwrap(),
-                interval,
-                &Default::default(),
-            )
-            .expect("couldn't setup event loop");
+        *interval_handle.borrow_mut() = Some(
+            web_sys::window()
+                .expect("couldn't find window")
+                .set_interval_with_callback_and_timeout_and_arguments(
+                    &handler.into_js_value().try_into().unwrap(),
+                    interval,
+                    &Default::default(),
+                )
+                .expect("couldn't setup event loop"),
+        );
     }
 
     #[cfg(not(target_arch = "wasm32"))]

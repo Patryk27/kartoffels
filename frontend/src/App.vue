@@ -8,41 +8,35 @@ import * as SandboxPresets from "./components/Game/SandboxConfig/Presets";
 
 type Route =
   | { id: "home" }
-  | { id: "game"; worldId: string; worldName: string; botId?: string }
+  | {
+      id: "game";
+      worldId: string;
+      worldName: string;
+      botId?: string;
+      server: Server;
+    }
   | { id: "crash"; msg: string };
 
 const route = ref<Route>({ id: "home" });
 
-let server: Server = null;
-
 function handleStart(worldId: string, worldName: string, botId?: string) {
+  if (route.value.id == "game") {
+    route.value.server.close();
+    route.value.server = null;
+  }
+
+  let server: Server;
+
   switch (worldId) {
     case "tutorial":
-      if (server) {
-        server.close();
-      }
-
       server = new LocalServer(SandboxPresets.getTutorialWorld());
       break;
 
     case "sandbox":
-      if (server instanceof LocalServer) {
-        //
-      } else {
-        if (server) {
-          server.close();
-        }
-
-        server = new LocalServer(SandboxPresets.getDefaultWorld());
-      }
-
+      server = new LocalServer(SandboxPresets.getDefaultWorld());
       break;
 
     default:
-      if (server) {
-        server.close();
-      }
-
       server = new RemoteServer(worldId);
       break;
   }
@@ -52,20 +46,22 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
     worldId,
     worldName,
     botId,
+    server,
   };
 }
 
 function handleLeave(): void {
+  if (route.value.id == "game") {
+    route.value.server.close();
+    route.value.server = null;
+  }
+
   route.value = { id: "home" };
 }
 
 onMounted(() => {
   window.onerror = (msg) => {
-    if (typeof msg === "string") {
-      route.value = { id: "crash", msg };
-    } else {
-      // TODO
-    }
+    route.value = { id: "crash", msg: msg.toString() };
   };
 });
 </script>
@@ -80,7 +76,7 @@ onMounted(() => {
       :worldId="route.worldId"
       :worldName="route.worldName"
       :botId="route.botId"
-      :server="server"
+      :server="route.server"
       @leave="handleLeave()"
     />
   </template>

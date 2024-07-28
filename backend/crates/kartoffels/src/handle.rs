@@ -62,10 +62,10 @@ impl Handle {
         Ok(())
     }
 
-    pub async fn shutdown(&self) -> Result<()> {
+    pub async fn close(&self) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::Shutdown { tx }).await?;
+        self.send(Request::Close { tx }).await?;
 
         rx.await.context(Self::ERR_DIED)
     }
@@ -123,7 +123,8 @@ pub enum Request {
         paused: bool,
     },
 
-    Shutdown {
+    Close {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 

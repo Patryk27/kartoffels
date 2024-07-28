@@ -48,7 +48,7 @@ watch(paused, (oldValue, newValue) => {
     // TODO restore camera position
 
     if (paused.value) {
-      server.leave();
+      world.leave();
     } else {
       join(world.bot.value?.id);
     }

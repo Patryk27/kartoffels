@@ -24,6 +24,19 @@ pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
     let shutdown = world.events.recv::<Shutdown>();
 
+    if shutdown.is_some() {
+        // HACK intercepting shutdown within this system feels pretty icky, but
+        //      currently there's no better place to do this
+        #[cfg(target_arch = "wasm32")]
+        if let Some(interval) = world.web_interval_handle.borrow_mut().take() {
+            info!("clearing interval");
+
+            web_sys::window()
+                .expect("couldn't find window")
+                .clear_interval_with_handle(interval);
+        }
+    }
+
     let Some(path) = &world.path else {
         if let Some(shutdown) = shutdown {
             _ = shutdown.tx.send(());

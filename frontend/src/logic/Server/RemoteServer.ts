@@ -1,100 +1,89 @@
-import type { Server, ServerMessage } from "@/logic/Server";
+import type { Server, ServerMsg } from "@/logic/Server";
 
 export class RemoteServer implements Server {
-  private worldId?: string;
-
-  private messageFn?: (msg: ServerMessage) => void;
-  private statusChangeFn?: (status: string) => void;
-
-  private socket?: WebSocket;
+  private url: string;
+  private socket?: MyWebSocket;
+  private reconnectFn?: (status: string) => void;
 
   constructor(worldId: string) {
-    this.worldId = worldId;
+    this.url = `${import.meta.env.VITE_WS_URL}/worlds/${worldId}`;
   }
 
-  join(botId?: string): Promise<void> {
-    this.socket = new WebSocket(
-      botId == null
-        ? `${import.meta.env.VITE_WS_URL}/worlds/${this.worldId}`
-        : `${import.meta.env.VITE_WS_URL}/worlds/${this.worldId}/bots/${botId}`,
+  async join(botId?: string): Promise<ReadableStream<ServerMsg>> {
+    log("join()", botId);
+
+    const socket = new MyWebSocket(
+      botId == null ? `${this.url}` : `${this.url}/bots/${botId}`,
     );
 
-    this.socket.onmessage = (event) => {
-      if (this.messageFn) {
-        this.messageFn(JSON.parse(event.data));
+    const msgs = new ReadableStream({
+      start(ctrl) {
+        socket.onmessage = (event) => {
+          ctrl.enqueue(JSON.parse(event.data));
+        };
+      },
+
+      cancel() {
+        socket.close();
+      },
+    });
+
+    await socket.connect();
+
+    const reconnect = async () => {
+      if (socket.isClosing) {
+        return;
+      }
+
+      log("reconnecting");
+
+      if (this.reconnectFn) {
+        this.reconnectFn("reconnecting");
+      }
+
+      while (true) {
+        try {
+          await this.join(botId);
+          break;
+        } catch (err) {
+          await new Promise((resolve) => {
+            setTimeout(resolve, 250);
+          });
+        }
+      }
+
+      log("reconnected");
+
+      if (this.reconnectFn) {
+        this.reconnectFn("connected");
       }
     };
 
-    return new Promise((resolve, reject) => {
-      this.socket.onopen = () => {
-        const reconnect = async () => {
-          if (this.statusChangeFn) {
-            this.statusChangeFn("reconnecting");
-          }
+    socket.onclose = reconnect;
+    socket.onerror = reconnect;
 
-          while (true) {
-            try {
-              await this.join(botId);
-              break;
-            } catch (err) {
-              await new Promise((resolve) => {
-                setTimeout(resolve, 250);
-              });
-            }
-          }
+    this.socket = socket;
 
-          if (this.statusChangeFn) {
-            this.statusChangeFn("connected");
-          }
-        };
+    log("ready");
 
-        this.socket.onclose = reconnect;
-        this.socket.onerror = reconnect;
-
-        resolve();
-      };
-
-      this.socket.onclose = () => {
-        // Prevent the other handler from firing `reject()` again
-        this.socket.onerror = null;
-
-        reject();
-      };
-
-      this.socket.onerror = () => {
-        // Prevent the other handler from firing `reject()` again
-        this.socket.onclose = null;
-
-        reject();
-      };
-    });
+    return msgs;
   }
 
-  leave(): void {
-    this.close();
-  }
+  async close(): Promise<void> {
+    log("close()");
 
-  close(): void {
     if (this.socket) {
-      // Usually when a socket closes, we'd like to reconnect (because most
-      // likely a socket closing means the server's getting restarted and will
-      // be online again shortly) - but when it's us killing the connection, we
-      // don't want for the reconnection logic to trigger.
-      this.socket.onclose = null;
-
       this.socket.close();
-      this.socket = null;
     }
   }
 
   async uploadBot(file: File): Promise<{ id: string }> {
-    var response = await fetch(
-      `${import.meta.env.VITE_HTTP_URL}/worlds/${this.worldId}/bots`,
-      {
-        method: "POST",
-        body: file,
-      },
-    );
+    log("uploadBot()");
+
+    const response = await fetch(`${this.url}/bots`, {
+      method: "POST",
+      body: file,
+    });
 
     if (response.status == 200) {
       return await response.json();
@@ -103,11 +92,46 @@ export class RemoteServer implements Server {
     }
   }
 
-  onMessage(f: (msg: ServerMessage) => void) {
-    this.messageFn = f;
+  onReconnect(f: (status: string) => void): void {
+    this.reconnectFn = f;
+  }
+}
+
+class MyWebSocket extends WebSocket {
+  isClosing: boolean = false;
+
+  connect(): Promise<void> {
+    log("connecting");
+
+    return new Promise((resolve, reject) => {
+      this.onopen = () => {
+        resolve(null);
+      };
+
+      this.onclose = () => {
+        // Prevent the other handler from firing `reject()` again
+        this.onerror = null;
+
+        reject();
+      };
+
+      this.onerror = () => {
+        // Prevent the other handler from firing `reject()` again
+        this.onclose = null;
+
+        reject();
+      };
+    });
   }
 
-  onStatusChange(f: (status: string) => void): void {
-    this.statusChangeFn = f;
+  close(): void {
+    log("closing");
+
+    this.isClosing = true;
+    super.close();
   }
+}
+
+function log(...data: any[]) {
+  console.log("[remote-server]", ...data);
 }

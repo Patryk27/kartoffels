@@ -51,6 +51,12 @@ impl Sandbox {
         Ok(())
     }
 
+    pub async fn close(&self) -> Result<(), JsError> {
+        self.handle.close().await.convert_err()?;
+
+        Ok(())
+    }
+
     pub async fn upload_bot(&self, src: Vec<u8>) -> Result<JsValue, JsError> {
         let id = self
             .handle

@@ -3,7 +3,7 @@ import {
   type Server,
   type ServerBotsUpdate,
   type ServerConnectedBotUpdate,
-  type ServerMessage,
+  type ServerMsg,
 } from "@/logic/Server";
 import type { PlayerBots } from "@/logic/State";
 import type { ComputedRef } from "vue";
@@ -19,6 +19,7 @@ export class GameWorld {
   public botsTable: ComputedRef<GameTableBot[]>;
   public camera: Ref<GameCamera>;
   public status: Ref<GameConnectionStatus>;
+  private abort?: AbortController;
 
   constructor(id: string, name: string, playerBots: PlayerBots) {
     this.id = id;
@@ -68,7 +69,7 @@ export class GameWorld {
     playerBots: PlayerBots,
     botId?: string,
   ): Promise<void> {
-    server.leave();
+    this.leave();
 
     this.map.value = null;
     this.mode.value = null;
@@ -88,20 +89,7 @@ export class GameWorld {
       };
     }
 
-    server.onMessage((msg) => {
-      // This is a bit sideways, but currently the backend isn't able to
-      // directly tell us whether our bot exists or not - we can only infer this
-      // by looking at the first message we get: if it contains the bot, the bot
-      // exists; otherwise it doesn't.
-      if (this.bot.value?.status == "unknown" && !msg.bot) {
-        alert(`couldn't find bot \`${botId}\``);
-        this.bot.value = null;
-      }
-
-      this.handleMessage(playerBots, msg);
-    });
-
-    server.onStatusChange((status) => {
+    server.onReconnect((status) => {
       if (status == "reconnecting") {
         this.status.value = "reconnecting";
       } else {
@@ -109,12 +97,42 @@ export class GameWorld {
       }
     });
 
-    await server.join(botId);
+    const abort = new AbortController();
+    const msgs = await server.join(botId);
 
+    new Promise(async () => {
+      for await (const msg of msgs) {
+        if (abort.signal.aborted) {
+          break;
+        }
+
+        // This is a bit sideways, but currently the backend isn't able to tell
+        // us whether our bot exists or not - we can only infer this by looking
+        // at the first message we get: if it contains the bot, the bot exists;
+        // otherwise it doesn't.
+        if (this.bot.value?.status == "unknown" && !msg.bot) {
+          alert(`couldn't find bot \`${botId}\``);
+          this.bot.value = null;
+        }
+
+        this.handleMessage(playerBots, msg);
+      }
+
+      msgs.cancel();
+    });
+
+    this.abort = abort;
     this.status.value = "connected";
   }
 
-  private handleMessage(playerBots: PlayerBots, msg: ServerMessage): void {
+  leave(): void {
+    if (this.abort) {
+      this.abort.abort();
+      this.abort = null;
+    }
+  }
+
+  private handleMessage(playerBots: PlayerBots, msg: ServerMsg): void {
     if (msg.map) {
       this.map.value = {
         size: msg.map.size,

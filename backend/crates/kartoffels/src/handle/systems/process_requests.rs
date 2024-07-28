@@ -24,8 +24,8 @@ pub fn run(world: &mut World) {
                 world.paused = paused;
             }
 
-            Request::Shutdown { tx } => {
-                info!("starting shutdown");
+            Request::Close { tx } => {
+                info!("initiating shutdown");
 
                 world.events.send(Shutdown { tx });
             }

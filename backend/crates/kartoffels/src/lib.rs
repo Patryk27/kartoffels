@@ -92,6 +92,9 @@ pub fn create(
         spawn_point: None,
         systems: Default::default(),
         theme,
+
+        #[cfg(target_arch = "wasm32")]
+        web_interval_handle: Default::default(),
     };
 
     let handle = Handle::new(&world, tx);
@@ -130,6 +133,9 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
         spawn_point: None,
         systems: Default::default(),
         theme: this.theme.into_owned(),
+
+        #[cfg(target_arch = "wasm32")]
+        web_interval_handle: Default::default(),
     };
 
     let handle = Handle::new(&world, tx);

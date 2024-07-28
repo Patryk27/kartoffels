@@ -6,16 +6,14 @@ import { RemoteServer } from "./Server/RemoteServer";
 //
 // @see kartoffels::Handle
 export interface Server {
-  join(botId?: string): Promise<void>;
-  leave(): void;
-  close(): void;
+  join(botId?: string): Promise<ReadableStream<ServerMsg>>;
+  close(): Promise<void>;
   uploadBot(file: File): Promise<{ id: string }>;
 
-  onMessage(f: (msg: ServerMessage) => void): void;
-  onStatusChange(f: (status: string) => void): void;
+  onReconnect(f: (status: string) => void): void;
 }
 
-export interface ServerMessage {
+export interface ServerMsg {
   map?: ServerMapUpdate;
   mode?: ServerModeUpdate;
   bots?: ServerBotsUpdate;
