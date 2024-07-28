@@ -115,7 +115,7 @@ onMounted(async () => {
 
       <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
         <span class="hand">👉 </span>
-        <a href="#">start tutorial</a>
+        <a href="#">getting started</a>
         <span class="hand"> 👈</span>
       </p>
 

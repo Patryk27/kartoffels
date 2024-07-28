@@ -34,21 +34,19 @@ fn main() {
   <p>this doesn't do anything yet, but baby steps</p>
 
   <p>
-    first, as compared to usual rust code, implementing a firmware is a bit
-    funky - what's most important is that there's no standard library, so you
-    can't access <kbd>std::fs</kbd>, use <kbd>println!()</kbd> etc.
+    as compared to usual rust code, implementing a firmware is a bit funky -
+    what's most important is that there's no standard library, so you can't
+    access <kbd>std::fs</kbd>, use <kbd>println!()</kbd> etc.
   </p>
 
   <p>
     that's because the game simulates an actual custom robot, with limited CPU
-    and RAM, and without access to the external world (besides specific emulated
-    peripherals such as the radar)
+    and RAM, and without access to the external world
   </p>
 
   <p>
-    you can use all the language constructs, though: functions, traits etc. all
-    work - you can even allocate, just remember to import <kbd>Vec</kbd> from
-    the <kbd>alloc</kbd> crate instead of <kbd>std</kbd>
+    the only things your code has access to are the <b>peripherals</b>: motor,
+    radar and arm
   </p>
 
   <p style="text-align: right">

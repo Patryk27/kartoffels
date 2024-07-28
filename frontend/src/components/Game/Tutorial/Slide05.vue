@@ -13,12 +13,8 @@ ctrl.onSlide(5, () => {
 </script>
 
 <template>
-  <p>now, let's make the robot do something!</p>
-
-  <p>
-    the simplest peripheral is <b>the motor</b> - it allows to move the robot
-    via the following functions:
-  </p>
+  <p>let's start with the simplest peripheral: <b>the motor</b></p>
+  <p>motor allows to move the robot using the following functions:</p>
 
   <ul>
     <li><kbd>motor_step()</kbd>, which moves the robot one tile forward</li>
@@ -51,10 +47,10 @@ fn main() {
   </ul>
 
   <p>
-    don't forget to <i>leave</i> the other parts of code (such as
+    don't forget to leave the other parts of code (such as
     <kbd>#![no_std]</kbd> or <kbd>use kartoffel::*;</kbd>) in place - they are
-    required, it's just that for simplicity the snippets in here will not
-    mention them anymore
+    required, it's just that for brevity the snippets in here will not mention
+    them anymore
   </p>
 
   <p style="text-align: right">

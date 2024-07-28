@@ -8,10 +8,9 @@ const { ctrl } = defineProps<{
 ctrl.onSlide(7, () => {
   ctrl.disableButton("uploadBot");
   ctrl.unhighlightButton("uploadBot");
-  ctrl.pause();
 });
 </script>
 
 <template>
-  <p>nice!</p>
+  <p>nice! -- let's see how your bot's doing:</p>
 </template>

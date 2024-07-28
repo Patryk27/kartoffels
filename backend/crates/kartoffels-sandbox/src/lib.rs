@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use futures::StreamExt;
+use glam::ivec2;
 use kartoffels::prelude::*;
 use serde::ser::Serialize;
 use serde_wasm_bindgen::Serializer;
@@ -20,10 +21,10 @@ impl Sandbox {
     pub fn new(config: JsValue) -> Result<Sandbox, JsError> {
         let config = serde_wasm_bindgen::from_value(config)
             .map_err(|err| anyhow!("couldn't parse configuration: {:?}", err))
-            .wrap_err()?;
+            .convert_err()?;
 
         let handle =
-            kartoffels::create(WorldId::SANDBOX, config, None).wrap_err()?;
+            kartoffels::create(WorldId::SANDBOX, config, None).convert_err()?;
 
         Ok(Self { handle })
     }
@@ -32,20 +33,20 @@ impl Sandbox {
         &self,
         id: Option<String>,
     ) -> Result<sys::ReadableStream, JsError> {
-        let id = id.map(|id| id.parse()).transpose().wrap_err()?;
+        let id = id.map(|id| id.parse()).transpose().convert_err()?;
 
         let stream = self
             .handle
             .join(id)
             .await
-            .wrap_err()?
+            .convert_err()?
             .map(|val| Ok(val.into_js_value()));
 
         Ok(ReadableStream::from_stream(stream).into_raw())
     }
 
     pub async fn pause(&self, paused: bool) -> Result<(), JsError> {
-        self.handle.pause(paused).await.wrap_err()?;
+        self.handle.pause(paused).await.convert_err()?;
 
         Ok(())
     }
@@ -55,7 +56,7 @@ impl Sandbox {
             .handle
             .upload_bot(Cow::Owned(src))
             .await
-            .wrap_err()?
+            .convert_err()?
             .into_js_value();
 
         Ok(id)
@@ -79,35 +80,51 @@ impl Sandbox {
             .handle
             .upload_bot(Cow::Borrowed(src))
             .await
-            .wrap_err()?
+            .convert_err()?
             .into_js_value();
 
         Ok(id)
     }
 
     pub async fn restart_bot(&self, id: String) -> Result<(), JsValue> {
-        let id = id.parse().wrap_err()?;
+        let id = id.parse().convert_err()?;
 
-        self.handle.restart_bot(id).await.wrap_err()?;
+        self.handle.restart_bot(id).await.convert_err()?;
 
         Ok(())
     }
 
     pub async fn destroy_bot(&self, id: String) -> Result<(), JsValue> {
-        let id = id.parse().wrap_err()?;
+        let id = id.parse().convert_err()?;
 
-        self.handle.destroy_bot(id).await.wrap_err()?;
+        self.handle.destroy_bot(id).await.convert_err()?;
+
+        Ok(())
+    }
+
+    pub async fn set_spawn_point(
+        &self,
+        x: Option<i32>,
+        y: Option<i32>,
+    ) -> Result<(), JsValue> {
+        let at = if x.is_none() && y.is_none() {
+            None
+        } else {
+            Some(ivec2(x.unwrap_or_default(), y.unwrap_or_default()))
+        };
+
+        self.handle.set_spawn_point(at).await.convert_err()?;
 
         Ok(())
     }
 }
 
-trait WrapErr<T> {
-    fn wrap_err(self) -> Result<T, JsError>;
+trait ConvertErr<T> {
+    fn convert_err(self) -> Result<T, JsError>;
 }
 
-impl<T> WrapErr<T> for Result<T> {
-    fn wrap_err(self) -> Result<T, JsError> {
+impl<T> ConvertErr<T> for Result<T> {
+    fn convert_err(self) -> Result<T, JsError> {
         self.map_err(|err| JsError::new(&format!("{:?}", err)))
     }
 }

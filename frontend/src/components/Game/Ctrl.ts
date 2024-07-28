@@ -1,3 +1,4 @@
+import { LocalServer, type Server } from "@/logic/Server";
 import { ref, type Ref } from "vue";
 
 export interface GameUi {
@@ -9,13 +10,18 @@ export interface GameUi {
 }
 
 export class GameCtrl {
+  server: Server;
+  paused: Ref<boolean>;
+
   ui: Ref<GameUi>;
   events: Map<String, () => void>;
   postponedEmits: Set<String>;
-  paused: Ref<boolean>;
   tutorialSlide: Ref<number>;
 
-  constructor(paused: Ref<boolean>) {
+  constructor(server: Server, paused: Ref<boolean>) {
+    this.server = server;
+    this.paused = paused;
+
     this.ui = ref({
       btnHelpDisabled: false,
       btnPauseDisabled: false,
@@ -26,7 +32,6 @@ export class GameCtrl {
 
     this.events = new Map();
     this.postponedEmits = new Set();
-    this.paused = paused;
     this.tutorialSlide = ref(null);
   }
 
@@ -124,5 +129,13 @@ export class GameCtrl {
 
   resume(): void {
     this.paused.value = false;
+  }
+
+  getLocalServer(): LocalServer {
+    if (this.server instanceof LocalServer) {
+      return this.server;
+    } else {
+      throw "called getLocalServer() on a server that's not local";
+    }
   }
 }

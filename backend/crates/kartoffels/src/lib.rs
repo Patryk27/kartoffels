@@ -89,6 +89,7 @@ pub fn create(
         policy: config.policy,
         rng: SmallRng::from_entropy(),
         rx,
+        spawn_point: None,
         systems: Default::default(),
         theme,
     };
@@ -126,6 +127,7 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
         policy: this.policy.into_owned(),
         rng: SmallRng::from_entropy(),
         rx,
+        spawn_point: None,
         systems: Default::default(),
         theme: this.theme.into_owned(),
     };

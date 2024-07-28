@@ -8,6 +8,7 @@ use crate::{
     Policy, RequestRx, Theme,
 };
 use ahash::AHashMap;
+use glam::IVec2;
 use rand::rngs::SmallRng;
 use std::any::{Any, TypeId};
 use std::collections::VecDeque;
@@ -27,6 +28,7 @@ pub struct World {
     pub policy: Policy,
     pub rng: SmallRng,
     pub rx: RequestRx,
+    pub spawn_point: Option<IVec2>,
     pub systems: Container,
     pub theme: Theme,
 }

@@ -5,6 +5,7 @@ use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use futures_util::Stream;
+use glam::IVec2;
 use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
@@ -89,6 +90,12 @@ impl Handle {
         Ok(())
     }
 
+    pub async fn set_spawn_point(&self, at: Option<IVec2>) -> Result<()> {
+        self.send(Request::SetSpawnPoint { at }).await?;
+
+        Ok(())
+    }
+
     async fn send(&self, request: Request) -> Result<()> {
         self.tx
             .send(request)
@@ -134,5 +141,9 @@ pub enum Request {
 
     DestroyBot {
         id: BotId,
+    },
+
+    SetSpawnPoint {
+        at: Option<IVec2>,
     },
 }

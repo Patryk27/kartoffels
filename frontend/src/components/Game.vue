@@ -28,12 +28,12 @@ const { worldId, worldName, botId, server } = defineProps<{
 const paused = ref(false);
 const dialog = ref<GameDialogId>(null);
 
-const ctrl = new GameCtrl(paused);
+const ctrl = new GameCtrl(server, paused);
 const playerBots = new PlayerBots(worldId);
 const world = new GameWorld(worldId, worldName, playerBots);
 
 // TODO this is cursed, but currently there's no better way to have this logic
-//      available both when user pauses and when the GameCtrl wants to pause
+//      available both when the user pauses and when the GameCtrl wants to pause
 watch(paused, (oldValue, newValue) => {
   if (oldValue == newValue) {
     return;
@@ -113,10 +113,6 @@ async function handleBotUpload(src: File): Promise<void> {
 }
 
 async function handleBotSpawnPrefab(ty: string): Promise<void> {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
   const instancesStr = prompt(
     `how many instances of ${ty} you'd like to spawn?`,
     "1",
@@ -130,7 +126,7 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
 
   for (let i = 0; i < instances; i += 1) {
     try {
-      const bot = await server.spawnPrefabBot(ty);
+      const bot = await ctrl.getLocalServer().spawnPrefabBot(ty);
 
       if (instances == 1) {
         join(bot.id);
@@ -155,23 +151,15 @@ function handleBotClick(id?: string): void {
 }
 
 function handleBotDestroy(): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
   if (world.bot.value?.id) {
-    server.destroyBot(world.bot.value.id);
+    ctrl.getLocalServer().destroyBot(world.bot.value.id);
     world.bot.value = null;
   }
 }
 
 function handleBotRestart(): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
   if (world.bot.value?.id) {
-    server.restartBot(world.bot.value.id);
+    ctrl.getLocalServer().restartBot(world.bot.value.id);
   }
 }
 
@@ -180,12 +168,8 @@ function toggleDialog(id: GameDialogId): void {
 }
 
 function handleRecreateSandbox(config: any): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
   dialog.value = null;
-  server.recreate(config);
+  ctrl.getLocalServer().recreate(config);
 
   join(null);
 }

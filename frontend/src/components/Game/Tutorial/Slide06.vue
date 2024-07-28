@@ -8,6 +8,7 @@ const { ctrl } = defineProps<{
 ctrl.onSlide(6, () => {
   ctrl.enableButton("uploadBot");
   ctrl.highlightButton("uploadBot");
+  ctrl.getLocalServer().setSpawnPoint(16, 16);
 
   // TODO wait just once
   ctrl.waitFor("join").then(() => {
@@ -38,7 +39,7 @@ ctrl.onSlide(6, () => {
     <a target="_blank" href="https://en.wikipedia.org/wiki/RISC-V">
       risc-v opcodes
     </a>
-    encoding our source code from the previous slide ))
+    that define how the firmware behaves ))
   </p>
 
   <footer>

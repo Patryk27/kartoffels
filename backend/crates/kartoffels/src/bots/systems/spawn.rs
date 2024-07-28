@@ -32,7 +32,12 @@ pub fn run(world: &mut World) {
     }
 
     let Some(pos) = sample_pos(world) else {
-        debug!("all tiles are taken - can't dequeue pending bot");
+        if world.spawn_point.is_some() {
+            debug!("spawn point is taken - can't dequeue pending bot");
+        } else {
+            debug!("all tiles are taken - can't dequeue pending bot");
+        }
+
         return;
     };
 
@@ -58,7 +63,9 @@ fn sample_pos(world: &mut World) -> Option<IVec2> {
     let mut nth = 0;
 
     loop {
-        let pos = world.map.rand_pos(&mut world.rng);
+        let pos = world
+            .spawn_point
+            .unwrap_or_else(|| world.map.rand_pos(&mut world.rng));
 
         if world.map.get(pos).is_floor()
             && world.bots.alive.lookup_by_pos(pos).is_none()

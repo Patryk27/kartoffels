@@ -125,6 +125,10 @@ async function handleRestartBot(id: string): Promise<void> {
   (await getSandbox()).restart_bot(id);
 }
 
+async function handleSetSpawnPoint(x?: number, y?: number): Promise<void> {
+  (await getSandbox()).set_spawn_point(x, y);
+}
+
 // ---
 
 onmessage = (event) => {
@@ -163,6 +167,10 @@ onmessage = (event) => {
 
     case "restartBot":
       handleRestartBot(data.id);
+      break;
+
+    case "setSpawnPoint":
+      handleSetSpawnPoint(data.x, data.y);
       break;
   }
 };

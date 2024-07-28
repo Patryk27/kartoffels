@@ -45,6 +45,10 @@ pub fn run(world: &mut World) {
             Request::DestroyBot { id } => {
                 world.bots.remove(id);
             }
+
+            Request::SetSpawnPoint { at } => {
+                world.spawn_point = at;
+            }
         }
     }
 }

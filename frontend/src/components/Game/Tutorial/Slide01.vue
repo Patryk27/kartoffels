@@ -21,8 +21,17 @@ ctrl.onSlide(1, () => {
   </p>
 
   <p>
+    <b>note:</b> if you'd like to see how the game looks like without uploading
+    your own robot just yet, simply
+    <a href="#" @click="ctrl.emit('tutorial.done')">go back</a>, choose any
+    world and play around as long as you want
+  </p>
+
+  <p>otherwise:</p>
+
+  <p>
     i'm assuming you know a bit of rust (calling functions, using ifs etc.,
-    nothing too advanced)
+    nothing too advanced) and that you've got <kbd>cargo</kbd> at hand
   </p>
 
   <p>alrighty - start by following this carefully crafted instruction:</p>

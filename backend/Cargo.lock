@@ -831,6 +831,7 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "getrandom",
+ "glam",
  "kartoffels",
  "serde",
  "serde-wasm-bindgen",

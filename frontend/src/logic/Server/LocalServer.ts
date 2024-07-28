@@ -158,6 +158,14 @@ export class LocalServer implements Server {
     });
   }
 
+  setSpawnPoint(x?: number, y?: number): void {
+    this.worker.postMessage({
+      op: "setSpawnPoint",
+      x,
+      y,
+    });
+  }
+
   onMessage(f: (msg: ServerMessage) => void) {
     this.messageFn = f;
   }
