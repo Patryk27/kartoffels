@@ -835,6 +835,8 @@ dependencies = [
  "kartoffels",
  "serde",
  "serde-wasm-bindgen",
+ "tracing",
+ "tracing-subscriber",
  "tracing-wasm",
  "wasm-bindgen",
  "wasm-bindgen-futures",

@@ -6,6 +6,10 @@ use serde::ser::Serialize;
 use serde_wasm_bindgen::Serializer;
 use std::borrow::Cow;
 use std::panic;
+use tracing::{subscriber, Level};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::Registry;
+use tracing_wasm::{WASMLayer, WASMLayerConfigBuilder};
 use wasm_bindgen::prelude::*;
 use wasm_streams::readable::sys;
 use wasm_streams::ReadableStream;
@@ -152,5 +156,13 @@ where
 #[wasm_bindgen(start)]
 fn start() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-    tracing_wasm::set_as_global_default();
+
+    subscriber::set_global_default(
+        Registry::default().with(WASMLayer::new(
+            WASMLayerConfigBuilder::new()
+                .set_max_level(Level::INFO)
+                .build(),
+        )),
+    )
+    .unwrap();
 }
