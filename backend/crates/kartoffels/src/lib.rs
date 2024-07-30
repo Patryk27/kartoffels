@@ -81,20 +81,17 @@ pub fn create(
         clients: Default::default(),
         events: Default::default(),
         map,
-        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
         mode,
         name: Arc::new(config.name),
         path,
         paused: false,
+        platform: Default::default(),
         policy: config.policy,
         rng: SmallRng::from_entropy(),
         rx,
         spawn_point: None,
         systems: Default::default(),
         theme,
-
-        #[cfg(target_arch = "wasm32")]
-        web_interval_handle: Default::default(),
     };
 
     let handle = Handle::new(&world, tx);
@@ -122,20 +119,17 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
         clients: Default::default(),
         events: Default::default(),
         map: this.map.into_owned(),
-        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
         mode: this.mode.into_owned(),
         name: Arc::new(this.name.into_owned()),
         path: Some(path.to_owned()),
         paused: false,
+        platform: Default::default(),
         policy: this.policy.into_owned(),
         rng: SmallRng::from_entropy(),
         rx,
         spawn_point: None,
         systems: Default::default(),
         theme: this.theme.into_owned(),
-
-        #[cfg(target_arch = "wasm32")]
-        web_interval_handle: Default::default(),
     };
 
     let handle = Handle::new(&world, tx);

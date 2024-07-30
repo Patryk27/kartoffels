@@ -28,7 +28,9 @@ pub fn run(world: &mut World) {
         // HACK intercepting shutdown within this system feels pretty icky, but
         //      currently there's no better place to do this
         #[cfg(target_arch = "wasm32")]
-        if let Some(interval) = world.web_interval_handle.borrow_mut().take() {
+        if let Some(interval) =
+            world.platform.interval_handle.borrow_mut().take()
+        {
             info!("clearing interval");
 
             web_sys::window()

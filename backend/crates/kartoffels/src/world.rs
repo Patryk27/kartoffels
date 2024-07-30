@@ -23,7 +23,6 @@ pub struct World {
     pub clients: Vec<Client>,
     pub events: Events,
     pub map: Map,
-    pub metronome: Metronome,
     pub mode: Mode,
     pub name: Arc<WorldName>,
     pub path: Option<PathBuf>,
@@ -35,8 +34,8 @@ pub struct World {
     pub systems: Container,
     pub theme: Theme,
 
-    #[cfg(target_arch = "wasm32")]
-    pub web_interval_handle: Rc<RefCell<Option<i32>>>,
+    #[allow(dead_code)]
+    pub platform: Platform,
 }
 
 impl World {
@@ -44,8 +43,11 @@ impl World {
     pub fn spawn(mut self) {
         use wasm_bindgen::closure::Closure;
 
-        let interval = self.metronome.interval().as_millis() as i32;
-        let interval_handle = self.web_interval_handle.clone();
+        let interval = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS)
+            .interval()
+            .as_millis() as i32;
+
+        let interval_handle = self.platform.interval_handle.clone();
 
         let handler = Closure::<dyn FnMut()>::new(move || {
             self.tick();
@@ -72,11 +74,13 @@ impl World {
 
         thread::spawn(move || {
             let _rt = rt.enter();
+            let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
 
             loop {
                 self.tick();
-                self.metronome.tick();
-                self.metronome.wait();
+
+                metronome.tick();
+                metronome.wait();
             }
         });
     }
@@ -134,4 +138,10 @@ impl Events {
     {
         self.events.get_mut::<VecDeque<_>>().pop_front()
     }
+}
+
+#[derive(Default)]
+pub struct Platform {
+    #[cfg(target_arch = "wasm32")]
+    pub interval_handle: Rc<RefCell<Option<i32>>>,
 }
