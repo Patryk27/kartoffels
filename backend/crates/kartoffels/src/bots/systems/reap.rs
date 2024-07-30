@@ -17,7 +17,7 @@ pub(super) fn run_now(
 
     let mut bot = world.bots.alive.remove(id);
 
-    bot.log(reason.to_owned());
+    bot.log(reason);
 
     if let Some(killer) = killer {
         if let Some(killer) = world.bots.alive.get_mut(killer) {
