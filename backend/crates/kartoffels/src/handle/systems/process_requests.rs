@@ -1,5 +1,6 @@
 use crate::{
-    AliveBot, BotId, CreateClient, KillBot, QueuedBot, Request, Shutdown, World,
+    AliveBot, BotId, CreateConnection, KillBot, QueuedBot, Request, Shutdown,
+    World,
 };
 use anyhow::{anyhow, Result};
 use kartoffels_vm as vm;
@@ -12,10 +13,18 @@ pub fn run(world: &mut World) {
         debug!(?msg, "processing message");
 
         match msg {
+            Request::Listen { tx } => {
+                let (tx2, rx2) = mpsc::channel(256);
+
+                world.event_tx = Some(tx2);
+
+                _ = tx.send(rx2);
+            }
+
             Request::Join { id, tx } => {
                 let (tx2, rx2) = mpsc::channel(32);
 
-                world.events.send(CreateClient { id, tx: tx2 });
+                world.events.send(CreateConnection { id, tx: tx2 });
 
                 _ = tx.send(rx2);
             }

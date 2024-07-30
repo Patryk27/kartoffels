@@ -6,40 +6,40 @@ import { RemoteServer } from "./Server/RemoteServer";
 //
 // @see kartoffels::Handle
 export interface Server {
-  join(botId?: string): Promise<ReadableStream<ServerMsg>>;
+  join(botId?: string): Promise<ReadableStream<ConnectionUpdate>>;
   close(): Promise<void>;
   uploadBot(src: File): Promise<{ id: string }>;
 
   onReconnect(f: (status: string) => void): void;
 }
 
-export interface ServerMsg {
-  map?: ServerMapUpdate;
-  mode?: ServerModeUpdate;
-  bots?: ServerBotsUpdate;
-  bot?: ServerConnectedBotUpdate;
+export interface ConnectionUpdate {
+  map?: ConnectionMapUpdate;
+  mode?: ConnectionModeUpdate;
+  bots?: ConnectionBotsUpdate;
+  bot?: ConnectionJoinedBotUpdate;
 }
 
-export interface ServerMapUpdate {
+export interface ConnectionMapUpdate {
   size: [number, number];
   tiles: number[];
 }
 
-export interface ServerModeUpdate {
+export interface ConnectionModeUpdate {
   //
 }
 
-export interface ServerBotsUpdate {
-  [index: string]: ServerBotUpdate;
+export interface ConnectionBotsUpdate {
+  [index: string]: ConnectionBotUpdate;
 }
 
-export interface ServerBotUpdate {
+export interface ConnectionBotUpdate {
   pos: [number, number];
   dir: "^" | ">" | "v" | "<";
   age: number;
 }
 
-export type ServerConnectedBotUpdate =
+export type ConnectionJoinedBotUpdate =
   | {
       status: "queued";
       place: number;
@@ -61,6 +61,11 @@ export interface BotEvent {
   at: Date;
   msg: string;
 }
+
+export type ServerEvent = {
+  ty: "bot-killed";
+  id: string;
+};
 
 export interface ServerGetWorldsResponse {
   worlds: ServerWorld[];

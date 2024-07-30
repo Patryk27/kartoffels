@@ -1,9 +1,9 @@
 import {
   type BotEvent,
   type Server,
-  type ServerBotsUpdate,
-  type ServerConnectedBotUpdate,
-  type ServerMsg,
+  type ConnectionBotsUpdate,
+  type ConnectionJoinedBotUpdate,
+  type ConnectionUpdate,
 } from "@/logic/Server";
 import type { PlayerBots } from "@/logic/State";
 import type { ComputedRef } from "vue";
@@ -132,7 +132,7 @@ export class GameWorld {
     }
   }
 
-  private handleMessage(playerBots: PlayerBots, msg: ServerMsg): void {
+  private handleMessage(playerBots: PlayerBots, msg: ConnectionUpdate): void {
     if (msg.map) {
       this.map.value = {
         size: msg.map.size,
@@ -219,7 +219,7 @@ export interface GameMapBot {
 export type GameBot = {
   id: string;
   following: boolean;
-} & (ServerConnectedBotUpdate | { status: "unknown"; events: BotEvent[] });
+} & (ConnectionJoinedBotUpdate | { status: "unknown"; events: BotEvent[] });
 
 export interface GameTableBot {
   id: string;
@@ -229,7 +229,7 @@ export interface GameTableBot {
   nth: number;
 }
 
-export type GameBots = ServerBotsUpdate;
+export type GameBots = ConnectionBotsUpdate;
 
 export interface GameCamera {
   x: number;

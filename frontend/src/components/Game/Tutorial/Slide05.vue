@@ -1,14 +1,25 @@
 <script setup lang="ts">
+import { onUnmounted } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onSlide(5, () => {
-  ctrl.on("tutorial.continue", () => {
-    ctrl.openSlide(6);
+const abort = new AbortController();
+
+ctrl.onTutorialSlide(5, () => {
+  ctrl.onOnce("tutorial.continue", () => {
+    if (abort.signal.aborted) {
+      return;
+    }
+
+    ctrl.openTutorialSlide(6);
   });
+});
+
+onUnmounted(() => {
+  abort.abort();
 });
 </script>
 
@@ -27,6 +38,11 @@ ctrl.onSlide(5, () => {
   <p>since those are just rust functions, you can invoke them like so:</p>
 
   <pre>
+#![no_std]
+#![no_main]
+
+use kartoffel::*;
+
 #[no_mangle]
 fn main() {
     loop {
@@ -38,20 +54,13 @@ fn main() {
   <p>okie, now:</p>
 
   <ul>
-    <li>copy this code into <kbd>src/main.rs</kbd></li>
+    <li>copy the code above into <kbd>src/main.rs</kbd></li>
     <li>
       build the project (by running <kbd>./build</kbd> or
       <kbd>./build.bat</kbd>)
     </li>
     <li>lemme know once you're ready!</li>
   </ul>
-
-  <p>
-    don't forget to leave the other parts of code (such as
-    <kbd>#![no_std]</kbd> or <kbd>use kartoffel::*;</kbd>) in place - they are
-    required, it's just that for brevity the snippets in here will not mention
-    them anymore
-  </p>
 
   <p style="text-align: right">
     <button @click="ctrl.emit('tutorial.continue')" class="highlighted">

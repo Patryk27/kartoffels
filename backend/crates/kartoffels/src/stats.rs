@@ -36,7 +36,7 @@ pub fn run(world: &mut World) {
             world.bots.queued.len(),
             world.policy.max_queued_bots
         ),
-        format!("clients = {}", world.clients.len()),
+        format!("connections = {}", world.conns.len()),
         format!("vcpu = {} khz", state.ticks / 1_000),
     ];
 

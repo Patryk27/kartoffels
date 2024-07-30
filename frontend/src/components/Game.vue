@@ -53,6 +53,12 @@ watch(paused, (oldValue, newValue) => {
       join(world.bot.value?.id);
     }
   }
+
+  if (paused.value) {
+    ctrl.emit("server.pause");
+  } else {
+    ctrl.emit("server.resume");
+  }
 });
 
 switch (worldId) {
@@ -176,9 +182,8 @@ function handleRecreateSandbox(config: any): void {
   join(null);
 }
 
-// ---
-
 onMounted(() => {
+  // TODO extract camera to a separate component
   document.onkeydown = (event) => {
     const moveCamera = (dx: number, dy: number): void => {
       if (ctrl.tutorialSlide.value) {

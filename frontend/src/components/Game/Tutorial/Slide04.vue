@@ -1,14 +1,25 @@
 <script setup lang="ts">
+import { onUnmounted } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onSlide(4, () => {
-  ctrl.on("tutorial.continue", () => {
-    ctrl.openSlide(5);
+const abort = new AbortController();
+
+ctrl.onTutorialSlide(4, () => {
+  ctrl.onOnce("tutorial.continue", () => {
+    if (abort.signal.aborted) {
+      return;
+    }
+
+    ctrl.openTutorialSlide(5);
   });
+});
+
+onUnmounted(() => {
+  abort.abort();
 });
 </script>
 
@@ -46,7 +57,7 @@ fn main() {
 
   <p>
     the only things your code has access to are the <b>peripherals</b>: motor,
-    radar and arm
+    radar, arm and serial port
   </p>
 
   <p style="text-align: right">

@@ -4,8 +4,8 @@ mod name;
 pub use self::id::*;
 pub use self::name::*;
 use crate::{
-    bots, clients, handle, stats, store, Bots, Client, Map, Metronome, Mode,
-    Policy, RequestRx, Theme,
+    bots, cfg, conns, handle, stats, store, Bots, Connection, Event, EventTx,
+    Map, Metronome, Mode, Policy, RequestRx, Theme,
 };
 use ahash::AHashMap;
 use glam::IVec2;
@@ -20,7 +20,8 @@ use std::{cell::RefCell, rc::Rc};
 
 pub struct World {
     pub bots: Bots,
-    pub clients: Vec<Client>,
+    pub conns: Vec<Connection>,
+    pub event_tx: Option<EventTx>,
     pub events: Events,
     pub map: Map,
     pub mode: Mode,
@@ -87,7 +88,7 @@ impl World {
 
     pub fn tick(&mut self) {
         handle::process_requests(self);
-        clients::create(self);
+        conns::create(self);
 
         if !self.paused {
             bots::spawn(self);
@@ -95,9 +96,15 @@ impl World {
             bots::reap(self);
         }
 
-        clients::broadcast(self);
+        conns::broadcast(self);
         store::save(self);
         stats::run(self);
+    }
+
+    pub fn emit(&self, event: Event) {
+        if let Some(tx) = &self.event_tx {
+            _ = tx.blocking_send(event);
+        }
     }
 }
 

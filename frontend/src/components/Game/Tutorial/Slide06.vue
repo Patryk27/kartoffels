@@ -5,16 +5,18 @@ const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onSlide(6, () => {
-  ctrl.enableButton("uploadBot");
-  ctrl.highlightButton("uploadBot");
-  ctrl.getLocalServer().setSpawnPoint(16, 16);
+ctrl.onTutorialSlide(6, () => {
+  ctrl.alterUi((ui) => {
+    ui.enableDisconnectFromBot = false;
+    ui.enableUploadBot = true;
+    ui.highlightUploadBot = true;
+  });
 
-  ctrl.removeEventHandlersFor("join");
+  ctrl.getLocalServer().setSpawnPoint(16, 16);
 
   ctrl.onOnce("server.join", () => {
     ctrl.pause();
-    ctrl.openSlide(7);
+    ctrl.openTutorialSlide(7);
   });
 });
 </script>
@@ -26,28 +28,31 @@ ctrl.onSlide(6, () => {
   </p>
 
   <p>
-    it should be located in the main directory, next to
+    this file should be located in the main directory, right next to
     <kbd>./README.md</kbd>, <kbd>./build</kbd> etc.
   </p>
 
   <p>
-    (( fwiw, this file is an
+    (( it is an
     <a
       target="_blank"
       href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format"
       >*.elf binary</a
     >
-    that contains
+    containing
     <a target="_blank" href="https://en.wikipedia.org/wiki/RISC-V">
       risc-v opcodes
     </a>
-    that define how the firmware behaves ))
+    that define how the bot should behave - it's a compiled version of the Rust
+    code from before ))
   </p>
 
   <footer>
     <p>
       if something went wrong, feel free to
-      <a href="#" @click="ctrl.openSlide(5)">check out the previous slide</a>
+      <a href="#" @click="ctrl.openTutorialSlide(5)"
+        >check out the previous slide</a
+      >
     </p>
   </footer>
 </template>

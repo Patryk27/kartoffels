@@ -9,30 +9,31 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 
-pub type ClientUpdateTx = mpsc::Sender<ClientUpdate>;
-pub type ClientUpdateRx = mpsc::Receiver<ClientUpdate>;
+pub type ConnectionUpdateTx = mpsc::Sender<ConnectionUpdate>;
+pub type ConnectionUpdateRx = mpsc::Receiver<ConnectionUpdate>;
 
 #[derive(Debug)]
-pub struct Client {
-    pub tx: ClientUpdateTx,
-    pub bot: Option<ClientBot>,
+pub struct Connection {
+    pub tx: ConnectionUpdateTx,
+    pub bot: Option<ConnectionBot>,
     pub is_fresh: bool,
 }
 
 #[derive(Debug)]
-pub struct ClientBot {
+pub struct ConnectionBot {
     pub id: BotId,
-    pub events: Option<ClientBotEvents>,
+    pub events: Option<ConnectionBotEvents>,
 }
 
 #[derive(Debug)]
-pub struct ClientBotEvents {
+pub struct ConnectionBotEvents {
     pub rx: BotEventRx,
     pub init: Vec<Arc<BotEvent>>,
 }
 
+// TODO consider serializing just once and keeping `Arc<String>`
 #[derive(Clone, Debug, Serialize)]
-pub struct ClientUpdate {
+pub struct ConnectionUpdate {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<Arc<Value>>,
 
@@ -40,14 +41,14 @@ pub struct ClientUpdate {
     pub map: Option<Arc<Map>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bots: Option<Arc<BTreeMap<BotId, ClientBotUpdate>>>,
+    pub bots: Option<Arc<BTreeMap<BotId, ConnectionBotUpdate>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<ClientConnectedBotUpdate>,
+    pub bot: Option<ConnectionJoinedBotUpdate>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct ClientBotUpdate {
+pub struct ConnectionBotUpdate {
     pub pos: IVec2,
     pub dir: Dir,
     pub age: f32,
@@ -55,7 +56,7 @@ pub struct ClientBotUpdate {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "status")]
-pub enum ClientConnectedBotUpdate {
+pub enum ConnectionJoinedBotUpdate {
     #[serde(rename = "queued")]
     Queued {
         place: usize,
@@ -75,7 +76,7 @@ pub enum ClientConnectedBotUpdate {
 }
 
 #[derive(Debug)]
-pub struct CreateClient {
+pub struct CreateConnection {
     pub id: Option<BotId>,
-    pub tx: ClientUpdateTx,
+    pub tx: ConnectionUpdateTx,
 }

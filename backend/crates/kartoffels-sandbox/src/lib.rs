@@ -33,6 +33,17 @@ impl Sandbox {
         Ok(Self { handle })
     }
 
+    pub async fn listen(&self) -> Result<sys::ReadableStream, JsError> {
+        let stream = self
+            .handle
+            .listen()
+            .await
+            .convert_err()?
+            .map(|val| Ok(val.into_js_value()));
+
+        Ok(ReadableStream::from_stream(stream).into_raw())
+    }
+
     pub async fn join(
         &self,
         id: Option<String>,

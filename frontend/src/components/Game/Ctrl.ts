@@ -2,11 +2,14 @@ import { LocalServer, type Server } from "@/logic/Server";
 import { ref, type Ref } from "vue";
 
 export interface GameUi {
-  btnHelpDisabled: boolean;
-  btnPauseDisabled: boolean;
-  btnConnectToBotDisabled: boolean;
-  btnUploadBotDisabled: boolean;
-  btnUploadBotHighlighted: boolean;
+  enableConnectToBot: boolean;
+  enableDisconnectFromBot: boolean;
+  enableHelp: boolean;
+  enablePause: boolean;
+  enableUploadBot: boolean;
+  highlightPause: boolean;
+  highlightUploadBot: boolean;
+  showBotList: boolean;
 }
 
 export class GameCtrl {
@@ -15,7 +18,6 @@ export class GameCtrl {
 
   ui: Ref<GameUi>;
   events: Map<String, Array<EventHandler>>;
-  postponedEmits: Set<String>;
   tutorialSlide: Ref<number>;
 
   constructor(server: Server, paused: Ref<boolean>) {
@@ -23,28 +25,22 @@ export class GameCtrl {
     this.paused = paused;
 
     this.ui = ref({
-      btnHelpDisabled: false,
-      btnPauseDisabled: false,
-      btnConnectToBotDisabled: false,
-      btnUploadBotDisabled: false,
-      btnUploadBotHighlighted: false,
+      enableConnectToBot: true,
+      enableDisconnectFromBot: true,
+      enableHelp: true,
+      enablePause: true,
+      enableUploadBot: true,
+      highlightPause: false,
+      highlightUploadBot: false,
+      showBotList: true,
     });
 
     this.events = new Map();
-    this.postponedEmits = new Set();
     this.tutorialSlide = ref(null);
   }
 
   on(event: string, fn: () => void, once: boolean = false): void {
     log("on()", event, fn, once);
-
-    if (this.postponedEmits.delete(event)) {
-      fn();
-
-      if (once) {
-        return;
-      }
-    }
 
     if (!this.events.has(event)) {
       this.events.set(event, []);
@@ -57,102 +53,48 @@ export class GameCtrl {
     this.on(event, handler, true);
   }
 
-  onSlide(id: number, handler: () => void): void {
-    this.on(`tutorial.slide.${id}`, handler);
-  }
+  emit(event: string): void {
+    log("emit()", event);
 
-  waitFor(event: string): Promise<void> {
-    return new Promise((resolve, _) => {
-      this.on(event, resolve);
+    if (!this.events.has(event)) {
+      return;
+    }
+
+    let handlers = this.events.get(event);
+
+    for (const handler of handlers) {
+      handler.fn();
+    }
+
+    handlers = handlers.filter((handler) => {
+      return !handler.once;
     });
+
+    this.events.set(event, handlers);
   }
 
-  emit(event: string, canPostpone: boolean = false): void {
-    log("emit()", event, canPostpone);
-
-    if (this.events.has(event)) {
-      let handlers = this.events.get(event);
-
-      for (const handler of handlers) {
-        handler.fn();
-      }
-
-      handlers = handlers.filter((handler) => {
-        return !handler.once;
-      });
-
-      this.events.set(event, handlers);
-    } else {
-      // Postponing is a hacky approach to solve a tiiiny race condition between
-      // slide transitions.
-      //
-      // When we call `openSlide()`, we do two things: change the currently
-      // active slide and emit an event, so that the next slide can prepare its
-      // environment.
-      //
-      // But slides only get setup once the `tutorialSlide` is changed, so
-      // without this postponing mechanism, we wouldn't be able to get beyond
-      // the first slide (i.e. changing the slide number only activates the
-      // slide, and thus makes it register the event, on the next frame).
-      if (canPostpone) {
-        this.postponedEmits.add(event);
-      }
-    }
-  }
-
-  removeEventHandlersFor(event: string): void {
-    this.events.delete(event);
-  }
-
-  openSlide(id: number): void {
-    this.tutorialSlide.value = id;
-
+  openTutorialSlide(slide: number): void {
+    this.tutorialSlide.value = slide;
     this.emit("tutorial.before-slide");
-    this.emit(`tutorial.slide.${id}`, true);
+
+    // HACK Slides attach event hooks only after they are mounted, but since
+    // we've modified `tutorialSlide` just now, the slide won't get mounted up
+    // until the next frame, so... let's wait for the next frame.
+    setTimeout(() => {
+      this.emit(`tutorial.slide.${slide}`);
+    }, 0);
   }
 
-  disableButton(id: string): void {
-    this.setButtonDisabled(id, true);
+  hideTutorial(): void {
+    this.tutorialSlide.value = null;
   }
 
-  enableButton(id: string): void {
-    this.setButtonDisabled(id, false);
+  onTutorialSlide(id: number, handler: () => void): void {
+    this.onOnce(`tutorial.slide.${id}`, handler);
   }
 
-  highlightButton(id: string): void {
-    this.setButtonHighlighted(id, true);
-  }
-
-  unhighlightButton(id: string): void {
-    this.setButtonHighlighted(id, false);
-  }
-
-  setButtonDisabled(id: string, disabled: boolean): void {
-    switch (id) {
-      case "help":
-        this.ui.value.btnHelpDisabled = disabled;
-        break;
-
-      case "pause":
-        this.ui.value.btnPauseDisabled = disabled;
-        break;
-
-      case "connectToBot":
-        this.ui.value.btnConnectToBotDisabled = disabled;
-        break;
-
-      case "uploadBot":
-        this.ui.value.btnUploadBotDisabled = disabled;
-        break;
-    }
-  }
-
-  setButtonHighlighted(id: string, highlighted: boolean): void {
-    switch (id) {
-      case "uploadBot":
-        this.ui.value.btnUploadBotHighlighted = highlighted;
-        break;
-    }
+  alterUi(f: (ui: GameUi) => void): void {
+    f(this.ui.value);
   }
 
   pause(): void {
@@ -167,7 +109,7 @@ export class GameCtrl {
     if (this.server instanceof LocalServer) {
       return this.server;
     } else {
-      throw "called getLocalServer() on a server that's not local";
+      throw "called getLocalServer() on a non-local server";
     }
   }
 }

@@ -1,3 +1,4 @@
+use crate::Event::BotKilled;
 use crate::{DeadBot, KillBot, QueuedBot, World};
 use tracing::debug;
 
@@ -13,6 +14,7 @@ pub(super) fn run_now(
 ) {
     debug!(?id, ?reason, ?killer, "bot killed");
 
+    world.emit(BotKilled { id, killer });
     world.mode.on_bot_killed(id, killer);
 
     let mut bot = world.bots.alive.remove(id);

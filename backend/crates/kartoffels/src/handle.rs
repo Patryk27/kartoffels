@@ -1,7 +1,10 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
+use crate::{
+    BotId, ConnectionUpdate, ConnectionUpdateRx, Event, EventRx, World,
+    WorldName,
+};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use futures_util::Stream;
@@ -43,10 +46,20 @@ impl Handle {
         self.theme
     }
 
+    pub async fn listen(&self) -> Result<impl Stream<Item = Event>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Listen { tx }).await?;
+
+        let rx = rx.await.context(Self::ERR_DIED)?;
+
+        Ok(ReceiverStream::new(rx))
+    }
+
     pub async fn join(
         &self,
         id: Option<BotId>,
-    ) -> Result<impl Stream<Item = ClientUpdate>> {
+    ) -> Result<impl Stream<Item = ConnectionUpdate>> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::Join { id, tx }).await?;
@@ -112,11 +125,16 @@ pub type RequestRx = mpsc::Receiver<Request>;
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub enum Request {
+    Listen {
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<EventRx>,
+    },
+
     Join {
         id: Option<BotId>,
 
         #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<ClientUpdateRx>,
+        tx: oneshot::Sender<ConnectionUpdateRx>,
     },
 
     Pause {

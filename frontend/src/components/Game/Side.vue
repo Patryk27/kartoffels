@@ -42,6 +42,7 @@ defineProps<{
     />
 
     <Bots
+      v-if="ctrl.ui.value.showBotList"
       :world="world"
       @bot-click="(id) => emit('botClick', id)"
       @open-summary="emit('openSummary')"

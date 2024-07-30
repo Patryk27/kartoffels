@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import type { GameCtrl } from "./Ctrl";
 import Slide01 from "./Tutorial/Slide01.vue";
 import Slide02 from "./Tutorial/Slide02.vue";
@@ -8,6 +7,7 @@ import Slide04 from "./Tutorial/Slide04.vue";
 import Slide05 from "./Tutorial/Slide05.vue";
 import Slide06 from "./Tutorial/Slide06.vue";
 import Slide07 from "./Tutorial/Slide07.vue";
+import Slide08 from "./Tutorial/Slide08.vue";
 
 defineProps<{
   ctrl: GameCtrl;
@@ -19,13 +19,15 @@ defineProps<{
 // tutorial is completed.
 export function start(ctrl: GameCtrl): Promise<void> {
   return new Promise((resolve, _) => {
-    ctrl.disableButton("help");
-    ctrl.disableButton("pause");
-    ctrl.disableButton("connectToBot");
-    ctrl.disableButton("uploadBot");
+    ctrl.alterUi((ui) => {
+      ui.enableConnectToBot = false;
+      ui.enableHelp = false;
+      ui.enablePause = false;
+      ui.enableUploadBot = false;
+    });
 
     ctrl.onOnce("server.ready", () => {
-      ctrl.openSlide(1);
+      ctrl.openTutorialSlide(1);
     });
 
     ctrl.on("tutorial.before-slide", () => {
@@ -36,7 +38,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
       }
     });
 
-    ctrl.on("tutorial.done", resolve);
+    ctrl.onOnce("tutorial.done", resolve);
   });
 }
 </script>
@@ -44,7 +46,9 @@ export function start(ctrl: GameCtrl): Promise<void> {
 <template>
   <dialog class="game-tutorial" :open="ctrl.tutorialSlide.value != null">
     <nav>
-      <div class="dialog-title">tutorial</div>
+      <div class="dialog-title">
+        tutorial ({{ ctrl.tutorialSlide.value }} / 8)
+      </div>
     </nav>
 
     <Slide01 :ctrl v-if="ctrl.tutorialSlide.value == 1" />
@@ -54,6 +58,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
     <Slide05 :ctrl v-else-if="ctrl.tutorialSlide.value == 5" />
     <Slide06 :ctrl v-else-if="ctrl.tutorialSlide.value == 6" />
     <Slide07 :ctrl v-else-if="ctrl.tutorialSlide.value == 7" />
+    <Slide08 :ctrl v-else-if="ctrl.tutorialSlide.value == 8" />
   </dialog>
 </template>
 

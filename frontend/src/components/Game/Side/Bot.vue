@@ -106,15 +106,15 @@ function handleUploadBot() {
     <div class="buttons">
       <div class="buttons-row">
         <button
-          :disabled="paused || ctrl.ui.value.btnConnectToBotDisabled"
+          :disabled="paused || !ctrl.ui.value.enableConnectToBot"
           @click="handleConnectToBot"
         >
           connect to bot
         </button>
 
         <button
-          :disabled="paused || ctrl.ui.value.btnUploadBotDisabled"
-          :class="{ highlighted: ctrl.ui.value.btnUploadBotHighlighted }"
+          :disabled="paused || !ctrl.ui.value.enableUploadBot"
+          :class="{ highlighted: ctrl.ui.value.highlightUploadBot }"
           @click="handleUploadBot"
         >
           upload bot
@@ -136,7 +136,12 @@ function handleUploadBot() {
   <div v-else class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
-        <button @click="emit('botDisconnect')">disconnect from bot</button>
+        <button
+          :disabled="!ctrl.ui.value.enableDisconnectFromBot"
+          @click="emit('botDisconnect')"
+        >
+          disconnect from bot
+        </button>
       </div>
 
       <div v-if="world.id == 'sandbox'" class="buttons-row">

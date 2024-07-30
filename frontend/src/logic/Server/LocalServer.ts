@@ -1,4 +1,4 @@
-import type { Server, ServerMsg } from "@/logic/Server";
+import type { Server, ServerEvent, ConnectionUpdate } from "@/logic/Server";
 import init, { Sandbox } from "kartoffels-sandbox";
 import wasmUrl from "kartoffels-sandbox/kartoffels_sandbox_bg.wasm?url";
 
@@ -19,7 +19,16 @@ export class LocalServer implements Server {
     });
   }
 
-  async join(botId?: string): Promise<ReadableStream<ServerMsg>> {
+  async listen(): Promise<ReadableStream<ServerEvent>> {
+    log("listen()");
+
+    const sandbox = await this.getSandbox();
+    const events = await sandbox.listen();
+
+    return events;
+  }
+
+  async join(botId?: string): Promise<ReadableStream<ConnectionUpdate>> {
     log("join()", botId);
 
     const sandbox = await this.getSandbox();

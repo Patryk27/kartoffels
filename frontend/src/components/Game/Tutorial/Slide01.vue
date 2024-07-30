@@ -5,9 +5,9 @@ const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onSlide(1, () => {
-  ctrl.on("tutorial.continue", () => {
-    ctrl.openSlide(2);
+ctrl.onTutorialSlide(1, () => {
+  ctrl.onOnce("tutorial.continue", () => {
+    ctrl.openTutorialSlide(2);
   });
 });
 </script>
@@ -34,7 +34,7 @@ ctrl.onSlide(1, () => {
     nothing too advanced) and that you've got <kbd>cargo</kbd> at hand
   </p>
 
-  <p>alrighty - start by following this carefully crafted instruction:</p>
+  <p>start by following this carefully crafted instruction:</p>
 
   <pre>
 $ git clone https://github.com/patryk27/kartoffel

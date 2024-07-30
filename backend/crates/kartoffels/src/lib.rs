@@ -8,8 +8,9 @@
 
 mod bot;
 mod bots;
-mod clients;
 mod config;
+mod conns;
+mod events;
 mod handle;
 mod map;
 mod mode;
@@ -24,7 +25,8 @@ mod world;
 pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::config::Config;
-    pub use crate::handle::Handle;
+    pub use crate::events::Event;
+    pub use crate::handle::{Handle, Request};
     pub use crate::utils::*;
     pub use crate::world::{WorldId, WorldName};
 }
@@ -38,8 +40,9 @@ mod cfg {
 
 pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
-pub(crate) use self::clients::*;
 pub(crate) use self::config::*;
+pub(crate) use self::conns::*;
+pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
@@ -78,7 +81,8 @@ pub fn create(
 
     let world = World {
         bots: Default::default(),
-        clients: Default::default(),
+        conns: Default::default(),
+        event_tx: None,
         events: Default::default(),
         map,
         mode,
@@ -116,7 +120,8 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
 
     let world = World {
         bots: this.bots.into_owned(),
-        clients: Default::default(),
+        conns: Default::default(),
+        event_tx: None,
         events: Default::default(),
         map: this.map.into_owned(),
         mode: this.mode.into_owned(),

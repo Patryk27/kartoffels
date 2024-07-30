@@ -69,12 +69,14 @@ textarea {
 
 select,
 button {
-  &:hover {
-    border: 1px solid var(--green) !important;
-  }
+  &:not([disabled]) {
+    &:hover {
+      border: 1px solid var(--green) !important;
+    }
 
-  &:active {
-    outline: 1px solid var(--green);
+    &:active {
+      outline: 1px solid var(--green);
+    }
   }
 
   &:disabled {

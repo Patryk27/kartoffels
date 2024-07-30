@@ -1,18 +1,33 @@
 <script setup lang="ts">
+import { onUnmounted } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onSlide(2, () => {
-  ctrl.on("tutorial.continue.a", () => {
-    ctrl.openSlide(3);
+const abort = new AbortController();
+
+ctrl.onTutorialSlide(2, () => {
+  ctrl.onOnce("tutorial.continue.a", () => {
+    if (abort.signal.aborted) {
+      return;
+    }
+
+    ctrl.openTutorialSlide(3);
   });
 
-  ctrl.on("tutorial.continue.b", () => {
-    ctrl.openSlide(4);
+  ctrl.onOnce("tutorial.continue.b", () => {
+    if (abort.signal.aborted) {
+      return;
+    }
+
+    ctrl.openTutorialSlide(4);
   });
+});
+
+onUnmounted(() => {
+  abort.abort();
 });
 </script>
 
