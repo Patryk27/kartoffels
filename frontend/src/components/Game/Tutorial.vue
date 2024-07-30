@@ -8,6 +8,7 @@ import Slide05 from "./Tutorial/Slide05.vue";
 import Slide06 from "./Tutorial/Slide06.vue";
 import Slide07 from "./Tutorial/Slide07.vue";
 import Slide08 from "./Tutorial/Slide08.vue";
+import Slide09 from "./Tutorial/Slide09.vue";
 
 defineProps<{
   ctrl: GameCtrl;
@@ -59,6 +60,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
     <Slide06 :ctrl v-else-if="ctrl.tutorialSlide.value == 6" />
     <Slide07 :ctrl v-else-if="ctrl.tutorialSlide.value == 7" />
     <Slide08 :ctrl v-else-if="ctrl.tutorialSlide.value == 8" />
+    <Slide09 :ctrl v-else-if="ctrl.tutorialSlide.value == 9" />
   </dialog>
 </template>
 

@@ -5,19 +5,17 @@ const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-ctrl.onTutorialSlide(6, () => {
-  ctrl.alterUi((ui) => {
-    ui.enableDisconnectFromBot = false;
-    ui.enableUploadBot = true;
-    ui.highlightUploadBot = true;
-  });
+ctrl.alterUi((ui) => {
+  ui.enableDisconnectFromBot = false;
+  ui.enableUploadBot = true;
+  ui.highlightUploadBot = true;
+});
 
-  ctrl.getLocalServer().setSpawnPoint(16, 16);
+ctrl.getLocalServer().setSpawnPoint(16, 16);
 
-  ctrl.onOnce("server.join", () => {
-    ctrl.pause();
-    ctrl.openTutorialSlide(7);
-  });
+ctrl.onOnce("server.join", () => {
+  ctrl.pause();
+  ctrl.openTutorialSlide(7);
 });
 </script>
 

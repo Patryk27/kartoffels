@@ -21,6 +21,9 @@ export class GameCtrl {
   tutorialSlide: Ref<number>;
 
   constructor(server: Server, paused: Ref<boolean>) {
+    // Having the controller at hand comes handy for debugging:
+    (<any>window).ctrl = this;
+
     this.server = server;
     this.paused = paused;
 
@@ -76,21 +79,10 @@ export class GameCtrl {
   openTutorialSlide(slide: number): void {
     this.tutorialSlide.value = slide;
     this.emit("tutorial.before-slide");
-
-    // HACK Slides attach event hooks only after they are mounted, but since
-    // we've modified `tutorialSlide` just now, the slide won't get mounted up
-    // until the next frame, so... let's wait for the next frame.
-    setTimeout(() => {
-      this.emit(`tutorial.slide.${slide}`);
-    }, 0);
   }
 
   hideTutorial(): void {
     this.tutorialSlide.value = null;
-  }
-
-  onTutorialSlide(id: number, handler: () => void): void {
-    this.onOnce(`tutorial.slide.${id}`, handler);
   }
 
   alterUi(f: (ui: GameUi) => void): void {

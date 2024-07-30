@@ -1,26 +1,9 @@
 <script setup lang="ts">
-import { onUnmounted } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
-
-const abort = new AbortController();
-
-ctrl.onTutorialSlide(4, () => {
-  ctrl.onOnce("tutorial.continue", () => {
-    if (abort.signal.aborted) {
-      return;
-    }
-
-    ctrl.openTutorialSlide(5);
-  });
-});
-
-onUnmounted(() => {
-  abort.abort();
-});
 </script>
 
 <template>
@@ -61,7 +44,7 @@ fn main() {
   </p>
 
   <p style="text-align: right">
-    <button @click="ctrl.emit('tutorial.continue')" class="highlighted">
+    <button @click="ctrl.openTutorialSlide(5)" class="highlighted">
       so far so good
     </button>
   </p>

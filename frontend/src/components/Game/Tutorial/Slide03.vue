@@ -1,26 +1,9 @@
 <script setup lang="ts">
-import { onUnmounted } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
-
-const abort = new AbortController();
-
-ctrl.onTutorialSlide(3, () => {
-  ctrl.onOnce("tutorial.alt", () => {
-    if (abort.signal.aborted) {
-      return;
-    }
-
-    ctrl.openTutorialSlide(4);
-  });
-});
-
-onUnmounted(() => {
-  abort.abort();
-});
 </script>
 
 <template>
@@ -54,7 +37,7 @@ onUnmounted(() => {
   <p style="text-align: center">good luck and have fun!</p>
 
   <footer>
-    <button @click="ctrl.emit('tutorial.alt')">
+    <button @click="ctrl.openTutorialSlide(4)">
       you know, let's do the full tutorial
     </button>
 

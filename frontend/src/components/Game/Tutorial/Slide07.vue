@@ -1,57 +1,46 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import type { GameCtrl } from "../Ctrl";
 
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
 
-const abort = new AbortController();
 const status = ref("awaiting-resume");
 
-ctrl.onTutorialSlide(7, () => {
-  ctrl.alterUi((ui) => {
-    ui.enableDisconnectFromBot = false;
-    ui.enablePause = true;
-    ui.enableUploadBot = false;
-    ui.highlightPause = true;
-    ui.highlightUploadBot = false;
-    ui.showBotList = false;
-  });
-
-  ctrl.onOnce("server.resume", () => {
-    if (abort.signal.aborted) {
-      return;
-    }
-
-    ctrl.alterUi((ui) => {
-      ui.enablePause = false;
-      ui.highlightPause = false;
-    });
-
-    status.value = "awaiting-robot";
-
-    const onceBotIsKilled = new Promise(async (resolve) => {
-      const events = await ctrl.getLocalServer().listen();
-
-      for await (const event of events) {
-        if (event.ty == "bot-killed") {
-          resolve(null);
-          break;
-        }
-      }
-    });
-
-    // TODO timeout
-    onceBotIsKilled.then(() => {
-      ctrl.pause();
-      ctrl.openTutorialSlide(8);
-    });
-  });
+ctrl.alterUi((ui) => {
+  ui.enableDisconnectFromBot = false;
+  ui.enablePause = true;
+  ui.enableUploadBot = false;
+  ui.highlightPause = true;
+  ui.highlightUploadBot = false;
+  ui.showBotList = false;
 });
 
-onUnmounted(() => {
-  abort.abort();
+ctrl.onOnce("server.resume", () => {
+  ctrl.alterUi((ui) => {
+    ui.enablePause = false;
+    ui.highlightPause = false;
+  });
+
+  status.value = "awaiting-robot";
+
+  const onceBotIsKilled = new Promise(async (resolve) => {
+    const events = await ctrl.getLocalServer().listen();
+
+    for await (const event of events) {
+      if (event.ty == "bot-killed") {
+        resolve(null);
+        break;
+      }
+    }
+  });
+
+  // TODO timeout
+  onceBotIsKilled.then(() => {
+    ctrl.pause();
+    ctrl.openTutorialSlide(8);
+  });
 });
 </script>
 

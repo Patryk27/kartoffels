@@ -4,12 +4,6 @@ import type { GameCtrl } from "../Ctrl";
 const { ctrl } = defineProps<{
   ctrl: GameCtrl;
 }>();
-
-ctrl.onTutorialSlide(1, () => {
-  ctrl.onOnce("tutorial.continue", () => {
-    ctrl.openTutorialSlide(2);
-  });
-});
 </script>
 
 <template>
@@ -43,7 +37,7 @@ $ cd kartoffel</pre
 
   <p>
     ... and then press
-    <button class="highlighted" @click="ctrl.emit('tutorial.continue')">
+    <button class="highlighted" @click="ctrl.openTutorialSlide(2)">
       continue
     </button>
     once you're ready.
