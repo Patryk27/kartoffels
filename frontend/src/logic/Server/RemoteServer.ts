@@ -3,7 +3,7 @@ import type { Server, ServerConnMsg } from "@/logic/Server";
 export class RemoteServer implements Server {
   private httpUrl: string;
   private wsUrl: string;
-  private socket?: MyWebSocket;
+  private socket?: Socket;
   private reconnectFn?: (status: string) => void;
 
   constructor(worldId: string) {
@@ -17,15 +17,21 @@ export class RemoteServer implements Server {
   async join(botId?: string): Promise<ReadableStream<ServerConnMsg>> {
     log("join()", botId);
 
-    const socket = new MyWebSocket(
+    const socket = new Socket(
       botId == null ? `${this.wsUrl}` : `${this.wsUrl}/bots/${botId}`,
     );
 
+    socket.onReconnect((status) => {
+      if (this.reconnectFn) {
+        this.reconnectFn(status);
+      }
+    });
+
     const msgs = new ReadableStream({
       start(ctrl) {
-        socket.onmessage = (event) => {
+        socket.onMessage((event) => {
           ctrl.enqueue(JSON.parse(event.data));
-        };
+        });
       },
 
       cancel() {
@@ -35,41 +41,7 @@ export class RemoteServer implements Server {
 
     await socket.connect();
 
-    const reconnect = async () => {
-      if (socket.isClosing) {
-        return;
-      }
-
-      log("reconnecting");
-
-      if (this.reconnectFn) {
-        this.reconnectFn("reconnecting");
-      }
-
-      while (true) {
-        try {
-          await this.join(botId);
-          break;
-        } catch (err) {
-          await new Promise((resolve) => {
-            setTimeout(resolve, 250);
-          });
-        }
-      }
-
-      log("reconnected");
-
-      if (this.reconnectFn) {
-        this.reconnectFn("connected");
-      }
-    };
-
-    socket.onclose = reconnect;
-    socket.onerror = reconnect;
-
     this.socket = socket;
-
-    log("ready");
 
     return msgs;
   }
@@ -102,30 +74,53 @@ export class RemoteServer implements Server {
   }
 }
 
-class MyWebSocket extends WebSocket {
-  isClosing: boolean = false;
+class Socket {
+  private url: string;
+  private isClosing: boolean;
+  private socket?: WebSocket;
+  private messageFn?: (ev: MessageEvent) => void;
+  private reconnectFn?: (status: string) => void;
+
+  constructor(url: string) {
+    this.url = url;
+    this.isClosing = false;
+  }
 
   connect(): Promise<void> {
     log("connecting");
 
+    if (this.socket) {
+      this.socket.onclose = null;
+      this.socket.onerror = null;
+      this.socket.onmessage = null;
+      this.socket.close();
+    }
+
+    this.socket = new WebSocket(this.url);
+
     return new Promise((resolve, reject) => {
-      this.onopen = () => {
+      this.socket.onopen = () => {
+        log("connected");
+
         resolve(null);
+
+        this.socket.onmessage = (ev) => {
+          if (this.messageFn) {
+            this.messageFn(ev);
+          }
+        };
+
+        this.socket.onclose = () => {
+          this.reconnect();
+        };
+
+        this.socket.onerror = () => {
+          this.reconnect();
+        };
       };
 
-      this.onclose = () => {
-        // Prevent the other handler from firing `reject()` again
-        this.onerror = null;
-
-        reject();
-      };
-
-      this.onerror = () => {
-        // Prevent the other handler from firing `reject()` again
-        this.onclose = null;
-
-        reject();
-      };
+      this.socket.onclose = reject;
+      this.socket.onerror = reject;
     });
   }
 
@@ -133,7 +128,40 @@ class MyWebSocket extends WebSocket {
     log("closing");
 
     this.isClosing = true;
-    super.close();
+    this.socket.close();
+  }
+
+  onMessage(f: (ev: MessageEvent) => void): void {
+    this.messageFn = f;
+  }
+
+  onReconnect(f: (status: string) => void): void {
+    this.reconnectFn = f;
+  }
+
+  private async reconnect(): Promise<void> {
+    if (this.isClosing) {
+      return;
+    }
+
+    if (this.reconnectFn) {
+      this.reconnectFn("reconnecting");
+    }
+
+    while (true) {
+      try {
+        await this.connect();
+        break;
+      } catch (err) {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 250);
+        });
+      }
+    }
+
+    if (this.reconnectFn) {
+      this.reconnectFn("connected");
+    }
   }
 }
 
