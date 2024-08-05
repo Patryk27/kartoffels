@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { GameTableBot, GameWorld } from "../State";
+import type { GameTableBot, GameWorld } from "../World";
 import BotLink from "../Common/BotLink.vue";
 
 const emit = defineEmits<{
   botClick: [string];
-  openSummary: [];
+  summaryOpen: [];
 }>();
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
 
   let result = [];
 
-  for (let nth = 0; nth < 8; nth += 1) {
+  for (let nth = 0; nth < 5; nth += 1) {
     const entry = bots[nth];
 
     if (entry) {
@@ -96,15 +96,16 @@ const filteredBots = computed<(GameTableBot & { ty: string })[]>(() => {
     </table>
 
     <div style="text-align: right; margin-top: 1em">
-      <button @click="emit('openSummary')">show more</button>
+      <button @click="emit('summaryOpen')">show more</button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .game-side-bots {
-  border-top: 1px solid var(--gray);
+  margin-top: 1em;
   padding-top: 1em;
+  border-top: 1px solid var(--gray);
 
   table {
     width: 100%;

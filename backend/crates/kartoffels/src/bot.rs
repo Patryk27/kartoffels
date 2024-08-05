@@ -177,3 +177,8 @@ pub struct QueuedBot {
     #[serde(flatten)]
     pub bot: AliveBot,
 }
+
+#[derive(Clone, Debug, Serialize)]
+pub struct BotInfo {
+    pub id: BotId,
+}

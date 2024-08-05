@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { botIdToColor } from "@/utils/bot";
-import type { GameTableBot } from "../State";
+import type { GameTableBot } from "../World";
 
 defineProps<{
   bot: GameTableBot;

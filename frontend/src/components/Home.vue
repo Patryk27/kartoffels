@@ -99,8 +99,8 @@ onMounted(async () => {
       </p>
 
       <p>
-        this is an mmo arena where every robot is equipped with
-        <b>motors</b>, <b>a radar</b> and <b>an arm</b>:
+        this is an mmo arena where you're given a robot with <b>motors</b>,
+        <b>a radar</b> and <b>an arm</b>:
       </p>
 
       <p class="bot">
@@ -108,9 +108,9 @@ onMounted(async () => {
       </p>
 
       <p>
-        ... and your objective is to implement <b>a firmware</b> controlling
-        this robot - developing the best, the longest surviving, the most deadly
-        machine imaginable, in rust
+        ... and your objective is to implement <b>a firmware</b> controlling it
+        - developing the best, the longest surviving, the most deadly machine
+        imaginable, in rust
       </p>
 
       <p>
@@ -158,13 +158,12 @@ onMounted(async () => {
         </div>
 
         <div v-if="session" class="session-restore">
-          <div class="or">or</div>
+          <div class="or">-- or --</div>
 
           <button @click="handleRestore()">
-            restore your previous session
+            restore your previous session <br />
+            <span style="color: var(--gray)">({{ session.worldName }})</span>
           </button>
-
-          <p>(world: {{ session.worldName }})</p>
         </div>
       </template>
     </div>
@@ -271,12 +270,10 @@ onMounted(async () => {
       }
 
       button {
-        font-weight: 600;
-      }
-
-      button + p {
-        margin-top: 0.5em;
-        color: var(--gray);
+        span {
+          display: inline-block;
+          margin-top: 0.25em;
+        }
       }
     }
   }

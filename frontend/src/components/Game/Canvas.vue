@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, toRaw } from "vue";
 import { botIdToColor } from "@/utils/bot";
-import type { GameWorld } from "./State";
+import type { GameWorld } from "./World";
 
 const props = defineProps<{
   world: GameWorld;
@@ -51,7 +51,6 @@ function resize(): void {
 function draw(): void {
   const camera = props.world.camera.value;
   const map = props.world.map.value;
-  const status = props.world.status.value;
 
   if (ctxt == null || canvas.value == null) {
     return;
@@ -59,41 +58,21 @@ function draw(): void {
 
   ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-  const blink = Date.now() % 1000 <= 500;
+  if (props.world.status.value == "reconnecting") {
+    ctxt.fillStyle = "rgb(0, 255, 128)";
 
-  switch (status) {
-    case "connecting":
-    case "reconnecting":
-      drawStatus();
-      break;
+    ctxt.fillText(
+      "connection lost, reconnecting...",
+      8,
+      charMetrics.height + 8,
+    );
+  } else {
+    if (map && camera) {
+      const blink = Date.now() % 1000 <= 500;
 
-    case "connected":
-      if (map && camera) {
-        drawTiles();
-        drawCarets(blink);
-      } else {
-        // Should be unreachable
-      }
-
-      break;
-  }
-}
-
-function drawStatus(): void {
-  const status = props.world.status.value;
-  const x = 8;
-  const y = charMetrics.height + 8;
-
-  switch (status) {
-    case "connecting":
-      ctxt.fillStyle = "rgb(0, 255, 128)";
-      ctxt.fillText("connecting...", x, y);
-      break;
-
-    case "reconnecting":
-      ctxt.fillStyle = "rgb(0, 255, 128)";
-      ctxt.fillText("connection lost, reconnecting...", x, y);
-      break;
+      drawTiles();
+      drawCarets(blink);
+    }
   }
 }
 
@@ -244,7 +223,7 @@ function drawCarets(blink: boolean): void {
 
 // ---
 
-watch([props.world.map, props.world.bots, props.world.status], () => {
+watch([props.world.map, props.world.bots], () => {
   draw();
 });
 

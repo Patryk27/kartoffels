@@ -4,8 +4,8 @@ mod name;
 pub use self::id::*;
 pub use self::name::*;
 use crate::{
-    bots, cfg, conns, handle, stats, store, Bots, Connection, Event, EventTx,
-    Map, Metronome, Mode, Policy, RequestRx, Theme,
+    bots, cfg, conns, handle, stats, store, Bots, Conn, Event, EventTx, Map,
+    Metronome, Mode, Policy, RequestRx, Theme,
 };
 use ahash::AHashMap;
 use glam::IVec2;
@@ -20,7 +20,7 @@ use std::{cell::RefCell, rc::Rc};
 
 pub struct World {
     pub bots: Bots,
-    pub conns: Vec<Connection>,
+    pub conns: Vec<Conn>,
     pub event_tx: Option<EventTx>,
     pub events: Events,
     pub map: Map,

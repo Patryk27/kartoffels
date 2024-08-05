@@ -6,66 +6,67 @@ import { RemoteServer } from "./Server/RemoteServer";
 //
 // @see kartoffels::Handle
 export interface Server {
-  join(botId?: string): Promise<ReadableStream<ConnectionUpdate>>;
+  join(botId?: string): Promise<ReadableStream<ServerConnMsg>>;
   close(): Promise<void>;
   uploadBot(src: File): Promise<{ id: string }>;
 
   onReconnect(f: (status: string) => void): void;
 }
 
-export interface ConnectionUpdate {
-  map?: ConnectionMapUpdate;
-  mode?: ConnectionModeUpdate;
-  bots?: ConnectionBotsUpdate;
-  bot?: ConnectionJoinedBotUpdate;
+export type ServerEvent = {
+  ty: "bot-killed";
+  id: string;
+};
+
+export interface ServerConnMsg {
+  map?: ServerConnMapMsg;
+  mode?: ServerConnModeMsg;
+  bots?: ServerConnBotsMsg;
+  bot?: ServerConnJoinedBotMsg;
 }
 
-export interface ConnectionMapUpdate {
+export interface ServerConnMapMsg {
   size: [number, number];
   tiles: number[];
 }
 
-export interface ConnectionModeUpdate {
+export interface ServerConnModeMsg {
   //
 }
 
-export interface ConnectionBotsUpdate {
-  [index: string]: ConnectionBotUpdate;
+export interface ServerConnBotsMsg {
+  [index: string]: ServerConnBotMsg;
 }
 
-export interface ConnectionBotUpdate {
+export interface ServerConnBotMsg {
   pos: [number, number];
   dir: "^" | ">" | "v" | "<";
   age: number;
 }
 
-export type ConnectionJoinedBotUpdate =
-  | {
-      status: "queued";
-      place: number;
-      requeued: number;
-      events: BotEvent[];
-    }
+export type ServerConnJoinedBotMsg =
   | {
       status: "alive";
       age: number;
       serial: [number];
-      events: BotEvent[];
+      events: ServerBotEvent[];
     }
   | {
       status: "dead";
-      events: BotEvent[];
-    };
+      events: ServerBotEvent[];
+    }
+  | {
+      status: "queued";
+      place: number;
+      requeued: boolean;
+      events: ServerBotEvent[];
+    }
+  | { status: "unknown" };
 
-export interface BotEvent {
+export interface ServerBotEvent {
   at: Date;
   msg: string;
 }
-
-export type ServerEvent = {
-  ty: "bot-killed";
-  id: string;
-};
 
 export interface ServerGetWorldsResponse {
   worlds: ServerWorld[];
@@ -76,6 +77,10 @@ export interface ServerWorld {
   name: string;
   mode: string;
   theme: string;
+}
+
+export interface ServerBotInfo {
+  id: string;
 }
 
 export { LocalServer, RemoteServer };

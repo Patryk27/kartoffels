@@ -1,17 +1,6 @@
 import { LocalServer, type Server } from "@/logic/Server";
 import { ref, type Ref } from "vue";
 
-export interface GameUi {
-  enableConnectToBot: boolean;
-  enableDisconnectFromBot: boolean;
-  enableHelp: boolean;
-  enablePause: boolean;
-  enableUploadBot: boolean;
-  highlightPause: boolean;
-  highlightUploadBot: boolean;
-  showBotList: boolean;
-}
-
 export class GameCtrl {
   server: Server;
   paused: Ref<boolean>;
@@ -104,6 +93,17 @@ export class GameCtrl {
       throw "called getLocalServer() on a non-local server";
     }
   }
+}
+
+export interface GameUi {
+  enableConnectToBot: boolean;
+  enableDisconnectFromBot: boolean;
+  enableHelp: boolean;
+  enablePause: boolean;
+  enableUploadBot: boolean;
+  highlightPause: boolean;
+  highlightUploadBot: boolean;
+  showBotList: boolean;
 }
 
 interface EventHandler {

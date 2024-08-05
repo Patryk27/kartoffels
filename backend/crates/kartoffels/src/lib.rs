@@ -23,7 +23,7 @@ mod utils;
 mod world;
 
 pub mod prelude {
-    pub use crate::bot::BotId;
+    pub use crate::bot::{BotId, BotInfo};
     pub use crate::config::Config;
     pub use crate::events::Event;
     pub use crate::handle::{Handle, Request};

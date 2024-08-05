@@ -1,4 +1,4 @@
-import type { Server, ConnectionUpdate } from "@/logic/Server";
+import type { Server, ServerConnMsg } from "@/logic/Server";
 
 export class RemoteServer implements Server {
   private httpUrl: string;
@@ -14,7 +14,7 @@ export class RemoteServer implements Server {
     log(`wsUrl = ${this.wsUrl}`);
   }
 
-  async join(botId?: string): Promise<ReadableStream<ConnectionUpdate>> {
+  async join(botId?: string): Promise<ReadableStream<ServerConnMsg>> {
     log("join()", botId);
 
     const socket = new MyWebSocket(

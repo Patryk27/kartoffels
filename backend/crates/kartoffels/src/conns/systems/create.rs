@@ -1,6 +1,5 @@
 use crate::{
-    BotEntryMut, Connection, ConnectionBot, ConnectionBotEvents,
-    CreateConnection, World,
+    BotEntryMut, Conn, ConnBot, ConnBotEvents, CreateConnection, World,
 };
 
 pub fn run(world: &mut World) {
@@ -14,15 +13,15 @@ pub fn run(world: &mut World) {
                     BotEntryMut::Alive(bot) => &mut bot.events,
                     BotEntryMut::Dead(bot) => &mut bot.events,
                 })
-                .map(|events| ConnectionBotEvents {
+                .map(|events| ConnBotEvents {
                     rx: events.subscribe(),
                     init: events.iter().cloned().collect(),
                 });
 
-            ConnectionBot { id, events }
+            ConnBot { id, events }
         });
 
-        world.conns.push(Connection {
+        world.conns.push(Conn {
             tx,
             bot,
             is_fresh: true,

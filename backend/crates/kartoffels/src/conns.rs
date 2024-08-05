@@ -9,31 +9,31 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 
-pub type ConnectionUpdateTx = mpsc::Sender<ConnectionUpdate>;
-pub type ConnectionUpdateRx = mpsc::Receiver<ConnectionUpdate>;
+pub type ConnMsgTx = mpsc::Sender<ConnMsg>;
+pub type ConnMsgRx = mpsc::Receiver<ConnMsg>;
 
 #[derive(Debug)]
-pub struct Connection {
-    pub tx: ConnectionUpdateTx,
-    pub bot: Option<ConnectionBot>,
+pub struct Conn {
+    pub tx: ConnMsgTx,
+    pub bot: Option<ConnBot>,
     pub is_fresh: bool,
 }
 
 #[derive(Debug)]
-pub struct ConnectionBot {
+pub struct ConnBot {
     pub id: BotId,
-    pub events: Option<ConnectionBotEvents>,
+    pub events: Option<ConnBotEvents>,
 }
 
 #[derive(Debug)]
-pub struct ConnectionBotEvents {
+pub struct ConnBotEvents {
     pub rx: BotEventRx,
     pub init: Vec<Arc<BotEvent>>,
 }
 
 // TODO consider serializing just once and keeping `Arc<String>`
 #[derive(Clone, Debug, Serialize)]
-pub struct ConnectionUpdate {
+pub struct ConnMsg {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<Arc<Value>>,
 
@@ -41,14 +41,14 @@ pub struct ConnectionUpdate {
     pub map: Option<Arc<Map>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bots: Option<Arc<BTreeMap<BotId, ConnectionBotUpdate>>>,
+    pub bots: Option<Arc<BTreeMap<BotId, ConnBotUpdate>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bot: Option<ConnectionJoinedBotUpdate>,
+    pub bot: Option<ConnJoinedBotUpdate>,
 }
 
 #[derive(Debug, Serialize)]
-pub struct ConnectionBotUpdate {
+pub struct ConnBotUpdate {
     pub pos: IVec2,
     pub dir: Dir,
     pub age: f32,
@@ -56,7 +56,7 @@ pub struct ConnectionBotUpdate {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "status")]
-pub enum ConnectionJoinedBotUpdate {
+pub enum ConnJoinedBotUpdate {
     #[serde(rename = "queued")]
     Queued {
         place: usize,
@@ -73,10 +73,13 @@ pub enum ConnectionJoinedBotUpdate {
 
     #[serde(rename = "dead")]
     Dead { events: Vec<Arc<BotEvent>> },
+
+    #[serde(rename = "unknown")]
+    Unknown,
 }
 
 #[derive(Debug)]
 pub struct CreateConnection {
     pub id: Option<BotId>,
-    pub tx: ConnectionUpdateTx,
+    pub tx: ConnMsgTx,
 }

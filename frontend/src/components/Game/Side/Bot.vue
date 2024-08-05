@@ -3,13 +3,13 @@ import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman, ordinal } from "@/utils/other";
 import type { GameCtrl } from "../Ctrl";
-import type { GameWorld } from "../State";
+import type { GameWorld } from "../World";
 
 const emit = defineEmits<{
   botUpload: [File];
   botSpawnPrefab: [string];
-  botConnect: [string];
-  botDisconnect: [];
+  botJoin: [string];
+  botLeave: [];
   botDestroy: [];
   botRestart: [];
 }>();
@@ -21,16 +21,16 @@ const props = defineProps<{
 }>();
 
 const serial = computed(() => {
-  const world = props.world;
+  const bot = props.world.bot.value;
 
-  if (world.bot.value.status != "alive") {
+  if (bot.status != "alive") {
     return null;
   }
 
   let out = "";
   let buf = null;
 
-  for (const op of world.bot.value.serial) {
+  for (const op of bot.serial) {
     switch (op) {
       case 0xffffff00:
         buf = "";
@@ -56,12 +56,16 @@ const serial = computed(() => {
 });
 
 const events = computed(() => {
-  const world = props.world;
+  const bot = props.world.bot.value;
   const now = new Date();
+
+  if (bot.status != "alive" && bot.status != "dead" && bot.status != "queued") {
+    return "";
+  }
 
   let out = "";
 
-  for (const event of world.bot.value?.events ?? []) {
+  for (const event of bot.events) {
     let eventHappenedToday =
       event.at.getFullYear() == now.getFullYear() &&
       event.at.getMonth() == now.getMonth() &&
@@ -78,11 +82,11 @@ const events = computed(() => {
   return out;
 });
 
-function handleConnectToBot() {
+function handleJoinBot() {
   const id = prompt("bot id to connect to:");
 
   if (id) {
-    emit("botConnect", id.trim());
+    emit("botJoin", id.trim());
   }
 }
 
@@ -107,7 +111,7 @@ function handleUploadBot() {
       <div class="buttons-row">
         <button
           :disabled="paused || !ctrl.ui.value.enableConnectToBot"
-          @click="handleConnectToBot"
+          @click="handleJoinBot"
         >
           connect to bot
         </button>
@@ -138,7 +142,7 @@ function handleUploadBot() {
       <div class="buttons-row">
         <button
           :disabled="!ctrl.ui.value.enableDisconnectFromBot"
-          @click="emit('botDisconnect')"
+          @click="emit('botLeave')"
         >
           disconnect from bot
         </button>
@@ -219,7 +223,6 @@ function handleUploadBot() {
   width: 32ch;
   flex-grow: 1;
   flex-direction: column;
-  padding-bottom: 1em;
 
   .buttons {
     margin-bottom: var(--text-margin);

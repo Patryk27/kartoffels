@@ -9,9 +9,9 @@ import Side from "./Game/Side.vue";
 import Summary from "./Game/Summary.vue";
 import GameTutorial, * as tutorial from "./Game/Tutorial.vue";
 import { LocalServer, type Server } from "@/logic/Server";
-import type { GameDialogId } from "./Game/State";
+import type { GameDialogId } from "./Game/World";
 import { GameCtrl } from "./Game/Ctrl";
-import { GameWorld } from "./Game/State";
+import { GameWorld } from "./Game/World";
 import { isValidBotId } from "@/utils/bot";
 
 const emit = defineEmits<{
@@ -32,7 +32,7 @@ const ctrl = new GameCtrl(server, paused);
 const playerBots = new PlayerBots(worldId);
 const world = new GameWorld(worldId, worldName, playerBots);
 
-// TODO this is cursed, but currently there's no better way to have this logic
+// HACK this is cursed, but currently there's no better way to have this logic
 //      available both when the user pauses and when the GameCtrl wants to pause
 watch(paused, (oldValue, newValue) => {
   if (oldValue == newValue) {
@@ -61,22 +61,6 @@ watch(paused, (oldValue, newValue) => {
   }
 });
 
-switch (worldId) {
-  case "tutorial":
-    tutorial.start(ctrl).then(() => {
-      emit("leave");
-    });
-
-    break;
-
-  case "sandbox":
-    if (help.canOpenSandboxHelp()) {
-      dialog.value = "help";
-    }
-
-    break;
-}
-
 async function join(newBotId?: string): Promise<void> {
   paused.value = false;
 
@@ -86,7 +70,9 @@ async function join(newBotId?: string): Promise<void> {
       newBotId = null;
     }
 
-    await world.join(server, playerBots, newBotId);
+    await world.join(server, playerBots, newBotId, () => {
+      alert(`couldn't find bot \`${newBotId}\``);
+    });
 
     storeSession({
       worldId: worldId,
@@ -100,10 +86,6 @@ async function join(newBotId?: string): Promise<void> {
   }
 }
 
-function handlePause(): void {
-  paused.value = !paused.value;
-}
-
 async function handleBotUpload(src: File): Promise<void> {
   try {
     const bot = await server.uploadBot(src);
@@ -112,7 +94,7 @@ async function handleBotUpload(src: File): Promise<void> {
 
     await join(bot.id);
 
-    ctrl.emit("server.join");
+    ctrl.emit("server.bot-upload");
   } catch (error) {
     alert("err, your bot couldn't be uploaded:\n\n" + error);
   }
@@ -146,18 +128,6 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
   }
 }
 
-function handleBotConnect(id?: string): void {
-  join(id);
-}
-
-function handleBotDisconnect(): void {
-  join(null);
-}
-
-function handleBotClick(id?: string): void {
-  join(id);
-}
-
 function handleBotDestroy(): void {
   if (world.bot.value?.id) {
     ctrl.getLocalServer().destroyBot(world.bot.value.id);
@@ -175,7 +145,7 @@ function toggleDialog(id: GameDialogId): void {
   dialog.value = dialog.value == id ? null : id;
 }
 
-function handleRecreateSandbox(config: any): void {
+function handleSandboxRecreate(config: any): void {
   dialog.value = null;
   ctrl.getLocalServer().recreate(config);
 
@@ -183,13 +153,29 @@ function handleRecreateSandbox(config: any): void {
 }
 
 onMounted(() => {
-  // TODO extract camera to a separate component
-  document.onkeydown = (event) => {
-    const moveCamera = (dx: number, dy: number): void => {
-      if (ctrl.tutorialSlide.value) {
-        return;
+  switch (worldId) {
+    case "tutorial":
+      tutorial.start(ctrl).then(() => {
+        emit("leave");
+      });
+
+      break;
+
+    case "sandbox":
+      if (help.canOpenSandboxHelp()) {
+        dialog.value = "help";
       }
 
+      break;
+  }
+
+  // TODO extract camera to a separate component
+  document.onkeydown = (event) => {
+    if (ctrl.tutorialSlide.value) {
+      return;
+    }
+
+    const moveCamera = (dx: number, dy: number): void => {
       if (world.camera.value) {
         world.camera.value.x += dx;
         world.camera.value.y += dy;
@@ -222,7 +208,7 @@ onMounted(() => {
         break;
 
       case " ":
-        handlePause();
+        paused.value = !paused.value;
         break;
 
       case "Escape":
@@ -246,7 +232,7 @@ join(botId);
       :world="world"
       :paused="paused"
       @leave="emit('leave')"
-      @pause="handlePause"
+      @pause="paused = !paused"
       @open-help="toggleDialog('help')"
       @open-config="toggleDialog('sandboxConfig')"
     />
@@ -260,12 +246,11 @@ join(botId);
         :paused="paused"
         @bot-upload="handleBotUpload"
         @bot-spawn-prefab="handleBotSpawnPrefab"
-        @bot-connect="handleBotConnect"
-        @bot-disconnect="handleBotDisconnect"
-        @bot-click="handleBotClick"
+        @bot-join="join"
+        @bot-leave="join(null)"
         @bot-destroy="handleBotDestroy"
         @bot-restart="handleBotRestart"
-        @open-summary="toggleDialog('summary')"
+        @summary-open="toggleDialog('summary')"
       />
 
       <Help :open="dialog == 'help'" :world="world" @close="dialog = null" />
@@ -276,13 +261,13 @@ join(botId);
         :open="dialog == 'summary'"
         :world="world"
         @close="dialog = null"
-        @bot-click="handleBotClick"
+        @bot-click="join"
       />
 
       <SandboxConfig
         :open="dialog == 'sandboxConfig'"
         @close="dialog = null"
-        @recreate-sandbox="handleRecreateSandbox"
+        @recreate="handleSandboxRecreate"
       />
     </main>
   </div>

@@ -47,7 +47,7 @@ impl AliveAppState {
         self.worlds.get(&id).ok_or(AppError::WorldNotFound).cloned()
     }
 
-    pub fn has_world_named(&self, name: &WorldName) -> bool {
+    pub fn contains_world_named(&self, name: &WorldName) -> bool {
         self.worlds.values().any(|world| world.name() == name)
     }
 }

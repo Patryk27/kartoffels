@@ -15,8 +15,8 @@ const { ctrl } = defineProps<{
   </p>
 
   <p>
-    <b>note:</b> if you would like to see how the game looks like without
-    submitting your own bot just yet, simply
+    <b>note:</b> if you would like to just see how the game looks like without
+    submitting your own bot yet, simply
     <a href="#" @click="ctrl.emit('tutorial.done')">go back</a>, choose any
     world and take a look around
   </p>

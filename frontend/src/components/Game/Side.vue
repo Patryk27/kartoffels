@@ -2,17 +2,16 @@
 import type { GameCtrl } from "./Ctrl";
 import Bot from "./Side/Bot.vue";
 import Bots from "./Side/Bots.vue";
-import type { GameWorld } from "./State";
+import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
   botUpload: [File];
   botSpawnPrefab: [string];
-  botConnect: [string];
-  botDisconnect: [];
-  botClick: [string];
+  botJoin: [string];
+  botLeave: [];
   botDestroy: [];
   botRestart: [];
-  openSummary: [];
+  summaryOpen: [];
 }>();
 
 defineProps<{
@@ -35,8 +34,8 @@ defineProps<{
       :paused="paused"
       @bot-upload="(file) => emit('botUpload', file)"
       @bot-spawn-prefab="(id) => emit('botSpawnPrefab', id)"
-      @bot-connect="(id) => emit('botConnect', id)"
-      @bot-disconnect="emit('botDisconnect')"
+      @bot-join="(id) => emit('botJoin', id)"
+      @bot-leave="emit('botLeave')"
       @bot-destroy="emit('botDestroy')"
       @bot-restart="emit('botRestart')"
     />
@@ -44,8 +43,8 @@ defineProps<{
     <Bots
       v-if="ctrl.ui.value.showBotList"
       :world="world"
-      @bot-click="(id) => emit('botClick', id)"
-      @open-summary="emit('openSummary')"
+      @bot-click="(id) => emit('botJoin', id)"
+      @summary-open="emit('summaryOpen')"
     />
   </div>
 </template>

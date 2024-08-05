@@ -3,7 +3,7 @@ import { worlds } from "./SandboxConfig/Presets";
 
 const emit = defineEmits<{
   close: [];
-  recreateSandbox: [any];
+  recreate: [any];
 }>();
 
 let worldIdx = 0;
@@ -12,7 +12,7 @@ let worldIdx = 0;
 <template>
   <dialog class="game-sandbox-config" open>
     <nav>
-      <div class="dialog-title">sandbox configuration</div>
+      <div class="dialog-title">sandbox config</div>
 
       <div class="dialog-buttons">
         <button @click="emit('close')">close</button>
@@ -30,7 +30,7 @@ let worldIdx = 0;
     </div>
 
     <footer style="text-align: right">
-      <button @click="emit('recreateSandbox', worlds[worldIdx].config)">
+      <button @click="emit('recreate', worlds[worldIdx].config)">
         recreate sandbox
       </button>
     </footer>

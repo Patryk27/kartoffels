@@ -2,11 +2,9 @@ mod systems;
 
 pub use self::systems::*;
 use crate::{
-    BotId, ConnectionUpdate, ConnectionUpdateRx, Event, EventRx, World,
-    WorldName,
+    BotId, BotInfo, ConnMsg, ConnMsgRx, Event, EventRx, World, WorldName,
 };
 use anyhow::{anyhow, Context, Result};
-use derivative::Derivative;
 use futures_util::Stream;
 use glam::IVec2;
 use std::borrow::Cow;
@@ -59,7 +57,7 @@ impl Handle {
     pub async fn join(
         &self,
         id: Option<BotId>,
-    ) -> Result<impl Stream<Item = ConnectionUpdate>> {
+    ) -> Result<impl Stream<Item = ConnMsg>> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::Join { id, tx }).await?;
@@ -103,6 +101,14 @@ impl Handle {
         Ok(())
     }
 
+    pub async fn get_bots(&self) -> Result<Vec<BotInfo>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::GetBots { tx }).await?;
+
+        rx.await.context(Self::ERR_DIED)
+    }
+
     pub async fn set_spawn_point(&self, at: Option<IVec2>) -> Result<()> {
         self.send(Request::SetSpawnPoint { at }).await?;
 
@@ -122,19 +128,14 @@ impl Handle {
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
-#[derive(Derivative)]
-#[derivative(Debug)]
 pub enum Request {
     Listen {
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<EventRx>,
     },
 
     Join {
         id: Option<BotId>,
-
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<ConnectionUpdateRx>,
+        tx: oneshot::Sender<ConnMsgRx>,
     },
 
     Pause {
@@ -142,15 +143,11 @@ pub enum Request {
     },
 
     Close {
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     UploadBot {
-        #[derivative(Debug = "ignore")]
         src: Cow<'static, [u8]>,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
@@ -160,6 +157,10 @@ pub enum Request {
 
     DestroyBot {
         id: BotId,
+    },
+
+    GetBots {
+        tx: oneshot::Sender<Vec<BotInfo>>,
     },
 
     SetSpawnPoint {

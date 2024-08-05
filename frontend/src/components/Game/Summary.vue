@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { durationToHuman } from "@/utils/other";
-import type { GameWorld } from "./State";
+import type { GameWorld } from "./World";
 import BotLink from "./Common/BotLink.vue";
 
 const emit = defineEmits<{

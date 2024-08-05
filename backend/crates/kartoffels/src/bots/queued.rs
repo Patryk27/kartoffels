@@ -6,18 +6,18 @@ use std::collections::VecDeque;
 #[derive(Clone, Debug, Default)]
 pub struct QueuedBots {
     entries: VecDeque<QueuedBot>,
-    id_to_idx: AHashMap<BotId, usize>,
+    id_to_place: AHashMap<BotId, usize>,
 }
 
 impl QueuedBots {
     pub fn push(&mut self, bot: QueuedBot) {
         self.entries.push_back(bot);
-        self.index();
+        self.reindex();
     }
 
     pub fn pop(&mut self) -> Option<QueuedBot> {
         if let Some(entry) = self.entries.pop_front() {
-            self.index();
+            self.reindex();
 
             Some(entry)
         } else {
@@ -25,21 +25,38 @@ impl QueuedBots {
         }
     }
 
+    pub fn remove(&mut self, id: BotId) {
+        let Some(place) = self.id_to_place.remove(&id) else {
+            return;
+        };
+
+        self.entries.remove(place);
+        self.reindex();
+    }
+
     pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
-        let place = *self.id_to_idx.get(&id)?;
+        let place = *self.id_to_place.get(&id)?;
         let bot = &self.entries[place];
 
-        Some(QueuedBotEntry { bot, place })
+        Some(QueuedBotEntry { id, bot, place })
     }
 
     pub fn get_mut(&mut self, id: BotId) -> Option<&mut QueuedBot> {
-        let place = *self.id_to_idx.get(&id)?;
+        let place = *self.id_to_place.get(&id)?;
 
         Some(&mut self.entries[place])
     }
 
-    pub fn has(&self, id: BotId) -> bool {
-        self.id_to_idx.contains_key(&id)
+    pub fn contains(&self, id: BotId) -> bool {
+        self.id_to_place.contains_key(&id)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = QueuedBotEntry> {
+        self.id_to_place.iter().map(|(&id, &place)| QueuedBotEntry {
+            id,
+            bot: &self.entries[place],
+            place,
+        })
     }
 
     pub fn len(&self) -> usize {
@@ -50,10 +67,10 @@ impl QueuedBots {
         self.entries.is_empty()
     }
 
-    fn index(&mut self) {
-        self.id_to_idx.clear();
+    fn reindex(&mut self) {
+        self.id_to_place.clear();
 
-        self.id_to_idx.extend(
+        self.id_to_place.extend(
             self.entries
                 .iter()
                 .enumerate()
@@ -83,7 +100,7 @@ impl<'de> Deserialize<'de> for QueuedBots {
             this.entries.push_back(bot);
         }
 
-        this.index();
+        this.reindex();
 
         Ok(this)
     }
@@ -91,6 +108,7 @@ impl<'de> Deserialize<'de> for QueuedBots {
 
 #[derive(Debug)]
 pub struct QueuedBotEntry<'a> {
+    pub id: BotId,
     pub bot: &'a QueuedBot,
     pub place: usize,
 }

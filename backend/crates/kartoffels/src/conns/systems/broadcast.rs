@@ -1,7 +1,6 @@
 use crate::{
-    BotEntry, Bots, BroadcastReceiverRx, Connection, ConnectionBot,
-    ConnectionBotUpdate, ConnectionJoinedBotUpdate, ConnectionUpdate, Map,
-    Mode, World,
+    BotEntry, Bots, BroadcastReceiverRx, Conn, ConnBot, ConnBotUpdate,
+    ConnJoinedBotUpdate, ConnMsg, Map, Mode, World,
 };
 use std::collections::BTreeMap;
 use std::mem;
@@ -27,19 +26,19 @@ pub fn run(world: &mut World) {
         return;
     }
 
-    let update = prepare_update(&world.bots, &mut world.map, &world.mode);
+    let msg = prepare_msg(&world.bots, &mut world.map, &world.mode);
 
     world
         .conns
         .extract_if(|conn| {
-            handle_connection(&world.bots, &world.map, update.clone(), conn)
+            process_conn(&world.bots, &world.map, msg.clone(), conn)
         })
         .for_each(drop);
 
-    state.next_tick_at = Instant::now() + Duration::from_millis(50);
+    state.next_run_at = Instant::now() + Duration::from_millis(50);
 }
 
-fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ConnectionUpdate {
+fn prepare_msg(bots: &Bots, map: &mut Map, mode: &Mode) -> ConnMsg {
     let mode = Some(Arc::new(mode.state()));
 
     let map = if map.take_dirty() {
@@ -57,14 +56,14 @@ fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ConnectionUpdate {
                 let dir = entry.bot.motor.dir;
                 let age = entry.bot.timer.age();
 
-                (entry.id, ConnectionBotUpdate { pos, dir, age })
+                (entry.id, ConnBotUpdate { pos, dir, age })
             })
             .collect();
 
         Some(Arc::new(bots))
     };
 
-    ConnectionUpdate {
+    ConnMsg {
         mode,
         map,
         bots,
@@ -72,11 +71,11 @@ fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ConnectionUpdate {
     }
 }
 
-fn handle_connection(
+fn process_conn(
     bots: &Bots,
     map: &Map,
-    mut update: ConnectionUpdate,
-    conn: &mut Connection,
+    mut update: ConnMsg,
+    conn: &mut Conn,
 ) -> bool {
     update.map = if mem::take(&mut conn.is_fresh) && update.map.is_none() {
         Some(Arc::new(map.clone()))
@@ -84,18 +83,12 @@ fn handle_connection(
         update.map.clone()
     };
 
-    update.bot = conn
-        .bot
-        .as_mut()
-        .and_then(|bot| handle_connection_bot(bots, bot));
+    update.bot = conn.bot.as_mut().map(|bot| process_conn_bot(bots, bot));
 
     conn.tx.try_send(update).is_err()
 }
 
-fn handle_connection_bot(
-    bots: &Bots,
-    bot: &mut ConnectionBot,
-) -> Option<ConnectionJoinedBotUpdate> {
+fn process_conn_bot(bots: &Bots, bot: &mut ConnBot) -> ConnJoinedBotUpdate {
     let events = bot
         .events
         .as_mut()
@@ -108,19 +101,20 @@ fn handle_connection_bot(
         })
         .unwrap_or_default();
 
-    match bots.get(bot.id)? {
-        BotEntry::Queued(entry) => Some(ConnectionJoinedBotUpdate::Queued {
+    match bots.get(bot.id) {
+        Some(BotEntry::Queued(entry)) => ConnJoinedBotUpdate::Queued {
             place: entry.place + 1,
             requeued: entry.bot.requeued,
             events,
-        }),
+        },
 
-        BotEntry::Alive(entry) => Some(ConnectionJoinedBotUpdate::Alive {
+        Some(BotEntry::Alive(entry)) => ConnJoinedBotUpdate::Alive {
             age: entry.bot.timer.age(),
             serial: entry.bot.serial.buffer.clone(),
             events,
-        }),
+        },
 
-        BotEntry::Dead => Some(ConnectionJoinedBotUpdate::Dead { events }),
+        Some(BotEntry::Dead(_)) => ConnJoinedBotUpdate::Dead { events },
+        None => ConnJoinedBotUpdate::Unknown,
     }
 }

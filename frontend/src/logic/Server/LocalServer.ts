@@ -1,4 +1,9 @@
-import type { Server, ServerEvent, ConnectionUpdate } from "@/logic/Server";
+import type {
+  Server,
+  ServerEvent,
+  ServerConnMsg,
+  ServerBotInfo,
+} from "@/logic/Server";
 import init, { Sandbox } from "kartoffels-sandbox";
 import wasmUrl from "kartoffels-sandbox/kartoffels_sandbox_bg.wasm?url";
 
@@ -28,7 +33,7 @@ export class LocalServer implements Server {
     return events;
   }
 
-  async join(botId?: string): Promise<ReadableStream<ConnectionUpdate>> {
+  async join(botId?: string): Promise<ReadableStream<ServerConnMsg>> {
     log("join()", botId);
 
     const sandbox = await this.getSandbox();
@@ -99,12 +104,26 @@ export class LocalServer implements Server {
     await sandbox.destroy_bot(id);
   }
 
+  async destroyAllBots(): Promise<void> {
+    for (const bot of await this.getBots()) {
+      await this.destroyBot(bot.id);
+    }
+  }
+
   async restartBot(id: string): Promise<void> {
     log("restartBot()", id);
 
     const sandbox = await this.getSandbox();
 
     await sandbox.restart_bot(id);
+  }
+
+  async getBots(): Promise<ServerBotInfo[]> {
+    log("getBots()");
+
+    const sandbox = await this.getSandbox();
+
+    return await sandbox.get_bots();
   }
 
   async setSpawnPoint(x?: number, y?: number): Promise<void> {

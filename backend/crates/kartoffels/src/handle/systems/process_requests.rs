@@ -1,6 +1,6 @@
 use crate::{
-    AliveBot, BotId, CreateConnection, KillBot, QueuedBot, Request, Shutdown,
-    World,
+    AliveBot, BotEntry, BotId, BotInfo, CreateConnection, KillBot, QueuedBot,
+    Request, Shutdown, World,
 };
 use anyhow::{anyhow, Result};
 use kartoffels_vm as vm;
@@ -10,8 +10,6 @@ use tracing::{debug, info};
 
 pub fn run(world: &mut World) {
     while let Ok(msg) = world.rx.try_recv() {
-        debug!(?msg, "processing message");
-
         match msg {
             Request::Listen { tx } => {
                 let (tx2, rx2) = mpsc::channel(256);
@@ -55,6 +53,24 @@ pub fn run(world: &mut World) {
                 world.bots.remove(id);
             }
 
+            Request::GetBots { tx } => {
+                let bots = world
+                    .bots
+                    .iter()
+                    .map(|bot| {
+                        let id = match bot {
+                            BotEntry::Alive(bot) => bot.id,
+                            BotEntry::Dead(bot) => bot.id,
+                            BotEntry::Queued(bot) => bot.id,
+                        };
+
+                        BotInfo { id }
+                    })
+                    .collect();
+
+                _ = tx.send(bots);
+            }
+
             Request::SetSpawnPoint { at } => {
                 world.spawn_point = at;
             }
@@ -72,7 +88,7 @@ fn do_upload_bot(world: &mut World, src: Cow<'static, [u8]>) -> Result<BotId> {
     let id = loop {
         let id = BotId::new(&mut world.rng);
 
-        if !world.bots.has(id) {
+        if !world.bots.contains(id) {
             break id;
         }
     };

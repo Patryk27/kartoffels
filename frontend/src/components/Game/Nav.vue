@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { GameCtrl } from "./Ctrl";
-import type { GameWorld } from "./State";
+import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
   leave: [];

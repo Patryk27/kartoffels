@@ -9,6 +9,7 @@ import Slide06 from "./Tutorial/Slide06.vue";
 import Slide07 from "./Tutorial/Slide07.vue";
 import Slide08 from "./Tutorial/Slide08.vue";
 import Slide09 from "./Tutorial/Slide09.vue";
+import Slide10 from "./Tutorial/Slide10.vue";
 
 defineProps<{
   ctrl: GameCtrl;
@@ -48,7 +49,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
   <dialog class="game-tutorial" :open="ctrl.tutorialSlide.value != null">
     <nav>
       <div class="dialog-title">
-        tutorial ({{ ctrl.tutorialSlide.value }} / 8)
+        tutorial ({{ ctrl.tutorialSlide.value }} / 10)
       </div>
     </nav>
 
@@ -61,6 +62,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
     <Slide07 :ctrl v-else-if="ctrl.tutorialSlide.value == 7" />
     <Slide08 :ctrl v-else-if="ctrl.tutorialSlide.value == 8" />
     <Slide09 :ctrl v-else-if="ctrl.tutorialSlide.value == 9" />
+    <Slide10 :ctrl v-else-if="ctrl.tutorialSlide.value == 10" />
   </dialog>
 </template>
 

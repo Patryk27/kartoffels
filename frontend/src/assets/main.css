@@ -215,3 +215,25 @@ dialog {
 .status-queued {
   color: var(--pink);
 }
+
+.text-rainbow {
+  animation: text-rainbow 0.5s linear 0s infinite;
+}
+
+@keyframes text-rainbow {
+  from {
+    color: #6666ff;
+  }
+  10% {
+    color: #0099ff;
+  }
+  50% {
+    color: #00ff00;
+  }
+  75% {
+    color: #ff3399;
+  }
+  100% {
+    color: #6666ff;
+  }
+}

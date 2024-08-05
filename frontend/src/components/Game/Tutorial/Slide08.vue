@@ -10,7 +10,8 @@ const altDisabled = ref(false);
 
 function handleAlt() {
   alert(
-    "listen, i'm not here to judge you, because i know you're still learning - but we *are* going to use the radar",
+    "i'm sure you do buddy -- listen, i'm not here to judge you, because i \
+     know you're still learning, but we *are* going to use the radar",
   );
 
   altDisabled.value = true;
@@ -23,7 +24,7 @@ ctrl.onOnce("tutorial.continue", () => {
 </script>
 
 <template>
-  <p>nice!</p>
+  <p class="text-rainbow">nice!</p>
 
   <p>
     i mean, you know, not nice, because we're dead - but relatively speaking
@@ -31,19 +32,19 @@ ctrl.onOnce("tutorial.continue", () => {
   </p>
 
   <p>
-    the <kbd>.</kbd> tile repesents floor (like in nethack or similar games) -
-    the robot can drive over a floor, but once it drives off of it, it'll fall
-    into the hell or something and die, standard stuff
+    the <kbd>.</kbd> tile repesents floor (like in nethack) - the robot can
+    drive over a floor, but once it drives off of it, it falls into the hell or
+    something and dies, capiche?
   </p>
 
   <p>now, in order for the robot not to fall, we can use <b>the radar</b></p>
 
   <footer>
     <button :disabled="altDisabled" @click="handleAlt()">
-      no, let's not use the radar
+      no, i've got a better idea
     </button>
 
-    <button @click="ctrl.emit('tutorial.continue')">
+    <button class="highlighted" @click="ctrl.emit('tutorial.continue')">
       yes, let's use the radar
     </button>
   </footer>

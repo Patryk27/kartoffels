@@ -9,6 +9,13 @@ ctrl.alterUi((ui) => {
   ui.enableUploadBot = true;
   ui.highlightUploadBot = true;
 });
+
+ctrl.resume();
+ctrl.getLocalServer().destroyAllBots();
+
+ctrl.onOnce("server.bot-upload", () => {
+  ctrl.openTutorialSlide(10);
+});
 </script>
 
 <template>
@@ -18,18 +25,17 @@ ctrl.alterUi((ui) => {
   </p>
 
   <ul>
-    <li><kbd>radar_scan_3()</kbd></li>
-    <li><kbd>radar_scan_5()</kbd></li>
-    <li><kbd>radar_scan_7()</kbd></li>
-    <li><kbd>radar_scan_9()</kbd></li>
+    <li><kbd>radar_scan_3x3()</kbd></li>
+    <li><kbd>radar_scan_5x5()</kbd></li>
+    <li><kbd>radar_scan_7x7()</kbd></li>
+    <li><kbd>radar_scan_9x9()</kbd></li>
   </ul>
 
   <p>
-    the scan is always a <kbd>D</kbd> x <kbd>D</kbd> square, and the number at
-    the end of the function tells you how large the scan will be
+    the scan is always square-shaped and the number at the end of the function
+    tells you how large the scan will be (<kbd>radar_scan_3x3()</kbd>
+    performs a 3x3 scan and so on)
   </p>
-
-  <p>e.g. <kbd>radar_scan_3()</kbd> performs a 3x3 scan</p>
 
   <p>
     to put this into practice, let's make use of the radar to prevent our bot
@@ -42,10 +48,11 @@ fn main() {
     loop {
         motor_step();
 
-        let scan = radar_scan_3();
+        let scan = radar_scan_3x3();
 
         // `scan` is a 2D char-array (`[[char; 3]; 3]`)
-        // representing our robot's neighbourhood
+        // representing our robot's neighbourhood, with
+        // the robot always at the center
         //
         // basically, if the map looks like:
         //
@@ -73,15 +80,16 @@ fn main() {
         // - scan[1][0] is the tile to our left
         // - scan[1][2] is the tile to our right
 
-        // if there's no floor in front of us, turn right
+        // if going forward would cause us to fall, turn
+        // right
         if scan[0][1] == ' ' {
             motor_turn(1);
         }
     }
-}
-  </pre>
+}</pre
+  >
 
   <p>
-    now, update your <kbd>main.rs</kbd>, build the project and submit bot v2.0
+    now, update your <kbd>main.rs</kbd>, build the project and upload bot v2.0
   </p>
 </template>

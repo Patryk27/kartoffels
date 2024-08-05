@@ -122,6 +122,15 @@ impl Sandbox {
         Ok(())
     }
 
+    pub async fn get_bots(&self) -> Result<JsValue> {
+        Ok(self
+            .handle
+            .get_bots()
+            .await
+            .into_js_error()?
+            .into_js_value())
+    }
+
     pub async fn set_spawn_point(
         &self,
         x: Option<i32>,

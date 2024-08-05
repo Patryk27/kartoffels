@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GameWorld } from "./State";
+import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
   close: [];
