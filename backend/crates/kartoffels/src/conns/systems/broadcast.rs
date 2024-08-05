@@ -9,13 +9,13 @@ use std::sync::Arc;
 use web_time::{Duration, Instant};
 
 struct State {
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            next_tick_at: Instant::now(),
+            next_run_at: Instant::now(),
         }
     }
 }
@@ -23,7 +23,7 @@ impl Default for State {
 pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_run_at {
         return;
     }
 

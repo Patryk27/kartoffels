@@ -5,13 +5,13 @@ use web_time::{Duration, Instant};
 
 #[derive(Debug)]
 struct State {
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            next_tick_at: Instant::now(),
+            next_run_at: Instant::now(),
         }
     }
 }
@@ -19,11 +19,11 @@ impl Default for State {
 pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_run_at {
         return;
     }
 
-    state.next_tick_at = Instant::now() + Duration::from_millis(16);
+    state.next_run_at = Instant::now() + Duration::from_millis(16);
 
     if world.bots.queued.is_empty()
         || world.bots.alive.len() >= world.policy.max_alive_bots

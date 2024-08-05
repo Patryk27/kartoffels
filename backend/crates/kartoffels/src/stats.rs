@@ -4,14 +4,14 @@ use web_time::{Duration, Instant};
 
 struct State {
     ticks: u32,
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
             ticks: 0,
-            next_tick_at: next_tick(),
+            next_run_at: next_tick(),
         }
     }
 }
@@ -21,7 +21,7 @@ pub fn run(world: &mut World) {
 
     state.ticks += cfg::SIM_TICKS;
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_run_at {
         return;
     }
 
@@ -47,7 +47,7 @@ pub fn run(world: &mut World) {
     }
 
     state.ticks = 0;
-    state.next_tick_at = next_tick();
+    state.next_run_at = next_tick();
 }
 
 fn next_tick() -> Instant {

@@ -8,14 +8,14 @@ use web_time::{Duration, Instant};
 
 struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
             task: Default::default(),
-            next_tick_at: next_tick(),
+            next_run_at: next_tick(),
         }
     }
 }
@@ -47,7 +47,7 @@ pub fn run(world: &mut World) {
         return;
     };
 
-    if Instant::now() < state.next_tick_at && shutdown.is_none() {
+    if Instant::now() < state.next_run_at && shutdown.is_none() {
         return;
     }
 
@@ -88,7 +88,7 @@ pub fn run(world: &mut World) {
     .map(|result| result.context("task crashed")?);
 
     state.task = Some(Box::new(task));
-    state.next_tick_at = next_tick();
+    state.next_run_at = next_tick();
 }
 
 fn next_tick() -> Instant {
