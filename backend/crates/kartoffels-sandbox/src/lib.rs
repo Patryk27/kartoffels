@@ -176,12 +176,20 @@ where
 fn start() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    subscriber::set_global_default(
-        Registry::default().with(WASMLayer::new(
-            WASMLayerConfigBuilder::new()
-                .set_max_level(Level::INFO)
-                .build(),
-        )),
-    )
-    .unwrap();
+    let enable_logs = web_sys::window()
+        .expect("couldn't find window")
+        .get("enableSandboxLogs")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+
+    if enable_logs {
+        subscriber::set_global_default(
+            Registry::default().with(WASMLayer::new(
+                WASMLayerConfigBuilder::new()
+                    .set_max_level(Level::INFO)
+                    .build(),
+            )),
+        )
+        .unwrap();
+    }
 }
