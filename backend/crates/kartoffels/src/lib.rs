@@ -81,7 +81,7 @@ pub fn create(
     let world = World {
         bots: Default::default(),
         conns: Default::default(),
-        event_tx: None,
+        event_txs: Default::default(),
         events: Default::default(),
         map,
         mode,
@@ -119,7 +119,7 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
     let world = World {
         bots: this.bots.into_owned(),
         conns: Default::default(),
-        event_tx: None,
+        event_txs: Default::default(),
         events: Default::default(),
         map: this.map.into_owned(),
         mode: this.mode.into_owned(),

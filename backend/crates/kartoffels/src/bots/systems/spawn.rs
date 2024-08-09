@@ -36,19 +36,23 @@ pub fn run(world: &mut World) {
 
     // ---
 
-    let pos = bot
-        .pos
-        .or_else(|| sample_pos(&mut world.rng, &world.map, &world.bots));
-
-    let Some(pos) = pos else {
-        if bot.pos.is_some() {
+    let pos = if let Some(pos) = bot.pos {
+        if is_pos_valid(&world.map, &world.bots, pos) {
+            pos
+        } else {
             debug!(
-                pos = ?bot.pos,
+                ?pos,
                 "can't dequeue pending bot: requested spawn point is taken",
             );
-        } else {
-            debug!("can't dequeue pending bot: all tiles are taken");
+
+            return;
         }
+    } else if let Some(pos) =
+        sample_pos(&mut world.rng, &world.map, &world.bots)
+    {
+        pos
+    } else {
+        debug!("can't dequeue pending bot: couldn't find empty tile");
 
         return;
     };
@@ -78,7 +82,7 @@ fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {
     loop {
         let pos = map.rand_pos(rng);
 
-        if map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none() {
+        if is_pos_valid(map, bots, pos) {
             return Some(pos);
         }
 
@@ -88,4 +92,8 @@ fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {
             return None;
         }
     }
+}
+
+fn is_pos_valid(map: &Map, bots: &Bots, pos: IVec2) -> bool {
+    map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none()
 }

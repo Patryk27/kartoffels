@@ -18,7 +18,7 @@ pub async fn handle(
     let world = state.read().await.as_alive()?.world(world_id)?;
 
     let id = world
-        .create_bot(Cow::Owned(body.to_vec()), None)
+        .create_bot(Cow::Owned(body.to_vec()), None, false)
         .await
         .map_err(AppError::MAP_HTTP_400)?;
 

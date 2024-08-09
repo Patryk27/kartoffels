@@ -20,10 +20,12 @@ defineProps<{
 </script>
 
 <script lang="ts">
-// Starts the tutorial and returns a `Promise` that resolves once the entire
+// Starts the tutorial and returns a promise that resolves once the entire
 // tutorial is completed.
 export function start(ctrl: GameCtrl): Promise<void> {
   return new Promise((resolve, _) => {
+    ctrl.getLocalServer().setSpawnPoint(16, 16);
+
     ctrl.alterUi((ui) => {
       ui.enableConnectToBot = false;
       ui.enableHelp = false;
@@ -75,24 +77,6 @@ export function start(ctrl: GameCtrl): Promise<void> {
 <style>
 .game-tutorial {
   width: 768px;
-
-  p {
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  ul {
-    &:last-child {
-      margin-bottom: 0;
-
-      li {
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-  }
 
   pre {
     margin-left: 4ch;

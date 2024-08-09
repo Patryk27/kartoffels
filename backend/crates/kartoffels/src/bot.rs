@@ -36,6 +36,7 @@ pub struct AliveBot {
     pub arm: BotArm,
     pub radar: BotRadar,
     pub events: BotEvents,
+    pub ephemeral: bool,
 }
 
 impl AliveBot {
@@ -46,7 +47,11 @@ impl AliveBot {
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
 
-    pub fn new(rng: &mut impl RngCore, vm: vm::Runtime) -> Self {
+    pub fn new(
+        rng: &mut impl RngCore,
+        vm: vm::Runtime,
+        ephemeral: bool,
+    ) -> Self {
         Self {
             vm: Some(vm),
             timer: BotTimer::new(rng),
@@ -56,6 +61,7 @@ impl AliveBot {
             arm: BotArm::default(),
             radar: BotRadar::default(),
             events: BotEvents::default(),
+            ephemeral,
         }
     }
 
@@ -107,9 +113,13 @@ impl AliveBot {
     }
 
     pub fn reset(mut self, rng: &mut impl RngCore) -> Result<Self, Self> {
+        if self.ephemeral {
+            return Err(self);
+        }
+
         if let Some(vm) = self.vm.take() {
             let vm = vm.reset();
-            let this = Self::new(rng, vm);
+            let this = Self::new(rng, vm, self.ephemeral);
 
             Ok(Self {
                 events: self.events,

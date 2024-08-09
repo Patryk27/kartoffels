@@ -49,7 +49,7 @@ pub(super) fn run_now(
         }
 
         Err(mut bot) => {
-            let msg = "discarded (firmware crashed)";
+            let msg = "discarded";
 
             bot.log(msg.into());
             debug!(?id, "bot {}", msg);

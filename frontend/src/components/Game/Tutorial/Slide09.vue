@@ -19,30 +19,31 @@ ctrl.onOnce("server.bot-create", () => {
 </script>
 
 <template>
-  <p>
-    radar is the second peripheral - it allows to scan the bot's neighbourhood
-    through these four functions:
-  </p>
+  <main>
+    <p>
+      radar is the second peripheral - it allows to scan the bot's neighbourhood
+      through these four functions:
+    </p>
 
-  <ul class="compact">
-    <li><kbd>radar_scan_3x3()</kbd></li>
-    <li><kbd>radar_scan_5x5()</kbd></li>
-    <li><kbd>radar_scan_7x7()</kbd></li>
-    <li><kbd>radar_scan_9x9()</kbd></li>
-  </ul>
+    <ul class="compact">
+      <li><kbd>radar_scan_3x3()</kbd></li>
+      <li><kbd>radar_scan_5x5()</kbd></li>
+      <li><kbd>radar_scan_7x7()</kbd></li>
+      <li><kbd>radar_scan_9x9()</kbd></li>
+    </ul>
 
-  <p>
-    the scan is always square-shaped and the number at the end of the function
-    tells you how large the scan will be (<kbd>radar_scan_3x3()</kbd>
-    performs a 3x3 scan and so on)
-  </p>
+    <p>
+      the scan is always square-shaped and the number at the end of the function
+      tells you how large the scan will be (<kbd>radar_scan_3x3()</kbd>
+      performs a 3x3 scan and so on)
+    </p>
 
-  <p>
-    to put this into practice, let's make use of the radar to prevent our bot
-    from falling:
-  </p>
+    <p>
+      to put this into practice, let's make use of the radar to prevent our bot
+      from falling:
+    </p>
 
-  <pre>
+    <pre>
 #[no_mangle]
 fn main() {
     loop {
@@ -83,13 +84,14 @@ fn main() {
         // if going forward would cause us to fall, turn
         // right
         if scan[0][1] == ' ' {
-            motor_turn(1);
+            motor_turn_right();
         }
     }
 }</pre
-  >
+    >
 
-  <p>
-    now, update your <kbd>main.rs</kbd>, build the project and upload bot v2.0
-  </p>
+    <p>
+      now, update your <kbd>main.rs</kbd>, build the project and upload bot v2.0
+    </p>
+  </main>
 </template>

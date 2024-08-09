@@ -20,7 +20,7 @@ use std::{cell::RefCell, rc::Rc};
 pub struct World {
     pub bots: Bots,
     pub conns: Vec<Conn>,
-    pub event_tx: Option<EventTx>,
+    pub event_txs: Vec<EventTx>,
     pub events: Events,
     pub map: Map,
     pub mode: Mode,
@@ -99,10 +99,10 @@ impl World {
         stats::run(self);
     }
 
-    pub fn emit(&self, event: Event) {
-        if let Some(tx) = &self.event_tx {
-            _ = tx.blocking_send(event);
-        }
+    pub fn emit(&mut self, event: Event) {
+        self.event_txs
+            .extract_if(|tx| tx.blocking_send(event.clone()).is_err())
+            .for_each(drop);
     }
 }
 

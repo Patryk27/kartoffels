@@ -91,11 +91,12 @@ export class LocalServer implements Server {
     ty: string,
     x?: number,
     y?: number,
+    ephemeral?: boolean,
   ): Promise<{ id: string }> {
-    log("createPrefabBot()", ty);
+    log("createPrefabBot()", ty, x, y, ephemeral);
 
     const sandbox = await this.getSandbox();
-    const id = await sandbox.create_prefab_bot(ty, x, y);
+    const id = await sandbox.create_prefab_bot(ty, x, y, ephemeral);
 
     return { id };
   }

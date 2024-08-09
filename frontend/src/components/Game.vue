@@ -94,7 +94,7 @@ async function handleBotCreate(src: File): Promise<void> {
 
     await join(bot.id);
 
-    ctrl.emit("server.bot-create");
+    ctrl.emit("server.bot-create", bot.id);
   } catch (error) {
     alert("ouch, the firmware seems wrong:\n\n" + error);
   }

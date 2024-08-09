@@ -169,17 +169,23 @@ table {
 dialog {
   top: 10vh;
   max-height: 80vh;
-  padding: 0.75em;
+  padding: 0;
   overflow: auto;
 
   color: var(--fg);
   background: #050505;
   border: 1px solid var(--green);
 
+  nav,
+  main,
+  footer {
+    margin: 0.75em;
+  }
+
   nav {
     display: flex;
-    margin-bottom: 1em;
-    padding-bottom: 0.55em;
+    margin-bottom: var(--text-margin);
+    padding-bottom: 0.75em;
     border-bottom: 1px solid var(--gray);
 
     .dialog-title {
@@ -194,8 +200,7 @@ dialog {
   }
 
   footer {
-    margin-top: 1em;
-    padding-top: 1em;
+    padding-top: 0.75em;
     border-top: 1px solid var(--gray);
   }
 }

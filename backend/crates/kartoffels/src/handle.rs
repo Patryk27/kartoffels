@@ -85,10 +85,17 @@ impl Handle {
         &self,
         src: Cow<'static, [u8]>,
         pos: Option<IVec2>,
+        ephemeral: bool,
     ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::CreateBot { src, pos, tx }).await?;
+        self.send(Request::CreateBot {
+            src,
+            pos,
+            ephemeral,
+            tx,
+        })
+        .await?;
 
         rx.await.context(Self::ERR_DIED)?
     }
@@ -147,6 +154,7 @@ pub enum Request {
     CreateBot {
         src: Cow<'static, [u8]>,
         pos: Option<IVec2>,
+        ephemeral: bool,
         tx: oneshot::Sender<Result<BotId>>,
     },
 

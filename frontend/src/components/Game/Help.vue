@@ -32,44 +32,46 @@ export function canOpenSandboxHelp(): boolean {
         </div>
       </nav>
 
-      <p>hey there soldier, welcome to the sandbox 🫡🫡🫡</p>
+      <main>
+        <p>hey there soldier, welcome to the sandbox 🫡🫡🫡</p>
 
-      <p>
-        sandbox is a special, private world where you can experiment with your
-        bots before uploading them online
-      </p>
+        <p>
+          sandbox is a special, private world where you can experiment with your
+          bots before uploading them online
+        </p>
 
-      <p>as compared to the online play, in here:</p>
+        <p>as compared to the online play, in here:</p>
 
-      <ul>
-        <li>
-          you can use the <kbd>[configure]</kbd> button (located above) to
-          change how the world looks like
-        </li>
+        <ul>
+          <li>
+            you can use the <kbd>[configure]</kbd> button (located above) to
+            change how the world looks like
+          </li>
 
-        <li>
-          you can <kbd>[spawn roberto]</kbd>, the built-in moderately
-          challenging bot
-        </li>
+          <li>
+            you can <kbd>[spawn roberto]</kbd>, the built-in moderately
+            challenging bot
+          </li>
 
-        <li>you can destroy and kill bots</li>
-      </ul>
+          <li>you can destroy and kill bots</li>
+        </ul>
 
-      <p>
-        not sure what all this means? no problem, i don't either! -- the
-        eggheads left some extra instructions:
-      </p>
+        <p>
+          not sure what all this means? no problem, i don't either! -- the
+          eggheads left some extra instructions:
+        </p>
 
-      <pre>
-      $ git clone https://github.com/patryk27/kartoffel
-      $ cd kartoffel
-      $ ./build</pre
-      >
+        <pre>
+$ git clone https://github.com/patryk27/kartoffel
+$ cd kartoffel
+$ ./build</pre
+        >
 
-      <p>
-        ... and then go back, click <kbd>[upload bot]</kbd> and pick
-        <kbd>./kartoffel</kbd>
-      </p>
+        <p>
+          ... and then go back, click <kbd>[upload bot]</kbd> and pick
+          <kbd>./kartoffel</kbd>
+        </p>
+      </main>
 
       <footer>
         <button @click="handleDisableSandboxHelp()">
@@ -86,18 +88,6 @@ export function canOpenSandboxHelp(): boolean {
 <style scoped>
 .game-help {
   max-width: 768px;
-
-  p {
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  ul {
-    li {
-      margin-bottom: 0.75em;
-    }
-  }
 
   footer {
     display: flex;

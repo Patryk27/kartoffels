@@ -31,7 +31,7 @@ export class GameCtrl {
     this.tutorialSlide = ref(null);
   }
 
-  on(event: string, fn: () => void, once: boolean = false): void {
+  on(event: string, fn: (payload: any) => void, once: boolean = false): void {
     log("on()", event, fn, once);
 
     if (!this.events.has(event)) {
@@ -41,18 +41,18 @@ export class GameCtrl {
     this.events.get(event).push({ fn, once });
   }
 
-  onOnce(event: string, handler: () => void): void {
+  onOnce(event: string, handler: (payload: any) => void): void {
     this.on(event, handler, true);
   }
 
-  waitFor(event: string): Promise<void> {
+  waitFor(event: string): Promise<any> {
     return new Promise((resolve) => {
       this.onOnce(event, resolve);
     });
   }
 
-  emit(event: string): void {
-    log("emit()", event);
+  emit(event: string, payload: any = null): void {
+    log("emit()", event, payload);
 
     if (!this.events.has(event)) {
       return;
@@ -61,7 +61,7 @@ export class GameCtrl {
     let handlers = this.events.get(event);
 
     for (const handler of handlers) {
-      handler.fn();
+      handler.fn(payload);
     }
 
     handlers = handlers.filter((handler) => {
@@ -105,7 +105,6 @@ export class GameCtrl {
         for await (const event of events) {
           if (event.ty == "bot-killed") {
             ctrl.enqueue(event.id);
-            break;
           }
         }
       },
@@ -117,6 +116,27 @@ export class GameCtrl {
     const killedBots = await this.listenForKilledBots();
 
     await killedBots.getReader().read();
+  }
+
+  /// Returns a promise that resolves once given bot is killed.
+  onceBotIsKilled(id: string): Promise<void> {
+    return this.onceBotsAreKilled([id]);
+  }
+
+  /// Returns a promise that resolves once all given bots are killed.
+  onceBotsAreKilled(ids: string[]): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      for await (const id2 of await this.listenForKilledBots()) {
+        ids = ids.filter((id) => id != id2);
+
+        if (ids.length == 0) {
+          resolve();
+          return;
+        }
+      }
+
+      reject();
+    });
   }
 
   /// Creates a task that decrements given counter and returns a promise that
@@ -147,7 +167,7 @@ export interface GameUi {
 }
 
 interface EventHandler {
-  fn: () => void;
+  fn: (payload: any) => void;
   once: boolean;
 }
 

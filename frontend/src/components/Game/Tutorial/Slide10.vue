@@ -62,12 +62,16 @@ onUnmounted(() => {
 
 <template>
   <template v-if="status == 'awaiting'">
-    <p>observing robot ({{ timer }}s)...</p>
+    <main>
+      <p>observing robot ({{ timer }}s)...</p>
+    </main>
   </template>
 
   <template v-else>
-    <p>ouch, it looks like the robot got killed!</p>
-    <p>make sure you uploaded the correct firmware and try again</p>
+    <main>
+      <p>ouch, it looks like the robot got killed!</p>
+      <p>make sure you uploaded the correct firmware and try again</p>
+    </main>
 
     <footer>
       <p>

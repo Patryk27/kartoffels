@@ -80,26 +80,38 @@ onUnmounted(() => {
 
 <template>
   <template v-if="status == 'awaiting-resume'">
-    <p>nice, the bot has been spawned!</p>
+    <main>
+      <p>nice, the bot has been spawned!</p>
 
-    <p>
-      on the right side you can now see your bot's id and its other parameters
-    </p>
+      <p>
+        on the right side you can now see your bot's id and its other parameters
+      </p>
 
-    <p>
-      now, press the <kbd>[resume]</kbd> button (top-right corner) to unpause
-      the game - if everything goes correctly, we should see the bot driving
-      forward and quickly falling out the map!
-    </p>
+      <p>
+        btw, for tutorial's sake, your bots gets always spawned at the center of
+        the map - but within normal game, the location and direction is
+        randomized
+      </p>
+
+      <p>
+        now, press the <kbd>[resume]</kbd> button (top-right corner) to unpause
+        the game - if everything goes correctly, we should see the bot driving
+        forward and quickly falling out the map!
+      </p>
+    </main>
   </template>
 
   <template v-else-if="status == 'awaiting-kill'">
-    <p>observing robot ({{ timer }}s)...</p>
+    <main>
+      <p>observing robot ({{ timer }}s)...</p>
+    </main>
   </template>
 
   <template v-else>
-    <p>ouch, it looks like the robot is still alive!</p>
-    <p>make sure you uploaded the correct firmware and try again</p>
+    <main>
+      <p>ouch, it looks like the robot is still alive!</p>
+      <p>make sure you uploaded the correct firmware and try again</p>
+    </main>
 
     <footer>
       <p>

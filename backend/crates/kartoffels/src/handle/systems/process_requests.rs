@@ -15,7 +15,7 @@ pub fn run(world: &mut World) {
             Request::Listen { tx } => {
                 let (tx2, rx2) = mpsc::channel(256);
 
-                world.event_tx = Some(tx2);
+                world.event_txs.push(tx2);
 
                 _ = tx.send(rx2);
             }
@@ -38,8 +38,13 @@ pub fn run(world: &mut World) {
                 world.events.send(Shutdown { tx });
             }
 
-            Request::CreateBot { src, pos, tx } => {
-                _ = tx.send(create_bot(world, src, pos));
+            Request::CreateBot {
+                src,
+                pos,
+                ephemeral,
+                tx,
+            } => {
+                _ = tx.send(create_bot(world, src, pos, ephemeral));
             }
 
             Request::RestartBot { id } => {
@@ -79,10 +84,11 @@ fn create_bot(
     world: &mut World,
     src: Cow<'static, [u8]>,
     pos: Option<IVec2>,
+    ephemeral: bool,
 ) -> Result<BotId> {
     let fw = vm::Firmware::new(&src)?;
     let vm = vm::Runtime::new(fw);
-    let mut bot = AliveBot::new(&mut world.rng, vm);
+    let mut bot = AliveBot::new(&mut world.rng, vm, ephemeral);
 
     bot.log("uploaded and queued".into());
 

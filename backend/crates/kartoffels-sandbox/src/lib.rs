@@ -81,7 +81,7 @@ impl Sandbox {
     pub async fn create_bot(&self, src: Vec<u8>) -> Result<JsValue> {
         let id = self
             .handle
-            .create_bot(Cow::Owned(src), self.spawn_point)
+            .create_bot(Cow::Owned(src), self.spawn_point, false)
             .await
             .into_js_error()?
             .into_js_value();
@@ -94,6 +94,7 @@ impl Sandbox {
         ty: String,
         x: Option<i32>,
         y: Option<i32>,
+        ephemeral: Option<bool>,
     ) -> Result<JsValue> {
         let src: &[u8] = match ty.as_str() {
             "dummy" => {
@@ -108,10 +109,11 @@ impl Sandbox {
         };
 
         let at = Self::decode_opt_pos(x, y).or(self.spawn_point);
+        let ephemeral = ephemeral.unwrap_or(false);
 
         let id = self
             .handle
-            .create_bot(Cow::Borrowed(src), at)
+            .create_bot(Cow::Borrowed(src), at, ephemeral)
             .await
             .into_js_error()?
             .into_js_value();

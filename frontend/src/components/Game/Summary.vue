@@ -23,37 +23,39 @@ defineProps<{
       </div>
     </nav>
 
-    <table>
-      <thead>
-        <tr>
-          <th>place</th>
-          <th>bot</th>
-          <th>age</th>
-          <th>score</th>
-        </tr>
-      </thead>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>place</th>
+            <th>bot</th>
+            <th>age</th>
+            <th>score</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <tr
-          v-for="entry in world.botsTable.value"
-          :class="{ 'connected-bot': entry.id == world.bot.value?.id }"
-        >
-          <td>#{{ entry.nth }}</td>
+        <tbody>
+          <tr
+            v-for="entry in world.botsTable.value"
+            :class="{ 'connected-bot': entry.id == world.bot.value?.id }"
+          >
+            <td>#{{ entry.nth }}</td>
 
-          <td>
-            <BotLink :bot="entry" @click="emit('botClick', entry.id)" />
-          </td>
+            <td>
+              <BotLink :bot="entry" @click="emit('botClick', entry.id)" />
+            </td>
 
-          <td>
-            {{ durationToHuman(Math.round(entry.age)) }}
-          </td>
+            <td>
+              {{ durationToHuman(Math.round(entry.age)) }}
+            </td>
 
-          <td>
-            {{ entry.score }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <td>
+              {{ entry.score }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
   </dialog>
 </template>
 

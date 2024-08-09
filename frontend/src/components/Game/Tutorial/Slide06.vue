@@ -11,8 +11,6 @@ ctrl.alterUi((ui) => {
   ui.highlightUploadBot = true;
 });
 
-ctrl.getLocalServer().setSpawnPoint(16, 16);
-
 ctrl.onOnce("server.bot-create", () => {
   ctrl.pause();
   ctrl.openTutorialSlide(7);
@@ -20,35 +18,35 @@ ctrl.onOnce("server.bot-create", () => {
 </script>
 
 <template>
-  <p>
-    cool! -- now click the <kbd>[upload bot]</kbd> button and choose
-    <kbd>./kartoffel</kbd>
-  </p>
+  <main>
+    <p>
+      cool! -- now click the <kbd>[upload bot]</kbd> button and choose
+      <kbd>./kartoffel</kbd>
+    </p>
 
-  <p>
-    this file should be located in the main directory, right next to
-    <kbd>./README.md</kbd>, <kbd>./build</kbd> etc.
-  </p>
+    <p>
+      this file should be located in the main directory, right next to
+      <kbd>./README.md</kbd>, <kbd>./build</kbd> etc.
+    </p>
 
-  <p>
-    (( it is an
-    <a
-      target="_blank"
-      href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format"
-      >*.elf binary</a
-    >
-    containing
-    <a target="_blank" href="https://en.wikipedia.org/wiki/RISC-V">
-      risc-v opcodes
-    </a>
-    that define how the bot should behave - it's a compiled version of the Rust
-    code from before ))
-  </p>
+    <p>
+      (( it is an
+      <a
+        target="_blank"
+        href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format"
+        >*.elf binary</a
+      >
+      containing
+      <a target="_blank" href="https://en.wikipedia.org/wiki/RISC-V">
+        risc-v opcodes
+      </a>
+      that define how the bot should behave - it's a compiled version of the
+      Rust code from before ))
+    </p>
+  </main>
 
   <footer>
-    <p>
-      (need help?
-      <a href="#" @click="ctrl.openTutorialSlide(5)">see the previous slide</a>)
-    </p>
+    (need help?
+    <a href="#" @click="ctrl.openTutorialSlide(5)">see the previous slide</a>)
   </footer>
 </template>

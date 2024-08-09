@@ -87,7 +87,7 @@ export function getTutorialWorld() {
       radius: 16,
     },
     policy: {
-      max_alive_bots: 8,
+      max_alive_bots: 16,
       max_queued_bots: 16,
     },
   };

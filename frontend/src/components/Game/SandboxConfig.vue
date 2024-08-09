@@ -19,15 +19,17 @@ let worldIdx = 0;
       </div>
     </nav>
 
-    <div class="field">
-      <label for="world">world preset:</label>
+    <main>
+      <div class="field">
+        <label for="world">world preset:</label>
 
-      <select for="world" v-model="worldIdx">
-        <option v-for="(world, worldIdx) in worlds" :value="worldIdx">
-          {{ world.name }}
-        </option>
-      </select>
-    </div>
+        <select for="world" v-model="worldIdx">
+          <option v-for="(world, worldIdx) in worlds" :value="worldIdx">
+            {{ world.name }}
+          </option>
+        </select>
+      </div>
+    </main>
 
     <footer style="text-align: right">
       <button @click="emit('recreate', worlds[worldIdx].config)">
