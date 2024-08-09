@@ -45,14 +45,6 @@ impl AliveBots {
         bot
     }
 
-    pub fn lookup_by_pos(&self, pos: IVec2) -> Option<BotId> {
-        self.pos_to_id.get(&pos).copied()
-    }
-
-    pub fn has(&self, id: BotId) -> bool {
-        self.entries.contains_key(&id)
-    }
-
     pub fn get(&self, id: BotId) -> Option<AliveBotEntry> {
         Some(AliveBotEntry {
             id,
@@ -69,6 +61,14 @@ impl AliveBots {
                 pos_to_id: &self.pos_to_id,
             },
         })
+    }
+
+    pub fn contains(&self, id: BotId) -> bool {
+        self.entries.contains_key(&id)
+    }
+
+    pub fn lookup_by_pos(&self, pos: IVec2) -> Option<BotId> {
+        self.pos_to_id.get(&pos).copied()
     }
 
     pub fn iter(&self) -> impl Iterator<Item = AliveBotEntry> + '_ {

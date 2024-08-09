@@ -2,32 +2,35 @@
 import { computed } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import { durationToHuman, ordinal } from "@/utils/other";
-import type { GameBot } from "@/components/Game.vue";
+import type { GameCtrl } from "../Ctrl";
+import type { GameWorld } from "../World";
 
 const emit = defineEmits<{
-  botUpload: [File];
-  botSpawnPrefab: [string];
-  botConnect: [string];
-  botDisconnect: [];
+  botCreate: [File];
+  botCreatePrefab: [string];
+  botJoin: [string];
+  botLeave: [];
   botDestroy: [];
   botRestart: [];
 }>();
 
 const props = defineProps<{
-  worldId: string;
-  bot?: GameBot;
+  ctrl: GameCtrl;
+  world: GameWorld;
   paused: boolean;
 }>();
 
 const serial = computed(() => {
-  if (props.bot.status != "alive") {
+  const bot = props.world.bot.value;
+
+  if (bot.status != "alive") {
     return null;
   }
 
   let out = "";
   let buf = null;
 
-  for (const op of props.bot.serial) {
+  for (const op of bot.serial) {
     switch (op) {
       case 0xffffff00:
         buf = "";
@@ -53,10 +56,16 @@ const serial = computed(() => {
 });
 
 const events = computed(() => {
+  const bot = props.world.bot.value;
   const now = new Date();
+
+  if (bot.status != "alive" && bot.status != "dead" && bot.status != "queued") {
+    return "";
+  }
+
   let out = "";
 
-  for (const event of props.bot?.events ?? []) {
+  for (const event of bot.events) {
     let eventHappenedToday =
       event.at.getFullYear() == now.getFullYear() &&
       event.at.getMonth() == now.getMonth() &&
@@ -73,22 +82,22 @@ const events = computed(() => {
   return out;
 });
 
-function handleConnectToBot() {
+function handleJoinBot() {
   const id = prompt("bot id to connect to:");
 
   if (id) {
-    emit("botConnect", id.trim());
+    emit("botJoin", id.trim());
   }
 }
 
-function handleUploadBot() {
+function handleCreateBot() {
   const input = document.createElement("input");
 
   input.type = "file";
 
   input.onchange = (event) => {
     if (event.target instanceof HTMLInputElement) {
-      emit("botUpload", event.target.files[0]);
+      emit("botCreate", event.target.files[0]);
     }
   };
 
@@ -97,20 +106,29 @@ function handleUploadBot() {
 </script>
 
 <template>
-  <div v-if="bot == null" class="game-side-bot">
+  <div v-if="world.bot.value == null" class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
-        <button :disabled="paused" @click="handleConnectToBot">
+        <button
+          :disabled="paused || !ctrl.ui.value.enableConnectToBot"
+          @click="handleJoinBot"
+        >
           connect to bot
         </button>
 
-        <button :disabled="paused" @click="handleUploadBot">upload bot</button>
+        <button
+          :disabled="paused || !ctrl.ui.value.enableUploadBot"
+          :class="{ highlighted: ctrl.ui.value.highlightUploadBot }"
+          @click="handleCreateBot"
+        >
+          upload bot
+        </button>
       </div>
 
-      <div v-if="worldId == 'sandbox'" class="buttons-row">
+      <div v-if="world.id == 'sandbox'" class="buttons-row">
         <button
           :disabled="paused"
-          @click="emit('botSpawnPrefab', 'roberto')"
+          @click="emit('botCreatePrefab', 'roberto')"
           title="roberto is a built-in moderately challenging bot written by kartoffels' author"
         >
           spawn roberto
@@ -122,10 +140,15 @@ function handleUploadBot() {
   <div v-else class="game-side-bot">
     <div class="buttons">
       <div class="buttons-row">
-        <button @click="emit('botDisconnect')">disconnect from bot</button>
+        <button
+          :disabled="!ctrl.ui.value.enableDisconnectFromBot"
+          @click="emit('botLeave')"
+        >
+          disconnect from bot
+        </button>
       </div>
 
-      <div v-if="worldId == 'sandbox'" class="buttons-row">
+      <div v-if="world.id == 'sandbox'" class="buttons-row">
         <button :disabled="paused" @click="emit('botDestroy')">
           destroy bot
         </button>
@@ -139,36 +162,40 @@ function handleUploadBot() {
     <p>
       id:
       <br />
-      <span :style="`color: ${botIdToColor(bot.id)}`">
-        {{ bot.id }}
+      <span :style="`color: ${botIdToColor(world.bot.value.id)}`">
+        {{ world.bot.value.id }}
       </span>
     </p>
 
-    <template v-if="bot.status == 'alive'">
+    <template v-if="world.bot.value.status == 'alive'">
       <p>
         status:
         <br />
         <span class="status-alive">alive</span>
-        ({{ durationToHuman(Math.round(bot.age)) }})
+        ({{ durationToHuman(Math.round(world.bot.value.age)) }})
       </p>
 
       <p>serial port:</p>
 
-      <textarea v-if="bot.status == 'alive'" :value="serial" readonly />
+      <textarea
+        v-if="world.bot.value.status == 'alive'"
+        :value="serial"
+        readonly
+      />
     </template>
 
-    <p v-if="bot.status == 'dead'">
+    <p v-if="world.bot.value.status == 'dead'">
       status:
       <br />
       <span class="status-dead">dead</span>
     </p>
 
-    <p v-else-if="bot.status == 'queued'">
+    <p v-else-if="world.bot.value.status == 'queued'">
       status:
       <br />
       <span class="status-queued">
-        {{ bot.requeued ? "requeued" : "queued" }}
-        ({{ bot.place }}{{ ordinal(bot.place) }})
+        {{ world.bot.value.requeued ? "requeued" : "queued" }}
+        ({{ world.bot.value.place }}{{ ordinal(world.bot.value.place) }})
       </span>
     </p>
 
@@ -177,11 +204,11 @@ function handleUploadBot() {
       <textarea readonly :value="events" />
     </template>
 
-    <div v-if="bot.status == 'alive'">
+    <div v-if="world.bot.value.status == 'alive'">
       <input
         id="bot-follow"
         type="checkbox"
-        v-model="bot.following"
+        v-model="world.bot.value.following"
         :disabled="paused"
       />
 
@@ -196,9 +223,10 @@ function handleUploadBot() {
   width: 32ch;
   flex-grow: 1;
   flex-direction: column;
-  padding-bottom: 1em;
 
   .buttons {
+    margin-bottom: var(--text-margin);
+
     .buttons-row {
       display: flex;
 
@@ -219,10 +247,6 @@ function handleUploadBot() {
   }
 
   p {
-    &:first-child {
-      margin-top: 0;
-    }
-
     & + p {
       margin-top: 0;
     }

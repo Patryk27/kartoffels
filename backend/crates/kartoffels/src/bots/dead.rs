@@ -16,8 +16,12 @@ impl DeadBots {
         self.entries.put(id, bot);
     }
 
-    pub fn get(&self, id: BotId) -> Option<&DeadBot> {
-        self.entries.peek(&id)
+    pub fn get(&self, id: BotId) -> Option<DeadBotEntry> {
+        if self.entries.contains(&id) {
+            Some(DeadBotEntry { id })
+        } else {
+            None
+        }
     }
 
     pub fn get_mut(&mut self, id: BotId) -> Option<&mut DeadBot> {
@@ -28,9 +32,18 @@ impl DeadBots {
         self.entries.pop_entry(&id);
     }
 
-    pub fn has(&self, id: BotId) -> bool {
+    pub fn contains(&self, id: BotId) -> bool {
         self.entries.contains(&id)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = DeadBotEntry> + '_ {
+        self.entries.iter().map(|(&id, _)| DeadBotEntry { id })
+    }
+}
+
+#[derive(Debug)]
+pub struct DeadBotEntry {
+    pub id: BotId,
 }
 
 impl Default for DeadBots {

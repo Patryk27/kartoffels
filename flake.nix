@@ -74,16 +74,8 @@
                 path = backend.kartoffels-server;
               }
               {
-                name = "kartoffels-sandbox";
-                path = backend.kartoffels-sandbox;
-              }
-              {
                 name = "kartoffels-frontend";
                 path = frontend;
-              }
-              {
-                name = "roberto";
-                path = backend.kartoffels-sandbox;
               }
             ];
           };

@@ -115,6 +115,6 @@ pub async fn setup_shutdown_signal(state: Arc<RwLock<AppState>>) {
     };
 
     for (_, world) in state.worlds {
-        _ = world.shutdown().await;
+        _ = world.close().await;
     }
 }

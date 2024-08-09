@@ -11,23 +11,23 @@ use tokio::select;
 use tokio::sync::RwLock;
 use tracing::debug;
 
-pub async fn handle1(
+pub async fn handle(
     State(state): State<Arc<RwLock<AppState>>>,
     Path(world_id): Path<WorldId>,
     socket: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
-    handle(state, world_id, None, socket).await
+    handle_ex(state, world_id, None, socket).await
 }
 
-pub async fn handle2(
+pub async fn handle_with_bot(
     State(state): State<Arc<RwLock<AppState>>>,
     Path((world_id, bot_id)): Path<(WorldId, BotId)>,
     socket: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
-    handle(state, world_id, Some(bot_id), socket).await
+    handle_ex(state, world_id, Some(bot_id), socket).await
 }
 
-async fn handle(
+async fn handle_ex(
     state: Arc<RwLock<AppState>>,
     world_id: WorldId,
     bot_id: Option<BotId>,

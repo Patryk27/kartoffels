@@ -1,12 +1,15 @@
 mod v2;
 mod v3;
+mod v4;
 
 use anyhow::{Context, Result};
 use ciborium::Value;
 use tracing::info;
 
+pub const VERSION: u32 = 4;
+
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
-    let migrations = [v2::run, v3::run];
+    let migrations = [v2::run, v3::run, v4::run];
 
     for nth in old..new {
         info!("migrating: v{} -> v{}", nth, nth + 1);
@@ -29,6 +32,7 @@ mod tests {
 
     #[test_case(2)]
     #[test_case(3)]
+    #[test_case(4)]
     fn test(version: u32) {
         let dir = Path::new("src")
             .join("store")

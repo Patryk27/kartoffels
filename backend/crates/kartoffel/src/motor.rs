@@ -19,7 +19,7 @@ pub fn motor_wait() {
     }
 }
 
-/// Moves the bot one tile forward in the direction it's currently facing.
+/// Moves the bot one tile forward in the direction it's facing.
 ///
 /// # Cooldown
 ///
@@ -28,6 +28,20 @@ pub fn motor_wait() {
 #[inline(always)]
 pub fn motor_step() {
     wri(MEM_MOTOR, 0, 1);
+}
+
+/// Turns the bot left.
+///
+/// See: [`motor_turn()`].
+pub fn motor_turn_left() {
+    motor_turn(-1);
+}
+
+/// Turns the bot right.
+///
+/// See: [`motor_turn()`].
+pub fn motor_turn_right() {
+    motor_turn(1);
 }
 
 /// Turns the bot in place:

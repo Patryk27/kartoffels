@@ -1,9 +1,9 @@
 use crate::{
-    BotEntryMut, Client, ClientBot, ClientBotEvents, CreateClient, World,
+    BotEntryMut, Conn, ConnBot, ConnBotEvents, CreateConnection, World,
 };
 
 pub fn run(world: &mut World) {
-    while let Some(CreateClient { id, tx }) = world.events.recv() {
+    while let Some(CreateConnection { id, tx }) = world.events.recv() {
         let bot = id.map(|id| {
             let events = world
                 .bots
@@ -13,15 +13,15 @@ pub fn run(world: &mut World) {
                     BotEntryMut::Alive(bot) => &mut bot.events,
                     BotEntryMut::Dead(bot) => &mut bot.events,
                 })
-                .map(|events| ClientBotEvents {
+                .map(|events| ConnBotEvents {
                     rx: events.subscribe(),
                     init: events.iter().cloned().collect(),
                 });
 
-            ClientBot { id, events }
+            ConnBot { id, events }
         });
 
-        world.clients.push(Client {
+        world.conns.push(Conn {
             tx,
             bot,
             is_fresh: true,

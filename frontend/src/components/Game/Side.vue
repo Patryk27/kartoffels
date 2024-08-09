@@ -1,49 +1,50 @@
 <script setup lang="ts">
+import type { GameCtrl } from "./Ctrl";
 import Bot from "./Side/Bot.vue";
 import Bots from "./Side/Bots.vue";
-import type { GameBot, GameStatus, GameTableBot } from "../Game.vue";
+import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
-  botUpload: [File];
-  botSpawnPrefab: [string];
-  botConnect: [string];
-  botDisconnect: [];
-  botClick: [string];
+  botCreate: [File];
+  botCreatePrefab: [string];
+  botJoin: [string];
+  botLeave: [];
   botDestroy: [];
   botRestart: [];
-  openSummary: [];
+  summaryOpen: [];
 }>();
 
 defineProps<{
-  worldId: string;
-  mode: any;
-  bot?: GameBot;
-  bots?: GameTableBot[];
-  status: GameStatus;
+  ctrl: GameCtrl;
+  world: GameWorld;
   paused: boolean;
 }>();
 </script>
 
 <template>
-  <div v-if="status == 'connected' || status == 'connecting'" class="game-side">
+  <div
+    v-if="
+      world.status.value == 'connected' || world.status.value == 'connecting'
+    "
+    class="game-side"
+  >
     <Bot
-      :worldId="worldId"
-      :bot="bot"
+      :ctrl="ctrl"
+      :world="world"
       :paused="paused"
-      @bot-upload="(file) => emit('botUpload', file)"
-      @bot-spawn-prefab="(id) => emit('botSpawnPrefab', id)"
-      @bot-connect="(id) => emit('botConnect', id)"
-      @bot-disconnect="emit('botDisconnect')"
+      @bot-create="(file) => emit('botCreate', file)"
+      @bot-create-prefab="(id) => emit('botCreatePrefab', id)"
+      @bot-join="(id) => emit('botJoin', id)"
+      @bot-leave="emit('botLeave')"
       @bot-destroy="emit('botDestroy')"
       @bot-restart="emit('botRestart')"
     />
 
     <Bots
-      :bot="bot"
-      :bots="bots"
-      :mode="mode"
-      @bot-click="(id) => emit('botClick', id)"
-      @open-summary="emit('openSummary')"
+      v-if="ctrl.ui.value.showBotList"
+      :world="world"
+      @bot-click="(id) => emit('botJoin', id)"
+      @summary-open="emit('summaryOpen')"
     />
   </div>
 </template>

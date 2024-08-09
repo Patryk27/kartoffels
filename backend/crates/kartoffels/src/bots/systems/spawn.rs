@@ -1,17 +1,18 @@
-use crate::{QueuedBot, World};
+use crate::{Bots, Map, QueuedBot, World};
 use glam::IVec2;
+use rand::RngCore;
 use tracing::debug;
 use web_time::{Duration, Instant};
 
 #[derive(Debug)]
 struct State {
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            next_tick_at: Instant::now(),
+            next_run_at: Instant::now(),
         }
     }
 }
@@ -19,20 +20,40 @@ impl Default for State {
 pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_run_at {
         return;
     }
 
-    state.next_tick_at = Instant::now() + Duration::from_millis(16);
+    state.next_run_at = Instant::now() + Duration::from_millis(16);
 
-    if world.bots.queued.is_empty()
-        || world.bots.alive.len() >= world.policy.max_alive_bots
+    if world.bots.alive.len() >= world.policy.max_alive_bots {
+        return;
+    }
+
+    let Some(bot) = world.bots.queued.peek() else {
+        return;
+    };
+
+    // ---
+
+    let pos = if let Some(pos) = bot.pos {
+        if is_pos_valid(&world.map, &world.bots, pos) {
+            pos
+        } else {
+            debug!(
+                ?pos,
+                "can't dequeue pending bot: requested spawn point is taken",
+            );
+
+            return;
+        }
+    } else if let Some(pos) =
+        sample_pos(&mut world.rng, &world.map, &world.bots)
     {
-        return;
-    }
+        pos
+    } else {
+        debug!("can't dequeue pending bot: couldn't find empty tile");
 
-    let Some(pos) = sample_pos(world) else {
-        debug!("all tiles are taken - can't dequeue pending bot");
         return;
     };
 
@@ -41,6 +62,7 @@ pub fn run(world: &mut World) {
         id,
         requeued,
         mut bot,
+        ..
     } = world.bots.queued.pop().unwrap();
 
     debug!(?id, ?pos, "bot dequeued and spawned");
@@ -54,15 +76,13 @@ pub fn run(world: &mut World) {
     world.bots.alive.add(id, pos, bot);
 }
 
-fn sample_pos(world: &mut World) -> Option<IVec2> {
+fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {
     let mut nth = 0;
 
     loop {
-        let pos = world.map.rand_pos(&mut world.rng);
+        let pos = map.rand_pos(rng);
 
-        if world.map.get(pos).is_floor()
-            && world.bots.alive.lookup_by_pos(pos).is_none()
-        {
+        if is_pos_valid(map, bots, pos) {
             return Some(pos);
         }
 
@@ -72,4 +92,8 @@ fn sample_pos(world: &mut World) -> Option<IVec2> {
             return None;
         }
     }
+}
+
+fn is_pos_valid(map: &Map, bots: &Bots, pos: IVec2) -> bool {
+    map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none()
 }

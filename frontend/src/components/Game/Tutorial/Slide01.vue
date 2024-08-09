@@ -1,0 +1,45 @@
+<script setup lang="ts">
+import type { GameCtrl } from "../Ctrl";
+
+const { ctrl } = defineProps<{
+  ctrl: GameCtrl;
+}>();
+</script>
+
+<template>
+  <main>
+    <p>hey there soldier and welcome to the tutorial 🫡🫡🫡</p>
+
+    <p>
+      in here we'll go through the basics of programming the robots and
+      navigating the game - this will take just a couple of minutes
+    </p>
+
+    <p>
+      i'm assuming you know a bit of rust (calling functions, using ifs etc.,
+      nothing too advanced) and that you've got <kbd>cargo</kbd> at hand
+    </p>
+
+    <p>start by following this carefully crafted instruction:</p>
+
+    <pre>
+$ git clone https://github.com/patryk27/kartoffel
+$ cd kartoffel</pre
+    >
+
+    <p>
+      ... and then press
+      <button class="highlighted" @click="ctrl.openTutorialSlide(2)">
+        continue
+      </button>
+      once you're ready.
+    </p>
+  </main>
+
+  <footer>
+    <p>
+      <b>cool bear's hot tip:</b> you can leave the tutorial at any time by
+      using the <kbd>[leave]</kbd> button in the top left corner
+    </p>
+  </footer>
+</template>

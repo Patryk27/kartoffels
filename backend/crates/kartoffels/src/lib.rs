@@ -8,8 +8,9 @@
 
 mod bot;
 mod bots;
-mod clients;
 mod config;
+mod conns;
+mod events;
 mod handle;
 mod map;
 mod mode;
@@ -22,9 +23,10 @@ mod utils;
 mod world;
 
 pub mod prelude {
-    pub use crate::bot::BotId;
+    pub use crate::bot::{BotId, BotInfo};
     pub use crate::config::Config;
-    pub use crate::handle::Handle;
+    pub use crate::events::Event;
+    pub use crate::handle::{Handle, Request};
     pub use crate::utils::*;
     pub use crate::world::{WorldId, WorldName};
 }
@@ -32,14 +34,14 @@ pub mod prelude {
 mod cfg {
     pub const SIM_HZ: u32 = 64_000;
     pub const SIM_TICKS: u32 = 1024;
-    pub const VERSION: u32 = 3;
     pub const MAX_REQUEST_BACKLOG: usize = 16 * 1024;
 }
 
 pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
-pub(crate) use self::clients::*;
 pub(crate) use self::config::*;
+pub(crate) use self::conns::*;
+pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
@@ -78,14 +80,15 @@ pub fn create(
 
     let world = World {
         bots: Default::default(),
-        clients: Default::default(),
+        conns: Default::default(),
+        event_txs: Default::default(),
         events: Default::default(),
         map,
-        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
         mode,
         name: Arc::new(config.name),
         path,
         paused: false,
+        platform: Default::default(),
         policy: config.policy,
         rng: SmallRng::from_entropy(),
         rx,
@@ -115,14 +118,15 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
 
     let world = World {
         bots: this.bots.into_owned(),
-        clients: Default::default(),
+        conns: Default::default(),
+        event_txs: Default::default(),
         events: Default::default(),
         map: this.map.into_owned(),
-        metronome: Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS),
         mode: this.mode.into_owned(),
         name: Arc::new(this.name.into_owned()),
         path: Some(path.to_owned()),
         paused: false,
+        platform: Default::default(),
         policy: this.policy.into_owned(),
         rng: SmallRng::from_entropy(),
         rx,

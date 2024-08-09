@@ -1,6 +1,6 @@
 use crate::{
-    BotEntry, Bots, BroadcastReceiverRx, Client, ClientBot, ClientBotUpdate,
-    ClientConnectedBotUpdate, ClientUpdate, Map, Mode, World,
+    BotEntry, Bots, BroadcastReceiverRx, Conn, ConnBot, ConnBotUpdate,
+    ConnJoinedBotUpdate, ConnMsg, Map, Mode, World,
 };
 use std::collections::BTreeMap;
 use std::mem;
@@ -8,13 +8,13 @@ use std::sync::Arc;
 use web_time::{Duration, Instant};
 
 struct State {
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            next_tick_at: Instant::now(),
+            next_run_at: Instant::now(),
         }
     }
 }
@@ -22,23 +22,23 @@ impl Default for State {
 pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
 
-    if Instant::now() < state.next_tick_at {
+    if Instant::now() < state.next_run_at {
         return;
     }
 
-    let update = prepare_update(&world.bots, &mut world.map, &world.mode);
+    let msg = prepare_msg(&world.bots, &mut world.map, &world.mode);
 
     world
-        .clients
-        .extract_if(|client| {
-            handle_client(&world.bots, &world.map, update.clone(), client)
+        .conns
+        .extract_if(|conn| {
+            process_conn(&world.bots, &world.map, msg.clone(), conn)
         })
         .for_each(drop);
 
-    state.next_tick_at = Instant::now() + Duration::from_millis(50);
+    state.next_run_at = Instant::now() + Duration::from_millis(50);
 }
 
-fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ClientUpdate {
+fn prepare_msg(bots: &Bots, map: &mut Map, mode: &Mode) -> ConnMsg {
     let mode = Some(Arc::new(mode.state()));
 
     let map = if map.take_dirty() {
@@ -56,14 +56,14 @@ fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ClientUpdate {
                 let dir = entry.bot.motor.dir;
                 let age = entry.bot.timer.age();
 
-                (entry.id, ClientBotUpdate { pos, dir, age })
+                (entry.id, ConnBotUpdate { pos, dir, age })
             })
             .collect();
 
         Some(Arc::new(bots))
     };
 
-    ClientUpdate {
+    ConnMsg {
         mode,
         map,
         bots,
@@ -71,30 +71,24 @@ fn prepare_update(bots: &Bots, map: &mut Map, mode: &Mode) -> ClientUpdate {
     }
 }
 
-fn handle_client(
+fn process_conn(
     bots: &Bots,
     map: &Map,
-    mut update: ClientUpdate,
-    client: &mut Client,
+    mut update: ConnMsg,
+    conn: &mut Conn,
 ) -> bool {
-    update.map = if mem::take(&mut client.is_fresh) && update.map.is_none() {
+    update.map = if mem::take(&mut conn.is_fresh) && update.map.is_none() {
         Some(Arc::new(map.clone()))
     } else {
         update.map.clone()
     };
 
-    update.bot = client
-        .bot
-        .as_mut()
-        .and_then(|bot| handle_client_bot(bots, bot));
+    update.bot = conn.bot.as_mut().map(|bot| process_conn_bot(bots, bot));
 
-    client.tx.try_send(update).is_err()
+    conn.tx.try_send(update).is_err()
 }
 
-fn handle_client_bot(
-    bots: &Bots,
-    bot: &mut ClientBot,
-) -> Option<ClientConnectedBotUpdate> {
+fn process_conn_bot(bots: &Bots, bot: &mut ConnBot) -> ConnJoinedBotUpdate {
     let events = bot
         .events
         .as_mut()
@@ -107,19 +101,20 @@ fn handle_client_bot(
         })
         .unwrap_or_default();
 
-    match bots.get(bot.id)? {
-        BotEntry::Queued(entry) => Some(ClientConnectedBotUpdate::Queued {
+    match bots.get(bot.id) {
+        Some(BotEntry::Queued(entry)) => ConnJoinedBotUpdate::Queued {
             place: entry.place + 1,
             requeued: entry.bot.requeued,
             events,
-        }),
+        },
 
-        BotEntry::Alive(entry) => Some(ClientConnectedBotUpdate::Alive {
+        Some(BotEntry::Alive(entry)) => ConnJoinedBotUpdate::Alive {
             age: entry.bot.timer.age(),
             serial: entry.bot.serial.buffer.clone(),
             events,
-        }),
+        },
 
-        BotEntry::Dead => Some(ClientConnectedBotUpdate::Dead { events }),
+        Some(BotEntry::Dead(_)) => ConnJoinedBotUpdate::Dead { events },
+        None => ConnJoinedBotUpdate::Unknown,
     }
 }

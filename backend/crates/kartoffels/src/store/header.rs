@@ -1,4 +1,4 @@
-use crate::cfg;
+use crate::store;
 use anyhow::{anyhow, Result};
 use std::io::{Read, Write};
 
@@ -44,7 +44,7 @@ impl Header {
                 "unsupported version: world is v{}, but we support only up to \
                  v{}",
                 self.version,
-                cfg::VERSION,
+                store::VERSION,
             ));
         }
 
@@ -64,7 +64,7 @@ impl Default for Header {
     fn default() -> Self {
         Self {
             magic: *b"kartoffels:",
-            version: cfg::VERSION,
+            version: store::VERSION,
             padding: 0,
         }
     }

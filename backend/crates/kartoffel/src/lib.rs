@@ -19,12 +19,12 @@ pub use self::timer::*;
 use core::ptr;
 
 const MEM: *mut u32 = 0x08000000 as *mut u32;
-const MEM_TIMER: *mut u32 = MEM;
-const MEM_BATTERY: *mut u32 = MEM.wrapping_byte_add(1024);
-const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
-const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
-const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
-const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
+pub const MEM_TIMER: *mut u32 = MEM;
+pub const MEM_BATTERY: *mut u32 = MEM.wrapping_byte_add(1024);
+pub const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
+pub const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
+pub const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
+pub const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 
 #[inline(always)]
 fn rdi(ptr: *mut u32, off: usize) -> u32 {

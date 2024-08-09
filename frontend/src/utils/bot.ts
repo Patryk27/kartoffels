@@ -1,3 +1,7 @@
+export function isValidBotId(id: string): boolean {
+  return id.match(/^([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{4}$/) != null;
+}
+
 export function botIdToColor(id: string, mode: string = "fg"): string {
   let hue = stringToHash(id) % 360;
 

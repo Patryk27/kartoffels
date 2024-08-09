@@ -1,5 +1,5 @@
 [package]
-name = "roberto"
+name = "bot-dummy"
 version = { workspace = true }
 edition = { workspace = true }
 

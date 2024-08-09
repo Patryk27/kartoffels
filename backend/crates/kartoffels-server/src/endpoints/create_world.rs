@@ -21,7 +21,7 @@ pub async fn handle(
 
     info!(?id, ?config, "creating world");
 
-    if state.has_world_named(&config.name) {
+    if state.contains_world_named(&config.name) {
         return Err(AppError::Other(
             StatusCode::BAD_REQUEST,
             "world with this name already exists".into(),

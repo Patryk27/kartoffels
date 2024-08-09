@@ -1,10 +1,12 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClientUpdate, ClientUpdateRx, World, WorldName};
+use crate::{
+    BotId, BotInfo, ConnMsg, ConnMsgRx, Event, EventRx, World, WorldName,
+};
 use anyhow::{anyhow, Context, Result};
-use derivative::Derivative;
 use futures_util::Stream;
+use glam::IVec2;
 use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::sync::{mpsc, oneshot};
@@ -42,10 +44,20 @@ impl Handle {
         self.theme
     }
 
+    pub async fn listen(&self) -> Result<impl Stream<Item = Event>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Listen { tx }).await?;
+
+        let rx = rx.await.context(Self::ERR_DIED)?;
+
+        Ok(ReceiverStream::new(rx))
+    }
+
     pub async fn join(
         &self,
         id: Option<BotId>,
-    ) -> Result<impl Stream<Item = ClientUpdate>> {
+    ) -> Result<impl Stream<Item = ConnMsg>> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::Join { id, tx }).await?;
@@ -61,18 +73,29 @@ impl Handle {
         Ok(())
     }
 
-    pub async fn shutdown(&self) -> Result<()> {
+    pub async fn close(&self) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::Shutdown { tx }).await?;
+        self.send(Request::Close { tx }).await?;
 
         rx.await.context(Self::ERR_DIED)
     }
 
-    pub async fn upload_bot(&self, src: Cow<'static, [u8]>) -> Result<BotId> {
+    pub async fn create_bot(
+        &self,
+        src: Cow<'static, [u8]>,
+        pos: Option<IVec2>,
+        ephemeral: bool,
+    ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::UploadBot { src, tx }).await?;
+        self.send(Request::CreateBot {
+            src,
+            pos,
+            ephemeral,
+            tx,
+        })
+        .await?;
 
         rx.await.context(Self::ERR_DIED)?
     }
@@ -89,6 +112,14 @@ impl Handle {
         Ok(())
     }
 
+    pub async fn get_bots(&self) -> Result<Vec<BotInfo>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::GetBots { tx }).await?;
+
+        rx.await.context(Self::ERR_DIED)
+    }
+
     async fn send(&self, request: Request) -> Result<()> {
         self.tx
             .send(request)
@@ -102,29 +133,28 @@ impl Handle {
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
-#[derive(Derivative)]
-#[derivative(Debug)]
 pub enum Request {
+    Listen {
+        tx: oneshot::Sender<EventRx>,
+    },
+
     Join {
         id: Option<BotId>,
-
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<ClientUpdateRx>,
+        tx: oneshot::Sender<ConnMsgRx>,
     },
 
     Pause {
         paused: bool,
     },
 
-    Shutdown {
+    Close {
         tx: oneshot::Sender<()>,
     },
 
-    UploadBot {
-        #[derivative(Debug = "ignore")]
+    CreateBot {
         src: Cow<'static, [u8]>,
-
-        #[derivative(Debug = "ignore")]
+        pos: Option<IVec2>,
+        ephemeral: bool,
         tx: oneshot::Sender<Result<BotId>>,
     },
 
@@ -134,5 +164,9 @@ pub enum Request {
 
     DestroyBot {
         id: BotId,
+    },
+
+    GetBots {
+        tx: oneshot::Sender<Vec<BotInfo>>,
     },
 }

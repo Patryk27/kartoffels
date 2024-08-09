@@ -1,3 +1,4 @@
+use crate::Event::BotKilled;
 use crate::{DeadBot, KillBot, QueuedBot, World};
 use tracing::debug;
 
@@ -13,11 +14,12 @@ pub(super) fn run_now(
 ) {
     debug!(?id, ?reason, ?killer, "bot killed");
 
+    world.emit(BotKilled { id, killer });
     world.mode.on_bot_killed(id, killer);
 
     let mut bot = world.bots.alive.remove(id);
 
-    bot.log(reason.to_owned());
+    bot.log(reason);
 
     if let Some(killer) = killer {
         if let Some(killer) = world.bots.alive.get_mut(killer) {
@@ -33,6 +35,7 @@ pub(super) fn run_now(
                 world.bots.queued.push(QueuedBot {
                     id,
                     bot,
+                    pos: None,
                     requeued: true,
                 });
             } else {
@@ -46,7 +49,7 @@ pub(super) fn run_now(
         }
 
         Err(mut bot) => {
-            let msg = "discarded (firmware crashed)";
+            let msg = "discarded";
 
             bot.log(msg.into());
             debug!(?id, "bot {}", msg);
