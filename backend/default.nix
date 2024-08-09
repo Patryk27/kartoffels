@@ -16,37 +16,43 @@ let
     ];
   };
 
-  mkBot = name: crane'.buildPackage {
-    inherit src cargoVendorDir;
+  mkBot = name:
+    let
+      pkg = crane'.buildPackage {
+        inherit src cargoVendorDir;
 
-    # N.B. this is already defined in `.cargo/config.toml`, but Crane's
-    #      mkDummySrc accidentally gets rid of it
-    RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
+        # N.B. this is already defined in `.cargo/config.toml`, but Crane's
+        #      mkDummySrc accidentally gets rid of it
+        RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
 
-    cargoCheckCommand = ":";
-    cargoTestCommand = ":";
+        cargoCheckCommand = ":";
+        cargoTestCommand = ":";
 
-    cargoExtraArgs = builtins.concatStringsSep " " [
-      "-p ${name}"
-      "-Z build-std"
-      "-Z build-std-features=compiler-builtins-mem"
-      "--target ${./misc/riscv64-kartoffel-bot.json}"
-    ];
+        cargoExtraArgs = builtins.concatStringsSep " " [
+          "-p bot-${name}"
+          "-Z build-std"
+          "-Z build-std-features=compiler-builtins-mem"
+          "--target ${./misc/riscv64-kartoffel-bot.json}"
+        ];
 
-    postInstall = ''
-      ${pkgs.removeReferencesTo}/bin/remove-references-to \
-        -t ${toolchain} \
-        $out/bin/${name}
+        postInstall = ''
+          ${pkgs.removeReferencesTo}/bin/remove-references-to \
+            -t ${toolchain} \
+            $out/bin/bot-${name}
+        '';
+      };
 
-      mv $out/bin/${name} /tmp/bot
-      rm -rf $out
-      mv /tmp/bot $out
-    '';
-  };
+    in
+    "${pkg}/bin/bot-${name}";
 
 in
 rec
 {
+  bots = {
+    dummy = mkBot "dummy";
+    roberto = mkBot "roberto";
+  };
+
   kartoffels-server = crane'.buildPackage {
     inherit src cargoVendorDir;
 
@@ -64,8 +70,8 @@ rec
     ];
 
     CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-    KARTOFFELS_BOT_DUMMY = "${bots.dummy}";
-    KARTOFFELS_BOT_ROBERTO = "${bots.roberto}";
+    KARTOFFELS_BOT_DUMMY = bots.dummy;
+    KARTOFFELS_BOT_ROBERTO = bots.roberto;
 
     cargoCheckCommand = ":";
     cargoTestCommand = ":";
@@ -85,10 +91,5 @@ rec
         -t ${cargoVendorDir} \
         $out/kartoffels_sandbox_bg.wasm
     '';
-  };
-
-  bots = {
-    dummy = mkBot "dummy";
-    roberto = mkBot "roberto";
   };
 }
