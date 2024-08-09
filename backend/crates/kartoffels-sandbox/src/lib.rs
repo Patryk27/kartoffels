@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use futures::StreamExt;
-use glam::ivec2;
+use glam::{ivec2, IVec2};
 use kartoffels::prelude::*;
 use serde::ser::Serialize;
 use serde_wasm_bindgen::Serializer;
@@ -19,6 +19,7 @@ type Result<T> = anyhow::Result<T, JsError>;
 #[wasm_bindgen]
 pub struct Sandbox {
     handle: Handle,
+    spawn_point: Option<IVec2>,
 }
 
 #[wasm_bindgen]
@@ -32,7 +33,10 @@ impl Sandbox {
         let handle = kartoffels::create(WorldId::SANDBOX, config, None)
             .into_js_error()?;
 
-        Ok(Self { handle })
+        Ok(Self {
+            handle,
+            spawn_point: None,
+        })
     }
 
     pub async fn listen(&self) -> Result<sys::ReadableStream> {
@@ -74,10 +78,10 @@ impl Sandbox {
         Ok(())
     }
 
-    pub async fn upload_bot(&self, src: Vec<u8>) -> Result<JsValue> {
+    pub async fn create_bot(&self, src: Vec<u8>) -> Result<JsValue> {
         let id = self
             .handle
-            .upload_bot(Cow::Owned(src))
+            .create_bot(Cow::Owned(src), self.spawn_point)
             .await
             .into_js_error()?
             .into_js_value();
@@ -85,20 +89,29 @@ impl Sandbox {
         Ok(id)
     }
 
-    pub async fn spawn_prefab_bot(&self, ty: String) -> Result<JsValue> {
-        let src = match ty.as_str() {
-            "roberto" => {
-                include_bytes!(env!("KARTOFFELS_ROBERTO"))
+    pub async fn create_prefab_bot(
+        &self,
+        ty: String,
+        x: Option<i32>,
+        y: Option<i32>,
+    ) -> Result<JsValue> {
+        let src: &[u8] = match ty.as_str() {
+            "dummy" => {
+                include_bytes!(env!("KARTOFFELS_BOT_DUMMY"))
             }
-
+            "roberto" => {
+                include_bytes!(env!("KARTOFFELS_BOT_ROBERTO"))
+            }
             _ => {
                 return Err(JsError::new("unknown prefab"));
             }
         };
 
+        let at = Self::decode_opt_pos(x, y).or(self.spawn_point);
+
         let id = self
             .handle
-            .upload_bot(Cow::Borrowed(src))
+            .create_bot(Cow::Borrowed(src), at)
             .await
             .into_js_error()?
             .into_js_value();
@@ -131,20 +144,22 @@ impl Sandbox {
             .into_js_value())
     }
 
-    pub async fn set_spawn_point(
-        &self,
+    pub fn set_spawn_point(
+        &mut self,
         x: Option<i32>,
         y: Option<i32>,
     ) -> Result<()> {
-        let at = if x.is_none() && y.is_none() {
+        self.spawn_point = Self::decode_opt_pos(x, y);
+
+        Ok(())
+    }
+
+    fn decode_opt_pos(x: Option<i32>, y: Option<i32>) -> Option<IVec2> {
+        if x.is_none() && y.is_none() {
             None
         } else {
             Some(ivec2(x.unwrap_or_default(), y.unwrap_or_default()))
-        };
-
-        self.handle.set_spawn_point(at).await.into_js_error()?;
-
-        Ok(())
+        }
     }
 }
 

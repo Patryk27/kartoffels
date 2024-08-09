@@ -2,6 +2,8 @@
 resolver = "2"
 
 members = [
+    "crates/bot-dummy",
+    "crates/bot-roberto",
     "crates/kartoffel",
     "crates/kartoffels",
     "crates/kartoffels-dbg",
@@ -9,7 +11,6 @@ members = [
     "crates/kartoffels-server",
     "crates/kartoffels-vm",
     "crates/kartoffels-vm-tests",
-    "crates/roberto",
 ]
 
 [workspace.package]

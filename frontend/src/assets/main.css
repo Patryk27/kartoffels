@@ -44,8 +44,14 @@ ul {
 ul {
   margin-left: 4ch;
 
+  &.compact {
+    li {
+      margin-bottom: 0.1em;
+    }
+  }
+
   li {
-    margin-bottom: 0.1em;
+    margin-bottom: 0.5em;
 
     + p {
       margin-top: var(--text-margin);

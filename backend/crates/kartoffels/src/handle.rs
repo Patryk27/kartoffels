@@ -81,10 +81,14 @@ impl Handle {
         rx.await.context(Self::ERR_DIED)
     }
 
-    pub async fn upload_bot(&self, src: Cow<'static, [u8]>) -> Result<BotId> {
+    pub async fn create_bot(
+        &self,
+        src: Cow<'static, [u8]>,
+        pos: Option<IVec2>,
+    ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::UploadBot { src, tx }).await?;
+        self.send(Request::CreateBot { src, pos, tx }).await?;
 
         rx.await.context(Self::ERR_DIED)?
     }
@@ -107,12 +111,6 @@ impl Handle {
         self.send(Request::GetBots { tx }).await?;
 
         rx.await.context(Self::ERR_DIED)
-    }
-
-    pub async fn set_spawn_point(&self, at: Option<IVec2>) -> Result<()> {
-        self.send(Request::SetSpawnPoint { at }).await?;
-
-        Ok(())
     }
 
     async fn send(&self, request: Request) -> Result<()> {
@@ -146,8 +144,9 @@ pub enum Request {
         tx: oneshot::Sender<()>,
     },
 
-    UploadBot {
+    CreateBot {
         src: Cow<'static, [u8]>,
+        pos: Option<IVec2>,
         tx: oneshot::Sender<Result<BotId>>,
     },
 
@@ -161,9 +160,5 @@ pub enum Request {
 
     GetBots {
         tx: oneshot::Sender<Vec<BotInfo>>,
-    },
-
-    SetSpawnPoint {
-        at: Option<IVec2>,
     },
 }

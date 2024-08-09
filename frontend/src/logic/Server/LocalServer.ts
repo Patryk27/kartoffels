@@ -61,8 +61,8 @@ export class LocalServer implements Server {
     this.sandbox = null;
   }
 
-  uploadBot(src: File): Promise<{ id: string }> {
-    log("uploadBot()");
+  createBot(src: File): Promise<{ id: string }> {
+    log("createBot()");
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -76,7 +76,7 @@ export class LocalServer implements Server {
         const sandbox = await this.getSandbox();
 
         sandbox
-          .upload_bot(src)
+          .create_bot(src)
           .then((id) => {
             resolve({ id });
           })
@@ -87,11 +87,15 @@ export class LocalServer implements Server {
     });
   }
 
-  async spawnPrefabBot(ty: string): Promise<{ id: string }> {
-    log("spawnPrefabBot()", ty);
+  async createPrefabBot(
+    ty: string,
+    x?: number,
+    y?: number,
+  ): Promise<{ id: string }> {
+    log("createPrefabBot()", ty);
 
     const sandbox = await this.getSandbox();
-    const id = await sandbox.spawn_prefab_bot(ty);
+    const id = await sandbox.create_prefab_bot(ty, x, y);
 
     return { id };
   }
@@ -131,7 +135,7 @@ export class LocalServer implements Server {
 
     const sandbox = await this.getSandbox();
 
-    await sandbox.set_spawn_point(x, y);
+    sandbox.set_spawn_point(x, y);
   }
 
   onReconnect(_: (status: string) => void): void {

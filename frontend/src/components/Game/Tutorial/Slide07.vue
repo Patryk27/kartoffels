@@ -9,41 +9,7 @@ const { ctrl } = defineProps<{
 
 const abort = new AbortController();
 const status = ref("awaiting-resume");
-const remainingSeconds = ref(null);
-
-function onceBotIsKilled(): Promise<"bot-killed"> {
-  return new Promise(async (resolve) => {
-    const events = await ctrl.getLocalServer().listen();
-
-    for await (const event of events) {
-      if (event.ty == "bot-killed") {
-        resolve("bot-killed");
-        break;
-      }
-    }
-  });
-}
-
-function onceTimeRunsOut(): Promise<"timed-out"> {
-  return new Promise((resolve) => {
-    const handle = setInterval(() => {
-      remainingSeconds.value -= 1;
-
-      if (remainingSeconds.value == 0) {
-        resolve("timed-out");
-        clearInterval(handle);
-      }
-    }, 1000);
-  });
-}
-
-function onceComponentIsUnmounted(): Promise<"unmounted"> {
-  return new Promise((resolve) => {
-    onUnmounted(() => {
-      resolve("unmounted");
-    });
-  });
-}
+const timer = ref(null);
 
 ctrl.alterUi((ui) => {
   ui.enableDisconnectFromBot = false;
@@ -61,23 +27,22 @@ ctrl.onOnce("server.resume", async () => {
   });
 
   status.value = "awaiting-kill";
-  remainingSeconds.value = 10;
+  timer.value = 10;
 
-  ctrl.on("server.bot-upload", () => {
-    if (abort.signal.aborted) {
-      return;
-    }
-
+  ctrl.on("server.bot-create", () => {
     status.value = "awaiting-kill";
-    remainingSeconds.value = 10;
+    timer.value = 10;
   });
 
   while (true) {
     const outcome = await Promise.race([
-      onceBotIsKilled(),
-      onceTimeRunsOut(),
-      onceComponentIsUnmounted(),
+      ctrl.onceAnyBotIsKilled().then((_) => "bot-killed"),
+      ctrl.onceTimerIsCompleted(timer).then((_) => "timed-out"),
     ]);
+
+    if (abort.signal.aborted) {
+      break;
+    }
 
     switch (outcome) {
       case "bot-killed":
@@ -95,12 +60,18 @@ ctrl.onOnce("server.resume", async () => {
 
         ctrl.getLocalServer().destroyAllBots();
         break;
-
-      case "unmounted":
-        return;
     }
   }
 });
+
+function handleGoBack() {
+  ctrl.alterUi((ui) => {
+    ui.enableUploadBot = false;
+    ui.highlightUploadBot = false;
+  });
+
+  ctrl.openTutorialSlide(5);
+}
 
 onUnmounted(() => {
   abort.abort();
@@ -123,11 +94,18 @@ onUnmounted(() => {
   </template>
 
   <template v-else-if="status == 'awaiting-kill'">
-    <p>observing robot ({{ remainingSeconds }}s)...</p>
+    <p>observing robot ({{ timer }}s)...</p>
   </template>
 
   <template v-else>
-    <p>whoopsie - it looks like the robot is still alive!</p>
+    <p>ouch, it looks like the robot is still alive!</p>
     <p>make sure you uploaded the correct firmware and try again</p>
+
+    <footer>
+      <p>
+        (need help?
+        <a href="#" @click="handleGoBack()">see the previous slide</a>)
+      </p>
+    </footer>
   </template>
 </template>

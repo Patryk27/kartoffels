@@ -86,21 +86,21 @@ async function join(newBotId?: string): Promise<void> {
   }
 }
 
-async function handleBotUpload(src: File): Promise<void> {
+async function handleBotCreate(src: File): Promise<void> {
   try {
-    const bot = await server.uploadBot(src);
+    const bot = await server.createBot(src);
 
     playerBots.add(bot.id);
 
     await join(bot.id);
 
-    ctrl.emit("server.bot-upload");
+    ctrl.emit("server.bot-create");
   } catch (error) {
-    alert("err, your bot couldn't be uploaded:\n\n" + error);
+    alert("ouch, the firmware seems wrong:\n\n" + error);
   }
 }
 
-async function handleBotSpawnPrefab(ty: string): Promise<void> {
+async function handleBotCreatePrefab(ty: string): Promise<void> {
   const instancesStr = prompt(
     `how many instances of ${ty} you'd like to spawn?`,
     "1",
@@ -114,15 +114,15 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
 
   for (let i = 0; i < instances; i += 1) {
     try {
-      const bot = await ctrl.getLocalServer().spawnPrefabBot(ty);
+      const bot = await ctrl.getLocalServer().createPrefabBot(ty);
 
       // If the user isn't currently connected to any robot, join the first
-      // spawned prefab, for convenience
+      // created prefab, for convenience
       if (!world.bot.value && i == 0) {
         join(bot.id);
       }
     } catch (error) {
-      alert("err, prefab couldn't be spawned:\n\n" + error);
+      alert("ouch, couldn't create prefab:\n\n" + error);
       break;
     }
   }
@@ -244,8 +244,8 @@ join(botId);
         :ctrl="ctrl"
         :world="world"
         :paused="paused"
-        @bot-upload="handleBotUpload"
-        @bot-spawn-prefab="handleBotSpawnPrefab"
+        @bot-create="handleBotCreate"
+        @bot-create-prefab="handleBotCreatePrefab"
         @bot-join="join"
         @bot-leave="join(null)"
         @bot-destroy="handleBotDestroy"

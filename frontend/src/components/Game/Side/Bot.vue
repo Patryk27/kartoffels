@@ -6,8 +6,8 @@ import type { GameCtrl } from "../Ctrl";
 import type { GameWorld } from "../World";
 
 const emit = defineEmits<{
-  botUpload: [File];
-  botSpawnPrefab: [string];
+  botCreate: [File];
+  botCreatePrefab: [string];
   botJoin: [string];
   botLeave: [];
   botDestroy: [];
@@ -90,14 +90,14 @@ function handleJoinBot() {
   }
 }
 
-function handleUploadBot() {
+function handleCreateBot() {
   const input = document.createElement("input");
 
   input.type = "file";
 
   input.onchange = (event) => {
     if (event.target instanceof HTMLInputElement) {
-      emit("botUpload", event.target.files[0]);
+      emit("botCreate", event.target.files[0]);
     }
   };
 
@@ -119,7 +119,7 @@ function handleUploadBot() {
         <button
           :disabled="paused || !ctrl.ui.value.enableUploadBot"
           :class="{ highlighted: ctrl.ui.value.highlightUploadBot }"
-          @click="handleUploadBot"
+          @click="handleCreateBot"
         >
           upload bot
         </button>
@@ -128,7 +128,7 @@ function handleUploadBot() {
       <div v-if="world.id == 'sandbox'" class="buttons-row">
         <button
           :disabled="paused"
-          @click="emit('botSpawnPrefab', 'roberto')"
+          @click="emit('botCreatePrefab', 'roberto')"
           title="roberto is a built-in moderately challenging bot written by kartoffels' author"
         >
           spawn roberto

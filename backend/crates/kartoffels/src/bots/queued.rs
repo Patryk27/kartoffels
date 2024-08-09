@@ -16,13 +16,15 @@ impl QueuedBots {
     }
 
     pub fn pop(&mut self) -> Option<QueuedBot> {
-        if let Some(entry) = self.entries.pop_front() {
-            self.reindex();
+        let entry = self.entries.pop_front()?;
 
-            Some(entry)
-        } else {
-            None
-        }
+        self.reindex();
+
+        Some(entry)
+    }
+
+    pub fn peek(&self) -> Option<&QueuedBot> {
+        self.entries.front()
     }
 
     pub fn remove(&mut self, id: BotId) {
@@ -120,6 +122,7 @@ mod tests {
     fn bot(id: u64) -> QueuedBot {
         QueuedBot {
             id: id.into(),
+            pos: None,
             requeued: false,
             bot: Default::default(),
         }

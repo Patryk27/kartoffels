@@ -54,7 +54,7 @@ export class RemoteServer implements Server {
     }
   }
 
-  async uploadBot(src: File): Promise<{ id: string }> {
+  async createBot(src: File): Promise<{ id: string }> {
     log("uploadBot()");
 
     const response = await fetch(`${this.httpUrl}/bots`, {

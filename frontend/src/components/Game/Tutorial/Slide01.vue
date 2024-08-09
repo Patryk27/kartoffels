@@ -15,15 +15,6 @@ const { ctrl } = defineProps<{
   </p>
 
   <p>
-    <b>note:</b> if you would like to just see how the game looks like without
-    submitting your own bot yet, simply
-    <a href="#" @click="ctrl.emit('tutorial.done')">go back</a>, choose any
-    world and take a look around
-  </p>
-
-  <p>otherwise:</p>
-
-  <p>
     i'm assuming you know a bit of rust (calling functions, using ifs etc.,
     nothing too advanced) and that you've got <kbd>cargo</kbd> at hand
   </p>

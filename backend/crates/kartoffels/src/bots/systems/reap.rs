@@ -35,6 +35,7 @@ pub(super) fn run_now(
                 world.bots.queued.push(QueuedBot {
                     id,
                     bot,
+                    pos: None,
                     requeued: true,
                 });
             } else {

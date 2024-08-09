@@ -3,6 +3,7 @@ use crate::{
     Request, Shutdown, World,
 };
 use anyhow::{anyhow, Result};
+use glam::IVec2;
 use kartoffels_vm as vm;
 use std::borrow::Cow;
 use tokio::sync::mpsc;
@@ -37,8 +38,8 @@ pub fn run(world: &mut World) {
                 world.events.send(Shutdown { tx });
             }
 
-            Request::UploadBot { src, tx } => {
-                _ = tx.send(do_upload_bot(world, src));
+            Request::CreateBot { src, pos, tx } => {
+                _ = tx.send(create_bot(world, src, pos));
             }
 
             Request::RestartBot { id } => {
@@ -70,15 +71,15 @@ pub fn run(world: &mut World) {
 
                 _ = tx.send(bots);
             }
-
-            Request::SetSpawnPoint { at } => {
-                world.spawn_point = at;
-            }
         }
     }
 }
 
-fn do_upload_bot(world: &mut World, src: Cow<'static, [u8]>) -> Result<BotId> {
+fn create_bot(
+    world: &mut World,
+    src: Cow<'static, [u8]>,
+    pos: Option<IVec2>,
+) -> Result<BotId> {
     let fw = vm::Firmware::new(&src)?;
     let vm = vm::Runtime::new(fw);
     let mut bot = AliveBot::new(&mut world.rng, vm);
@@ -96,15 +97,16 @@ fn do_upload_bot(world: &mut World, src: Cow<'static, [u8]>) -> Result<BotId> {
     if world.bots.queued.len() < world.policy.max_queued_bots {
         world.bots.queued.push(QueuedBot {
             id,
+            pos,
             bot,
             requeued: false,
         });
 
-        debug!(?id, "bot queued");
+        debug!(?id, ?pos, "bot queued");
 
         Ok(id)
     } else {
-        debug!(?id, "bot discarded (queue full)");
+        debug!(?id, ?pos, "bot discarded (queue full)");
 
         Err(anyhow!("too many robots queued, try again in a moment"))
     }

@@ -172,6 +172,7 @@ pub struct DeadBot {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
     pub id: BotId,
+    pub pos: Option<IVec2>,
     pub requeued: bool,
 
     #[serde(flatten)]

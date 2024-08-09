@@ -16,6 +16,34 @@ let
     ];
   };
 
+  mkBot = name: crane'.buildPackage {
+    inherit src cargoVendorDir;
+
+    # N.B. this is already defined in `.cargo/config.toml`, but Crane's
+    #      mkDummySrc accidentally gets rid of it
+    RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
+
+    cargoCheckCommand = ":";
+    cargoTestCommand = ":";
+
+    cargoExtraArgs = builtins.concatStringsSep " " [
+      "-p ${name}"
+      "-Z build-std"
+      "-Z build-std-features=compiler-builtins-mem"
+      "--target ${./misc/riscv64-kartoffel-bot.json}"
+    ];
+
+    postInstall = ''
+      ${pkgs.removeReferencesTo}/bin/remove-references-to \
+        -t ${toolchain} \
+        $out/bin/${name}
+
+      mv $out/bin/${name} /tmp/bot
+      rm -rf $out
+      mv /tmp/bot $out
+    '';
+  };
+
 in
 rec
 {
@@ -36,7 +64,8 @@ rec
     ];
 
     CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-    KARTOFFELS_ROBERTO = "${roberto}/bin/roberto";
+    KARTOFFELS_BOT_DUMMY = "${bots.dummy}";
+    KARTOFFELS_BOT_ROBERTO = "${bots.roberto}";
 
     cargoCheckCommand = ":";
     cargoTestCommand = ":";
@@ -58,28 +87,8 @@ rec
     '';
   };
 
-  roberto = crane'.buildPackage {
-    inherit src cargoVendorDir;
-
-    # N.B. this is already defined in `.cargo/config.toml`, but Crane's
-    #      mkDummySrc accidentally gets rid of it
-    RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
-
-    cargoCheckCommand = ":";
-    cargoTestCommand = ":";
-
-    cargoExtraArgs = builtins.concatStringsSep " " [
-      "-p roberto"
-      "-Z build-std"
-      "-Z build-std-features=compiler-builtins-mem"
-      "--target ${./misc/riscv64-kartoffel-bot.json}"
-    ];
-
-    postInstall = ''
-      ${pkgs.removeReferencesTo}/bin/remove-references-to \
-        -t ${toolchain} \
-        $out/bin/roberto
-    '';
-
+  bots = {
+    dummy = mkBot "dummy";
+    roberto = mkBot "roberto";
   };
 }

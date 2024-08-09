@@ -9,7 +9,7 @@ const { ctrl } = defineProps<{
 <template>
   <p>okie, here's a quick introduction:</p>
 
-  <ul>
+  <ul class="compact">
     <li>
       see <kbd>README.md</kbd> in the repository for building instructions
     </li>

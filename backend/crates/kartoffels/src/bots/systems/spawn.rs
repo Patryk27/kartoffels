@@ -1,5 +1,6 @@
-use crate::{QueuedBot, World};
+use crate::{Bots, Map, QueuedBot, World};
 use glam::IVec2;
+use rand::RngCore;
 use tracing::debug;
 use web_time::{Duration, Instant};
 
@@ -25,17 +26,28 @@ pub fn run(world: &mut World) {
 
     state.next_run_at = Instant::now() + Duration::from_millis(16);
 
-    if world.bots.queued.is_empty()
-        || world.bots.alive.len() >= world.policy.max_alive_bots
-    {
+    if world.bots.alive.len() >= world.policy.max_alive_bots {
         return;
     }
 
-    let Some(pos) = sample_pos(world) else {
-        if world.spawn_point.is_some() {
-            debug!("spawn point is taken - can't dequeue pending bot");
+    let Some(bot) = world.bots.queued.peek() else {
+        return;
+    };
+
+    // ---
+
+    let pos = bot
+        .pos
+        .or_else(|| sample_pos(&mut world.rng, &world.map, &world.bots));
+
+    let Some(pos) = pos else {
+        if bot.pos.is_some() {
+            debug!(
+                pos = ?bot.pos,
+                "can't dequeue pending bot: requested spawn point is taken",
+            );
         } else {
-            debug!("all tiles are taken - can't dequeue pending bot");
+            debug!("can't dequeue pending bot: all tiles are taken");
         }
 
         return;
@@ -46,6 +58,7 @@ pub fn run(world: &mut World) {
         id,
         requeued,
         mut bot,
+        ..
     } = world.bots.queued.pop().unwrap();
 
     debug!(?id, ?pos, "bot dequeued and spawned");
@@ -59,17 +72,13 @@ pub fn run(world: &mut World) {
     world.bots.alive.add(id, pos, bot);
 }
 
-fn sample_pos(world: &mut World) -> Option<IVec2> {
+fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {
     let mut nth = 0;
 
     loop {
-        let pos = world
-            .spawn_point
-            .unwrap_or_else(|| world.map.rand_pos(&mut world.rng));
+        let pos = map.rand_pos(rng);
 
-        if world.map.get(pos).is_floor()
-            && world.bots.alive.lookup_by_pos(pos).is_none()
-        {
+        if map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none() {
             return Some(pos);
         }
 

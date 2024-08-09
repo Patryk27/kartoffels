@@ -10,6 +10,9 @@ import Slide07 from "./Tutorial/Slide07.vue";
 import Slide08 from "./Tutorial/Slide08.vue";
 import Slide09 from "./Tutorial/Slide09.vue";
 import Slide10 from "./Tutorial/Slide10.vue";
+import Slide11 from "./Tutorial/Slide11.vue";
+import Slide12 from "./Tutorial/Slide12.vue";
+import Slide13 from "./Tutorial/Slide13.vue";
 
 defineProps<{
   ctrl: GameCtrl;
@@ -49,7 +52,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
   <dialog class="game-tutorial" :open="ctrl.tutorialSlide.value != null">
     <nav>
       <div class="dialog-title">
-        tutorial ({{ ctrl.tutorialSlide.value }} / 10)
+        tutorial ({{ ctrl.tutorialSlide.value }} / 13)
       </div>
     </nav>
 
@@ -63,6 +66,9 @@ export function start(ctrl: GameCtrl): Promise<void> {
     <Slide08 :ctrl v-else-if="ctrl.tutorialSlide.value == 8" />
     <Slide09 :ctrl v-else-if="ctrl.tutorialSlide.value == 9" />
     <Slide10 :ctrl v-else-if="ctrl.tutorialSlide.value == 10" />
+    <Slide11 :ctrl v-else-if="ctrl.tutorialSlide.value == 11" />
+    <Slide12 :ctrl v-else-if="ctrl.tutorialSlide.value == 12" />
+    <Slide13 :ctrl v-else-if="ctrl.tutorialSlide.value == 13" />
   </dialog>
 </template>
 
@@ -70,10 +76,21 @@ export function start(ctrl: GameCtrl): Promise<void> {
 .game-tutorial {
   width: 768px;
 
-  p,
+  p {
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   ul {
     &:last-child {
       margin-bottom: 0;
+
+      li {
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
     }
   }
 

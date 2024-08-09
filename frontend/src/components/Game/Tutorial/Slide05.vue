@@ -10,7 +10,7 @@ const { ctrl } = defineProps<{
   <p>let's start with the simplest peripheral: <b>the motor</b></p>
   <p>motor allows to move the robot using the following functions:</p>
 
-  <ul>
+  <ul class="compact">
     <li><kbd>motor_step()</kbd>, which moves the robot one tile forward</li>
     <li>
       <kbd>motor_turn(1)</kbd>, which rotates the robot clockwise ("to right")
@@ -36,7 +36,7 @@ fn main() {
 
   <p>okie, now:</p>
 
-  <ul>
+  <ul class="compact">
     <li>copy the code above into <kbd>src/main.rs</kbd></li>
     <li>
       build the project (by running <kbd>./build</kbd> or

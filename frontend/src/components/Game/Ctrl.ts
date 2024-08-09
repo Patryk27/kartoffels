@@ -10,7 +10,7 @@ export class GameCtrl {
   tutorialSlide: Ref<number>;
 
   constructor(server: Server, paused: Ref<boolean>) {
-    // Having the controller at hand comes handy for debugging:
+    // Comes handy for debugging:
     (<any>window).ctrl = this;
 
     this.server = server;
@@ -45,6 +45,12 @@ export class GameCtrl {
     this.on(event, handler, true);
   }
 
+  waitFor(event: string): Promise<void> {
+    return new Promise((resolve) => {
+      this.onOnce(event, resolve);
+    });
+  }
+
   emit(event: string): void {
     log("emit()", event);
 
@@ -70,10 +76,6 @@ export class GameCtrl {
     this.emit("tutorial.before-slide");
   }
 
-  hideTutorial(): void {
-    this.tutorialSlide.value = null;
-  }
-
   alterUi(f: (ui: GameUi) => void): void {
     f(this.ui.value);
   }
@@ -92,6 +94,44 @@ export class GameCtrl {
     } else {
       throw "called getLocalServer() on a non-local server";
     }
+  }
+
+  /// Returns a stream that yields ids of killed bots.
+  async listenForKilledBots(): Promise<ReadableStream<string>> {
+    const events = await this.getLocalServer().listen();
+
+    return new ReadableStream({
+      async start(ctrl) {
+        for await (const event of events) {
+          if (event.ty == "bot-killed") {
+            ctrl.enqueue(event.id);
+            break;
+          }
+        }
+      },
+    });
+  }
+
+  /// Returns a promise that resolves when any bot is killed.
+  async onceAnyBotIsKilled(): Promise<void> {
+    const killedBots = await this.listenForKilledBots();
+
+    await killedBots.getReader().read();
+  }
+
+  /// Creates a task that decrements given counter and returns a promise that
+  /// resolves once this counter gets down to zero.
+  onceTimerIsCompleted(timer: Ref<number>): Promise<void> {
+    return new Promise((resolve) => {
+      const handle = setInterval(() => {
+        timer.value -= 1;
+
+        if (timer.value <= 0) {
+          resolve(null);
+          clearInterval(handle);
+        }
+      }, 1000);
+    });
   }
 }
 

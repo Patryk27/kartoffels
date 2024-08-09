@@ -8,7 +8,7 @@ import { RemoteServer } from "./Server/RemoteServer";
 export interface Server {
   join(botId?: string): Promise<ReadableStream<ServerConnMsg>>;
   close(): Promise<void>;
-  uploadBot(src: File): Promise<{ id: string }>;
+  createBot(src: File): Promise<{ id: string }>;
 
   onReconnect(f: (status: string) => void): void;
 }

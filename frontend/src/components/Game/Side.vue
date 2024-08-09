@@ -5,8 +5,8 @@ import Bots from "./Side/Bots.vue";
 import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
-  botUpload: [File];
-  botSpawnPrefab: [string];
+  botCreate: [File];
+  botCreatePrefab: [string];
   botJoin: [string];
   botLeave: [];
   botDestroy: [];
@@ -32,8 +32,8 @@ defineProps<{
       :ctrl="ctrl"
       :world="world"
       :paused="paused"
-      @bot-upload="(file) => emit('botUpload', file)"
-      @bot-spawn-prefab="(id) => emit('botSpawnPrefab', id)"
+      @bot-create="(file) => emit('botCreate', file)"
+      @bot-create-prefab="(id) => emit('botCreatePrefab', id)"
       @bot-join="(id) => emit('botJoin', id)"
       @bot-leave="emit('botLeave')"
       @bot-destroy="emit('botDestroy')"

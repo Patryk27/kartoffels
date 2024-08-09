@@ -13,7 +13,7 @@ ctrl.alterUi((ui) => {
 ctrl.resume();
 ctrl.getLocalServer().destroyAllBots();
 
-ctrl.onOnce("server.bot-upload", () => {
+ctrl.onOnce("server.bot-create", () => {
   ctrl.openTutorialSlide(10);
 });
 </script>
@@ -24,7 +24,7 @@ ctrl.onOnce("server.bot-upload", () => {
     through these four functions:
   </p>
 
-  <ul>
+  <ul class="compact">
     <li><kbd>radar_scan_3x3()</kbd></li>
     <li><kbd>radar_scan_5x5()</kbd></li>
     <li><kbd>radar_scan_7x7()</kbd></li>

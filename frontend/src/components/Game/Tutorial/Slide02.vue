@@ -14,7 +14,7 @@ const { ctrl } = defineProps<{
 
   <p>now:</p>
 
-  <ul>
+  <ul class="compact">
     <li>
       if you're more into discovering things yourself and you'd like just a
       quick introduction to the interface,

@@ -13,7 +13,7 @@ ctrl.alterUi((ui) => {
 
 ctrl.getLocalServer().setSpawnPoint(16, 16);
 
-ctrl.onOnce("server.bot-upload", () => {
+ctrl.onOnce("server.bot-create", () => {
   ctrl.pause();
   ctrl.openTutorialSlide(7);
 });
@@ -47,8 +47,8 @@ ctrl.onOnce("server.bot-upload", () => {
 
   <footer>
     <p>
-      if something went wrong, feel free to
-      <button @click="ctrl.openTutorialSlide(5)">go back</button>
+      (need help?
+      <a href="#" @click="ctrl.openTutorialSlide(5)">see the previous slide</a>)
     </p>
   </footer>
 </template>

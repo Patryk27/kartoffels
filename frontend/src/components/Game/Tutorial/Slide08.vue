@@ -17,10 +17,10 @@ function handleAlt() {
   altDisabled.value = true;
 }
 
-ctrl.onOnce("tutorial.continue", () => {
+function handleContinue() {
   ctrl.pause();
   ctrl.openTutorialSlide(9);
-});
+}
 </script>
 
 <template>
@@ -44,7 +44,7 @@ ctrl.onOnce("tutorial.continue", () => {
       no, i've got a better idea
     </button>
 
-    <button class="highlighted" @click="ctrl.emit('tutorial.continue')">
+    <button class="highlighted" @click="handleContinue()">
       yes, let's use the radar
     </button>
   </footer>
