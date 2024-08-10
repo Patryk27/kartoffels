@@ -49,6 +49,11 @@ new Promise(async () => {
         break;
 
       case "timer-completed":
+        ctrl.alterUi((ui) => {
+          ui.enableUploadBot = false;
+          ui.highlightUploadBot = false;
+        });
+
         ctrl.openTutorialSlide(11);
         break;
     }
