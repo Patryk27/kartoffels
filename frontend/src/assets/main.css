@@ -248,3 +248,8 @@ dialog {
     color: #6666ff;
   }
 }
+
+.inverted {
+  background: white;
+  color: black;
+}

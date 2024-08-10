@@ -319,4 +319,9 @@ export type GameConnectionStatus =
   | "connected"
   | "closing";
 
-export type GameDialogId = "help" | "tutorial" | "summary" | "sandboxConfig";
+export type GameDialogId =
+  | "help"
+  | "tutorial"
+  | "summary"
+  | "sandboxIntro"
+  | "sandboxConfig";

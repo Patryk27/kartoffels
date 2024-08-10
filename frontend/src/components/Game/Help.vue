@@ -1,97 +1,53 @@
 <script setup lang="ts">
-import type { GameWorld } from "./World";
-
 const emit = defineEmits<{
   close: [];
 }>();
-
-defineProps<{
-  world: GameWorld;
-}>();
-
-function handleDisableSandboxHelp(): void {
-  localStorage.setItem("popups.sandboxHelp", "disabled");
-  emit("close");
-}
-</script>
-
-<script lang="ts">
-export function canOpenSandboxHelp(): boolean {
-  return localStorage.getItem("popups.sandboxHelp") == null;
-}
 </script>
 
 <template>
   <dialog class="game-help">
-    <template v-if="world.id == 'sandbox'">
-      <nav>
-        <div class="dialog-title">help</div>
+    <nav>
+      <div class="dialog-title">help</div>
 
-        <div class="dialog-buttons">
-          <button @click="emit('close')">close</button>
-        </div>
-      </nav>
+      <div class="dialog-buttons">
+        <button @click="emit('close')">close</button>
+      </div>
+    </nav>
 
-      <main>
-        <p>hey there soldier, welcome to the sandbox 🫡🫡🫡</p>
+    <main>
+      <p>hey there soldier and welcome to kartoffels 🫡🫡🫡</p>
 
-        <p>
-          sandbox is a special, private world where you can experiment with your
-          bots before uploading them online
-        </p>
+      <p>
+        the game has a built-in tutorial accessible from the home page, in
+        here's just a couple of tips:
+      </p>
 
-        <p>as compared to the online play, in here:</p>
+      <ul class="compact">
+        <li>
+          <kbd>git clone https://github.com/Patryk27/kartoffel</kbd> to get a
+          starting point - see <kbd>README.md</kbd> for building instructions
+        </li>
 
-        <ul>
-          <li>
-            you can use the <kbd>[configure]</kbd> button (located above) to
-            change how the world looks like
-          </li>
+        <li>use the <kbd>[upload bot]</kbd> button to upload the firmware</li>
+        <li>navigate map using <kbd>W/A/S/D</kbd> or arrow keys</li>
+        <li>bots are represented with the @ char</li>
 
-          <li>
-            you can <kbd>[spawn roberto]</kbd>, the built-in moderately
-            challenging bot
-          </li>
+        <li>
+          bots uploaded by you will have
+          <span class="inverted">inverted colors</span>
+        </li>
 
-          <li>you can destroy and kill bots</li>
-        </ul>
-
-        <p>
-          not sure what all this means? no problem, i don't either! -- the
-          eggheads left some extra instructions:
-        </p>
-
-        <pre>
-$ git clone https://github.com/patryk27/kartoffel
-$ cd kartoffel
-$ ./build</pre
-        >
-
-        <p>
-          ... and then go back, click <kbd>[upload bot]</kbd> and pick
-          <kbd>./kartoffel</kbd>
-        </p>
-      </main>
-
-      <footer>
-        <button @click="handleDisableSandboxHelp()">
-          ok, don't show this again
-        </button>
-        <button @click="emit('close')">ok, got it</button>
-      </footer>
-    </template>
-
-    <template v-else> TODO </template>
+        <li>
+          use your ide's <kbd>go to definition</kbd> feature to discover how
+          robot-specific functions, such as <kbd>radar_scan()</kbd>, work
+        </li>
+      </ul>
+    </main>
   </dialog>
 </template>
 
 <style scoped>
 .game-help {
   max-width: 768px;
-
-  footer {
-    display: flex;
-    justify-content: space-between;
-  }
 }
 </style>

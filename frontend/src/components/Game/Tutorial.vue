@@ -81,10 +81,5 @@ export function start(ctrl: GameCtrl): Promise<void> {
   pre {
     margin-left: 4ch;
   }
-
-  .inverted {
-    background: white;
-    color: black;
-  }
 }
 </style>

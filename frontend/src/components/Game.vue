@@ -3,11 +3,12 @@ import { ref, onMounted, watch } from "vue";
 import { PlayerBots, storeSession } from "@/logic/State";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
-import Help, * as help from "./Game/Help.vue";
+import Help from "./Game/Help.vue";
+import SandboxIntro, * as sandboxIntro from "./Game/SandboxIntro.vue";
 import SandboxConfig from "./Game/SandboxConfig.vue";
 import Side from "./Game/Side.vue";
 import Summary from "./Game/Summary.vue";
-import GameTutorial, * as tutorial from "./Game/Tutorial.vue";
+import Tutorial, * as tutorial from "./Game/Tutorial.vue";
 import { LocalServer, type Server } from "@/logic/Server";
 import type { GameDialogId } from "./Game/World";
 import { GameCtrl } from "./Game/Ctrl";
@@ -162,8 +163,8 @@ onMounted(() => {
       break;
 
     case "sandbox":
-      if (help.canOpenSandboxHelp()) {
-        dialog.value = "help";
+      if (sandboxIntro.canOpen()) {
+        dialog.value = "sandboxIntro";
       }
 
       break;
@@ -253,9 +254,9 @@ join(botId);
         @summary-open="toggleDialog('summary')"
       />
 
-      <Help :open="dialog == 'help'" :world="world" @close="dialog = null" />
+      <Help :open="dialog == 'help'" @close="dialog = null" />
 
-      <GameTutorial :ctrl="ctrl" />
+      <Tutorial :ctrl="ctrl" />
 
       <Summary
         :open="dialog == 'summary'"
@@ -263,6 +264,8 @@ join(botId);
         @close="dialog = null"
         @bot-click="join"
       />
+
+      <SandboxIntro :open="dialog == 'sandboxIntro'" @close="dialog = null" />
 
       <SandboxConfig
         :open="dialog == 'sandboxConfig'"
