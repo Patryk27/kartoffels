@@ -13,10 +13,10 @@ const { ctrl } = defineProps<{
 
     <ul class="compact">
       <li><kbd>motor_step()</kbd>, which moves the robot one tile forward</li>
-      <li><kbd>motor_turn_right()</kbd>, which rotates the robot clockwise</li>
       <li>
         <kbd>motor_turn_left()</kbd>, which rotates the robot counterclockwise
       </li>
+      <li><kbd>motor_turn_right()</kbd>, which rotates the robot clockwise</li>
     </ul>
 
     <p>since those are just rust functions, you can invoke them like so:</p>

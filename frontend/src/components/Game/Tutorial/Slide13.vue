@@ -11,6 +11,7 @@ const status = ref("intro.1");
 const timer = ref(null);
 
 let enemyBotIds = [];
+let restartFn = null;
 
 function handleGoToIntro2() {
   status.value = "intro.2";
@@ -25,6 +26,12 @@ function handleStart() {
     ui.enableUploadBot = true;
     ui.highlightUploadBot = true;
   });
+}
+
+function handleRestart() {
+  if (restartFn) {
+    restartFn();
+  }
 }
 
 async function prepareMap() {
@@ -75,20 +82,25 @@ ctrl.on("server.bot-create", async (playerBotId) => {
     .onceTimerIsCompleted(timer)
     .then((_) => "timed-out");
 
+  const onceGameIsRestarted = new Promise((resolve) => {
+    restartFn = resolve;
+  }).then((_) => "restarted");
+
   const outcome = await Promise.race([
     oncePlayerIsKilled,
     onceEnemiesAreKilled,
     onceTimeRunsOut,
+    onceGameIsRestarted,
   ]);
 
   server.destroyAllBots();
 
-  let restartMap = false;
+  let restart = false;
 
   switch (outcome) {
     case "player-killed":
       status.value = "awaiting-repeat.player-killed";
-      restartMap = true;
+      restart = true;
       break;
 
     case "enemies-killed":
@@ -97,11 +109,16 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 
     case "timed-out":
       status.value = "awaiting-repeat.timed-out";
-      restartMap = true;
+      restart = true;
+      break;
+
+    case "restarted":
+      status.value = "awaiting-upload";
+      restart = true;
       break;
   }
 
-  if (restartMap) {
+  if (restart) {
     prepareMap();
 
     ctrl.alterUi((ui) => {
@@ -115,7 +132,7 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 <template>
   <template v-if="status == 'intro.1'">
     <main>
-      <p>alright, let's wrap things up with an exercise!</p>
+      <p>alright, let's wrap things up with an exercise, soldier!</p>
 
       <p>
         the purpose of a bot is to fight enemies, so how about we spawn a
@@ -200,6 +217,10 @@ ctrl.on("server.bot-create", async (playerBotId) => {
     <main>
       <p>observing robot ({{ timer }}s)...</p>
     </main>
+
+    <footer style="text-align: right">
+      <button @click="handleRestart()">restart</button>
+    </footer>
   </template>
 
   <template v-else-if="status == 'awaiting-repeat.player-killed'">

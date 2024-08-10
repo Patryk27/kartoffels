@@ -74,12 +74,8 @@ onUnmounted(() => {
     </main>
 
     <footer>
-      <p>
-        (need help?
-        <a href="#" @click="ctrl.openTutorialSlide(9)">
-          see the previous slide</a
-        >)
-      </p>
+      (need help?
+      <a href="#" @click="ctrl.openTutorialSlide(9)">see the previous slide</a>)
     </footer>
   </template>
 </template>
