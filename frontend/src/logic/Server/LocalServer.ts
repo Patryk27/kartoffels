@@ -39,7 +39,6 @@ export class LocalServer implements Server {
     const sandbox = await this.getSandbox();
     const msgs = await sandbox.join(botId);
 
-    // TODO handle cancellation
     return msgs;
   }
 
