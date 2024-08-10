@@ -8,14 +8,14 @@ use web_time::{Duration, Instant};
 
 struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
-    next_tick_at: Instant,
+    next_run_at: Instant,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
             task: Default::default(),
-            next_tick_at: next_tick(),
+            next_run_at: next_tick(),
         }
     }
 }
@@ -23,6 +23,21 @@ impl Default for State {
 pub fn run(world: &mut World) {
     let state = world.systems.get_mut::<State>();
     let shutdown = world.events.recv::<Shutdown>();
+
+    if shutdown.is_some() {
+        // HACK intercepting shutdown within this system feels pretty icky, but
+        //      currently there's no better place to do this
+        #[cfg(target_arch = "wasm32")]
+        if let Some(interval) =
+            world.platform.interval_handle.borrow_mut().take()
+        {
+            info!("clearing interval");
+
+            web_sys::window()
+                .expect("couldn't find window")
+                .clear_interval_with_handle(interval);
+        }
+    }
 
     let Some(path) = &world.path else {
         if let Some(shutdown) = shutdown {
@@ -32,7 +47,7 @@ pub fn run(world: &mut World) {
         return;
     };
 
-    if Instant::now() < state.next_tick_at && shutdown.is_none() {
+    if Instant::now() < state.next_run_at && shutdown.is_none() {
         return;
     }
 
@@ -73,7 +88,7 @@ pub fn run(world: &mut World) {
     .map(|result| result.context("task crashed")?);
 
     state.task = Some(Box::new(task));
-    state.next_tick_at = next_tick();
+    state.next_run_at = next_tick();
 }
 
 fn next_tick() -> Instant {

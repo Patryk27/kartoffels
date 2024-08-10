@@ -21,19 +21,32 @@ export function storeSession(session: Session): void {
 // Keeps track which bots were uploaded by the player, so that we can highlight
 // them differently etc.
 export class PlayerBots {
-  worldId: string;
-  bots: Map<String, Date>;
+  private worldId?: string;
+  private bots: Map<String, Date>;
 
   constructor(worldId: string) {
-    this.worldId = worldId;
+    switch (worldId) {
+      case "sandbox":
+      case "tutorial":
+        this.worldId = null;
+        break;
+
+      default:
+        this.worldId = worldId;
+        break;
+    }
+
     this.bots = new Map();
 
-    const bots =
-      worldId == "sandbox" ? null : localStorage.getItem(`${worldId}.bots`);
+    if (this.worldId) {
+      const bots =
+        localStorage.getItem(`${worldId}.bots`) ||
+        localStorage.getItem(`worlds.${worldId}.bots`);
 
-    if (bots) {
-      for (const [id, uploadedAt] of JSON.parse(bots)) {
-        this.bots.set(id, new Date(uploadedAt));
+      if (bots) {
+        for (const [id, uploadedAt] of JSON.parse(bots)) {
+          this.bots.set(id, new Date(uploadedAt));
+        }
       }
     }
   }
@@ -69,13 +82,11 @@ export class PlayerBots {
   }
 
   private save(): void {
-    if (this.worldId == "sandbox") {
-      return;
+    if (this.worldId) {
+      localStorage.setItem(
+        `worlds.${this.worldId}.bots`,
+        JSON.stringify(Array.from(this.bots)),
+      );
     }
-
-    localStorage.setItem(
-      `${this.worldId}.bots`,
-      JSON.stringify(Array.from(this.bots)),
-    );
   }
 }

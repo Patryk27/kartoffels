@@ -1,14 +1,27 @@
 @import url("https://fonts.googleapis.com/css2?family=Sono:wght@200..800&display=swap");
 
+:root {
+  --green: #00ff80;
+  --orange: #ff8000;
+  --gray: #555555;
+  --washed-pink: #c86b85;
+  --pink: #ff0080;
+  --red: #ff0000;
+
+  --fg: #f0f0f0;
+  --bg: #090909;
+
+  --text-margin: 1.25em;
+}
+
 body {
   height: 100%;
   margin: 0;
   padding: 0.5em;
 
-  color: #f0f0f0;
-
   font-size: 18px;
   font-family: "Sono";
+  color: var(--fg);
 }
 
 a {
@@ -21,36 +34,63 @@ a {
   }
 }
 
+p,
+ul {
+  margin: 0;
+  margin-bottom: var(--text-margin);
+  padding: 0;
+}
+
+ul {
+  margin-left: 4ch;
+
+  &.compact {
+    li {
+      margin-bottom: 0.1em;
+    }
+  }
+
+  li {
+    margin-bottom: 0.5em;
+
+    + p {
+      margin-top: var(--text-margin);
+    }
+  }
+}
+
 select,
 button,
 textarea {
   margin: 0;
   padding: 0.25em 0.5em;
 
-  color: #f0f0f0;
-  background: #090909;
-  border: 1px solid #444444;
-
-  font-family: "Sono";
   font-size: 1em;
+  font-family: "Sono";
+
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--gray);
 }
 
 select,
 button {
-  &:hover {
-    border: 1px solid #00ff80;
-  }
+  &:not([disabled]) {
+    &:hover {
+      border: 1px solid var(--green) !important;
+    }
 
-  &:active {
-    outline: 1px solid #00ff80;
+    &:active {
+      outline: 1px solid var(--green);
+    }
   }
 
   &:disabled {
-    color: #444444;
+    color: var(--gray);
 
     &:hover {
       cursor: default;
-      border: 1px solid #444444;
+      border: 1px solid var(--gray);
     }
 
     &:active {
@@ -62,6 +102,22 @@ button {
 
 button {
   cursor: pointer;
+
+  &.highlighted {
+    animation: button-highlighted 1s ease-in-out 0s infinite;
+  }
+}
+
+@keyframes button-highlighted {
+  from {
+    border-color: var(--gray);
+  }
+  50% {
+    border-color: var(--green);
+  }
+  100% {
+    border-color: var(--gray);
+  }
 }
 
 input {
@@ -72,12 +128,12 @@ input {
 }
 
 label {
-  color: #f0f0f0;
+  color: var(--fg);
 }
 
 textarea {
   resize: none;
-  scrollbar-color: #444444 #090909;
+  scrollbar-color: var(--gray) var(--bg);
 
   &:read-only {
     cursor: default;
@@ -88,11 +144,16 @@ textarea {
   }
 }
 
+pre {
+  margin: var(--text-margin) 0;
+}
+
 pre,
 kbd {
   font-size: 18px;
   font-family: "Sono";
-  color: #c86b85;
+
+  color: var(--washed-pink);
 }
 
 table {
@@ -108,18 +169,24 @@ table {
 dialog {
   top: 10vh;
   max-height: 80vh;
-  padding: 0.75em;
+  padding: 0;
   overflow: auto;
 
-  color: #f0f0f0;
+  color: var(--fg);
   background: #050505;
-  border: 1px solid #00ff80;
+  border: 1px solid var(--green);
+
+  nav,
+  main,
+  footer {
+    margin: 0.75em;
+  }
 
   nav {
     display: flex;
-    margin-bottom: 1.5em;
-    padding-bottom: 0.5em;
-    border-bottom: 1px solid #444444;
+    margin-bottom: var(--text-margin);
+    padding-bottom: 0.75em;
+    border-bottom: 1px solid var(--gray);
 
     .dialog-title {
       flex-grow: 1;
@@ -133,9 +200,8 @@ dialog {
   }
 
   footer {
-    margin-top: 1.5em;
-    padding-top: 1em;
-    border-top: 1px solid #444444;
+    padding-top: 0.75em;
+    border-top: 1px solid var(--gray);
   }
 }
 
@@ -150,13 +216,40 @@ dialog {
 }
 
 .status-alive {
-  color: #00ff80;
+  color: var(--green);
 }
 
 .status-dead {
-  color: #ff0000;
+  color: var(--red);
 }
 
 .status-queued {
-  color: #ff0080;
+  color: var(--pink);
+}
+
+.text-rainbow {
+  animation: text-rainbow 0.5s linear 0s infinite;
+}
+
+@keyframes text-rainbow {
+  from {
+    color: #6666ff;
+  }
+  10% {
+    color: #0099ff;
+  }
+  50% {
+    color: #00ff00;
+  }
+  75% {
+    color: #ff3399;
+  }
+  100% {
+    color: #6666ff;
+  }
+}
+
+.inverted {
+  background: white;
+  color: black;
 }

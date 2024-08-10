@@ -3,49 +3,44 @@ import { ref, onMounted } from "vue";
 import Crash from "./components/Crash.vue";
 import Game from "./components/Game.vue";
 import Home from "./components/Home.vue";
-import Help from "./components/Help.vue";
 import { type Server, RemoteServer, LocalServer } from "./logic/Server";
+import * as SandboxPresets from "./components/Game/SandboxConfig/Presets";
 
 type Route =
-  | { id: "home"; worldId?: string }
-  | { id: "help"; prev: Route }
-  | { id: "game"; worldId: string; worldName: string; botId?: string }
+  | { id: "home" }
+  | {
+      id: "game";
+      worldId: string;
+      worldName: string;
+      botId?: string;
+      server: Server;
+    }
   | { id: "crash"; msg: string };
 
 const route = ref<Route>({ id: "home" });
 
-let server: Server = undefined;
-
 function handleStart(worldId: string, worldName: string, botId?: string) {
-  if (worldId === "sandbox") {
-    if (server instanceof LocalServer) {
-      //
-    } else {
-      if (server) {
-        server.close();
-      }
+  log("handleStart()", worldId, worldName, botId);
 
-      server = new LocalServer({
-        name: "total mayhem",
-        mode: {
-          type: "deathmatch",
-        },
-        theme: {
-          type: "arena",
-          radius: 20,
-        },
-        policy: {
-          max_alive_bots: 32,
-          max_queued_bots: 64,
-        },
-      });
-    }
-  } else {
-    if (server) {
-      server.close();
-    }
+  if (route.value.id == "game") {
+    route.value.server.close();
+    route.value.server = null;
+  }
 
-    server = new RemoteServer();
+  let server: Server;
+
+  switch (worldId) {
+    case "tutorial":
+      server = new LocalServer(SandboxPresets.getTutorialWorld());
+      break;
+
+    case "sandbox":
+      server = new LocalServer(SandboxPresets.getDefaultWorld());
+      break;
+
+    default:
+      server = new RemoteServer(worldId);
+      break;
   }
 
   route.value = {
@@ -53,39 +48,37 @@ function handleStart(worldId: string, worldName: string, botId?: string) {
     worldId,
     worldName,
     botId,
+    server,
   };
 }
 
-function handleLeave() {
-  if (route.value.id == "help") {
-    route.value = route.value.prev;
-  } else {
-    route.value = { id: "home" };
+function handleLeave(): void {
+  log("handleLeave()");
+
+  if (route.value.id == "game") {
+    route.value.server.close();
+    route.value.server = null;
   }
+
+  route.value = { id: "home" };
 }
 
-function handleOpenHelp() {
-  route.value = { id: "help", prev: route.value };
+function log(...data: any[]) {
+  console.log("[app]", ...data);
 }
 
 onMounted(() => {
+  log("i'm alive!");
+
   window.onerror = (msg) => {
-    if (typeof msg === "string") {
-      route.value = { id: "crash", msg };
-    } else {
-      // TODO
-    }
+    route.value = { id: "crash", msg: msg.toString() };
   };
 });
 </script>
 
 <template>
   <template v-if="route.id == 'home'">
-    <Home
-      :worldId="route.worldId"
-      @start="handleStart"
-      @open-help="handleOpenHelp"
-    />
+    <Home @start="handleStart" />
   </template>
 
   <template v-if="route.id == 'game'">
@@ -93,14 +86,9 @@ onMounted(() => {
       :worldId="route.worldId"
       :worldName="route.worldName"
       :botId="route.botId"
-      :server="server"
-      @leave="handleLeave"
-      @open-help="handleOpenHelp"
+      :server="route.server"
+      @leave="handleLeave()"
     />
-  </template>
-
-  <template v-if="route.id == 'help'">
-    <Help @leave="handleLeave" />
   </template>
 
   <template v-if="route.id == 'crash'">

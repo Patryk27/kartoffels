@@ -25,7 +25,7 @@ function refresh() {
 <style scoped>
 .crash {
   padding: 1em;
-  border: 1px solid #ff0000;
+  border: 1px solid var(--red);
 
   p {
     &:first-child {

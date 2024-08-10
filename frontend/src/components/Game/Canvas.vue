@@ -1,20 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, toRaw } from "vue";
 import { botIdToColor } from "@/utils/bot";
-import type {
-  GameBot,
-  GameBots,
-  GameCamera,
-  GameMap,
-  GameStatus,
-} from "../Game.vue";
+import type { GameWorld } from "./World";
 
 const props = defineProps<{
-  map?: GameMap;
-  bot?: GameBot;
-  bots?: GameBots;
-  camera?: GameCamera;
-  status: GameStatus;
+  world: GameWorld;
   paused: boolean;
 }>();
 
@@ -28,7 +18,7 @@ let textScale = 1.0;
 let charMetrics = null;
 let chars = { x: 0, y: 0 };
 
-function resize() {
+function resize(): void {
   if (canvasWrapper.value == null) {
     return;
   }
@@ -59,7 +49,8 @@ function resize() {
 }
 
 function draw(): void {
-  const { camera, map, status } = props;
+  const camera = props.world.camera.value;
+  const map = props.world.map.value;
 
   if (ctxt == null || canvas.value == null) {
     return;
@@ -67,53 +58,30 @@ function draw(): void {
 
   ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-  const blink = Date.now() % 1000 <= 500;
+  if (props.world.status.value == "reconnecting") {
+    ctxt.fillStyle = "rgb(0, 255, 128)";
 
-  switch (status) {
-    case "connecting":
-    case "reconnecting":
-      drawStatus();
-      break;
-
-    case "connected":
-      if (map == null || camera == null) {
-        break;
-      }
+    ctxt.fillText(
+      "connection lost, reconnecting...",
+      8,
+      charMetrics.height + 8,
+    );
+  } else {
+    if (map && camera) {
+      const blink = Date.now() % 1000 <= 500;
 
       drawTiles();
       drawCarets(blink);
-      break;
-  }
-}
-
-function drawStatus(): void {
-  const { status } = props;
-  const x = 8;
-  const y = charMetrics.height + 8;
-
-  switch (status) {
-    case "connecting":
-      ctxt.fillStyle = "rgb(0, 255, 128)";
-      ctxt.fillText("connecting...", x, y);
-      break;
-
-    case "reconnecting":
-      ctxt.fillStyle = "rgb(0, 255, 128)";
-      ctxt.fillText("connection lost, reconnecting...", x, y);
-      break;
+    }
   }
 }
 
 function drawTiles(): void {
-  let { map, bot, camera, paused } = props;
+  const map = toRaw(props.world.map.value);
+  const camera = toRaw(props.world.camera.value);
+  const paused = toRaw(props.paused);
   const cw = charMetrics.width;
   const ch = charMetrics.height;
-
-  // Optimization: We're accessing those objects very frequently in here
-  map = toRaw(map);
-  bot = toRaw(bot);
-  camera = toRaw(camera);
-  paused = toRaw(paused);
 
   for (let y = 0; y <= chars.y; y += 1) {
     for (let x = 0; x <= chars.x; x += 1) {
@@ -134,7 +102,7 @@ function drawTiles(): void {
       const tileBot = map.bots[tileIdx] ?? null;
 
       let tileFg: string;
-      let tileBg: string = undefined;
+      let tileBg: string = null;
       let tileChar: string;
       let tileOffsetY = 0.0;
       let tileOffsetX = 0.0;
@@ -185,18 +153,14 @@ function drawTiles(): void {
   }
 }
 
-// Draws bot's carets - they show which way the bots are rotated.
 function drawCarets(blink: boolean): void {
-  let { bot, bots, camera, paused } = props;
+  const bot = toRaw(props.world.bot.value);
+  const bots = toRaw(props.world.bots.value);
+  const camera = toRaw(props.world.camera.value);
+  const paused = toRaw(props.paused);
   const cw = charMetrics.width;
   const ch = charMetrics.height;
   const selectedBotId = bot?.id;
-
-  // Optimization: We're accessing those objects very frequently in here
-  bot = toRaw(bot);
-  bots = toRaw(bots);
-  camera = toRaw(camera);
-  paused = toRaw(paused);
 
   ctxt.save();
 
@@ -259,19 +223,23 @@ function drawCarets(blink: boolean): void {
 
 // ---
 
-watch(
-  () => [props.map, props.bots, props.status, props.paused],
-  (_) => {
-    draw();
-  },
-);
+watch([props.world.map, props.world.bots], () => {
+  draw();
+});
 
 watch(
-  () => [props.bot, props.camera],
-  (_) => {
+  [props.world.bot, props.world.camera],
+  () => {
     draw();
   },
   { deep: true },
+);
+
+watch(
+  () => props.paused,
+  () => {
+    draw();
+  },
 );
 
 onMounted(() => {
@@ -300,7 +268,7 @@ onMounted(() => {
 <style scoped>
 .game-canvas {
   position: relative;
-  border: 1px solid #444444;
+  border: 1px solid var(--gray);
   flex-grow: 1;
   overflow: hidden;
 

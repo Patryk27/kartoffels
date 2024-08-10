@@ -241,6 +241,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot-dummy"
+version = "0.2.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
+name = "bot-roberto"
+version = "0.2.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -831,13 +845,17 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "getrandom",
+ "glam",
  "kartoffels",
  "serde",
  "serde-wasm-bindgen",
+ "tracing",
+ "tracing-subscriber",
  "tracing-wasm",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-streams",
+ "web-sys",
 ]
 
 [[package]]
@@ -1169,13 +1187,6 @@ name = "regex-syntax"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
-
-[[package]]
-name = "roberto"
-version = "0.2.0"
-dependencies = [
- "kartoffel",
-]
 
 [[package]]
 name = "rustc-demangle"

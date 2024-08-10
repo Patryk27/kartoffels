@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { botIdToColor } from "@/utils/bot";
 import { durationToHuman } from "@/utils/other";
-import type { GameTableBot } from "../Game.vue";
+import type { GameWorld } from "./World";
+import BotLink from "./Common/BotLink.vue";
 
 const emit = defineEmits<{
   botClick: [string];
@@ -9,7 +9,7 @@ const emit = defineEmits<{
 }>();
 
 defineProps<{
-  bots: GameTableBot[];
+  world: GameWorld;
 }>();
 </script>
 
@@ -23,49 +23,39 @@ defineProps<{
       </div>
     </nav>
 
-    <table>
-      <thead>
-        <tr>
-          <th>place</th>
-          <th>bot</th>
-          <th>age</th>
-          <th>score</th>
-        </tr>
-      </thead>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>place</th>
+            <th>bot</th>
+            <th>age</th>
+            <th>score</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <tr v-for="entry in bots">
-          <td>#{{ entry.nth }}&nbsp;</td>
+        <tbody>
+          <tr
+            v-for="entry in world.botsTable.value"
+            :class="{ 'connected-bot': entry.id == world.bot.value?.id }"
+          >
+            <td>#{{ entry.nth }}</td>
 
-          <td v-if="entry.known">
-            <a
-              @click="emit('botClick', entry.id)"
-              style="color: #ffffff"
-              :style="`background: ${botIdToColor(entry.id, 'bg')}`"
-            >
-              {{ entry.id }}
-            </a>
-          </td>
+            <td>
+              <BotLink :bot="entry" @click="emit('botClick', entry.id)" />
+            </td>
 
-          <td v-else>
-            <a
-              @click="emit('botClick', entry.id)"
-              :style="`color: ${botIdToColor(entry.id)}`"
-            >
-              {{ entry.id }}
-            </a>
-          </td>
+            <td>
+              {{ durationToHuman(Math.round(entry.age)) }}
+            </td>
 
-          <td>
-            {{ durationToHuman(Math.round(entry.age)) }}
-          </td>
-
-          <td>
-            {{ entry.score }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <td>
+              {{ entry.score }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
   </dialog>
 </template>
 
@@ -78,17 +68,23 @@ defineProps<{
       }
     }
 
-    td {
-      &:not(:last-child) {
-        padding-right: 1em;
+    tr {
+      &.connected-bot {
+        background-color: #202020;
       }
 
-      &:nth-child(3) {
-        text-align: right;
-      }
+      td {
+        &:not(:last-child) {
+          padding-right: 1em;
+        }
 
-      &:nth-child(4) {
-        text-align: right;
+        &:nth-child(3) {
+          text-align: right;
+        }
+
+        &:nth-child(4) {
+          text-align: right;
+        }
       }
     }
   }

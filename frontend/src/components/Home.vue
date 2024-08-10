@@ -5,13 +5,22 @@ import type { ServerGetWorldsResponse, ServerWorld } from "@/logic/Server";
 
 const emit = defineEmits<{
   start: [string, string, string?];
-  openHelp: [];
 }>();
 
-const worldId = ref<string>(null);
+const world = ref<string>(null);
 const worlds = ref<ServerWorld[]>(null);
 const session: Ref<Session & { worldName?: string }> = ref(loadSession());
 const error = ref(null);
+
+const testimonials = [
+  "senator, you're no kartoffel! -- jack kennedy, 2024",
+  "amazing piece of technology! -- lewis carroll, 2024",
+  "super fun! -- the pope, 2024",
+  "better than almond water! -- the entity, 1990",
+];
+
+const testimonial =
+  testimonials[Math.floor(Math.random() * testimonials.length)];
 
 function getWorldName(id: string): string {
   if (id == "sandbox") {
@@ -28,7 +37,7 @@ function getWorldName(id: string): string {
 }
 
 function handleJoin(worldId: string): void {
-  emit("start", worldId, getWorldName(worldId), undefined);
+  emit("start", worldId, getWorldName(worldId), null);
 }
 
 function handleRestore(): void {
@@ -40,17 +49,25 @@ function handleRestore(): void {
   );
 }
 
+function log(...data: any[]) {
+  console.log("[home]", ...data);
+}
+
 onMounted(async () => {
   try {
+    log("fetching worlds");
+
     var request = await fetch(`${import.meta.env.VITE_HTTP_URL}/worlds`);
     var response: ServerGetWorldsResponse = await request.json();
 
     worlds.value = response.worlds;
 
     if (response.worlds.length > 0) {
-      worldId.value = response.worlds[0].id;
+      world.value = response.worlds[0].id;
 
       if (session.value) {
+        log("loading session");
+
         for (const world of response.worlds) {
           if (world.id == session.value.worldId) {
             session.value.worldName = world.name;
@@ -72,85 +89,91 @@ onMounted(async () => {
 
 <template>
   <main class="home">
-    <div class="lead">
+    <div class="intro">
       <p>
         welcome to 🥔
         <a href="https://github.com/Patryk27/kartoffels/" target="_blank">
           kartoffels</a
         >
-        🥔, an mmo robot combat arena!
+        🥔, a game where everyone's killed and everyone's the killer!
       </p>
 
       <p>
-        it's an online game where you implement your own bot and see it fight
-        other bots <span class="rainbow">in real time</span>
+        this is an mmo arena where you're given a robot with <b>motors</b>,
+        <b>a radar</b> and <b>an arm</b>:
       </p>
 
-      <p>the rules are simple -- have fun and let the best bot win!</p>
-
-      <p style="text-align: center">
-        <img src="./Home/bot.svg" @click="emit('openHelp')" />
+      <p class="bot">
+        <img src="./Home/bot.svg" />
       </p>
 
-      <p v-if="error == null" style="text-align: center; padding: 0.5em">
-        👉 <a @click="emit('openHelp')">getting started</a> 👈
+      <p>
+        ... and your objective is to implement <b>a firmware</b> controlling it
+        - developing the best, the longest surviving, the most deadly machine
+        imaginable, in rust
       </p>
 
-      <p class="quote">
-        > senator, you're no kartoffel -- jack kennedy, anno domini 2024
+      <p>
+        robots are limited to <b>64 khz cpu</b> and <b>128 kb of ram</b>, and
+        the game happens entirely online - you can see your bot fighting bots
+        submitted from other players and you can learn from their behavior
       </p>
+
+      <p>feeling up to the challenge?</p>
+
+      <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
+        <span class="hand">👉 </span>
+        <a href="#">getting started</a>
+        <span class="hand"> 👈</span>
+      </p>
+
+      <p class="testimonial">> {{ testimonial }}</p>
     </div>
 
-    <div class="menu">
-      <template v-if="error == null">
-        <template v-if="worlds == null">loading...</template>
+    <div v-if="!error" class="menu">
+      <template v-if="worlds == null">loading...</template>
 
-        <template v-else>
-          <div class="world-selection">
-            <label for="world">choose world and click join:</label>
+      <template v-else>
+        <div class="world-selection">
+          <label for="world">choose world and click join:</label>
 
-            <select v-model="worldId">
-              <option v-for="world in worlds" :value="world.id">
-                {{ world.name }} ({{ world.mode }} + {{ world.theme }})
-              </option>
+          <select v-model="world">
+            <option v-for="world in worlds" :value="world.id">
+              {{ world.name }} ({{ world.mode }} + {{ world.theme }})
+            </option>
 
-              <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
-            </select>
+            <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
+          </select>
 
-            <button @click="handleJoin(worldId)">join!</button>
-          </div>
+          <button @click="handleJoin(world)">join!</button>
+        </div>
 
-          <div v-if="worldId == 'sandbox'" class="sandbox-info">
-            <p><b>note, soldier!</b></p>
+        <div v-if="world == 'sandbox'" class="sandbox-info">
+          <p><b>note, soldier!</b></p>
 
-            <p>
-              sandbox is a temporary, private world - it is simulated only in
-              your browser and so and it disappears once you close or refresh
-              the page
-            </p>
-          </div>
+          <p>
+            sandbox is a temporary, private world - it is simulated only in your
+            browser and so and it disappears once you close or refresh the page
+          </p>
+        </div>
 
-          <div v-if="session" class="session-restore">
-            <div class="or">or</div>
+        <div v-if="session" class="session-restore">
+          <div class="or">-- or --</div>
 
-            <button @click="handleRestore()">
-              restore your previous session
-            </button>
-
-            <p>(world: {{ session.worldName }})</p>
-          </div>
-        </template>
+          <button @click="handleRestore()">
+            restore your previous session <br />
+            <span style="color: var(--gray)">({{ session.worldName }})</span>
+          </button>
+        </div>
       </template>
+    </div>
 
-      <div v-else>
-        <p>
-          error: it looks like the server is down, please try again later 👉👈
-        </p>
+    <div v-if="error" class="error">
+      <p>whoopsie, it looks like the server is down:</p>
 
-        <p>
-          {{ error }}
-        </p>
-      </div>
+      <p>
+        {{ error }}
+      </p>
     </div>
   </main>
 </template>
@@ -162,10 +185,10 @@ onMounted(async () => {
   max-width: 1024px;
   padding: 1em;
 
-  .lead {
+  .intro {
     padding: 1em;
     margin-bottom: 1em;
-    border: 1px solid #00ff80;
+    border: 1px solid var(--green);
 
     p {
       &:first-child {
@@ -176,8 +199,37 @@ onMounted(async () => {
         margin-bottom: 0;
       }
 
-      &.quote {
-        color: #606060;
+      &.bot {
+        text-align: center;
+        margin-top: 0.8em;
+        margin-bottom: 0;
+        padding: 0.5em 0;
+
+        img {
+          animation: bot-anim 2s ease-in-out 0s infinite;
+        }
+      }
+
+      &.tutorial {
+        cursor: pointer;
+        padding: 0.33em 0;
+        text-align: center;
+
+        &:hover {
+          a {
+            text-decoration: underline;
+          }
+        }
+
+        .hand {
+          position: relative;
+          top: 0.12em;
+          animation: hand-anim 1s ease-in-out 0s infinite;
+        }
+      }
+
+      &.testimonial {
+        color: var(--gray);
         text-align: right;
       }
     }
@@ -185,84 +237,84 @@ onMounted(async () => {
 
   .menu {
     text-align: center;
+
+    .world-selection {
+      margin-top: 1em;
+
+      label {
+        display: block;
+        margin-bottom: 0.25em;
+      }
+
+      button {
+        margin-left: 0.5em;
+      }
+    }
+
+    .sandbox-info {
+      margin-top: 1.5em;
+      padding-top: var(--text-margin);
+      border-top: 1px dashed var(--gray);
+      border-bottom: 1px dashed var(--gray);
+
+      b {
+        color: var(--orange);
+      }
+    }
+
+    .session-restore {
+      margin-top: 1.5em;
+
+      .or {
+        margin-bottom: 1.5em;
+      }
+
+      button {
+        span {
+          display: inline-block;
+          margin-top: 0.25em;
+        }
+      }
+    }
   }
 
-  .world-selection {
-    margin-top: 1em;
+  .error {
+    padding: 1em;
+    border: 1px dashed var(--red);
+    text-align: center;
 
-    label {
-      display: block;
-      margin-bottom: 0.25em;
+    p {
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
-
-    button {
-      margin-left: 0.5em;
-    }
-  }
-
-  .sandbox-info {
-    margin-top: 1.5em;
-    border-top: 1px dashed #444444;
-    border-bottom: 1px dashed #444444;
-
-    b {
-      color: #ff8000;
-    }
-  }
-
-  .session-restore {
-    margin-top: 1.5em;
-
-    .or {
-      margin-bottom: 1.5em;
-    }
-
-    button {
-      font-weight: 600;
-    }
-
-    button + p {
-      margin-top: 0.5em;
-      color: #606060;
-    }
-  }
-
-  .rainbow {
-    display: inline-block;
-
-    animation:
-      rainbow-color 0.5s linear 0s infinite,
-      rainbow-rotate 1.8s ease-in-out 0s infinite;
   }
 }
 
-@keyframes rainbow-color {
+@keyframes bot-anim {
   from {
-    color: #6666ff;
-  }
-  10% {
-    color: #0099ff;
+    transform: rotate(-4deg);
   }
   50% {
-    color: #00ff00;
-  }
-  75% {
-    color: #ff3399;
-  }
-  100% {
-    color: #6666ff;
-  }
-}
-
-@keyframes rainbow-rotate {
-  from {
-    transform: rotate(-2deg);
-  }
-  50% {
-    transform: rotate(2deg);
+    transform: rotate(8deg);
   }
   to {
-    transform: rotate(-2deg);
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes hand-anim {
+  from {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  50% {
+    margin-left: 0.75ch;
+    margin-right: 0.75ch;
+  }
+  to {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
 </style>

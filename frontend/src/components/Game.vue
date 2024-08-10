@@ -1,299 +1,107 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { storeSession, PlayerBots } from "@/logic/State";
-import {
-  LocalServer,
-  type BotEvent,
-  type Server,
-  type ServerBotsUpdate,
-  type ServerConnectedBotUpdate,
-} from "@/logic/Server";
+import { ref, onMounted, watch } from "vue";
+import { PlayerBots, storeSession } from "@/logic/State";
 import Canvas from "./Game/Canvas.vue";
 import Nav from "./Game/Nav.vue";
-import SandboxHelp from "./Game/SandboxHelp.vue";
+import Help from "./Game/Help.vue";
+import SandboxIntro, * as sandboxIntro from "./Game/SandboxIntro.vue";
 import SandboxConfig from "./Game/SandboxConfig.vue";
 import Side from "./Game/Side.vue";
 import Summary from "./Game/Summary.vue";
-
-export interface GameMap {
-  size: [number, number];
-  tiles: number[];
-  bots: GameMapBot[];
-}
-
-export interface GameMapBot {
-  id: string;
-  known: boolean;
-}
-
-export type GameBot = {
-  id: string;
-  following: boolean;
-} & (ServerConnectedBotUpdate | { status: "unknown"; events: BotEvent[] });
-
-export interface GameTableBot {
-  id: string;
-  age: number;
-  score: number;
-  known: boolean;
-  nth: number;
-}
-
-export type GameBots = ServerBotsUpdate;
-
-export interface GameCamera {
-  x: number;
-  y: number;
-}
-
-export type GameStatus =
-  | "connecting"
-  | "reconnecting"
-  | "connected"
-  | "closing";
-
-export type GameDialogId = "sandboxConfig" | "sandboxHelp" | "summary";
-
-// ---
+import Tutorial, * as tutorial from "./Game/Tutorial.vue";
+import { LocalServer, type Server } from "@/logic/Server";
+import type { GameDialogId } from "./Game/World";
+import { GameCtrl } from "./Game/Ctrl";
+import { GameWorld } from "./Game/World";
+import { isValidBotId } from "@/utils/bot";
 
 const emit = defineEmits<{
   leave: [];
-  openHelp: [];
 }>();
 
-const props = defineProps<{
+const { worldId, worldName, botId, server } = defineProps<{
   worldId: string;
   worldName: string;
   botId?: string;
   server: Server;
 }>();
 
-const map = ref<GameMap>(null);
-const mode = ref(null);
-const bot = ref<GameBot>(null);
-const bots = ref<GameBots>(null);
-const camera = ref<GameCamera>(null);
-const status = ref<GameStatus>("connecting");
 const paused = ref(false);
 const dialog = ref<GameDialogId>(null);
-const server = props.server;
 
-const playerBots = new PlayerBots(props.worldId);
+const ctrl = new GameCtrl(server, paused);
+const playerBots = new PlayerBots(worldId);
+const world = new GameWorld(worldId, worldName, playerBots);
 
-const tableBots = computed(() => {
-  let result: GameTableBot[] = [];
-
-  for (const [id, bot] of Object.entries(bots.value ?? {})) {
-    result.push({
-      id,
-      age: bot.age,
-      score: (mode.value ?? {}).scores[id] ?? 0,
-      known: playerBots.has(id),
-      nth: 0,
-    });
+// HACK this is cursed, but currently there's no better way to have this logic
+//      available both when the user pauses and when the GameCtrl wants to pause
+watch(paused, (oldValue, newValue) => {
+  if (oldValue == newValue) {
+    return;
   }
-
-  result.sort((a, b) => {
-    if (a.score != b.score) {
-      return b.score - a.score;
-    }
-
-    if (a.age == b.age) {
-      return b.age - a.age;
-    }
-
-    return b.id.localeCompare(a.id);
-  });
-
-  for (let i = 0; i < result.length; i += 1) {
-    result[i].nth = i + 1;
-  }
-
-  return result;
-});
-
-function join(newBotId?: string): void {
-  server.onClose(null);
-  server.leave();
-
-  map.value = null;
-  mode.value = null;
-  bot.value = null;
-  bots.value = null;
-  camera.value = null;
-  status.value = status.value == "reconnecting" ? "reconnecting" : "connecting";
-  paused.value = false;
-
-  if (newBotId) {
-    bot.value = {
-      id: newBotId,
-      following: true,
-      status: "unknown",
-      events: [],
-    };
-  }
-
-  server.join(props.worldId, newBotId);
-
-  server.onOpen(() => {
-    status.value = "connected";
-
-    storeSession({
-      worldId: props.worldId,
-      botId: bot.value?.id,
-    });
-  });
-
-  server.onClose(() => {
-    if (status.value == "connected" || status.value == "connecting") {
-      status.value = "reconnecting";
-
-      setTimeout(() => {
-        join(newBotId);
-      }, 250);
-    }
-  });
-
-  server.onError(() => {
-    server.onError(null);
-    server.onClose(null);
-
-    if (status.value == "reconnecting") {
-      setTimeout(() => {
-        join(newBotId);
-      }, 250);
-    } else {
-      if (newBotId) {
-        alert(`couldn't find bot ${newBotId}`);
-
-        // LocalServer needs an extra tick before we're able to join() again
-        setTimeout(() => {
-          join(null);
-        }, 0);
-      } else {
-        window.onerror(`couldn't join world ${props.worldId}`);
-      }
-    }
-  });
-
-  server.onUpdate((msg) => {
-    if (msg.map) {
-      map.value = {
-        size: msg.map.size,
-        tiles: msg.map.tiles,
-        bots: [],
-      };
-
-      camera.value = {
-        x: Math.round(msg.map.size[0] / 2),
-        y: Math.round(msg.map.size[1] / 2),
-      };
-    }
-
-    if (msg.mode) {
-      mode.value = msg.mode;
-    }
-
-    if (msg.bots) {
-      let mapBots: GameMapBot[] = [];
-
-      for (const [botId, bot] of Object.entries(msg.bots)) {
-        const tileIdx = bot.pos[1] * map.value.size[0] + bot.pos[0];
-
-        mapBots[tileIdx] = {
-          id: botId,
-          known: playerBots.has(botId),
-        };
-      }
-
-      bots.value = msg.bots;
-      map.value.bots = mapBots;
-
-      if (bot.value?.following) {
-        const botEntry = msg.bots[bot.value.id];
-
-        if (botEntry) {
-          camera.value = {
-            x: botEntry.pos[0] + 1,
-            y: botEntry.pos[1] + 1,
-          };
-        }
-      }
-    }
-
-    if (bot.value) {
-      const old = bot.value;
-
-      const events = (msg.bot?.events ?? []).map((event: any) => {
-        return {
-          at: new Date(event.at),
-          msg: event.msg,
-        };
-      });
-
-      bot.value = {
-        ...msg.bot,
-        ...{
-          id: old.id,
-          events: (old.events ?? []).concat(events),
-          following: old.following,
-        },
-      };
-
-      bot.value.events.sort((a, b) => {
-        return b.at.getTime() - a.at.getTime();
-      });
-
-      bot.value.events = bot.value.events.slice(0, 64);
-    }
-  });
-}
-
-function handlePause(): void {
-  paused.value = !paused.value;
 
   if (server instanceof LocalServer) {
     server.pause(paused.value);
   } else {
-    // We can't pause remote connections, so in that case let's just drop the
-    // connection and transparently re-acquire it on unpausing.
+    // Since can't pause remote connections, just drop the connection and
+    // transparently reacquire it on unpausing.
     //
     // TODO restore camera position
 
     if (paused.value) {
-      server.onClose(null);
-      server.leave();
+      world.leave();
     } else {
-      join(bot.value?.id);
+      join(world.bot.value?.id);
     }
   }
-}
 
-function handleOpenHelp(): void {
-  if (props.worldId == "sandbox") {
-    toggleDialog("sandboxHelp");
+  if (paused.value) {
+    ctrl.emit("server.pause");
   } else {
-    emit("openHelp");
+    ctrl.emit("server.resume");
+  }
+});
+
+async function join(newBotId?: string): Promise<void> {
+  paused.value = false;
+
+  try {
+    if (newBotId && !isValidBotId(newBotId)) {
+      alert(`\`${newBotId}\` is not a valid bot id`);
+      newBotId = null;
+    }
+
+    await world.join(server, playerBots, newBotId, () => {
+      alert(`couldn't find bot \`${newBotId}\``);
+    });
+
+    storeSession({
+      worldId: worldId,
+      botId: newBotId,
+    });
+
+    ctrl.emit("server.ready");
+  } catch (err) {
+    window.onerror(`couldn't join world ${worldId}`);
+    console.log(err);
   }
 }
 
-async function handleBotUpload(src: File): Promise<void> {
+async function handleBotCreate(src: File): Promise<void> {
   try {
-    const bot = await server.uploadBot(src);
+    const bot = await server.createBot(src);
 
     playerBots.add(bot.id);
 
-    join(bot.id);
+    await join(bot.id);
+
+    ctrl.emit("server.bot-create", bot.id);
   } catch (error) {
-    alert("err, your bot couldn't be uploaded:\n\n" + error);
+    alert("ouch, the firmware seems wrong:\n\n" + error);
   }
 }
 
-async function handleBotSpawnPrefab(ty: string): Promise<void> {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
+async function handleBotCreatePrefab(ty: string): Promise<void> {
   const instancesStr = prompt(
     `how many instances of ${ty} you'd like to spawn?`,
     "1",
@@ -307,81 +115,74 @@ async function handleBotSpawnPrefab(ty: string): Promise<void> {
 
   for (let i = 0; i < instances; i += 1) {
     try {
-      const bot = await server.spawnPrefabBot(ty);
+      const bot = await ctrl.getLocalServer().createPrefabBot(ty);
 
-      if (instances == 1) {
+      // If the user isn't currently connected to any robot, join the first
+      // created prefab, for convenience
+      if (!world.bot.value && i == 0) {
         join(bot.id);
       }
     } catch (error) {
-      alert("err, prefab couldn't be spawned:\n\n" + error);
+      alert("ouch, couldn't create prefab:\n\n" + error);
       break;
     }
   }
 }
 
-function handleBotConnect(id?: string): void {
-  join(id);
-}
-
-function handleBotDisconnect(): void {
-  join(null);
-}
-
-function handleBotClick(id?: string): void {
-  if (bot.value?.id == id && !paused.value) {
-    join(null);
-  } else {
-    join(id);
-  }
-}
-
 function handleBotDestroy(): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
-  if (bot.value?.id) {
-    server.destroyBot(bot.value.id);
-    bot.value = null;
+  if (world.bot.value?.id) {
+    ctrl.getLocalServer().destroyBot(world.bot.value.id);
+    world.bot.value = null;
   }
 }
 
 function handleBotRestart(): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
-  if (bot.value?.id) {
-    server.restartBot(bot.value.id);
+  if (world.bot.value?.id) {
+    ctrl.getLocalServer().restartBot(world.bot.value.id);
   }
 }
 
 function toggleDialog(id: GameDialogId): void {
-  dialog.value = dialog.value == id ? undefined : id;
+  dialog.value = dialog.value == id ? null : id;
 }
 
-function handleRecreateSandbox(config: any): void {
-  if (!(server instanceof LocalServer)) {
-    return;
-  }
-
-  dialog.value = undefined;
-  server.recreate(config);
+function handleSandboxRecreate(config: any): void {
+  dialog.value = null;
+  ctrl.getLocalServer().recreate(config);
 
   join(null);
 }
 
-// ---
-
 onMounted(() => {
-  document.onkeydown = (event) => {
-    const moveCamera = (dx: number, dy: number): void => {
-      if (camera.value) {
-        camera.value.x += dx;
-        camera.value.y += dy;
+  switch (worldId) {
+    case "tutorial":
+      tutorial.start(ctrl).then(() => {
+        emit("leave");
+      });
 
-        if (bot.value) {
-          bot.value.following = false;
+      break;
+
+    case "sandbox":
+      if (sandboxIntro.canOpen()) {
+        dialog.value = "sandboxIntro";
+      }
+
+      break;
+  }
+
+  // TODO extract camera to a separate component
+  document.onkeydown = (event) => {
+    if (ctrl.tutorialSlide.value) {
+      return;
+    }
+
+    const moveCamera = (dx: number, dy: number): void => {
+      if (world.camera.value) {
+        world.camera.value.x += dx;
+        world.camera.value.y += dy;
+
+        if (world.bot.value) {
+          world.bot.value.following = false;
         }
       }
     };
@@ -408,79 +209,68 @@ onMounted(() => {
         break;
 
       case " ":
-        handlePause();
+        paused.value = !paused.value;
         break;
 
       case "Escape":
-        dialog.value = undefined;
+        dialog.value = null;
         break;
     }
   };
 
   window.onbeforeunload = () => {
-    status.value = "closing";
+    world.status.value = "closing";
   };
 });
 
-join(props.botId);
+join(botId);
 </script>
 
 <template>
   <div class="game">
     <Nav
-      :worldId="worldId"
-      :worldName="worldName"
-      :status="status"
+      :ctrl="ctrl"
+      :world="world"
       :paused="paused"
       @leave="emit('leave')"
-      @pause="handlePause"
-      @open-help="handleOpenHelp"
-      @open-sandboxConfig="toggleDialog('sandboxConfig')"
+      @pause="paused = !paused"
+      @open-help="toggleDialog('help')"
+      @open-config="toggleDialog('sandboxConfig')"
     />
 
     <main>
-      <Canvas
-        :map="map"
-        :bot="bot"
-        :bots="bots"
-        :camera="camera"
-        :status="status"
-        :paused="paused"
-      />
+      <Canvas :world="world" :paused="paused" />
 
       <Side
-        :worldId="worldId"
-        :mode="mode"
-        :bot="bot"
-        :bots="tableBots"
-        :status="status"
+        :ctrl="ctrl"
+        :world="world"
         :paused="paused"
-        @bot-upload="handleBotUpload"
-        @bot-spawn-prefab="handleBotSpawnPrefab"
-        @bot-connect="handleBotConnect"
-        @bot-disconnect="handleBotDisconnect"
-        @bot-click="handleBotClick"
+        @bot-create="handleBotCreate"
+        @bot-create-prefab="handleBotCreatePrefab"
+        @bot-join="join"
+        @bot-leave="join(null)"
         @bot-destroy="handleBotDestroy"
         @bot-restart="handleBotRestart"
-        @open-summary="toggleDialog('summary')"
+        @summary-open="toggleDialog('summary')"
       />
+
+      <Help :open="dialog == 'help'" @close="dialog = null" />
+
+      <Tutorial :ctrl="ctrl" />
 
       <Summary
         :open="dialog == 'summary'"
-        :bots="tableBots"
-        @close="dialog = undefined"
-        @bot-click="handleBotClick"
+        :world="world"
+        @close="dialog = null"
+        @bot-click="join"
       />
 
-      <SandboxHelp
-        :open="dialog == 'sandboxHelp'"
-        @close="dialog = undefined"
-      />
+      <SandboxIntro :open="dialog == 'sandboxIntro'" @close="dialog = null" />
 
       <SandboxConfig
         :open="dialog == 'sandboxConfig'"
-        @close="dialog = undefined"
-        @recreate-sandbox="handleRecreateSandbox"
+        @close="dialog = null"
+        @recreate="handleSandboxRecreate"
       />
     </main>
   </div>

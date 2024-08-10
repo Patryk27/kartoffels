@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { GameStatus } from "../Game.vue";
+import type { GameCtrl } from "./Ctrl";
+import type { GameWorld } from "./World";
 
 const emit = defineEmits<{
   leave: [];
   pause: [];
   openHelp: [];
-  openSandboxConfig: [];
+  openConfig: [];
 }>();
 
 defineProps<{
-  worldId: string;
-  worldName: string;
-  status: GameStatus;
+  ctrl: GameCtrl;
+  world: GameWorld;
   paused: boolean;
 }>();
 </script>
@@ -19,28 +19,38 @@ defineProps<{
 <template>
   <nav class="game-nav">
     <div class="game-nav-back">
-      <button @click="emit('leave')">go back</button>
+      <button @click="emit('leave')">leave</button>
     </div>
 
     <div class="game-nav-world">
-      <template v-if="worldId == 'sandbox'">
-        <span style="color: #ff8000">🕵️ sandbox 🕵️ </span>
-        <button @click="emit('openSandboxConfig')">configure</button>
+      <template v-if="world.id == 'sandbox'">
+        <span style="color: var(--orange)">🕵️ sandbox 🕵️ </span>
+        <button @click="emit('openConfig')">configure</button>
       </template>
 
       <template v-else>
-        {{ worldName }}
+        {{ world.name }}
       </template>
     </div>
 
     <div class="game-nav-control">
-      <button :disabled="status == 'reconnecting'" @click="emit('openHelp')">
+      <button
+        :disabled="
+          world.status.value == 'reconnecting' || !ctrl.ui.value.enableHelp
+        "
+        @click="emit('openHelp')"
+      >
         help
       </button>
 
       <button
-        :class="{ paused }"
-        :disabled="status == 'reconnecting'"
+        :class="{
+          paused: paused && ctrl.ui.value.enablePause,
+          highlighted: ctrl.ui.value.highlightPause,
+        }"
+        :disabled="
+          world.status.value == 'reconnecting' || !ctrl.ui.value.enablePause
+        "
         @click="emit('pause')"
       >
         <template v-if="paused">resume</template>
@@ -66,7 +76,7 @@ defineProps<{
 
   button {
     &.paused {
-      border: 1px solid red;
+      border: 1px solid var(--red);
     }
 
     & + button {
