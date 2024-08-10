@@ -96,7 +96,9 @@ export class GameWorld {
       }
     });
 
-    const abort = new AbortController();
+    this.abort = new AbortController();
+
+    const abort = this.abort;
     const msgs = await server.join(botId);
 
     new Promise(async () => {
@@ -119,7 +121,6 @@ export class GameWorld {
       msgs.cancel();
     });
 
-    this.abort = abort;
     this.status.value = "connected";
   }
 
