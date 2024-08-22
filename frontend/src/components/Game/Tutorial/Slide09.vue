@@ -33,9 +33,14 @@ ctrl.onOnce("server.bot-create", () => {
     </ul>
 
     <p>
-      the scan is always square-shaped and the number at the end of the function
-      tells you how large the scan will be (<kbd>radar_scan_3x3()</kbd>
-      performs a 3x3 scan and so on)
+      the scan is always square-shaped (3x3, 5x5 etc.) and already rotated
+      according to the robot's direction
+    </p>
+
+    <p>
+      e.g. when using the 3x3 scan, the <kbd>scan[0][1]</kbd> cell always
+      describes what's directly in front of the robot and corresponds to the
+      place the robot will go when you call <kbd>motor_step()</kbd>
     </p>
 
     <p>

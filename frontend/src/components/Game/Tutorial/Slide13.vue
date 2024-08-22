@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { GameCtrl } from "../Ctrl";
+import type { GameWorld } from "../World";
 
-const { ctrl } = defineProps<{
+const { ctrl, world } = defineProps<{
   ctrl: GameCtrl;
+  world: GameWorld;
 }>();
 
 const server = ctrl.getLocalServer();
@@ -16,6 +18,7 @@ let restartFn = null;
 function handleGoToIntro2() {
   status.value = "intro.2";
 
+  prepareCamera();
   prepareMap();
 }
 
@@ -32,6 +35,11 @@ function handleRestart() {
   if (restartFn) {
     restartFn();
   }
+}
+
+function prepareCamera() {
+  world.camera.value.x = 16;
+  world.camera.value.y = 16;
 }
 
 async function prepareMap() {
@@ -132,12 +140,8 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 <template>
   <template v-if="status == 'intro.1'">
     <main>
-      <p>alright, let's wrap things up with an exercise, soldier!</p>
-
-      <p>
-        the purpose of a bot is to fight enemies, so how about we spawn a
-        couple?
-      </p>
+      <p>alright then, let's wrap things up with an exercise, soldier!</p>
+      <p>the purpose of a bot is to fight enemies, is it not?</p>
     </main>
 
     <footer style="text-align: right">
@@ -147,7 +151,7 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 
   <template v-else-if="status == 'intro.2'">
     <main>
-      <p>lo and behold!</p>
+      <p>so - lo and behold!</p>
     </main>
 
     <footer style="text-align: right">
@@ -159,7 +163,7 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 
   <template v-else-if="status == 'intro.3'">
     <main>
-      <p>now, my dear, it's time for you to fight... and win, hopefully!</p>
+      <p>now, my dear, it's time for you to fight!</p>
 
       <p>
         in order to kill a bot, drive right towards it and then call
@@ -168,7 +172,7 @@ ctrl.on("server.bot-create", async (playerBotId) => {
 
       <p>
         using all the knowledge gathered so far, implement a bot that uses radar
-        to locate the closest enemy (visible as <kbd>'@'</kbd> on the scan) -
+        to locate the closest enemy (visible as <kbd>'@'</kbd> on the scan) and
         then let the bot drive towards this enemy, stab it, and repeat
       </p>
 
@@ -194,8 +198,8 @@ ctrl.on("server.bot-create", async (playerBotId) => {
         </li>
 
         <li>
-          if you run out of ideas, feel free to <kbd>git checkout tutorial</kbd>
-          to see the solution
+          if you run out of ideas, feel free to
+          <kbd>$ git checkout tutorial</kbd> to see the solution
         </li>
       </ul>
     </main>

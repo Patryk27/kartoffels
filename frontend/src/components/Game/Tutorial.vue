@@ -13,9 +13,11 @@ import Slide10 from "./Tutorial/Slide10.vue";
 import Slide11 from "./Tutorial/Slide11.vue";
 import Slide12 from "./Tutorial/Slide12.vue";
 import Slide13 from "./Tutorial/Slide13.vue";
+import type { GameWorld } from "./World";
 
 defineProps<{
   ctrl: GameCtrl;
+  world: GameWorld;
 }>();
 </script>
 
@@ -70,7 +72,7 @@ export function start(ctrl: GameCtrl): Promise<void> {
     <Slide10 :ctrl v-else-if="ctrl.tutorialSlide.value == 10" />
     <Slide11 :ctrl v-else-if="ctrl.tutorialSlide.value == 11" />
     <Slide12 :ctrl v-else-if="ctrl.tutorialSlide.value == 12" />
-    <Slide13 :ctrl v-else-if="ctrl.tutorialSlide.value == 13" />
+    <Slide13 :ctrl :world v-else-if="ctrl.tutorialSlide.value == 13" />
   </dialog>
 </template>
 

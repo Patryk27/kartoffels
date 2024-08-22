@@ -15,12 +15,13 @@ const { ctrl } = defineProps<{
     </p>
 
     <p>
-      for instance the <kbd>motor_step()</kbd> function has a cooldown of 20_000
-      ticks, which means that it can be called only
-      <kbd>64_000 / 20_000 = 3</kbd>
-      times a second - invoking the function before the time has passed will
-      make it a no-op (i.e. do nothing)
+      for instance the <kbd>motor_step()</kbd> function has cooldown of 20k
+      ticks, which means that it can be called at most
+      <kbd>64000 / 20000 = 3</kbd> times a second¹ - invoking the function
+      before this time has passed will do nothing
     </p>
+
+    <p>(( ¹each kartoffel has a 64 KHz CPU ))</p>
 
     <p>in practice, it means that if you call a function twice in a row:</p>
 
@@ -30,11 +31,11 @@ motor_step();</pre
     >
 
     <p>
-      ... the robot will only move one tile, the second stepping will do
-      nothing, because the motor is not ready to accept another command
+      ... the robot will move only one tile - the second step() will do nothing,
+      because the motor is not ready to accept another command
     </p>
 
-    <p>the correct way to step two tiles would be:</p>
+    <p>the correct way to move two tiles could be:</p>
 
     <pre>
 motor_wait();
@@ -45,9 +46,9 @@ motor_step();</pre
     >
 
     <p>
-      each peripheral has its own cooldown time, which you can read more about
-      when you click <kbd>go to definition</kbd> (or whatever your ide has) on
-      <kbd>motor_step()</kbd> and the other functions
+      each peripheral has its own cooldow , which you can read more about when
+      you click <kbd>go to definition</kbd> (or whatever your ide has) on
+      <kbd>motor_step()</kbd> and the like
     </p>
   </main>
 

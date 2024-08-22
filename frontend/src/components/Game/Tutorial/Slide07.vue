@@ -88,9 +88,9 @@ onUnmounted(() => {
       </p>
 
       <p>
-        btw, for tutorial's sake, your bots gets always spawned at the center of
-        the map - but within normal game, the location and direction is
-        randomized
+        (( for tutorial's sake your robot always gets spawned at the center of
+        the map, but during normal game bot's location and direction are
+        randomized at spawn ))
       </p>
 
       <p>

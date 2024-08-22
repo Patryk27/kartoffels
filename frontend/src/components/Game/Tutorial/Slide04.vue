@@ -10,8 +10,7 @@ const { ctrl } = defineProps<{
   <main>
     <p>
       okie, for the purposes of this tutorial, we'll be starting from scratch -
-      open
-      <kbd>src/main.rs</kbd> and replace the code there with:
+      open <kbd>src/main.rs</kbd> and replace the code there with:
     </p>
 
     <pre>

@@ -8,18 +8,28 @@ const { ctrl } = defineProps<{
 
 <template>
   <main>
-    <p>let's start with the simplest peripheral: <b>the motor</b></p>
-    <p>motor allows to move the robot using the following functions:</p>
+    <p>let's start with the simplest peripheral, <b>the motor</b></p>
+
+    <p>
+      motor allows for the robot to move (d'oh!) and it can be controlled using
+      these three functions:
+    </p>
 
     <ul class="compact">
-      <li><kbd>motor_step()</kbd>, which moves the robot one tile forward</li>
+      <li>
+        <kbd>motor_step()</kbd>, which moves the robot one tile forward in the
+        direction the robot is currently facing
+      </li>
       <li>
         <kbd>motor_turn_left()</kbd>, which rotates the robot counterclockwise
       </li>
       <li><kbd>motor_turn_right()</kbd>, which rotates the robot clockwise</li>
     </ul>
 
-    <p>since those are just rust functions, you can invoke them like so:</p>
+    <p>
+      putting it to practice, you can make the robot move forward by repeatedly
+      calling <kbd>motor_step()</kbd>, like so:
+    </p>
 
     <pre>
 #![no_std]

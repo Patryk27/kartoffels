@@ -16,7 +16,6 @@ const testimonials = [
   "senator, you're no kartoffel! -- jack kennedy, 2024",
   "amazing piece of technology! -- lewis carroll, 2024",
   "super fun! -- the pope, 2024",
-  "better than almond water! -- the entity, 1990",
 ];
 
 const testimonial =

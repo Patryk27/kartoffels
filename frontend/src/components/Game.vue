@@ -256,7 +256,7 @@ join(botId);
 
       <Help :open="dialog == 'help'" @close="dialog = null" />
 
-      <Tutorial :ctrl="ctrl" />
+      <Tutorial :ctrl="ctrl" :world="world" />
 
       <Summary
         :open="dialog == 'summary'"
