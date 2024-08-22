@@ -49,6 +49,7 @@ function resize(): void {
 }
 
 function draw(): void {
+  const status = props.world.status.value;
   const camera = props.world.camera.value;
   const map = props.world.map.value;
 
@@ -58,21 +59,39 @@ function draw(): void {
 
   ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-  if (props.world.status.value == "reconnecting") {
-    ctxt.fillStyle = "rgb(0, 255, 128)";
+  switch (status) {
+    case "connecting":
+    case "reconnecting":
+      drawStatus();
+      break;
 
-    ctxt.fillText(
-      "connection lost, reconnecting...",
-      8,
-      charMetrics.height + 8,
-    );
-  } else {
-    if (map && camera) {
-      const blink = Date.now() % 1000 <= 500;
+    case "connected":
+      if (map && camera) {
+        const blink = Date.now() % 1000 <= 500;
 
-      drawTiles();
-      drawCarets(blink);
-    }
+        drawTiles();
+        drawCarets(blink);
+      }
+
+      break;
+  }
+}
+
+function drawStatus(): void {
+  const status = props.world.status.value;
+  const x = 8;
+  const y = charMetrics.height + 8;
+
+  switch (status) {
+    case "connecting":
+      ctxt.fillStyle = "rgb(0, 255, 128)";
+      ctxt.fillText("connecting...", x, y);
+      break;
+
+    case "reconnecting":
+      ctxt.fillStyle = "rgb(0, 255, 128)";
+      ctxt.fillText("connection lost, reconnecting...", x, y);
+      break;
   }
 }
 
