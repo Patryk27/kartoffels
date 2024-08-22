@@ -142,7 +142,7 @@ onMounted(async () => {
               {{ world.name }} ({{ world.mode }} + {{ world.theme }})
             </option>
 
-            <option value="sandbox">sandbox (🕵️ private 🕵️)</option>
+            <option value="sandbox">🕵️ private sandbox 🕵️</option>
           </select>
 
           <button @click="handleJoin(world)">join!</button>
@@ -152,8 +152,8 @@ onMounted(async () => {
           <p><b>note, soldier!</b></p>
 
           <p>
-            sandbox is a temporary, private world - it is simulated only in your
-            browser and so and it disappears once you close or refresh the page
+            sandbox is a special world simulated locally in your browser - it
+            disappears once you close or refresh the game
           </p>
         </div>
 
