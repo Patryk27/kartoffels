@@ -24,7 +24,7 @@ in
 
         data = mkOption {
           type = types.str;
-          default = "/var/kartoffels/data";
+          default = "/var/lib/kartoffels";
         };
 
         secret = mkOption {
