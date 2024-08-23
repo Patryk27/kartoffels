@@ -12,6 +12,7 @@ const world = ref<string>(null);
 const worlds = ref<ServerWorld[]>(null);
 const session: Ref<Session & { worldName?: string }> = ref(loadSession());
 const error = ref(null);
+const isUserOnPhone = ref(true);
 
 const testimonials = [
   "senator, you're no kartoffel! -- jack kennedy, 2024",
@@ -21,6 +22,10 @@ const testimonials = [
 
 const testimonial =
   testimonials[Math.floor(Math.random() * testimonials.length)];
+
+function log(...data: any[]) {
+  console.log("[home]", ...data);
+}
 
 function getWorldName(id: string): string {
   if (id == "sandbox") {
@@ -49,9 +54,20 @@ function handleRestore(): void {
   );
 }
 
-function log(...data: any[]) {
-  console.log("[home]", ...data);
+function handleOverridePhoneCheck() {
+  localStorage.setItem("home.override-phone-check", "enabled");
+  window.onresize(null);
 }
+
+window.onresize = () => {
+  if (localStorage.getItem("home.override-phone-check") === null) {
+    isUserOnPhone.value = window.innerWidth <= 768;
+  } else {
+    isUserOnPhone.value = false;
+  }
+};
+
+window.onresize(null);
 
 onMounted(async () => {
   try {
@@ -108,73 +124,98 @@ onMounted(async () => {
       </p>
 
       <p>
-        ... and your objective is to implement <b>a firmware</b> controlling it
-        - developing the best, the longest surviving, the most deadly machine
-        imaginable, in rust
+        ... and your objective is to <b>implement a firmware</b> controlling
+        this bot - developing the best, the longest surviving, the most deadly
+        machine imaginable, in rust
       </p>
 
       <p>
         robots are limited to <b>64 khz cpu</b> and <b>128 kb of ram</b>, and
-        the game happens entirely online - you can see your bot fighting bots
-        submitted from other players and you can learn from their behavior
+        the game happens online - you can see your bot fighting bots submitted
+        from other players and you can learn from their behavior
       </p>
 
-      <p>feeling up to the challenge?</p>
+      <template v-if="!isUserOnPhone">
+        <p>feeling up to the challenge?</p>
 
-      <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
-        <span class="hand">👉 </span>
-        <a href="#">getting started</a>
-        <span class="hand"> 👈</span>
-      </p>
+        <p class="tutorial" @click="emit('start', 'tutorial', 'tutorial')">
+          <span class="hand">👉 </span>
+          <a href="#">getting started</a>
+          <span class="hand"> 👈</span>
+        </p>
 
-      <p class="testimonial">> {{ testimonial }}</p>
-    </div>
-
-    <div v-if="!error" class="menu">
-      <template v-if="worlds == null">loading...</template>
-
-      <template v-else>
-        <div class="world-selection">
-          <label for="world">choose world and click join:</label>
-
-          <select v-model="world">
-            <option v-for="world in worlds" :value="world.id">
-              {{ world.name }} ({{ world.mode }} + {{ world.theme }})
-            </option>
-
-            <option value="sandbox">🕵️ private sandbox 🕵️</option>
-          </select>
-
-          <button @click="handleJoin(world)">join!</button>
-        </div>
-
-        <div v-if="world == 'sandbox'" class="sandbox-info">
-          <p><b>note, soldier!</b></p>
-
-          <p>
-            sandbox is a special world simulated locally in your browser - it
-            disappears once you close or refresh the game
-          </p>
-        </div>
-
-        <div v-if="session" class="session-restore">
-          <div class="or">-- or --</div>
-
-          <button @click="handleRestore()">
-            restore your previous session <br />
-            <span style="color: var(--gray)">({{ session.worldName }})</span>
-          </button>
-        </div>
+        <p class="testimonial">> {{ testimonial }}</p>
       </template>
     </div>
 
-    <div v-if="error" class="error">
-      <p>whoopsie, it looks like the server is down:</p>
+    <template v-if="isUserOnPhone">
+      <div class="error">
+        <p>
+          whoopsie, our robocop-ai-matrix systems have detected that you might
+          be on a phone right now
+        </p>
 
-      <p>
-        {{ error }}
-      </p>
-    </div>
+        <p>
+          playing this game requires access to keyboard, mouse and a bit larger
+          screen, so come check it out on your pc or a laptop!
+        </p>
+
+        <p>
+          if you think that's a mistake,
+          <a href="#" @click.prevent="handleOverridePhoneCheck()"
+            >click here to play anyway</a
+          >
+        </p>
+      </div>
+    </template>
+
+    <template v-else>
+      <div v-if="!error" class="menu">
+        <template v-if="worlds == null">loading...</template>
+
+        <template v-else>
+          <div class="world-selection">
+            <label for="world">choose world and click join:</label>
+
+            <select v-model="world">
+              <option v-for="world in worlds" :value="world.id">
+                {{ world.name }} ({{ world.mode }} + {{ world.theme }})
+              </option>
+
+              <option value="sandbox">🕵️ private sandbox 🕵️</option>
+            </select>
+
+            <button @click="handleJoin(world)">join!</button>
+          </div>
+
+          <div v-if="world == 'sandbox'" class="sandbox-info">
+            <p><b>note, soldier!</b></p>
+
+            <p>
+              sandbox is a special world simulated locally in your browser - it
+              disappears once you close or refresh the game
+            </p>
+          </div>
+
+          <div v-if="session" class="session-restore">
+            <div class="or">-- or --</div>
+
+            <button @click="handleRestore()">
+              restore your previous session <br />
+              <span style="color: var(--gray)">({{ session.worldName }})</span>
+            </button>
+          </div>
+        </template>
+      </div>
+
+      <div v-if="error" class="error">
+        <p>whoopsie, it looks like the server is down:</p>
+
+        <p>
+          {{ error }}
+        </p>
+      </div>
+    </template>
   </main>
 
   <footer>
@@ -187,7 +228,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   max-width: 1024px;
-  padding: 1em;
 
   .intro {
     padding: 1em;
@@ -296,12 +336,19 @@ onMounted(async () => {
 }
 
 footer {
-  position: absolute;
-  right: 0;
-  bottom: 0;
+  text-align: right;
+  margin-top: 1em;
 
   a {
     color: var(--gray);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
   }
 }
 

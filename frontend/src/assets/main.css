@@ -24,6 +24,12 @@ body {
   color: var(--fg);
 }
 
+@media only screen and (min-width: 768px) {
+  body {
+    padding: 0.5em 0.25em;
+  }
+}
+
 a {
   color: #0080ff;
   text-decoration: none;
@@ -206,13 +212,19 @@ dialog {
 }
 
 #app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  display: block;
+}
 
-  width: 100%;
-  height: 100%;
+@media only screen and (min-width: 768px) {
+  #app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .status-alive {

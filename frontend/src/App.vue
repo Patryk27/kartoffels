@@ -67,13 +67,11 @@ function log(...data: any[]) {
   console.log("[app]", ...data);
 }
 
-onMounted(() => {
-  log("i'm alive!");
+log(`i'm alive! (rev=${import.meta.env.VITE_REV})`);
 
-  window.onerror = (msg) => {
-    route.value = { id: "crash", msg: msg.toString() };
-  };
-});
+window.onerror = (msg) => {
+  route.value = { id: "crash", msg: msg.toString() };
+};
 </script>
 
 <template>
