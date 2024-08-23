@@ -58,6 +58,7 @@
           frontend = import ./frontend {
             inherit napalm pkgs;
 
+            rev = builtins.substring 0 7 (self.rev or "dirty");
             kartoffels-sandbox = backend.kartoffels-sandbox;
           };
 

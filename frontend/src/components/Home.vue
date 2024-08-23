@@ -7,6 +7,7 @@ const emit = defineEmits<{
   start: [string, string, string?];
 }>();
 
+const rev = import.meta.env.VITE_REV;
 const world = ref<string>(null);
 const worlds = ref<ServerWorld[]>(null);
 const session: Ref<Session & { worldName?: string }> = ref(loadSession());
@@ -175,6 +176,10 @@ onMounted(async () => {
       </p>
     </div>
   </main>
+
+  <footer>
+    <a href="https://github.com/Patryk27/kartoffels">kartoffels/{{ rev }}</a>
+  </footer>
 </template>
 
 <style scoped>
@@ -287,6 +292,16 @@ onMounted(async () => {
         margin-bottom: 0;
       }
     }
+  }
+}
+
+footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+
+  a {
+    color: var(--gray);
   }
 }
 

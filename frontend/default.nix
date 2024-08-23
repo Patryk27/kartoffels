@@ -1,10 +1,11 @@
-{ napalm, pkgs, kartoffels-sandbox }:
+{ napalm, pkgs, kartoffels-sandbox, rev }:
 
 let
   napalm' = pkgs.callPackage napalm { };
 
 in
 napalm'.buildPackage ./. {
+  VITE_REV = rev;
   VITE_HTTP_URL = "/api";
   VITE_WS_URL = "/api";
 
