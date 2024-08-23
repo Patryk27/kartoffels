@@ -18,13 +18,6 @@ pub enum Theme {
 }
 
 impl Theme {
-    pub fn ty(&self) -> &'static str {
-        match self {
-            Theme::Arena(_) => "arena",
-            Theme::Dungeon(_) => "dungeon",
-        }
-    }
-
     pub fn create_map(&self, rng: &mut impl RngCore) -> Map {
         match self {
             Theme::Arena(this) => this.create_map(),

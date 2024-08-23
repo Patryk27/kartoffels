@@ -15,8 +15,6 @@ use tokio_stream::wrappers::ReceiverStream;
 #[derive(Clone, Debug)]
 pub struct Handle {
     pub(super) name: Arc<WorldName>,
-    pub(super) mode: &'static str,
-    pub(super) theme: &'static str,
     pub(super) tx: RequestTx,
 }
 
@@ -26,22 +24,12 @@ impl Handle {
     pub(crate) fn new(world: &World, tx: RequestTx) -> Self {
         Self {
             name: world.name.clone(),
-            mode: world.mode.ty(),
-            theme: world.theme.ty(),
             tx,
         }
     }
 
     pub fn name(&self) -> &WorldName {
         &self.name
-    }
-
-    pub fn mode(&self) -> &'static str {
-        self.mode
-    }
-
-    pub fn theme(&self) -> &'static str {
-        self.theme
     }
 
     pub async fn listen(&self) -> Result<impl Stream<Item = Event>> {

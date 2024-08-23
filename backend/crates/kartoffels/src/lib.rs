@@ -70,8 +70,6 @@ pub fn create(
     info!(
         ?id,
         name = ?config.name,
-        mode = ?mode.ty(),
-        theme = ?theme.ty(),
         "creating world",
     );
 
@@ -109,8 +107,6 @@ pub fn resume(id: WorldId, path: &Path) -> Result<Handle> {
     info!(
         ?id,
         name = ?*this.name,
-        mode = ?this.mode.ty(),
-        theme = ?this.theme.ty(),
         "resuming world",
     );
 

@@ -75,8 +75,6 @@ export interface ServerGetWorldsResponse {
 export interface ServerWorld {
   id: string;
   name: string;
-  mode: string;
-  theme: string;
 }
 
 export interface ServerBotInfo {

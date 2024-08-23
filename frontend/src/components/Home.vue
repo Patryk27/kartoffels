@@ -179,7 +179,7 @@ onMounted(async () => {
 
             <select v-model="world">
               <option v-for="world in worlds" :value="world.id">
-                {{ world.name }} ({{ world.mode }} + {{ world.theme }})
+                {{ world.name }}
               </option>
 
               <option value="sandbox">🕵️ private sandbox 🕵️</option>

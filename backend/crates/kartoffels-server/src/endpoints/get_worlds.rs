@@ -20,8 +20,6 @@ pub async fn handle(
         .map(|(id, world)| ResponseWorld {
             id: *id,
             name: world.name(),
-            mode: world.mode(),
-            theme: world.theme(),
         })
         .collect();
 
@@ -37,6 +35,4 @@ struct Response<'a> {
 struct ResponseWorld<'a> {
     id: WorldId,
     name: &'a WorldName,
-    mode: &'static str,
-    theme: &'static str,
 }

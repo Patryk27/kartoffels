@@ -14,12 +14,6 @@ pub enum Mode {
 }
 
 impl Mode {
-    pub fn ty(&self) -> &'static str {
-        match self {
-            Mode::Deathmatch(_) => "deathmatch",
-        }
-    }
-
     pub fn state(&self) -> Value {
         match self {
             Mode::Deathmatch(this) => this.state(),
