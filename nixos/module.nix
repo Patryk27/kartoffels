@@ -87,7 +87,7 @@ in
       };
     };
 
-    systemd.services.kartoffels-server = {
+    systemd.services.kartoffels = {
       script = ''
         mkdir -p "${cfg.backend.data}"
 
