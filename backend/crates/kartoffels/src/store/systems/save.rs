@@ -92,5 +92,5 @@ pub fn run(world: &mut World) {
 }
 
 fn next_tick() -> Instant {
-    Instant::now() + Duration::from_secs(15)
+    Instant::now() + Duration::from_secs(60)
 }
