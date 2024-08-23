@@ -239,7 +239,7 @@ join(botId);
     />
 
     <main>
-      <Canvas :world="world" :paused="paused" />
+      <Canvas :world="world" :paused="paused" @bot-join="join" />
 
       <Side
         :ctrl="ctrl"

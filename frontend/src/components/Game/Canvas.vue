@@ -3,6 +3,10 @@ import { ref, onMounted, watch, toRaw } from "vue";
 import { botIdToColor } from "@/utils/bot";
 import type { GameWorld } from "./World";
 
+const emit = defineEmits<{
+  botJoin: [string];
+}>();
+
 const props = defineProps<{
   world: GameWorld;
   paused: boolean;
@@ -10,16 +14,44 @@ const props = defineProps<{
 
 const canvas = ref(null);
 const canvasWrapper = ref(null);
-const pausedColor = "rgb(40, 40, 40)";
+const pausedColorA = "rgb(40, 40, 40)";
+const pausedColorB = "rgb(80, 80, 80)";
 
-let ctxt = null;
-let scale = 1.0;
-let textScale = 1.0;
-let charMetrics = null;
-let chars = { x: 0, y: 0 };
+let ctxt: CanvasRenderingContext2D = null;
+
+// Size of a single tile, in pixels
+let tileSize = {
+  w: 0,
+  h: 0,
+};
+
+// Size of the entire canvas, in tiles
+let canvasSize = {
+  x: 0,
+  y: 0,
+};
+
+// Camera offset, in tiles
+let offset = {
+  x: 0,
+  y: 0,
+};
+
+let mouse = {
+  // Position, in pixels relative to the canvas
+  pos: {
+    x: 0,
+    y: 0,
+  },
+
+  // Id of bot the mouse is hovering over, if any
+  hoveringOver: null,
+};
 
 function resize(): void {
   if (canvasWrapper.value == null) {
+    // Can happen during development if Vue decides it's time to reload the
+    // component
     return;
   }
 
@@ -27,35 +59,75 @@ function resize(): void {
   const height = canvasWrapper.value.clientHeight;
   const dpr = window.devicePixelRatio || 1;
 
-  scale = 13.5;
-  textScale = scale * 2.0;
   canvas.value.width = width;
   canvas.value.height = height;
 
   ctxt.scale(dpr, dpr);
-  ctxt.font = `${textScale}px Sono`;
+  ctxt.font = `30px Sono`;
 
-  charMetrics = ctxt.measureText("@");
+  const ch = ctxt.measureText("@");
 
-  charMetrics.height =
-    charMetrics.actualBoundingBoxAscent +
-    charMetrics.actualBoundingBoxDescent +
-    2.0;
+  tileSize = {
+    w: ch.width,
+    h: ch.actualBoundingBoxAscent + ch.actualBoundingBoxDescent + 2.0,
+  };
 
-  chars = {
-    x: Math.round(width / dpr / charMetrics.width),
-    y: Math.round(height / dpr / charMetrics.height),
+  canvasSize = {
+    x: Math.round(width / dpr / tileSize.w),
+    y: Math.round(height / dpr / tileSize.h),
   };
 }
 
+function update(): void {
+  if (canvasWrapper.value == null) {
+    // Can happen during development if Vue decides it's time to reload the
+    // component
+    return;
+  }
+
+  const map = toRaw(props.world.map.value);
+  const camera = toRaw(props.world.camera.value);
+
+  // ---
+
+  offset = {
+    x: camera.x - Math.round(canvasSize.x / 2),
+    y: camera.y - Math.round(canvasSize.y / 2),
+  };
+
+  // ---
+
+  mouse.hoveringOver = null;
+
+  if (mouse) {
+    const mouseTilePos = {
+      x: Math.floor(offset.x + mouse.pos.x / tileSize.w),
+      y: Math.floor(offset.y + mouse.pos.y / tileSize.h),
+    };
+
+    if (mouseTilePos.x >= 0 && mouseTilePos.y >= 0) {
+      const mouseTileIdx = mouseTilePos.y * map.size[0] + mouseTilePos.x;
+      const mouseBot = map.bots[mouseTileIdx];
+
+      if (mouseBot) {
+        mouse.hoveringOver = mouseBot.id;
+      }
+    }
+  }
+
+  document.body.style.cursor = mouse.hoveringOver ? "pointer" : "default";
+}
+
 function draw(): void {
+  if (canvasWrapper.value == null) {
+    // Can happen during development if Vue decides it's time to reload the
+    // component
+    return;
+  }
+
   const status = props.world.status.value;
   const camera = props.world.camera.value;
   const map = props.world.map.value;
-
-  if (ctxt == null || canvas.value == null) {
-    return;
-  }
 
   ctxt.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
@@ -71,6 +143,10 @@ function draw(): void {
 
         drawTiles();
         drawCarets(blink);
+      } else {
+        // Should be unreachable, but let's keep it just in case - there might
+        // happen that it takes one frame more for the map and camera data to
+        // arrive etc.
       }
 
       break;
@@ -80,7 +156,7 @@ function draw(): void {
 function drawStatus(): void {
   const status = props.world.status.value;
   const x = 8;
-  const y = charMetrics.height + 8;
+  const y = tileSize.h + 8;
 
   switch (status) {
     case "connecting":
@@ -97,43 +173,37 @@ function drawStatus(): void {
 
 function drawTiles(): void {
   const map = toRaw(props.world.map.value);
-  const camera = toRaw(props.world.camera.value);
   const paused = toRaw(props.paused);
-  const cw = charMetrics.width;
-  const ch = charMetrics.height;
 
-  for (let y = 0; y <= chars.y; y += 1) {
-    for (let x = 0; x <= chars.x; x += 1) {
-      const tileX = camera.x - Math.round(chars.x / 2) + x;
-      const tileY = camera.y - Math.round(chars.y / 2) + y;
+  for (let y = 0; y <= canvasSize.y; y += 1) {
+    for (let x = 0; x <= canvasSize.x; x += 1) {
+      const tilePos = { x: offset.x + x, y: offset.y + y };
 
       if (
-        tileX < 0 ||
-        tileY < 0 ||
-        tileX >= map.size[0] ||
-        tileY >= map.size[1]
+        tilePos.x < 0 ||
+        tilePos.y < 0 ||
+        tilePos.x >= map.size[0] ||
+        tilePos.y >= map.size[1]
       ) {
         continue;
       }
 
-      const tileIdx = tileY * map.size[0] + tileX;
+      const tileIdx = tilePos.y * map.size[0] + tilePos.x;
       const tile = map.tiles[tileIdx] ?? 0;
       const tileBot = map.bots[tileIdx] ?? null;
 
       let tileFg: string;
       let tileBg: string = null;
       let tileChar: string;
-      let tileOffsetY = 0.0;
-      let tileOffsetX = 0.0;
+      let tileOffset = { x: 0.0, y: 0.0 };
 
       if (tileBot) {
         tileChar = "@";
-        tileOffsetX = -0.025;
-        tileOffsetY = -0.125;
+        tileOffset = { x: -0.025, y: -0.125 };
 
         if (tileBot.known) {
           if (paused) {
-            tileBg = pausedColor;
+            tileBg = pausedColorB;
             tileFg = "#000000";
           } else {
             tileBg = botIdToColor(tileBot.id, "bg");
@@ -141,33 +211,45 @@ function drawTiles(): void {
           }
         } else {
           if (paused) {
-            tileFg = pausedColor;
+            tileFg = pausedColorB;
           } else {
             tileFg = botIdToColor(tileBot.id);
           }
         }
       } else {
-        tileFg = paused ? pausedColor : "rgb(80, 80, 80)";
+        tileFg = paused ? pausedColorA : "rgb(80, 80, 80)";
         tileChar = String.fromCharCode(tile >> 24);
 
         switch (tileChar) {
           case ".":
-            tileOffsetX = 0.035;
-            tileOffsetY = -0.4;
+            tileOffset = { x: 0.035, y: -0.4 };
             break;
         }
       }
 
-      const tx = cw * (x + tileOffsetX);
-      const ty = ch * (y + tileOffsetY + 1);
+      const tilePixelPos = {
+        x: tileSize.w * (x + tileOffset.x),
+        y: tileSize.h * (y + tileOffset.y + 1),
+      };
+
+      if (tileBot && mouse.hoveringOver && tileBot.id == mouse.hoveringOver) {
+        tileBg = "#ffffff";
+        tileFg = "#000000";
+      }
 
       if (tileBg) {
         ctxt.fillStyle = tileBg;
-        ctxt.fillRect(tx, ty - ch * 0.9, cw, ch);
+
+        ctxt.fillRect(
+          tilePixelPos.x,
+          tilePixelPos.y - tileSize.h * 0.9,
+          tileSize.w,
+          tileSize.h,
+        );
       }
 
       ctxt.fillStyle = tileFg;
-      ctxt.fillText(tileChar, tx, ty);
+      ctxt.fillText(tileChar, tilePixelPos.x, tilePixelPos.y);
     }
   }
 }
@@ -175,29 +257,26 @@ function drawTiles(): void {
 function drawCarets(blink: boolean): void {
   const bot = toRaw(props.world.bot.value);
   const bots = toRaw(props.world.bots.value);
-  const camera = toRaw(props.world.camera.value);
   const paused = toRaw(props.paused);
-  const cw = charMetrics.width;
-  const ch = charMetrics.height;
   const selectedBotId = bot?.id;
 
   ctxt.save();
-
-  ctxt.translate(
-    (Math.round(chars.x / 2) - camera.x) * cw,
-    (Math.round(chars.y / 2) - camera.y) * ch,
-  );
+  ctxt.translate(-offset.x * tileSize.w, -offset.y * tileSize.h);
 
   for (const [botId, bot] of Object.entries(bots)) {
-    let botColor = paused ? pausedColor : botIdToColor(botId);
+    let botColor = paused ? pausedColorB : botIdToColor(botId);
 
     if (botId == selectedBotId && blink && !paused) {
       botColor = "#ffffff";
     }
 
+    if (botId == mouse.hoveringOver) {
+      botColor = "#ffffff";
+    }
+
     ctxt.save();
-    ctxt.translate(cw * bot.pos[0], ch * (bot.pos[1] + 1));
-    ctxt.translate(cw / 2, -ch / 2);
+    ctxt.translate(tileSize.w * bot.pos[0], tileSize.h * (bot.pos[1] + 1));
+    ctxt.translate(tileSize.w / 2, -tileSize.h / 2);
 
     switch (bot.dir) {
       case "<":
@@ -217,11 +296,11 @@ function drawCarets(blink: boolean): void {
     let d2: number;
 
     if (bot.dir == "<" || bot.dir == ">") {
-      d1 = ch;
-      d2 = cw;
+      d1 = tileSize.h;
+      d2 = tileSize.w;
     } else {
-      d1 = cw;
-      d2 = ch;
+      d1 = tileSize.w;
+      d2 = tileSize.h;
     }
 
     ctxt.translate(0, -d2 * 1.025);
@@ -240,15 +319,35 @@ function drawCarets(blink: boolean): void {
   ctxt.restore();
 }
 
+function handleMouseMove(ev: any): void {
+  const dpr = window.devicePixelRatio || 1;
+
+  mouse.pos = {
+    x: ev.layerX / dpr,
+    y: ev.layerY / dpr,
+  };
+
+  update();
+  draw();
+}
+
+function handleClick(): void {
+  if (mouse.hoveringOver) {
+    emit("botJoin", mouse.hoveringOver);
+  }
+}
+
 // ---
 
 watch([props.world.map, props.world.bots], () => {
+  update();
   draw();
 });
 
 watch(
   [props.world.bot, props.world.camera],
   () => {
+    update();
     draw();
   },
   { deep: true },
@@ -257,6 +356,7 @@ watch(
 watch(
   () => props.paused,
   () => {
+    update();
     draw();
   },
 );
@@ -280,7 +380,11 @@ onMounted(() => {
 
 <template>
   <div ref="canvasWrapper" class="game-canvas">
-    <canvas ref="canvas" />
+    <canvas
+      ref="canvas"
+      @mousemove.prevent="handleMouseMove"
+      @click.prevent="handleClick"
+    />
   </div>
 </template>
 
