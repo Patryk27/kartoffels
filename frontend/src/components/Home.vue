@@ -219,7 +219,9 @@ onMounted(async () => {
   </main>
 
   <footer>
-    <a href="https://github.com/Patryk27/kartoffels">kartoffels/{{ rev }}</a>
+    <a href="https://github.com/Patryk27/kartoffels" target="_blank"
+      >kartoffels/{{ rev }}</a
+    >
   </footer>
 </template>
 
