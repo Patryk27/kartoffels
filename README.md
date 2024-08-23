@@ -15,10 +15,6 @@ kartoffel (🇩🇪)
 = slang for "slow machine"    
 = exactly what kartoffel bots are - slow machines indeed!
 
-## Building
-
-See: [BUILDING.md](./BUILDING.md)
-
 ## License
 
 Copyright (c) 2024, Patryk Wychowaniec (`pwychowaniec @at@ pm.me`).
