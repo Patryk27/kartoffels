@@ -57,6 +57,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    environment.systemPackages = [
+      cfg.backend.package
+    ];
+
     services.nginx = mkIf cfg.nginx.enable {
       enable = true;
 
@@ -87,7 +91,7 @@ in
       script = ''
         mkdir -p "${cfg.backend.data}"
 
-        ${cfg.backend.package}/bin/kartoffels-server \
+        ${cfg.backend.package}/bin/kartoffels serve \
             --listen ${cfg.backend.listen} \
             --data ${cfg.backend.data} \
             ${optionalString (cfg.backend.secret != null) "--secret '${cfg.backend.secret}'"} \

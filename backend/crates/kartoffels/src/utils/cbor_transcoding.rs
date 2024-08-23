@@ -7,7 +7,12 @@ pub fn cbor_to_json(val: CborValue) -> JsonValue {
             JsonValue::Number((i128::from(val) as i64).into())
         }
 
-        CborValue::Bytes(_) => JsonValue::String("[bytes]".into()),
+        CborValue::Bytes(val) => JsonValue::Array(
+            val.into_iter()
+                .map(JsonNumber::from)
+                .map(JsonValue::Number)
+                .collect(),
+        ),
 
         CborValue::Float(val) => {
             JsonValue::Number(JsonNumber::from_f64(val).unwrap())

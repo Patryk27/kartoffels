@@ -1,8 +1,9 @@
 use crate::store;
 use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Header {
     magic: [u8; 11],
     version: u32,
@@ -34,7 +35,7 @@ impl Header {
         Ok(())
     }
 
-    pub fn validated(self) -> Result<Self> {
+    pub(crate) fn validated(self) -> Result<Self> {
         if self.magic != Self::default().magic {
             return Err(anyhow!("invalid magic value"));
         }
@@ -55,7 +56,7 @@ impl Header {
         Ok(self)
     }
 
-    pub fn version(&self) -> u32 {
+    pub(crate) fn version(&self) -> u32 {
         self.version
     }
 }

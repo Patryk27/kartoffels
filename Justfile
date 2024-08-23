@@ -1,6 +1,10 @@
-back:
+backend:
     cd backend \
-    && cargo run --release -p kartoffels-server -- --data ../data
+    && cargo run --release -- serve --data ../data
+
+toolbox *args:
+    cd backend \
+    && cargo run --release -- toolbox {{ args }}
 
 bot name:
     cd backend \
@@ -20,7 +24,7 @@ wasm:
     && nix develop \
         -c wasm-pack build ./crates/kartoffels-sandbox --target web
 
-front:
+frontend:
     cd frontend \
     && npm run dev
 

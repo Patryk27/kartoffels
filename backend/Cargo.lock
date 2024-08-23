@@ -827,14 +827,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "kartoffels-dbg"
+name = "kartoffels-app"
 version = "0.3.0"
 dependencies = [
  "anyhow",
- "ciborium",
  "clap",
- "kartoffels",
- "serde_json",
+ "kartoffels-server",
+ "kartoffels-toolbox",
 ]
 
 [[package]]
@@ -866,7 +865,6 @@ dependencies = [
  "axum",
  "clap",
  "futures-util",
- "glam",
  "indoc",
  "kartoffels",
  "rand",
@@ -876,6 +874,18 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kartoffels-toolbox"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "ciborium",
+ "clap",
+ "kartoffels",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

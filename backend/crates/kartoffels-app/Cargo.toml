@@ -1,0 +1,15 @@
+[package]
+name = "kartoffels-app"
+version.workspace = true
+edition.workspace = true
+default-run = "kartoffels"
+
+[[bin]]
+name = "kartoffels"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+kartoffels-server = { path = "../kartoffels-server" }
+kartoffels-toolbox = { path = "../kartoffels-toolbox" }

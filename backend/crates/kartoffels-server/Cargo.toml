@@ -2,17 +2,14 @@
 name = "kartoffels-server"
 version = { workspace = true }
 edition = { workspace = true }
-default-run = "kartoffels-server"
 
 [dependencies]
-kartoffels = { path = "../kartoffels" }
-
 anyhow = { workspace = true }
 axum = { workspace = true }
 clap = { workspace = true }
 futures-util = { workspace = true }
-glam = { workspace = true }
 indoc = { workspace = true }
+kartoffels = { path = "../kartoffels" }
 rand = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

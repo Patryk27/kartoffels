@@ -2,7 +2,7 @@ mod header;
 mod migrations;
 mod systems;
 
-use self::header::*;
+pub use self::header::*;
 pub use self::migrations::VERSION;
 pub use self::systems::*;
 use crate::{Bots, Map, Metronome, Mode, Policy, Theme, WorldName};

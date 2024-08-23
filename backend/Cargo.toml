@@ -6,9 +6,10 @@ members = [
     "crates/bot-roberto",
     "crates/kartoffel",
     "crates/kartoffels",
-    "crates/kartoffels-dbg",
+    "crates/kartoffels-app",
     "crates/kartoffels-sandbox",
     "crates/kartoffels-server",
+    "crates/kartoffels-toolbox",
     "crates/kartoffels-vm",
     "crates/kartoffels-vm-tests",
 ]
