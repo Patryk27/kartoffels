@@ -1,7 +1,0 @@
-[package]
-name = "bot-roberto"
-version = { workspace = true }
-edition = { workspace = true }
-
-[dependencies]
-kartoffel = { path = "../kartoffel" }

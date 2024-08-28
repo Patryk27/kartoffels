@@ -1,0 +1,27 @@
+[package]
+name = "kartoffels"
+version.workspace = true
+edition.workspace = true
+default-run = "kartoffels"
+
+[dependencies]
+kartoffels-store = { path = "../kartoffels-store" }
+kartoffels-ui = { path = "../kartoffels-ui" }
+kartoffels-world = { path = "../kartoffels-world" }
+
+ahash.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+clap.workspace = true
+ed25519-dalek.workspace = true
+futures-util.workspace = true
+indoc.workspace = true
+rand.workspace = true
+russh-keys.workspace = true
+russh.workspace = true
+termwiz.workspace = true
+tokio-stream.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true

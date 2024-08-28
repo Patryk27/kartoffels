@@ -1,0 +1,13 @@
+[package]
+name = "kartoffels-vm"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+elf.workspace = true
+serde.workspace = true
+serde_bytes.workspace = true
+
+[dev-dependencies]
+itertools.workspace = true

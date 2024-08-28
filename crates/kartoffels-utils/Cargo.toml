@@ -1,0 +1,15 @@
+[package]
+name = "kartoffels-utils"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+ciborium.workspace = true
+glam.workspace = true
+itertools.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -1,10 +1,15 @@
-backend:
-    cd backend \
-    && cargo run --release -- serve --data ../data
+run *args:
+    cargo run --release -- \
+        serve \
+        ./data \
+        --http 127.0.0.1:1313 \
+        --ssh 127.0.0.1:1314 \
+        {{ args }}
 
 toolbox *args:
-    cd backend \
-    && cargo run --release -- toolbox {{ args }}
+    cargo run --release -- \
+        toolbox \
+        {{ args }}
 
 bot name:
     cd backend \
@@ -18,26 +23,3 @@ bot name:
 bots:
     just bot dummy
     just bot roberto
-
-wasm:
-    cd backend \
-    && nix develop \
-        -c wasm-pack build ./crates/kartoffels-sandbox --target web
-
-frontend:
-    cd frontend \
-    && npm run dev
-
-fmt:
-    cd backend \
-    && cargo fmt
-
-    cd frontend \
-    && prettier . --write
-
-check:
-    cd backend \
-    && cargo check
-
-    cd frontend \
-    && npm exec vue-tsc

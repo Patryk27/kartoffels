@@ -1,0 +1,58 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "crates/bot-dummy",
+    "crates/bot-roberto",
+    "crates/kartoffel",
+    "crates/kartoffels",
+    "crates/kartoffels-store",
+    "crates/kartoffels-ui",
+    "crates/kartoffels-utils",
+    "crates/kartoffels-vm",
+    "crates/kartoffels-vm-tests",
+    "crates/kartoffels-world",
+]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+
+[workspace.dependencies]
+ahash = { version = "0.8.11", features = ["serde"] }
+anyhow = "1.0.82"
+axum = { version = "0.7.5", features = ["macros", "ws"] }
+base64 = "0.22.1"
+chrono = { version = "0.4.38", features = ["serde"] }
+ciborium = "0.2.2"
+clap = { version = "4.5.4", features = ["derive"] }
+derivative = "2.2.0"
+ed25519-dalek = "*"
+elf = "0.7.4"
+futures = "0.3.30"
+futures-util = { version = "0.3.30", features = ["sink"] }
+glam = { version = "0.27.0", features = ["serde"] }
+indoc = "2.0.5"
+itertools = "0.12.1"
+lru = "0.12.3"
+maybe-owned = { version = "0.3.4", features = ["serde"] }
+num-traits = { version = "0.2.19", default-features = false }
+pretty_assertions = "1.4.0"
+rand = { version = "0.8.5", features = ["small_rng"] }
+rand_chacha = "0.3.1"
+ratatui = { path = "../ratatui", features = ["unstable-backend-writer", "unstable-rendered-line-info"] }
+russh = "0.45.0"
+russh-keys = "0.45.0"
+serde = { version = "1.0.200", features = ["derive", "rc"] }
+serde_bytes = "0.11.14"
+serde_json = "1.0.117"
+spin = "0.9.8"
+talc = "4.4.1"
+termwiz = "0.22.0"
+test-case = "3.3.1"
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-stream = { version = "0.1.15", features = ["sync"] }
+tokio-util = "0.7.11"
+tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
