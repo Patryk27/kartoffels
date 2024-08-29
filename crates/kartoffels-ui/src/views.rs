@@ -1,5 +1,2 @@
-mod home;
-mod play;
-
-pub use self::home::*;
-pub use self::play::*;
+pub mod home;
+pub mod play;

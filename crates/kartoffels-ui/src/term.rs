@@ -13,18 +13,20 @@ use std::mem;
 use std::pin::Pin;
 use termwiz::input::InputEvent;
 
+pub type Stdin = Pin<Box<dyn Stream<Item = Result<InputEvent>> + Send + Sync>>;
+pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
+
 pub struct Term {
-    stdin: Pin<Box<dyn Stream<Item = Result<InputEvent>> + Send>>,
-    stdout: Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send>>,
+    stdin: Stdin,
+    stdout: Stdout,
     term: Terminal<CrosstermBackend<WriterProxy>>,
     initialized: bool,
 }
 
 impl Term {
-    // TODO buffer stdin if there's too many events at once
     pub fn new(
-        stdin: impl Stream<Item = Result<InputEvent>> + Send + 'static,
-        stdout: impl Sink<Vec<u8>, Error = Error> + Send + 'static,
+        stdin: Stdin,
+        stdout: Stdout,
         cols: u32,
         rows: u32,
     ) -> Result<Self> {

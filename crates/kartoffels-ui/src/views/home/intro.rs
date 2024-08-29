@@ -1,54 +1,75 @@
-use crate::{theme, BlockExt};
-use ratatui::prelude::{Buffer, Rect};
-use ratatui::style::{Style, Stylize};
-use ratatui::text::Text;
-use ratatui::widgets::{Block, Widget};
+mod header;
+mod menu;
 
-const TEXT: &[&str] = &[
-    "welcome to kartoffels, a game where you're given a potato:",
-    "",
-    "     ██████     ",
-    "   ██░░░░░░██   ",
-    " ██░░░░░░░░░░██ ",
-    " ██░░░░░░░░░░██ ",
-    "   ██░░░░░░░░██ ",
-    "   oo████████oo ",
-    "   oo        oo ",
-    "",
-    "... and your job is to implement a firmware for it",
-    "",
-    "robots are limited to 64 khz cpu & 128 kb of ram and the",
-    "game happens online - you can see your robot fighting other",
-    "players and you can learn from their behavior",
-    "",
-    "develop the best, the longest surviving, the most deadly",
-    "machine imaginable, in rust 🦀",
-];
+use self::header::*;
+use self::menu::*;
+use crate::{Clear, Term};
+use anyhow::Result;
+use itertools::Either;
+use ratatui::layout::{Constraint, Layout};
+use termwiz::input::{InputEvent, KeyCode, Modifiers};
+use tokio::select;
 
-#[derive(Debug)]
-pub struct Intro;
+pub async fn run(term: &mut Term) -> Result<Outcome> {
+    let mut menu = Menu::new();
 
-impl Intro {
-    pub const WIDTH: u16 = 60 + 2;
-    pub const HEIGHT: u16 = TEXT.len() as u16 + 2;
-}
+    loop {
+        term.draw(|f| {
+            let area = f.area();
 
-impl Widget for Intro {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let area = Block::bordered()
-            .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
-            .render_and_measure(area, buf);
+            let [_, area, _] = Layout::horizontal([
+                Constraint::Fill(1),
+                Constraint::Length(Header::WIDTH),
+                Constraint::Fill(1),
+            ])
+            .areas(area);
 
-        let mut text = Text::default();
+            let [_, header_area, _, menu_area, _] = Layout::vertical([
+                Constraint::Fill(1),
+                Constraint::Length(Header::HEIGHT),
+                Constraint::Length(1),
+                Constraint::Length(Menu::HEIGHT),
+                Constraint::Fill(2),
+            ])
+            .areas(area);
 
-        for (idx, &line) in TEXT.iter().enumerate() {
-            if (2..=8).contains(&idx) {
-                text.push_line(line.fg(theme::POTATO));
-            } else {
-                text.push_line(line);
+            f.render_widget(Clear, f.area());
+            f.render_widget(Header, header_area);
+
+            menu.render(menu_area, f.buffer_mut());
+        })
+        .await?;
+
+        let event = select! {
+            event = term.read() => Either::Left(event?),
+            _ = menu.tick() => Either::Right(()),
+        };
+
+        if let Either::Left(Some(InputEvent::Key(event))) = event {
+            match (event.key, event.modifiers) {
+                (KeyCode::Char('p'), Modifiers::NONE) => {
+                    return Ok(Outcome::Play);
+                }
+                (KeyCode::Char('t'), Modifiers::NONE) => {
+                    return Ok(Outcome::SeeTutorial);
+                }
+                (KeyCode::Char('c'), Modifiers::NONE) => {
+                    return Ok(Outcome::SeeChallenges);
+                }
+                (KeyCode::Escape, _) => {
+                    return Ok(Outcome::Quit);
+                }
+
+                _ => (),
             }
         }
-
-        text.centered().render(area, buf);
     }
+}
+
+#[derive(Debug)]
+pub enum Outcome {
+    Play,
+    SeeTutorial,
+    SeeChallenges,
+    Quit,
 }

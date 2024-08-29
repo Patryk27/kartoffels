@@ -23,7 +23,7 @@ use termwiz::input::InputEvent;
 use tokio::select;
 use tokio_stream::StreamExt;
 
-pub async fn play(term: &mut Term, world: WorldHandle) -> Result<()> {
+pub async fn run(term: &mut Term, world: WorldHandle) -> Result<()> {
     let mut updates = world.listen().await?;
 
     let state = updates

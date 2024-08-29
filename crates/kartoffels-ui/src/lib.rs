@@ -9,26 +9,27 @@ mod views;
 use self::components::*;
 pub use self::term::*;
 use self::utils::*;
-use self::views::*;
 use anyhow::Result;
 use kartoffels_store::Store;
 
 pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
+    use self::views::*;
+
     loop {
-        match home(term, store).await? {
-            HomeOutcome::OpenTutorial => {
+        match home::run(term, store).await? {
+            home::Outcome::Play(world) => {
+                play::run(term, world).await?;
+            }
+
+            home::Outcome::OpenTutorial => {
                 todo!();
             }
 
-            HomeOutcome::OpenChallenges => {
+            home::Outcome::OpenChallenges => {
                 todo!();
             }
 
-            HomeOutcome::Play(world) => {
-                play(term, world).await?;
-            }
-
-            HomeOutcome::Quit => {
+            home::Outcome::Quit => {
                 return Ok(());
             }
         }

@@ -1,112 +1,45 @@
 mod intro;
-mod menu;
+mod world_selection;
 
-use self::intro::*;
-use self::menu::*;
-use crate::{Clear, Term};
+use crate::Term;
 use anyhow::Result;
-use itertools::{Either, Itertools};
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
-use ratatui::layout::{Constraint, Layout};
-use std::time::Duration;
-use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::{select, time};
 
-#[derive(Debug)]
-pub enum HomeOutcome {
-    OpenTutorial,
-    OpenChallenges,
-    Play(WorldHandle),
-    Quit,
-}
-
-pub async fn home(term: &mut Term, store: &Store) -> Result<HomeOutcome> {
-    let worlds: Vec<_> = store
-        .worlds
-        .values()
-        .sorted_by_key(|world| world.name())
-        .collect();
-
-    let mut blink = false;
-
-    let mut blink_int = {
-        let mut int = time::interval(Duration::from_millis(500));
-
-        int.tick().await;
-        int
-    };
-
+pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
     loop {
-        term.draw(|f| {
-            let area = f.area();
-
-            let menu = Menu {
-                blink,
-                worlds: &worlds,
-            };
-
-            let [_, main_area, _] = Layout::horizontal([
-                Constraint::Fill(1),
-                Constraint::Length(Intro::WIDTH),
-                Constraint::Fill(1),
-            ])
-            .areas(area);
-
-            let [_, intro_area, _, menu_area, _] = Layout::vertical([
-                Constraint::Fill(1),
-                Constraint::Length(Intro::HEIGHT),
-                Constraint::Length(1),
-                Constraint::Length(menu.height()),
-                Constraint::Fill(2),
-            ])
-            .areas(main_area);
-
-            f.render_widget(Clear, area);
-            f.render_widget(Intro, intro_area);
-            f.render_widget(menu, menu_area);
-        })
-        .await?;
-
-        let event = select! {
-            event = term.read() => Either::Left(event?),
-            _ = blink_int.tick() => Either::Right(()),
-        };
-
-        match event {
-            Either::Left(Some(InputEvent::Key(event))) => {
-                match (event.key, event.modifiers) {
-                    (KeyCode::Escape, _) => {
-                        return Ok(HomeOutcome::Quit);
+        match intro::run(term).await? {
+            intro::Outcome::Play => {
+                match world_selection::run(term, store).await? {
+                    world_selection::Outcome::Play(world) => {
+                        return Ok(Outcome::Play(world));
                     }
 
-                    (KeyCode::Char('t'), Modifiers::NONE) => {
-                        return Ok(HomeOutcome::OpenTutorial);
+                    world_selection::Outcome::Quit => {
+                        continue;
                     }
-
-                    (KeyCode::Char('c'), Modifiers::NONE) => {
-                        return Ok(HomeOutcome::OpenChallenges);
-                    }
-
-                    (KeyCode::Char(n @ '1'..='9'), Modifiers::NONE) => {
-                        let idx = (n as u8) - b'1';
-
-                        if let Some(world) = worlds.get(idx as usize) {
-                            return Ok(HomeOutcome::Play((*world).clone()));
-                        }
-                    }
-
-                    _ => (),
                 }
             }
 
-            Either::Left(_) => {
-                //
+            intro::Outcome::SeeTutorial => {
+                return Ok(Outcome::OpenTutorial);
             }
 
-            Either::Right(_) => {
-                blink = !blink;
+            intro::Outcome::SeeChallenges => {
+                return Ok(Outcome::OpenChallenges);
+            }
+
+            intro::Outcome::Quit => {
+                return Ok(Outcome::Quit);
             }
         }
     }
+}
+
+#[derive(Debug)]
+pub enum Outcome {
+    Play(WorldHandle),
+    OpenTutorial,
+    OpenChallenges,
+    Quit,
 }

@@ -77,9 +77,9 @@ impl AppChannel {
         };
 
         let (stdin_tx, stdin_rx) = mpsc::channel(32);
-        let stdin = ReceiverStream::new(stdin_rx).map(Ok);
+        let stdin = Box::pin(ReceiverStream::new(stdin_rx).map(Ok));
 
-        let stdout = {
+        let stdout = Box::pin({
             let handle = session.handle();
 
             drain().with(move |stdout: Vec<u8>| {
@@ -92,7 +92,7 @@ impl AppChannel {
                     }
                 }
             })
-        };
+        });
 
         let store = store.clone();
         let handle = session.handle();
