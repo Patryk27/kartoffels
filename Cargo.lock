@@ -1367,6 +1367,7 @@ dependencies = [
  "clap",
  "ed25519-dalek",
  "futures-util",
+ "glam",
  "indoc",
  "kartoffels-store",
  "kartoffels-ui",

@@ -1,5 +1,7 @@
+use super::SidePanelEvent;
+use crate::views::play::JoinedBot;
 use crate::BotIdExt;
-use kartoffels_world::prelude::{BotId, BotStatusUpdate, BotUpdate};
+use kartoffels_world::prelude::{BotId, Update, UpdateBot, UpdateBotStatus};
 use ratatui::layout::{Constraint, Layout, Offset};
 use ratatui::prelude::{Buffer, Rect};
 use ratatui::style::Stylize;
@@ -7,24 +9,14 @@ use ratatui::widgets::{Paragraph, Widget};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct ConnectedSidePanel {
-    pub id: BotId,
+pub struct ConnectedSidePanel<'a> {
+    pub update: &'a Update,
+    pub bot: &'a JoinedBot,
+    pub enabled: bool,
 }
 
-impl ConnectedSidePanel {
-    pub fn handle(&self, event: InputEvent) -> ConnectedSidePanelOutcome {
-        if let InputEvent::Key(event) = &event {
-            if event.key == KeyCode::Char('l')
-                && event.modifiers == Modifiers::NONE
-            {
-                return ConnectedSidePanelOutcome::Disconnect;
-            }
-        }
-
-        ConnectedSidePanelOutcome::Forward(event)
-    }
-
-    pub fn render(&self, area: Rect, buf: &mut Buffer, bots: &[BotUpdate]) {
+impl<'a> ConnectedSidePanel<'a> {
+    pub fn render(self, area: Rect, buf: &mut Buffer) {
         let [id_area, _, status_area, _, serial_area] = Layout::vertical([
             Constraint::Length(2),
             Constraint::Length(1),
@@ -34,10 +26,9 @@ impl ConnectedSidePanel {
         ])
         .areas(area);
 
-        Self::render_id(id_area, buf, self.id);
+        Self::render_id(id_area, buf, self.bot.id);
 
-        // TODO create a lookup table
-        let Some(bot) = bots.iter().find(|bot| bot.id == self.id) else {
+        let Some(bot) = self.update.bots.by_id(self.bot.id) else {
             return;
         };
 
@@ -52,15 +43,15 @@ impl ConnectedSidePanel {
             .render(area.offset(Offset { x: 0, y: 1 }), buf);
     }
 
-    fn render_status(area: Rect, buf: &mut Buffer, bot: &BotUpdate) {
+    fn render_status(area: Rect, buf: &mut Buffer, bot: &UpdateBot) {
         Paragraph::new("status").render(area, buf);
 
         let status = match &bot.status {
-            BotStatusUpdate::Alive { age } => {
+            UpdateBotStatus::Alive { age } => {
                 format!("{} ({}s)", "alive".green(), age)
             }
 
-            BotStatusUpdate::Queued { place, requeued } => {
+            UpdateBotStatus::Queued { place, requeued } => {
                 if *requeued {
                     format!("{} ({})", "requeued".magenta(), place)
                 } else {
@@ -72,16 +63,22 @@ impl ConnectedSidePanel {
         Paragraph::new(status).render(area.offset(Offset { x: 0, y: 1 }), buf);
     }
 
-    fn render_serial(area: Rect, buf: &mut Buffer, bot: &BotUpdate) {
+    fn render_serial(area: Rect, buf: &mut Buffer, bot: &UpdateBot) {
         Paragraph::new("serial port").render(area, buf);
 
         Paragraph::new(bot.serial.as_str())
             .render(area.offset(Offset { x: 0, y: 1 }), buf);
     }
-}
 
-#[derive(Debug)]
-pub enum ConnectedSidePanelOutcome {
-    Disconnect,
-    Forward(InputEvent),
+    pub fn handle(event: InputEvent) -> SidePanelEvent {
+        if let InputEvent::Key(event) = &event {
+            if event.key == KeyCode::Char('l')
+                && event.modifiers == Modifiers::NONE
+            {
+                return SidePanelEvent::DisconnectFromBot;
+            }
+        }
+
+        SidePanelEvent::Forward(event)
+    }
 }

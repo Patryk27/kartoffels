@@ -1,69 +1,68 @@
 mod bots;
 mod error;
 mod help;
-mod upload;
+mod join_bot;
+mod upload_bot;
 
 pub use self::bots::*;
 pub use self::error::*;
 pub use self::help::*;
-pub use self::upload::*;
-use kartoffels_world::prelude::BotUpdate;
-use ratatui::prelude::{Buffer, Rect};
+pub use self::join_bot::*;
+pub use self::upload_bot::*;
+use kartoffels_world::prelude::{BotId, Update};
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use termwiz::input::{InputEvent, KeyCode};
 
 #[derive(Debug)]
 pub enum Dialog {
     Bots(BotsDialog),
     Error(ErrorDialog),
-    Help,
-    Upload(UploadDialog),
+    Help(HelpDialog),
+    JoinBot(JoinBotDialog),
+    UploadBot(UploadBotDialog),
 }
 
 impl Dialog {
-    pub fn handle(&mut self, event: InputEvent) -> DialogOutcome {
-        if let InputEvent::Key(event) = &event {
-            if event.key == KeyCode::Escape {
-                return DialogOutcome::Close;
-            }
-        }
-
+    pub fn render(&mut self, area: Rect, buf: &mut Buffer, update: &Update) {
         match self {
-            Dialog::Bots(this) => {
-                this.handle(event);
-
-                DialogOutcome::None
-            }
-
-            Dialog::Upload(this) => match this.handle(event) {
-                UploadDialogOutcome::Ready(src) => DialogOutcome::Upload(src),
-                UploadDialogOutcome::None => DialogOutcome::None,
-            },
-
-            _ => DialogOutcome::None,
+            Dialog::Bots(this) => this.render(area, buf, update),
+            Dialog::Error(this) => this.render(area, buf),
+            Dialog::Help(this) => this.render(area, buf),
+            Dialog::JoinBot(this) => this.render(area, buf),
+            Dialog::UploadBot(this) => this.render(area, buf),
         }
     }
 
-    pub fn render(&mut self, area: Rect, buf: &mut Buffer, bots: &[BotUpdate]) {
+    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
+        if let InputEvent::Key(event) = &event {
+            if event.key == KeyCode::Escape {
+                return Some(DialogEvent::Close);
+            }
+        }
+
         match self {
-            Dialog::Bots(this) => {
-                this.render(area, buf, bots);
-            }
-            Dialog::Error(this) => {
-                this.render(area, buf);
-            }
-            Dialog::Help => {
-                HelpDialog.render(area, buf);
-            }
-            Dialog::Upload(this) => {
-                this.render(area, buf);
-            }
+            Dialog::Bots(this) => this.handle(event),
+            Dialog::Error(this) => this.handle(event),
+            Dialog::Help(this) => this.handle(event),
+            Dialog::JoinBot(this) => this.handle(event),
+            Dialog::UploadBot(this) => this.handle(event),
+        }
+    }
+
+    pub async fn tick(&mut self) {
+        match self {
+            Dialog::JoinBot(this) => this.tick().await,
+            Dialog::UploadBot(this) => this.tick().await,
+            _ => (),
         }
     }
 }
 
 #[derive(Debug)]
-pub enum DialogOutcome {
+pub enum DialogEvent {
     Close,
-    Upload(String),
-    None,
+    JoinBot(BotId),
+    UploadBot(String),
+    Throw(String),
 }

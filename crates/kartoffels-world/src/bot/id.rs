@@ -22,6 +22,8 @@ use std::str::FromStr;
 pub struct BotId(Id);
 
 impl BotId {
+    pub const LENGTH: usize = Id::LENGTH;
+
     pub fn new(rng: &mut impl RngCore) -> Self {
         Self(Id::new(rng))
     }

@@ -1,5 +1,6 @@
 use crate::{
-    AliveBot, BotStatusUpdate, BotUpdate, Map, Tile, TileBase, Update, World,
+    AliveBot, Map, Tile, TileBase, Update, UpdateBot, UpdateBotStatus,
+    UpdateBots, World,
 };
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -61,7 +62,7 @@ fn prepare_map(world: &World) -> Map {
     map
 }
 
-fn prepare_bots(world: &World) -> Vec<BotUpdate> {
+fn prepare_bots(world: &World) -> UpdateBots {
     // TODO handle 0xffffff00 and 0xffffff01
     let prepare_serial = |bot: &AliveBot| -> String {
         let mut out = String::with_capacity(256);
@@ -90,24 +91,34 @@ fn prepare_bots(world: &World) -> Vec<BotUpdate> {
             .collect()
     };
 
-    let alive = world.bots.alive.iter().map(|entry| BotUpdate {
+    let alive = world.bots.alive.iter().map(|entry| UpdateBot {
         id: entry.id,
+        pos: Some(entry.pos),
         serial: prepare_serial(entry.bot),
         events: prepare_events(entry.bot),
-        status: BotStatusUpdate::Alive {
+        status: UpdateBotStatus::Alive {
             age: entry.bot.timer.age(),
         },
     });
 
-    let queued = world.bots.queued.iter().map(|entry| BotUpdate {
+    let queued = world.bots.queued.iter().map(|entry| UpdateBot {
         id: entry.id,
+        pos: None,
         serial: prepare_serial(&entry.bot.bot),
         events: prepare_events(&entry.bot.bot),
-        status: BotStatusUpdate::Queued {
+        status: UpdateBotStatus::Queued {
             place: entry.place + 1,
             requeued: entry.bot.requeued,
         },
     });
 
-    alive.chain(queued).collect()
+    let list: Vec<_> = alive.chain(queued).collect();
+
+    let index = list
+        .iter()
+        .enumerate()
+        .map(|(idx, bot)| (bot.id, idx))
+        .collect();
+
+    UpdateBots { list, index }
 }

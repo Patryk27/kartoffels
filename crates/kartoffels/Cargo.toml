@@ -15,6 +15,7 @@ axum.workspace = true
 clap.workspace = true
 ed25519-dalek.workspace = true
 futures-util.workspace = true
+glam.workspace = true
 indoc.workspace = true
 rand.workspace = true
 russh-keys.workspace = true

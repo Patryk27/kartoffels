@@ -28,7 +28,7 @@ pub mod prelude {
     pub use crate::handle::{Handle, Request};
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::theme::{ArenaThemeConfig, DungeonThemeConfig, ThemeConfig};
-    pub use crate::updates::{BotStatusUpdate, BotUpdate, Update};
+    pub use crate::updates::{Update, UpdateBot, UpdateBotStatus};
     pub use crate::utils::Dir;
 }
 

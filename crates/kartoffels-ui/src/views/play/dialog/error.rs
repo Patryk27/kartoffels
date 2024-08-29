@@ -1,42 +1,48 @@
-use crate::{theme, BlockExt, Clear};
-use ratatui::layout::{Alignment, Constraint, Layout};
+use super::DialogEvent;
+use crate::{Action, BlockExt, LayoutExt, RectExt};
+use ratatui::layout::{Constraint, Layout};
 use ratatui::prelude::{Buffer, Rect};
-use ratatui::style::Style;
+use ratatui::text::Line;
 use ratatui::widgets::{Block, Paragraph, Widget};
+use termwiz::input::{InputEvent, KeyCode};
 
 #[derive(Debug)]
 pub struct ErrorDialog {
-    pub text: String,
+    pub error: String,
 }
 
 impl ErrorDialog {
     // TODO show escape button
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
-        let text = Paragraph::new(self.text.as_str()).wrap(Default::default());
-        let height = text.line_count(area.width - 2) as u16 + 2;
+        let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
 
-        let [_, area, _] = Layout::horizontal([
-            Constraint::Percentage(10),
-            Constraint::Fill(1),
-            Constraint::Percentage(10),
-        ])
-        .areas(area);
+        let width = 50;
+        let height = text.line_count(width) as u16;
 
-        let [_, area, _] = Layout::vertical([
-            Constraint::Fill(1),
-            Constraint::Length(height),
-            Constraint::Fill(2),
-        ])
-        .areas(area);
+        let area = {
+            let area = Layout::dialog(
+                Constraint::Length(width + 4),
+                Constraint::Length(height + 4),
+                area,
+            );
 
-        let area = Block::bordered()
-            .border_style(Style::new().fg(theme::RED).bg(theme::BG))
-            .title("whoopsie")
-            .title_alignment(Alignment::Center)
-            .render_and_measure(area, buf);
-
-        Clear.render(area, buf);
+            Block::dialog_error(Some(" whoopsie "), area, buf)
+        };
 
         text.render(area, buf);
+
+        Line::from(Action::new("enter", "close", true))
+            .right_aligned()
+            .render(area.footer(), buf);
+    }
+
+    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
+        if let InputEvent::Key(event) = event {
+            if event.key == KeyCode::Enter {
+                return Some(DialogEvent::Close);
+            }
+        }
+
+        None
     }
 }

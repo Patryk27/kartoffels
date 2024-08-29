@@ -12,33 +12,7 @@ pub struct BottomPanel {
 }
 
 impl BottomPanel {
-    pub fn handle(event: InputEvent, paused: bool) -> BottomPanelOutcome {
-        let InputEvent::Key(event) = event else {
-            return BottomPanelOutcome::Forward;
-        };
-
-        match (event.key, event.modifiers) {
-            (KeyCode::Escape, _) => {
-                if paused {
-                    BottomPanelOutcome::Pause
-                } else {
-                    BottomPanelOutcome::Quit
-                }
-            }
-
-            (KeyCode::Char('p'), Modifiers::NONE) => BottomPanelOutcome::Pause,
-
-            (KeyCode::Char('h' | '?'), Modifiers::NONE) => {
-                BottomPanelOutcome::Help
-            }
-
-            _ => BottomPanelOutcome::Forward,
-        }
-    }
-}
-
-impl Widget for BottomPanel {
-    fn render(self, area: Rect, buf: &mut Buffer) {
+    pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let quit = Action::new("esc", "quit", self.enabled);
         let help = Action::new("h", "help", self.enabled);
         let pause = Action::new("p", "pause", self.enabled);
@@ -69,6 +43,35 @@ impl Widget for BottomPanel {
                 .render(area, buf);
         }
     }
+
+    pub fn handle(
+        event: InputEvent,
+        paused: bool,
+    ) -> Option<BottomPanelOutcome> {
+        if let InputEvent::Key(event) = event {
+            match (event.key, event.modifiers) {
+                (KeyCode::Escape, _) => {
+                    return Some(if paused {
+                        BottomPanelOutcome::Pause
+                    } else {
+                        BottomPanelOutcome::Quit
+                    })
+                }
+
+                (KeyCode::Char('p'), Modifiers::NONE) => {
+                    return Some(BottomPanelOutcome::Pause);
+                }
+
+                (KeyCode::Char('h' | '?'), Modifiers::NONE) => {
+                    return Some(BottomPanelOutcome::Help);
+                }
+
+                _ => (),
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -76,5 +79,4 @@ pub enum BottomPanelOutcome {
     Quit,
     Pause,
     Help,
-    Forward,
 }

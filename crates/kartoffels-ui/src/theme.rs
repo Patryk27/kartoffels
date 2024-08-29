@@ -1,4 +1,5 @@
 use ratatui::style::Color;
+use std::time::Duration;
 
 pub const POTATO: Color = Color::Rgb(255, 212, 80);
 pub const DARK_GRAY: Color = Color::Rgb(64, 64, 64);
@@ -11,3 +12,6 @@ pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
 
 pub const BG: Color = Color::Rgb(9, 9, 9);
 pub const FG: Color = Color::Rgb(240, 240, 240);
+
+pub const CARET_INTERVAL: Duration = Duration::from_millis(500);
+pub const SPINNER_INTERVAL: Duration = Duration::from_millis(250);

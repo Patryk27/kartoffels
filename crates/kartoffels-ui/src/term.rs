@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
+use glam::{uvec2, UVec2};
 use ratatui::crossterm::event::{DisableBracketedPaste, EnableBracketedPaste};
 use ratatui::crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen,
@@ -20,16 +21,12 @@ pub struct Term {
     stdin: Stdin,
     stdout: Stdout,
     term: Terminal<CrosstermBackend<WriterProxy>>,
+    size: UVec2,
     initialized: bool,
 }
 
 impl Term {
-    pub fn new(
-        stdin: Stdin,
-        stdout: Stdout,
-        cols: u32,
-        rows: u32,
-    ) -> Result<Self> {
+    pub fn new(stdin: Stdin, stdout: Stdout, size: UVec2) -> Result<Self> {
         let stdin = Box::pin(stdin);
         let stdout = Box::pin(stdout);
 
@@ -38,10 +35,7 @@ impl Term {
             let backend = CrosstermBackend::new(writer);
 
             let opts = TerminalOptions {
-                viewport: Viewport::Fixed(Self::viewport_rect(
-                    cols as usize,
-                    rows as usize,
-                )),
+                viewport: Viewport::Fixed(Self::viewport_rect(size)),
             };
 
             Terminal::with_options(backend, opts)?
@@ -51,6 +45,7 @@ impl Term {
             stdin,
             stdout,
             term,
+            size,
             initialized: false,
         })
     }
@@ -63,7 +58,8 @@ impl Term {
             .ok_or_else(|| anyhow!("lost stdin"))??;
 
         if let InputEvent::Resized { cols, rows } = event {
-            self.term.resize(Self::viewport_rect(cols, rows))?;
+            self.size = uvec2(cols as u32, rows as u32);
+            self.term.resize(Self::viewport_rect(self.size))?;
 
             Ok(None)
         } else {
@@ -71,7 +67,7 @@ impl Term {
         }
     }
 
-    pub async fn draw<F>(&mut self, render: F) -> Result<Rect>
+    pub async fn draw<F>(&mut self, render: F) -> Result<()>
     where
         F: FnOnce(&mut Frame),
     {
@@ -87,11 +83,14 @@ impl Term {
             self.initialized = true;
         }
 
-        let area = self.term.draw(render)?.area;
-
+        self.term.draw(render)?;
         self.flush().await?;
 
-        Ok(area)
+        Ok(())
+    }
+
+    pub fn size(&self) -> UVec2 {
+        self.size
     }
 
     pub fn exit_sequence() -> String {
@@ -117,12 +116,12 @@ impl Term {
         Ok(())
     }
 
-    fn viewport_rect(cols: usize, rows: usize) -> Rect {
+    fn viewport_rect(size: UVec2) -> Rect {
         Rect {
             x: 0,
             y: 0,
-            width: cols.min(255) as u16,
-            height: rows.min(255) as u16,
+            width: size.x.min(255) as u16,
+            height: size.y.min(255) as u16,
         }
     }
 }

@@ -1,79 +1,36 @@
 mod connected;
-mod connecting;
 mod idle;
 
-pub use self::connected::*;
-pub use self::connecting::*;
-pub use self::idle::*;
-use kartoffels_world::prelude::BotUpdate;
+use self::connected::*;
+use self::idle::*;
+use super::JoinedBot;
+use kartoffels_world::prelude::Update;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
+use ratatui::widgets::Widget;
 use termwiz::input::InputEvent;
 
-#[derive(Debug, Default)]
-pub enum SidePanel {
-    #[default]
-    Idle,
-    Connecting(ConnectingSidePanel),
-    Connected(ConnectedSidePanel),
+#[derive(Debug)]
+pub struct SidePanel<'a> {
+    pub update: &'a Update,
+    pub bot: Option<&'a JoinedBot>,
+    pub enabled: bool,
 }
 
-impl SidePanel {
+impl<'a> SidePanel<'a> {
     pub const WIDTH: u16 = 22;
 
-    pub fn handle(&mut self, event: InputEvent) -> SidePanelOutcome {
-        match self {
-            SidePanel::Idle => match IdleSidePanel::handle(event) {
-                IdleSidePanelOutcome::ConnectToBot => {
-                    *self = SidePanel::Connecting(Default::default());
-                    SidePanelOutcome::None
-                }
-
-                IdleSidePanelOutcome::UploadBot => SidePanelOutcome::UploadBot,
-
-                IdleSidePanelOutcome::Forward(event) => {
-                    SidePanelOutcome::Forward(event)
-                }
-            },
-
-            SidePanel::Connecting(this) => match this.handle(event) {
-                ConnectingSidePanelOutcome::ConnectToBot(id) => {
-                    *self = SidePanel::Connected(ConnectedSidePanel { id });
-                    SidePanelOutcome::None
-                }
-
-                ConnectingSidePanelOutcome::Abort => {
-                    *self = SidePanel::Idle;
-                    SidePanelOutcome::None
-                }
-
-                ConnectingSidePanelOutcome::None => SidePanelOutcome::None,
-
-                ConnectingSidePanelOutcome::Forward(event) => {
-                    SidePanelOutcome::Forward(event)
-                }
-            },
-
-            SidePanel::Connected(this) => match this.handle(event) {
-                ConnectedSidePanelOutcome::Disconnect => {
-                    *self = SidePanel::Idle;
-                    SidePanelOutcome::None
-                }
-
-                ConnectedSidePanelOutcome::Forward(event) => {
-                    SidePanelOutcome::Forward(event)
-                }
-            },
+    pub fn handle(is_connected: bool, event: InputEvent) -> SidePanelEvent {
+        if is_connected {
+            ConnectedSidePanel::handle(event)
+        } else {
+            IdleSidePanel::handle(event)
         }
     }
+}
 
-    pub fn render(
-        &mut self,
-        area: Rect,
-        buf: &mut Buffer,
-        bots: &[BotUpdate],
-        enabled: bool,
-    ) {
+impl Widget for SidePanel<'_> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let area = Rect {
             x: area.x + 1,
             y: area.y,
@@ -81,23 +38,26 @@ impl SidePanel {
             height: area.height,
         };
 
-        match self {
-            SidePanel::Idle => {
-                IdleSidePanel.render(area, buf, enabled);
+        if let Some(bot) = &self.bot {
+            ConnectedSidePanel {
+                update: self.update,
+                bot,
+                enabled: self.enabled,
             }
-            SidePanel::Connecting(this) => {
-                this.render(area, buf);
+            .render(area, buf);
+        } else {
+            IdleSidePanel {
+                enabled: self.enabled,
             }
-            SidePanel::Connected(this) => {
-                this.render(area, buf, bots);
-            }
+            .render(area, buf);
         }
     }
 }
 
 #[derive(Debug)]
-pub enum SidePanelOutcome {
+pub enum SidePanelEvent {
     UploadBot,
-    None,
+    ConnectToBot,
+    DisconnectFromBot,
     Forward(InputEvent),
 }

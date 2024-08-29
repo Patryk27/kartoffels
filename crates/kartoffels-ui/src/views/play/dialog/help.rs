@@ -1,29 +1,19 @@
-use ratatui::layout::{Constraint, Layout};
+use super::DialogEvent;
 use ratatui::prelude::{Buffer, Rect};
-use ratatui::widgets::{Paragraph, Widget};
+use termwiz::input::InputEvent;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct HelpDialog;
 
 impl HelpDialog {
     pub const WIDTH: u16 = 32;
     pub const HEIGHT: u16 = 32;
 
-    pub fn render(self, area: Rect, buf: &mut Buffer) {
-        let [_, area, _] = Layout::horizontal([
-            Constraint::Fill(1),
-            Constraint::Length(Self::WIDTH),
-            Constraint::Fill(1),
-        ])
-        .areas(area);
+    pub fn render(&self, _area: Rect, _buf: &mut Buffer) {
+        //
+    }
 
-        let [_, area, _] = Layout::vertical([
-            Constraint::Fill(1),
-            Constraint::Length(Self::HEIGHT),
-            Constraint::Fill(1),
-        ])
-        .areas(area);
-
-        Paragraph::new("hello, world!").render(area, buf);
+    pub fn handle(&mut self, _event: InputEvent) -> Option<DialogEvent> {
+        None
     }
 }

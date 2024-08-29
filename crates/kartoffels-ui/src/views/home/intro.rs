@@ -3,7 +3,7 @@ mod menu;
 
 use self::header::*;
 use self::menu::*;
-use crate::{Clear, Term};
+use crate::{Clear, Prompt, Term};
 use anyhow::Result;
 use itertools::Either;
 use ratatui::layout::{Constraint, Layout};
@@ -11,7 +11,7 @@ use termwiz::input::{InputEvent, KeyCode, Modifiers};
 use tokio::select;
 
 pub async fn run(term: &mut Term) -> Result<Outcome> {
-    let mut menu = Menu::new();
+    let mut prompt = Prompt::default();
 
     loop {
         term.draw(|f| {
@@ -24,25 +24,28 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
             ])
             .areas(area);
 
-            let [_, header_area, _, menu_area, _] = Layout::vertical([
-                Constraint::Fill(1),
-                Constraint::Length(Header::HEIGHT),
-                Constraint::Length(1),
-                Constraint::Length(Menu::HEIGHT),
-                Constraint::Fill(2),
-            ])
-            .areas(area);
+            let [_, header_area, _, menu_area, _, prompt_area, _] =
+                Layout::vertical([
+                    Constraint::Fill(1),
+                    Constraint::Length(Header::HEIGHT),
+                    Constraint::Length(1),
+                    Constraint::Length(Menu::HEIGHT),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                    Constraint::Fill(2),
+                ])
+                .areas(area);
 
             f.render_widget(Clear, f.area());
             f.render_widget(Header, header_area);
-
-            menu.render(menu_area, f.buffer_mut());
+            f.render_widget(Menu, menu_area);
+            f.render_widget(prompt.as_line().centered(), prompt_area);
         })
         .await?;
 
         let event = select! {
             event = term.read() => Either::Left(event?),
-            _ = menu.tick() => Either::Right(()),
+            _ = prompt.tick() => Either::Right(()),
         };
 
         if let Either::Left(Some(InputEvent::Key(event))) = event {

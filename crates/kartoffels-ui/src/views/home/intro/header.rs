@@ -38,7 +38,7 @@ impl Widget for Header {
         let area = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1))
-            .render_and_measure(area, buf);
+            .render_and_lay(area, buf);
 
         let mut text = Text::default();
 

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use futures_util::sink::drain;
 use futures_util::SinkExt;
+use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::Term;
 use russh::server::Session;
@@ -94,19 +95,16 @@ impl AppChannel {
             })
         });
 
+        let size = uvec2(width, height);
         let store = store.clone();
         let handle = session.handle();
-        let mut term = Term::new(stdin, stdout, width, height)?;
+
+        let mut term = Term::new(stdin, stdout, size)?;
 
         task::spawn(async move {
-            match kartoffels_ui::main(&mut term, &store).await {
-                Ok(()) => {
-                    info!("ui finished");
-                }
-                Err(err) => {
-                    info!("ui finished: {:?}", err);
-                }
-            }
+            let result = kartoffels_ui::main(&mut term, &store).await;
+
+            info!("ui returned: {:?}", result);
 
             _ = handle
                 .data(id, Term::exit_sequence().into_bytes().into())
