@@ -12,7 +12,6 @@ pub struct ErrorDialog {
 }
 
 impl ErrorDialog {
-    // TODO show escape button
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
 

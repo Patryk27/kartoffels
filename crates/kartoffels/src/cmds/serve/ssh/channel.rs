@@ -102,9 +102,18 @@ impl AppChannel {
         let mut term = Term::new(stdin, stdout, size)?;
 
         task::spawn(async move {
-            let result = kartoffels_ui::main(&mut term, &store).await;
+            let result = task::spawn(async move {
+                kartoffels_ui::main(&mut term, &store).await
+            });
 
-            info!("ui returned: {:?}", result);
+            match result.await {
+                Ok(result) => {
+                    info!("ui task returned: {:?}", result);
+                }
+                Err(err) => {
+                    info!("ui task crashed: {}", err);
+                }
+            }
 
             _ = handle
                 .data(id, Term::exit_sequence().into_bytes().into())
