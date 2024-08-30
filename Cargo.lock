@@ -1411,6 +1411,7 @@ dependencies = [
  "termwiz",
  "tokio",
  "tokio-stream",
+ "waker-fn",
 ]
 
 [[package]]
@@ -3312,6 +3313,12 @@ checksum = "6d9b2acfb050df409c972a37d3b8e08cdea3bddb0c09db9d53137e504cfabed0"
 dependencies = [
  "utf8parse",
 ]
+
+[[package]]
+name = "waker-fn"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "317211a0dc0ceedd78fb2ca9a44aed3d7b9b26f81870d485c07122b4350673b7"
 
 [[package]]
 name = "wasi"

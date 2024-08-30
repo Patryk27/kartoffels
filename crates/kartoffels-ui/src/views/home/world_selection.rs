@@ -1,54 +1,111 @@
-use crate::{Action, Clear, LayoutExt, Prompt, RectExt, Term};
+use crate::{Button, Clear, LayoutExt, Prompt, Term};
 use anyhow::Result;
-use itertools::Either;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::layout::Layout;
-use ratatui::text::{Line, Text};
-use std::iter;
-use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::select;
+use ratatui::text::Line;
+use ratatui::widgets::Widget;
+use termwiz::input::KeyCode;
 
 pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
     let mut prompt = Prompt::default();
 
     loop {
-        term.draw(|f| {
-            let menu = menu(store);
+        let mut outcome = None;
 
-            let area = Layout::dialog(
-                menu.width() as u16,
-                menu.height() as u16,
-                f.area(),
-            );
+        term.draw(|ui| {
+            Clear::render(ui);
 
-            f.render_widget(Clear, f.area());
-            f.render_widget(menu.centered(), area);
-            f.render_widget(prompt.as_line().centered(), area.footer());
+            let menu = build_menu(store);
+
+            let area = {
+                let width = menu
+                    .iter()
+                    .map(|item| item.width())
+                    .max()
+                    .unwrap_or_default();
+
+                let height = menu.len() as u16;
+
+                Layout::dialog(width, height, ui.area())
+            };
+
+            ui.clamp(area, |ui| {
+                for item in menu {
+                    match item {
+                        MenuItem::Line(item) => {
+                            item.render(ui.area(), ui.buf());
+                        }
+
+                        MenuItem::Button(item, idx) => {
+                            if item.render(ui).activated {
+                                if let Some(idx) = idx {
+                                    outcome = Some(Outcome::Play(
+                                        store.worlds[idx as usize].1.clone(),
+                                    ));
+                                } else {
+                                    outcome = Some(Outcome::Quit);
+                                }
+                            }
+                        }
+                    }
+
+                    ui.step(1);
+                }
+
+                ui.step(1);
+                prompt.render(ui);
+            });
         })
         .await?;
 
-        let event = select! {
-            event = term.read() => Either::Left(event?),
-            _ = prompt.tick() => Either::Right(()),
-        };
+        if let Some(outcome) = outcome {
+            return Ok(outcome);
+        }
 
-        if let Either::Left(Some(InputEvent::Key(event))) = event {
-            match (event.key, event.modifiers) {
-                (KeyCode::Char(ch @ '1'..='9'), Modifiers::NONE) => {
-                    let world_idx = (ch as u8 - b'1') as usize;
+        term.tick().await?;
+    }
+}
 
-                    if let Some((_, world)) = store.worlds.get(world_idx) {
-                        return Ok(Outcome::Play(world.to_owned()));
-                    }
-                }
+fn build_menu(store: &Store) -> Vec<MenuItem> {
+    let mut items = vec![
+        MenuItem::Line(Line::raw("choose world:").centered()),
+        MenuItem::Line(Line::raw("")),
+    ];
 
-                (KeyCode::Escape, _) => {
-                    return Ok(Outcome::Quit);
-                }
+    for (idx, (_, world)) in store.worlds.iter().enumerate() {
+        let idx = idx as u8;
 
-                _ => (),
-            }
+        let btn = Button::new(
+            KeyCode::Char((b'1' + idx) as char),
+            world.name(),
+            true,
+        );
+
+        items.push(MenuItem::Button(btn, Some(idx)));
+    }
+
+    items.push(MenuItem::Line(Line::raw("")));
+
+    items.push(MenuItem::Button(
+        Button::new(KeyCode::Escape, "go back", true),
+        None,
+    ));
+
+    items
+}
+
+#[derive(Debug)]
+enum MenuItem<'a> {
+    Line(Line<'a>),
+    Button(Button<'a>, Option<u8>),
+}
+
+impl MenuItem<'_> {
+    fn width(&self) -> u16 {
+        match self {
+            MenuItem::Line(this) => this.width() as u16,
+            MenuItem::Button(this, _) => this.width(),
         }
     }
 }
@@ -57,17 +114,4 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
 pub enum Outcome {
     Play(WorldHandle),
     Quit,
-}
-
-fn menu(store: &Store) -> Text {
-    let worlds = store.worlds.iter().enumerate().map(|(idx, (_, world))| {
-        Action::new((idx + 1).to_string(), world.name(), true).into()
-    });
-
-    iter::once(Line::raw("choose world:"))
-        .chain([Line::raw("")])
-        .chain(worlds)
-        .chain([Line::raw("")])
-        .chain([Action::new("esc", "go back", true).into()])
-        .collect()
 }

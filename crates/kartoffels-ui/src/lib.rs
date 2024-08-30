@@ -1,14 +1,14 @@
 #![feature(impl_trait_in_assoc_type)]
 #![feature(let_chains)]
 
-mod components;
 mod term;
 mod theme;
+mod ui;
 mod utils;
 mod views;
 
-use self::components::*;
 pub use self::term::*;
+use self::ui::*;
 use self::utils::*;
 use anyhow::Result;
 use kartoffels_store::Store;

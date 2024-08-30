@@ -1,6 +1,8 @@
+use crate::Ui;
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
+use itertools::Either;
 use ratatui::crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
     EnableMouseCapture,
@@ -11,11 +13,14 @@ use ratatui::crossterm::terminal::{
 use ratatui::crossterm::{cursor, Command};
 use ratatui::layout::Rect;
 use ratatui::prelude::CrosstermBackend;
-use ratatui::{Frame, Terminal, TerminalOptions, Viewport};
+use ratatui::{Terminal, TerminalOptions, Viewport};
 use std::io::{self, Write};
 use std::mem;
 use std::pin::Pin;
-use termwiz::input::InputEvent;
+use std::sync::Arc;
+use termwiz::input::{InputEvent, MouseButtons};
+use tokio::select;
+use tokio::sync::Notify;
 
 pub type Stdin = Pin<Box<dyn Stream<Item = Result<InputEvent>> + Send + Sync>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
@@ -25,6 +30,9 @@ pub struct Term {
     stdout: Stdout,
     term: Terminal<CrosstermBackend<WriterProxy>>,
     size: UVec2,
+    mouse: Option<(UVec2, MouseButtons)>,
+    event: Option<InputEvent>,
+    notify: Arc<Notify>,
     initialized: bool,
 }
 
@@ -49,55 +57,24 @@ impl Term {
             stdout,
             term,
             size,
+            mouse: None,
+            event: None,
+            notify: Arc::new(Notify::new()),
             initialized: false,
         })
     }
 
-    pub async fn read(&mut self) -> Result<Option<InputEvent>> {
-        let event = self
-            .stdin
-            .next()
-            .await
-            .ok_or_else(|| anyhow!("lost stdin"))??;
+    pub fn enter_sequence() -> String {
+        let mut cmds = String::new();
 
-        if let InputEvent::Resized { cols, rows } = event {
-            self.size = uvec2(cols as u32, rows as u32);
-            self.term.resize(Self::viewport_rect(self.size))?;
+        _ = EnterAlternateScreen.write_ansi(&mut cmds);
+        _ = EnableBracketedPaste.write_ansi(&mut cmds);
+        _ = EnableMouseCapture.write_ansi(&mut cmds);
 
-            Ok(None)
-        } else {
-            Ok(Some(event))
-        }
+        cmds
     }
 
-    pub async fn draw<F>(&mut self, render: F) -> Result<()>
-    where
-        F: FnOnce(&mut Frame),
-    {
-        if !self.initialized {
-            self.term.clear()?;
-
-            let mut cmds = String::new();
-
-            _ = EnterAlternateScreen.write_ansi(&mut cmds);
-            _ = EnableBracketedPaste.write_ansi(&mut cmds);
-            _ = EnableMouseCapture.write_ansi(&mut cmds);
-
-            self.stdout.send(cmds.into_bytes()).await?;
-            self.initialized = true;
-        }
-
-        self.term.draw(render)?;
-        self.flush().await?;
-
-        Ok(())
-    }
-
-    pub fn size(&self) -> UVec2 {
-        self.size
-    }
-
-    pub fn exit_sequence() -> String {
+    pub fn leave_sequence() -> String {
         let mut cmds = String::new();
 
         _ = DisableMouseCapture.write_ansi(&mut cmds);
@@ -106,6 +83,80 @@ impl Term {
         _ = cursor::Show.write_ansi(&mut cmds);
 
         cmds
+    }
+
+    pub async fn draw<F, T>(&mut self, render: F) -> Result<T>
+    where
+        F: FnOnce(&mut Ui) -> T,
+    {
+        if !self.initialized {
+            self.term.clear()?;
+
+            self.stdout
+                .send(Self::enter_sequence().into_bytes())
+                .await?;
+
+            self.initialized = true;
+        }
+
+        // TODO constructing waker once should be enough
+        let waker = {
+            let notify = self.notify.clone();
+
+            waker_fn::waker_fn(move || {
+                notify.notify_waiters();
+            })
+        };
+
+        let mut result = None;
+
+        self.term.draw(|frame| {
+            result = Some(render(&mut Ui::new(
+                &waker,
+                frame,
+                self.mouse.clone(),
+                self.event.take(),
+            )));
+        })?;
+
+        self.flush().await?;
+
+        Ok(result.unwrap())
+    }
+
+    pub async fn tick(&mut self) -> Result<()> {
+        let event = select! {
+            event = self.stdin.next() => Either::Left(event),
+            _ = self.notify.notified() => Either::Right(())
+        };
+
+        if let Either::Left(event) = event {
+            let event = event.ok_or_else(|| anyhow!("lost stdin"))??;
+
+            match event {
+                InputEvent::Resized { cols, rows } => {
+                    self.size = uvec2(cols as u32, rows as u32);
+                    self.term.resize(Self::viewport_rect(self.size))?;
+                }
+
+                InputEvent::Mouse(event) => {
+                    self.mouse = Some((
+                        uvec2(event.x as u32, event.y as u32),
+                        event.mouse_buttons.clone(),
+                    ));
+                }
+
+                event => {
+                    self.event = Some(event);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn size(&self) -> UVec2 {
+        self.size
     }
 
     async fn flush(&mut self) -> Result<()> {

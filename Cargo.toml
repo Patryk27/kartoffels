@@ -56,3 +56,4 @@ tokio-util = "0.7.11"
 tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+waker-fn = "1.2.0"

@@ -50,7 +50,8 @@ impl AppChannel {
                 if event.key == KeyCode::Char('c')
                     && event.modifiers == Modifiers::CTRL
                 {
-                    session.data(id, Term::exit_sequence().into_bytes().into());
+                    session
+                        .data(id, Term::leave_sequence().into_bytes().into());
                     session.close(id);
 
                     break;
@@ -108,7 +109,7 @@ impl AppChannel {
             .await;
 
             _ = handle
-                .data(id, Term::exit_sequence().into_bytes().into())
+                .data(id, Term::leave_sequence().into_bytes().into())
                 .await;
 
             match result {

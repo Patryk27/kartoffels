@@ -1,12 +1,9 @@
 use super::DialogEvent;
-use crate::{Action, BlockExt, LayoutExt, RectExt};
+use crate::{Button, RectExt, Ui};
 use indoc::indoc;
-use ratatui::layout::Layout;
-use ratatui::prelude::{Buffer, Rect};
-use ratatui::text::Line;
-use ratatui::widgets::{Block, Paragraph, Widget, Wrap};
+use ratatui::widgets::{Paragraph, Widget, Wrap};
 use std::cmp;
-use termwiz::input::{InputEvent, KeyCode, Modifiers};
+use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct HelpDialog;
@@ -28,44 +25,33 @@ impl HelpDialog {
         - bots are represented with the `@` char, `.` is floor etc.
     "};
 
-    pub fn render(&self, area: Rect, buf: &mut Buffer) {
+    pub fn render(&self, ui: &mut Ui) -> Option<DialogEvent> {
         let text = Paragraph::new(Self::TEXT).wrap(Wrap::default());
+        let width = cmp::min(ui.area().width - 10, 60);
+        let height = text.line_count(width) as u16 + 2;
 
-        let width = cmp::min(area.width - 10, 60);
-        let height = text.line_count(width) as u16;
+        let mut event = None;
 
-        let area = Block::dialog_info(
-            Some(" help "),
-            Layout::dialog(width, height + 2, area),
-            buf,
-        );
+        ui.info_dialog(width, height, Some(" help "), |ui| {
+            text.render(ui.area(), ui.buf());
 
-        text.render(area, buf);
-
-        Line::from(Action::new("esc", "go back", true))
-            .left_aligned()
-            .render(area.footer(), buf);
-
-        Line::from(Action::new("t", "go to tutorial", true))
-            .right_aligned()
-            .render(area.footer(), buf);
-    }
-
-    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
-        if let InputEvent::Key(event) = event {
-            match (event.key, event.modifiers) {
-                (KeyCode::Escape, _) => {
-                    return Some(DialogEvent::Close);
+            ui.clamp(ui.area().footer(), |ui| {
+                if Button::new(KeyCode::Escape, "go back", true)
+                    .render(ui)
+                    .activated
+                {
+                    event = Some(DialogEvent::Close);
                 }
 
-                (KeyCode::Char('t'), Modifiers::NONE) => {
-                    return Some(DialogEvent::OpenTutorial);
+                if Button::new(KeyCode::Char('t'), "go to tutorial", true)
+                    .render(ui)
+                    .activated
+                {
+                    event = Some(DialogEvent::OpenTutorial);
                 }
+            })
+        });
 
-                _ => (),
-            }
-        }
-
-        None
+        event
     }
 }

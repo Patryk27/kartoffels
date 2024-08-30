@@ -1,27 +1,26 @@
-use crate::{theme, BotIdExt, Term};
+use crate::{theme, BotIdExt, Ui};
 use glam::{ivec2, IVec2};
 use kartoffels_world::prelude::{Dir, Snapshot, TileBase};
-use ratatui::buffer::Buffer;
-use ratatui::layout::Rect;
-use termwiz::input::{InputEvent, KeyCode, Modifiers};
+use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct MapCanvas<'a> {
-    pub snapshot: &'a Snapshot,
-    pub camera: IVec2,
-    pub paused: bool,
-    pub enabled: bool,
-}
+pub struct MapCanvas;
 
-impl<'a> MapCanvas<'a> {
-    pub fn render(self, area: Rect, buf: &mut Buffer) {
-        let offset =
-            self.camera - ivec2(area.width as i32, area.height as i32) / 2;
+impl MapCanvas {
+    pub fn render(
+        ui: &mut Ui,
+        snapshot: &Snapshot,
+        camera: IVec2,
+        paused: bool,
+        enabled: bool,
+    ) -> Option<MapCanvasEvent> {
+        let area = ui.area();
+        let offset = camera - ivec2(area.width as i32, area.height as i32) / 2;
 
         for dy in 0..area.height {
             for dx in 0..area.width {
                 let tile =
-                    self.snapshot.map.get(offset + ivec2(dx as i32, dy as i32));
+                    snapshot.map.get(offset + ivec2(dx as i32, dy as i32));
 
                 let ch;
                 let mut fg;
@@ -49,8 +48,7 @@ impl<'a> MapCanvas<'a> {
                     TileBase::BOT => {
                         ch = "@";
 
-                        fg = self
-                            .snapshot
+                        fg = snapshot
                             .bots
                             .alive
                             .by_idx(tile.meta[0])
@@ -68,8 +66,7 @@ impl<'a> MapCanvas<'a> {
                             Dir::Left => "⇠",
                         };
 
-                        fg = self
-                            .snapshot
+                        fg = snapshot
                             .bots
                             .alive
                             .by_idx(tile.meta[0])
@@ -86,8 +83,8 @@ impl<'a> MapCanvas<'a> {
                     }
                 };
 
-                if self.enabled {
-                    if self.paused && tile.base != TileBase::BOT {
+                if enabled {
+                    if paused && tile.base != TileBase::BOT {
                         fg = theme::DARK_GRAY;
                         bg = theme::BG;
                     }
@@ -96,45 +93,42 @@ impl<'a> MapCanvas<'a> {
                     bg = theme::BG;
                 }
 
-                buf[(area.left() + dx, area.top() + dy)]
+                ui.buf()[(area.left() + dx, area.top() + dy)]
                     .set_symbol(ch)
                     .set_fg(fg)
                     .set_bg(bg);
             }
         }
-    }
 
-    pub fn handle(event: InputEvent, term: &Term) -> MapCanvasEvent {
-        if let InputEvent::Key(event) = &event {
-            let offset = term.size().as_ivec2() / 8;
-
-            match (event.key, event.modifiers) {
-                (KeyCode::Char('w') | KeyCode::UpArrow, Modifiers::NONE) => {
-                    return MapCanvasEvent::MoveCamera(ivec2(0, -offset.y));
-                }
-
-                (KeyCode::Char('a') | KeyCode::LeftArrow, Modifiers::NONE) => {
-                    return MapCanvasEvent::MoveCamera(ivec2(-offset.x, 0));
-                }
-
-                (KeyCode::Char('s') | KeyCode::DownArrow, Modifiers::NONE) => {
-                    return MapCanvasEvent::MoveCamera(ivec2(0, offset.y));
-                }
-
-                (KeyCode::Char('d') | KeyCode::RightArrow, Modifiers::NONE) => {
-                    return MapCanvasEvent::MoveCamera(ivec2(offset.x, 0));
-                }
-
-                _ => (),
-            }
+        if ui.key(KeyCode::Char('w'), Modifiers::NONE)
+            || ui.key(KeyCode::UpArrow, Modifiers::NONE)
+        {
+            return Some(MapCanvasEvent::MoveCamera(ivec2(0, -offset.y)));
         }
 
-        MapCanvasEvent::Forward(event)
+        if ui.key(KeyCode::Char('a'), Modifiers::NONE)
+            || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
+        {
+            return Some(MapCanvasEvent::MoveCamera(ivec2(-offset.x, 0)));
+        }
+
+        if ui.key(KeyCode::Char('s'), Modifiers::NONE)
+            || ui.key(KeyCode::DownArrow, Modifiers::NONE)
+        {
+            return Some(MapCanvasEvent::MoveCamera(ivec2(0, offset.y)));
+        }
+
+        if ui.key(KeyCode::Char('d'), Modifiers::NONE)
+            || ui.key(KeyCode::RightArrow, Modifiers::NONE)
+        {
+            return Some(MapCanvasEvent::MoveCamera(ivec2(offset.x, 0)));
+        }
+
+        None
     }
 }
 
 #[derive(Debug)]
 pub enum MapCanvasEvent {
     MoveCamera(IVec2),
-    Forward(InputEvent),
 }

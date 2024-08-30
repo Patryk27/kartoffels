@@ -1,5 +1,4 @@
-use crate::{theme, BlockExt};
-use ratatui::prelude::{Buffer, Rect};
+use crate::{theme, Ui};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::Text;
 use ratatui::widgets::{Block, Padding, Widget};
@@ -31,14 +30,18 @@ pub struct Header;
 impl Header {
     pub const WIDTH: u16 = 58 + 2 + 2;
     pub const HEIGHT: u16 = TEXT.len() as u16 + 2;
-}
 
-impl Widget for Header {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let area = Block::bordered()
+    pub fn render(ui: &mut Ui) {
+        let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
-            .padding(Padding::horizontal(1))
-            .render_and_lay(area, buf);
+            .padding(Padding::horizontal(1));
+
+        let area = {
+            let inner_area = block.inner(ui.area());
+
+            block.render(ui.area(), ui.buf());
+            inner_area
+        };
 
         let mut text = Text::default();
 
@@ -50,6 +53,6 @@ impl Widget for Header {
             }
         }
 
-        text.centered().render(area, buf);
+        text.centered().render(area, ui.buf());
     }
 }

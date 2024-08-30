@@ -1,25 +1,48 @@
-use crate::Action;
-use ratatui::prelude::{Buffer, Rect};
-use ratatui::text::Text;
-use ratatui::widgets::Widget;
+use super::Outcome;
+use crate::{Button, Ui};
+use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct Menu;
 
 impl Menu {
     pub const HEIGHT: u16 = 5;
-}
 
-impl Widget for Menu {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut text = Text::default();
+    pub fn render(ui: &mut Ui) -> Option<Outcome> {
+        if Button::new(KeyCode::Char('p'), "play", true)
+            .render(ui)
+            .activated
+        {
+            return Some(Outcome::Play);
+        }
 
-        text.push_line(Action::new("p", "play", true));
-        text.push_line(Action::new("t", "see tutorial", true));
-        text.push_line(Action::new("c", "see challenges", true));
-        text.push_line("");
-        text.push_line(Action::new("esc", "quit", true));
+        ui.step(1);
 
-        text.centered().render(area, buf);
+        if Button::new(KeyCode::Char('t'), "tutorial", true)
+            .render(ui)
+            .activated
+        {
+            return Some(Outcome::OpenTutorial);
+        }
+
+        ui.step(1);
+
+        if Button::new(KeyCode::Char('c'), "challenges", true)
+            .render(ui)
+            .activated
+        {
+            return Some(Outcome::OpenChallenges);
+        }
+
+        ui.step(2);
+
+        if Button::new(KeyCode::Escape, "quit", true)
+            .render(ui)
+            .activated
+        {
+            return Some(Outcome::Quit);
+        }
+
+        None
     }
 }

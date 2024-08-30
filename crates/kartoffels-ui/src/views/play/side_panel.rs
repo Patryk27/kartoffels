@@ -4,33 +4,24 @@ mod joined;
 use self::idle::*;
 use self::joined::*;
 use super::JoinedBot;
+use crate::Ui;
 use kartoffels_world::prelude::Snapshot;
-use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
-use ratatui::widgets::Widget;
-use termwiz::input::InputEvent;
 
 #[derive(Debug)]
-pub struct SidePanel<'a> {
-    pub snapshot: &'a Snapshot,
-    pub bot: Option<&'a JoinedBot>,
-    pub enabled: bool,
-}
+pub struct SidePanel;
 
-impl<'a> SidePanel<'a> {
+impl SidePanel {
     pub const WIDTH: u16 = 22;
 
-    pub fn handle(is_joined: bool, event: InputEvent) -> SidePanelEvent {
-        if is_joined {
-            JoinedSidePanel::handle(event)
-        } else {
-            IdleSidePanel::handle(event)
-        }
-    }
-}
+    pub fn render(
+        ui: &mut Ui,
+        snapshot: &Snapshot,
+        bot: Option<&JoinedBot>,
+        enabled: bool,
+    ) -> Option<SidePanelEvent> {
+        let area = ui.area();
 
-impl Widget for SidePanel<'_> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
         let area = Rect {
             x: area.x + 1,
             y: area.y,
@@ -38,19 +29,13 @@ impl Widget for SidePanel<'_> {
             height: area.height,
         };
 
-        if let Some(bot) = &self.bot {
-            JoinedSidePanel {
-                snapshot: self.snapshot,
-                bot,
-                enabled: self.enabled,
+        ui.clamp(area, |ui| {
+            if let Some(bot) = bot {
+                JoinedSidePanel::render(ui, snapshot, bot, enabled)
+            } else {
+                IdleSidePanel::render(ui, enabled)
             }
-            .render(area, buf);
-        } else {
-            IdleSidePanel {
-                enabled: self.enabled,
-            }
-            .render(area, buf);
-        }
+        })
     }
 }
 
@@ -59,5 +44,4 @@ pub enum SidePanelEvent {
     UploadBot,
     JoinBot,
     LeaveBot,
-    Forward(InputEvent),
 }

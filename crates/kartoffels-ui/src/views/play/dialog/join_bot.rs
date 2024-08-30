@@ -1,11 +1,10 @@
 use super::DialogEvent;
-use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
+use crate::{theme, Button, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
-use ratatui::buffer::Buffer;
-use ratatui::layout::{Layout, Offset, Rect};
+use ratatui::layout::Offset;
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Widget};
+use ratatui::widgets::Widget;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 use tokio::time::{self, Interval};
 
@@ -17,35 +16,55 @@ pub struct JoinBotDialog {
 }
 
 impl JoinBotDialog {
-    pub fn render(&self, area: Rect, buf: &mut Buffer) {
-        let area = Block::dialog_info(
-            Some(" joining bot "),
-            Layout::dialog(26, 4, area),
-            buf,
-        );
+    pub fn render(
+        &mut self,
+        ui: &mut Ui,
+        snapshot: &Snapshot,
+    ) -> Option<DialogEvent> {
+        if ui.poll(self.caret_interval.tick()).is_ready() {
+            self.caret_visible = !self.caret_visible;
 
-        Line::raw("enter bot id:").render(area, buf);
+            _ = ui.poll(self.caret_interval.tick());
+        }
 
-        Line::from_iter([
-            Span::raw("> "),
-            Span::raw(&self.id),
-            Span::raw(if self.caret_visible { "_" } else { "" })
-                .fg(theme::GREEN),
-        ])
-        .render(area.offset(Offset { x: 0, y: 1 }), buf);
+        ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
+            let mut event = None;
 
-        Line::from(Action::new("esc", "cancel", true))
-            .left_aligned()
-            .render(area.footer(), buf);
+            Line::raw("enter bot id:").render(ui.area(), ui.buf());
 
-        Line::from(Action::new("enter", "join", true))
-            .right_aligned()
-            .render(area.footer(), buf);
+            Line::from_iter([
+                Span::raw("> "),
+                Span::raw(&self.id),
+                Span::raw(if self.caret_visible { "_" } else { "" })
+                    .fg(theme::GREEN),
+            ])
+            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
+
+            if let Some(ui_event) = ui.event() {
+                event = self.handle(ui_event, snapshot);
+            }
+
+            if Button::new(KeyCode::Escape, "cancel", true)
+                .render(ui)
+                .activated
+            {
+                event = Some(DialogEvent::Close);
+            }
+
+            if Button::new(KeyCode::Enter, "join", true)
+                .render(ui)
+                .activated
+            {
+                event = self.handle_confirm(snapshot);
+            }
+
+            event
+        })
     }
 
-    pub fn handle(
+    fn handle(
         &mut self,
-        event: InputEvent,
+        event: &InputEvent,
         snapshot: &Snapshot,
     ) -> Option<DialogEvent> {
         match event {
@@ -56,14 +75,6 @@ impl JoinBotDialog {
 
                 (KeyCode::Backspace, Modifiers::NONE) => {
                     self.id.pop();
-                }
-
-                (KeyCode::Enter, Modifiers::NONE) => {
-                    return self.handle_confirm(snapshot);
-                }
-
-                (KeyCode::Escape, Modifiers::NONE) => {
-                    return Some(DialogEvent::Close);
                 }
 
                 _ => (),
@@ -114,20 +125,14 @@ impl JoinBotDialog {
 
         Some(DialogEvent::JoinBot(id))
     }
-
-    pub async fn tick(&mut self) {
-        self.caret_interval.tick().await;
-        self.caret_visible = !self.caret_visible;
-    }
 }
 
 impl Default for JoinBotDialog {
     fn default() -> Self {
         Self {
             id: Default::default(),
-            caret_visible: true,
-            caret_interval: time::interval(theme::CARET_INTERVAL)
-                .skipping_first(),
+            caret_visible: false,
+            caret_interval: time::interval(theme::CARET_INTERVAL),
         }
     }
 }

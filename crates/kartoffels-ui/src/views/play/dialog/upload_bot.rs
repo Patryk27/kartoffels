@@ -1,11 +1,9 @@
 use super::DialogEvent;
-use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
-use ratatui::buffer::Buffer;
-use ratatui::layout::{Layout, Rect};
+use crate::{theme, Button, RectExt, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Paragraph, Widget, Wrap};
-use termwiz::input::InputEvent;
+use ratatui::widgets::{Paragraph, Widget, Wrap};
+use termwiz::input::KeyCode;
 use tokio::time::{self, Interval};
 
 #[derive(Debug)]
@@ -17,7 +15,7 @@ pub struct UploadBotDialog {
 impl UploadBotDialog {
     const SPINNER: &[&str] = &["|", "/", "-", "\\"];
 
-    pub fn render(&self, area: Rect, buf: &mut Buffer) {
+    pub fn render(&self, ui: &mut Ui) -> Option<DialogEvent> {
         let spinner = Self::SPINNER[self.spinner_icon % Self::SPINNER.len()];
         let spinner = Span::raw(spinner).fg(theme::GREEN);
 
@@ -44,40 +42,31 @@ impl UploadBotDialog {
         .wrap(Wrap::default());
 
         let width = 60;
-        let height = para.line_count(width) as u16;
+        let height = para.line_count(width) as u16 + 2;
 
-        let area = Block::dialog_info(
-            Some(" uploading a bot "),
-            Layout::dialog(width, height + 2, area),
-            buf,
-        );
+        let mut event = None;
 
-        para.render(area, buf);
+        ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
+            para.render(ui.area(), ui.buf());
 
-        Line::from(Action::new("esc", "cancel", true))
-            .left_aligned()
-            .render(area.footer(), buf);
-    }
+            ui.clamp(ui.area().footer(), |ui| {
+                if Button::new(KeyCode::Escape, "cancel", true)
+                    .render(ui)
+                    .activated
+                {
+                    event = Some(DialogEvent::Close);
+                }
+            });
+        });
 
-    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
-        if let InputEvent::Paste(src) = event {
-            return Some(DialogEvent::UploadBot(src));
-        }
-
-        None
-    }
-
-    pub async fn tick(&mut self) {
-        self.spinner_interval.tick().await;
-        self.spinner_icon += 1;
+        event
     }
 }
 
 impl Default for UploadBotDialog {
     fn default() -> Self {
         Self {
-            spinner_interval: time::interval(theme::SPINNER_INTERVAL)
-                .skipping_first(),
+            spinner_interval: time::interval(theme::SPINNER_INTERVAL),
             spinner_icon: 0,
         }
     }

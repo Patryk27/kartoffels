@@ -1,10 +1,7 @@
 use super::DialogEvent;
-use crate::{Action, BlockExt, LayoutExt, RectExt};
-use ratatui::layout::Layout;
-use ratatui::prelude::{Buffer, Rect};
-use ratatui::text::Line;
-use ratatui::widgets::{Block, Paragraph, Widget};
-use termwiz::input::{InputEvent, KeyCode};
+use crate::{Button, Ui};
+use ratatui::widgets::{Paragraph, Widget};
+use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct ErrorDialog {
@@ -12,32 +9,23 @@ pub struct ErrorDialog {
 }
 
 impl ErrorDialog {
-    pub fn render(&self, area: Rect, buf: &mut Buffer) {
+    pub fn render(&self, ui: &mut Ui) -> Option<DialogEvent> {
         let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
 
         let width = 50;
         let height = text.line_count(width) as u16;
 
-        let area = Block::dialog_error(
-            Some(" whoopsie "),
-            Layout::dialog(width, height + 2, area),
-            buf,
-        );
+        ui.error_dialog(width, height, Some(" whoopsie "), |ui| {
+            text.render(ui.area(), ui.buf());
 
-        text.render(area, buf);
-
-        Line::from(Action::new("enter", "close", true))
-            .right_aligned()
-            .render(area.footer(), buf);
-    }
-
-    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
-        if let InputEvent::Key(event) = event {
-            if event.key == KeyCode::Enter {
-                return Some(DialogEvent::Close);
+            if Button::new(KeyCode::Enter, "close", true)
+                .render(ui)
+                .activated
+            {
+                Some(DialogEvent::Close)
+            } else {
+                None
             }
-        }
-
-        None
+        })
     }
 }
