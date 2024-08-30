@@ -18,7 +18,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
 
             let area = Layout::dialog(
                 menu.width() as u16,
-                menu.height() as u16 + 2,
+                menu.height() as u16,
                 f.area(),
             );
 

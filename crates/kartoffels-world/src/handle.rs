@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Update};
+use crate::{BotId, Snapshot};
 use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
@@ -27,7 +27,7 @@ impl Handle {
         &self.name
     }
 
-    pub async fn listen(&self) -> Result<impl Stream<Item = Arc<Update>>> {
+    pub async fn listen(&self) -> Result<impl Stream<Item = Arc<Snapshot>>> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::Listen { tx }).await?;
@@ -97,7 +97,7 @@ pub type RequestRx = mpsc::Receiver<Request>;
 
 pub enum Request {
     Listen {
-        tx: oneshot::Sender<broadcast::Receiver<Arc<Update>>>,
+        tx: oneshot::Sender<broadcast::Receiver<Arc<Snapshot>>>,
     },
 
     Pause {

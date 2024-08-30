@@ -4,7 +4,7 @@ mod joined;
 use self::idle::*;
 use self::joined::*;
 use super::JoinedBot;
-use kartoffels_world::prelude::Update;
+use kartoffels_world::prelude::Snapshot;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::widgets::Widget;
@@ -12,7 +12,7 @@ use termwiz::input::InputEvent;
 
 #[derive(Debug)]
 pub struct SidePanel<'a> {
-    pub update: &'a Update,
+    pub snapshot: &'a Snapshot,
     pub bot: Option<&'a JoinedBot>,
     pub enabled: bool,
 }
@@ -40,7 +40,7 @@ impl Widget for SidePanel<'_> {
 
         if let Some(bot) = &self.bot {
             JoinedSidePanel {
-                update: self.update,
+                snapshot: self.snapshot,
                 bot,
                 enabled: self.enabled,
             }

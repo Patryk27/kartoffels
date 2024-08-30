@@ -16,7 +16,7 @@ impl BottomPanel {
         let quit = Action::new("esc", "quit", self.enabled);
         let help = Action::new("h", "help", self.enabled);
         let pause = Action::new("p", "pause", self.enabled);
-        let bots = Action::new("b", "bots", self.enabled);
+        let bots = Action::new("b", "list bots", self.enabled);
         let sep = [Span::raw("  ")];
 
         quit.into_iter()
@@ -58,12 +58,16 @@ impl BottomPanel {
                     })
                 }
 
+                (KeyCode::Char('h' | '?'), Modifiers::NONE) => {
+                    return Some(BottomPanelOutcome::Help);
+                }
+
                 (KeyCode::Char('p'), Modifiers::NONE) => {
                     return Some(BottomPanelOutcome::Pause);
                 }
 
-                (KeyCode::Char('h' | '?'), Modifiers::NONE) => {
-                    return Some(BottomPanelOutcome::Help);
+                (KeyCode::Char('b'), Modifiers::NONE) => {
+                    return Some(BottomPanelOutcome::ListBots);
                 }
 
                 _ => (),
@@ -77,6 +81,7 @@ impl BottomPanel {
 #[derive(Debug)]
 pub enum BottomPanelOutcome {
     Quit,
-    Pause,
     Help,
+    Pause,
+    ListBots,
 }

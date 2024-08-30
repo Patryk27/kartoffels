@@ -9,9 +9,10 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::upload_bot::*;
-use kartoffels_world::prelude::{BotId, Update};
+use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
+use std::future;
 use termwiz::input::{InputEvent, KeyCode};
 
 #[derive(Debug)]
@@ -24,9 +25,14 @@ pub enum Dialog {
 }
 
 impl Dialog {
-    pub fn render(&mut self, area: Rect, buf: &mut Buffer, update: &Update) {
+    pub fn render(
+        &mut self,
+        area: Rect,
+        buf: &mut Buffer,
+        snapshot: &Snapshot,
+    ) {
         match self {
-            Dialog::Bots(this) => this.render(area, buf, update),
+            Dialog::Bots(this) => this.render(area, buf, snapshot),
             Dialog::Error(this) => this.render(area, buf),
             Dialog::Help(this) => this.render(area, buf),
             Dialog::JoinBot(this) => this.render(area, buf),
@@ -37,7 +43,7 @@ impl Dialog {
     pub fn handle(
         &mut self,
         event: InputEvent,
-        update: &Update,
+        snapshot: &Snapshot,
     ) -> Option<DialogEvent> {
         if let InputEvent::Key(event) = &event {
             if event.key == KeyCode::Escape {
@@ -49,7 +55,7 @@ impl Dialog {
             Dialog::Bots(this) => this.handle(event),
             Dialog::Error(this) => this.handle(event),
             Dialog::Help(this) => this.handle(event),
-            Dialog::JoinBot(this) => this.handle(event, update),
+            Dialog::JoinBot(this) => this.handle(event, snapshot),
             Dialog::UploadBot(this) => this.handle(event),
         }
     }
@@ -58,7 +64,7 @@ impl Dialog {
         match self {
             Dialog::JoinBot(this) => this.tick().await,
             Dialog::UploadBot(this) => this.tick().await,
-            _ => (),
+            _ => future::pending::<()>().await,
         }
     }
 }

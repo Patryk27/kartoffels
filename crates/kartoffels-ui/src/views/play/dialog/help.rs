@@ -5,6 +5,7 @@ use ratatui::layout::Layout;
 use ratatui::prelude::{Buffer, Rect};
 use ratatui::text::Line;
 use ratatui::widgets::{Block, Paragraph, Widget, Wrap};
+use std::cmp;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug, Default)]
@@ -14,8 +15,9 @@ impl HelpDialog {
     const TEXT: &str = indoc! {"
         hey there soldier and welcome to kartoffels 🫡🫡🫡
 
-        the game has a tutorial which you can open by pressing [t] now, but if \
-        you're more into discovering things yourself, here's a couple of tips:
+        the game has a built-in tutorial which you can open by pressing [t] \
+        now, but if you're more into discovering things yourself, here's a \
+        couple of tips:
 
         - run `git clone https://github.com/Patryk27/kartoffel` to get a \
         starting point - see README.md there for building instructions
@@ -29,7 +31,7 @@ impl HelpDialog {
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let text = Paragraph::new(Self::TEXT).wrap(Wrap::default());
 
-        let width = area.width - 10;
+        let width = cmp::min(area.width - 10, 60);
         let height = text.line_count(width) as u16;
 
         let area = Block::dialog_info(

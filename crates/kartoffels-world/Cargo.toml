@@ -14,13 +14,14 @@ ciborium.workspace = true
 derivative.workspace = true
 futures-util.workspace = true
 glam.workspace = true
+itertools.workspace = true
 lru.workspace = true
 maybe-owned.workspace = true
 rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-tokio.workspace = true
 tokio-stream.workspace = true
+tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]

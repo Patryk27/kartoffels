@@ -2,7 +2,6 @@ use crate::{BotId, Map, Theme};
 use ahash::AHashMap;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::time::{Duration, Instant};
 use tracing::info;
 
@@ -26,21 +25,8 @@ impl DeathmatchMode {
         }
     }
 
-    pub fn state(&self) -> Value {
-        #[derive(Debug, Serialize)]
-        struct State<'a> {
-            scores: &'a AHashMap<BotId, u32>,
-            next_round_in: Option<u64>,
-        }
-
-        let next_round_in =
-            self.next_round_at.map(|at| (at - Instant::now()).as_secs());
-
-        serde_json::to_value(State {
-            scores: &self.scores,
-            next_round_in,
-        })
-        .unwrap()
+    pub fn scores(&self) -> &AHashMap<BotId, u32> {
+        &self.scores
     }
 
     pub fn on_bot_killed(

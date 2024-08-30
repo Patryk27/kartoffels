@@ -1,13 +1,13 @@
 use crate::{theme, BotIdExt, Term};
 use glam::{ivec2, IVec2};
-use kartoffels_world::prelude::{Dir, TileBase, Update};
+use kartoffels_world::prelude::{Dir, Snapshot, TileBase};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct MapCanvas<'a> {
-    pub update: &'a Update,
+    pub snapshot: &'a Snapshot,
     pub camera: IVec2,
     pub paused: bool,
     pub enabled: bool,
@@ -21,7 +21,7 @@ impl<'a> MapCanvas<'a> {
         for dy in 0..area.height {
             for dx in 0..area.width {
                 let tile =
-                    self.update.map.get(offset + ivec2(dx as i32, dy as i32));
+                    self.snapshot.map.get(offset + ivec2(dx as i32, dy as i32));
 
                 let ch;
                 let mut fg;
@@ -50,8 +50,9 @@ impl<'a> MapCanvas<'a> {
                         ch = "@";
 
                         fg = self
-                            .update
+                            .snapshot
                             .bots
+                            .alive
                             .by_idx(tile.meta[0])
                             .map(|bot| bot.id.color())
                             .unwrap_or(theme::RED);
@@ -68,8 +69,9 @@ impl<'a> MapCanvas<'a> {
                         };
 
                         fg = self
-                            .update
+                            .snapshot
                             .bots
+                            .alive
                             .by_idx(tile.meta[0])
                             .map(|bot| bot.id.color())
                             .unwrap_or(theme::RED);
@@ -85,14 +87,9 @@ impl<'a> MapCanvas<'a> {
                 };
 
                 if self.enabled {
-                    if self.paused {
-                        if tile.base == TileBase::BOT {
-                            fg = theme::BG;
-                            bg = theme::DARK_GRAY;
-                        } else {
-                            fg = theme::DARK_GRAY;
-                            bg = theme::BG;
-                        }
+                    if self.paused && tile.base != TileBase::BOT {
+                        fg = theme::DARK_GRAY;
+                        bg = theme::BG;
                     }
                 } else {
                     fg = theme::DARK_GRAY;

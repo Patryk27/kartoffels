@@ -1,6 +1,5 @@
 #![feature(impl_trait_in_assoc_type)]
 #![feature(let_chains)]
-#![feature(noop_waker)]
 
 mod components;
 mod term;

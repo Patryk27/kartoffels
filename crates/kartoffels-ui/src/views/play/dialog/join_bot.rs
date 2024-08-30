@@ -1,6 +1,6 @@
 use super::DialogEvent;
 use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
-use kartoffels_world::prelude::{BotId, Update};
+use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Layout, Offset, Rect};
 use ratatui::style::Stylize;
@@ -46,7 +46,7 @@ impl JoinBotDialog {
     pub fn handle(
         &mut self,
         event: InputEvent,
-        update: &Update,
+        snapshot: &Snapshot,
     ) -> Option<DialogEvent> {
         match event {
             InputEvent::Key(event) => match (event.key, event.modifiers) {
@@ -59,7 +59,7 @@ impl JoinBotDialog {
                 }
 
                 (KeyCode::Enter, Modifiers::NONE) => {
-                    return self.handle_confirm(update);
+                    return self.handle_confirm(snapshot);
                 }
 
                 (KeyCode::Escape, Modifiers::NONE) => {
@@ -75,7 +75,7 @@ impl JoinBotDialog {
                 }
 
                 if self.id.len() == BotId::LENGTH {
-                    return self.handle_confirm(update);
+                    return self.handle_confirm(snapshot);
                 }
             }
 
@@ -95,7 +95,7 @@ impl JoinBotDialog {
         }
     }
 
-    fn handle_confirm(&self, update: &Update) -> Option<DialogEvent> {
+    fn handle_confirm(&self, snapshot: &Snapshot) -> Option<DialogEvent> {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {
@@ -105,7 +105,7 @@ impl JoinBotDialog {
             )));
         };
 
-        if update.bots.by_id(id).is_none() {
+        if snapshot.bots.by_id(id).is_none() {
             return Some(DialogEvent::Throw(format!(
                 "bot `{}` was not found\n\nmaybe it's dead?",
                 id

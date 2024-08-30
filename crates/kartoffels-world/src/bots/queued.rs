@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 #[derive(Clone, Debug, Default)]
 pub struct QueuedBots {
     entries: VecDeque<QueuedBot>,
-    id_to_place: AHashMap<BotId, usize>,
+    id_to_place: AHashMap<BotId, u8>,
 }
 
 impl QueuedBots {
@@ -32,13 +32,13 @@ impl QueuedBots {
             return;
         };
 
-        self.entries.remove(place);
+        self.entries.remove(place as usize);
         self.reindex();
     }
 
     pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
         let place = *self.id_to_place.get(&id)?;
-        let bot = &self.entries[place];
+        let bot = &self.entries[place as usize];
 
         Some(QueuedBotEntry { id, bot, place })
     }
@@ -46,7 +46,7 @@ impl QueuedBots {
     pub fn get_mut(&mut self, id: BotId) -> Option<&mut QueuedBot> {
         let place = *self.id_to_place.get(&id)?;
 
-        Some(&mut self.entries[place])
+        Some(&mut self.entries[place as usize])
     }
 
     pub fn contains(&self, id: BotId) -> bool {
@@ -56,7 +56,7 @@ impl QueuedBots {
     pub fn iter(&self) -> impl Iterator<Item = QueuedBotEntry> {
         self.id_to_place.iter().map(|(&id, &place)| QueuedBotEntry {
             id,
-            bot: &self.entries[place],
+            bot: &self.entries[place as usize],
             place,
         })
     }
@@ -76,7 +76,7 @@ impl QueuedBots {
             self.entries
                 .iter()
                 .enumerate()
-                .map(|(idx, bot)| (bot.id, idx)),
+                .map(|(place, bot)| (bot.id, place as u8)),
         );
     }
 }
@@ -112,7 +112,7 @@ impl<'de> Deserialize<'de> for QueuedBots {
 pub struct QueuedBotEntry<'a> {
     pub id: BotId,
     pub bot: &'a QueuedBot,
-    pub place: usize,
+    pub place: u8,
 }
 
 #[cfg(test)]

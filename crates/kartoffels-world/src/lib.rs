@@ -10,10 +10,10 @@ mod handle;
 mod map;
 mod mode;
 mod policy;
+mod snapshots;
 mod stats;
 mod store;
 mod theme;
-mod updates;
 mod utils;
 
 mod cfg {
@@ -27,8 +27,11 @@ pub mod prelude {
     pub use crate::config::Config;
     pub use crate::handle::{Handle, Request};
     pub use crate::map::{Map, Tile, TileBase};
+    pub use crate::snapshots::{
+        Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
+        SnapshotQueuedBot, SnapshotQueuedBots,
+    };
     pub use crate::theme::{ArenaThemeConfig, DungeonThemeConfig, ThemeConfig};
-    pub use crate::updates::{Update, UpdateBot, UpdateBotStatus};
     pub use crate::utils::Dir;
 }
 
@@ -39,9 +42,9 @@ pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
 pub(crate) use self::policy::*;
+pub(crate) use self::snapshots::*;
 pub(crate) use self::store::*;
 pub(crate) use self::theme::*;
-pub(crate) use self::updates::*;
 pub(crate) use self::utils::*;
 use anyhow::Result;
 use kartoffels_utils::Metronome;
@@ -113,7 +116,7 @@ struct World {
     rx: RequestRx,
     systems: Container,
     theme: Theme,
-    updates: broadcast::Sender<Arc<Update>>,
+    updates: broadcast::Sender<Arc<Snapshot>>,
 }
 
 impl World {
@@ -126,7 +129,7 @@ impl World {
             bots::kill::run(self);
         }
 
-        updates::broadcast::run(self);
+        snapshots::broadcast::run(self);
         store::save::run(self);
         stats::run(self);
     }

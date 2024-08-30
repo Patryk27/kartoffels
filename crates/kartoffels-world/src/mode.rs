@@ -2,9 +2,9 @@ mod deathmatch;
 
 pub use self::deathmatch::*;
 use crate::{BotId, Map, Theme};
+use ahash::AHashMap;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -14,9 +14,9 @@ pub enum Mode {
 }
 
 impl Mode {
-    pub fn state(&self) -> Value {
+    pub fn scores(&self) -> &AHashMap<BotId, u32> {
         match self {
-            Mode::Deathmatch(this) => this.state(),
+            Mode::Deathmatch(this) => this.scores(),
         }
     }
 
