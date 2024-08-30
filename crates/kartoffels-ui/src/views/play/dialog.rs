@@ -34,7 +34,11 @@ impl Dialog {
         }
     }
 
-    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
+    pub fn handle(
+        &mut self,
+        event: InputEvent,
+        update: &Update,
+    ) -> Option<DialogEvent> {
         if let InputEvent::Key(event) = &event {
             if event.key == KeyCode::Escape {
                 return Some(DialogEvent::Close);
@@ -45,7 +49,7 @@ impl Dialog {
             Dialog::Bots(this) => this.handle(event),
             Dialog::Error(this) => this.handle(event),
             Dialog::Help(this) => this.handle(event),
-            Dialog::JoinBot(this) => this.handle(event),
+            Dialog::JoinBot(this) => this.handle(event, update),
             Dialog::UploadBot(this) => this.handle(event),
         }
     }

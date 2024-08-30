@@ -1,6 +1,6 @@
 use super::DialogEvent;
 use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
-use kartoffels_world::prelude::BotId;
+use kartoffels_world::prelude::{BotId, Update};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Layout, Offset, Rect};
 use ratatui::style::Stylize;
@@ -20,7 +20,7 @@ impl JoinBotDialog {
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let area = Block::dialog_info(
             Some(" joining bot "),
-            Layout::dialog(33, 4, area),
+            Layout::dialog(26, 4, area),
             buf,
         );
 
@@ -43,7 +43,11 @@ impl JoinBotDialog {
             .render(area.footer(), buf);
     }
 
-    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
+    pub fn handle(
+        &mut self,
+        event: InputEvent,
+        update: &Update,
+    ) -> Option<DialogEvent> {
         match event {
             InputEvent::Key(event) => match (event.key, event.modifiers) {
                 (KeyCode::Char(ch), Modifiers::NONE) => {
@@ -55,7 +59,7 @@ impl JoinBotDialog {
                 }
 
                 (KeyCode::Enter, Modifiers::NONE) => {
-                    return self.handle_confirm();
+                    return self.handle_confirm(update);
                 }
 
                 (KeyCode::Escape, Modifiers::NONE) => {
@@ -71,7 +75,7 @@ impl JoinBotDialog {
                 }
 
                 if self.id.len() == BotId::LENGTH {
-                    return self.handle_confirm();
+                    return self.handle_confirm(update);
                 }
             }
 
@@ -91,17 +95,24 @@ impl JoinBotDialog {
         }
     }
 
-    fn handle_confirm(&self) -> Option<DialogEvent> {
+    fn handle_confirm(&self, update: &Update) -> Option<DialogEvent> {
         let id = self.id.trim();
 
-        if let Ok(id) = id.parse() {
-            Some(DialogEvent::JoinBot(id))
-        } else {
-            Some(DialogEvent::Throw(format!(
+        let Ok(id) = id.parse() else {
+            return Some(DialogEvent::Throw(format!(
                 "`{}` is not a valid bot id",
                 self.id
-            )))
+            )));
+        };
+
+        if update.bots.by_id(id).is_none() {
+            return Some(DialogEvent::Throw(format!(
+                "bot `{}` was not found\n\nmaybe it's dead?",
+                id
+            )));
         }
+
+        Some(DialogEvent::JoinBot(id))
     }
 
     pub async fn tick(&mut self) {

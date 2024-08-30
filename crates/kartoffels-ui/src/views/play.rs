@@ -139,7 +139,7 @@ impl View {
         term: &Term,
     ) -> Result<ControlFlow<Outcome, ()>> {
         if let Some(dialog) = &mut self.dialog {
-            match dialog.handle(event) {
+            match dialog.handle(event, &self.update) {
                 Some(DialogEvent::Close) => {
                     self.dialog = None;
                 }
