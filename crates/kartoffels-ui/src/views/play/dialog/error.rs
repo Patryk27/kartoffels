@@ -1,6 +1,6 @@
 use super::DialogEvent;
 use crate::{Action, BlockExt, LayoutExt, RectExt};
-use ratatui::layout::{ Layout};
+use ratatui::layout::Layout;
 use ratatui::prelude::{Buffer, Rect};
 use ratatui::text::Line;
 use ratatui::widgets::{Block, Paragraph, Widget};

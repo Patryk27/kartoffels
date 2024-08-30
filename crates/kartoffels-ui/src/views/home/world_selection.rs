@@ -3,7 +3,7 @@ use anyhow::Result;
 use itertools::Either;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
-use ratatui::layout::{ Layout};
+use ratatui::layout::Layout;
 use ratatui::text::{Line, Text};
 use std::iter;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};

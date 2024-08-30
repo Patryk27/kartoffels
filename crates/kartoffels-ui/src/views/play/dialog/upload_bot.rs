@@ -1,7 +1,7 @@
 use super::DialogEvent;
 use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
 use ratatui::buffer::Buffer;
-use ratatui::layout::{ Layout, Rect};
+use ratatui::layout::{Layout, Rect};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph, Widget, Wrap};

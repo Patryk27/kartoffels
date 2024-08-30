@@ -177,13 +177,13 @@ impl View {
                 return Ok(ControlFlow::Continue(()));
             }
 
-            SidePanelEvent::ConnectToBot => {
+            SidePanelEvent::JoinBot => {
                 self.dialog = Some(Dialog::JoinBot(Default::default()));
 
                 return Ok(ControlFlow::Continue(()));
             }
 
-            SidePanelEvent::DisconnectFromBot => {
+            SidePanelEvent::LeaveBot => {
                 self.bot = None;
 
                 return Ok(ControlFlow::Continue(()));

@@ -1,8 +1,8 @@
-mod connected;
 mod idle;
+mod joined;
 
-use self::connected::*;
 use self::idle::*;
+use self::joined::*;
 use super::JoinedBot;
 use kartoffels_world::prelude::Update;
 use ratatui::buffer::Buffer;
@@ -20,9 +20,9 @@ pub struct SidePanel<'a> {
 impl<'a> SidePanel<'a> {
     pub const WIDTH: u16 = 22;
 
-    pub fn handle(is_connected: bool, event: InputEvent) -> SidePanelEvent {
-        if is_connected {
-            ConnectedSidePanel::handle(event)
+    pub fn handle(is_joined: bool, event: InputEvent) -> SidePanelEvent {
+        if is_joined {
+            JoinedSidePanel::handle(event)
         } else {
             IdleSidePanel::handle(event)
         }
@@ -39,7 +39,7 @@ impl Widget for SidePanel<'_> {
         };
 
         if let Some(bot) = &self.bot {
-            ConnectedSidePanel {
+            JoinedSidePanel {
                 update: self.update,
                 bot,
                 enabled: self.enabled,
@@ -57,7 +57,7 @@ impl Widget for SidePanel<'_> {
 #[derive(Debug)]
 pub enum SidePanelEvent {
     UploadBot,
-    ConnectToBot,
-    DisconnectFromBot,
+    JoinBot,
+    LeaveBot,
     Forward(InputEvent),
 }

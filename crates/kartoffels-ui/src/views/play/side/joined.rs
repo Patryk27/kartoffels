@@ -9,13 +9,13 @@ use ratatui::widgets::{Paragraph, Widget};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct ConnectedSidePanel<'a> {
+pub struct JoinedSidePanel<'a> {
     pub update: &'a Update,
     pub bot: &'a JoinedBot,
     pub enabled: bool,
 }
 
-impl<'a> ConnectedSidePanel<'a> {
+impl<'a> JoinedSidePanel<'a> {
     pub fn render(self, area: Rect, buf: &mut Buffer) {
         let [id_area, _, status_area, _, serial_area] = Layout::vertical([
             Constraint::Length(2),
@@ -75,7 +75,7 @@ impl<'a> ConnectedSidePanel<'a> {
             if event.key == KeyCode::Char('l')
                 && event.modifiers == Modifiers::NONE
             {
-                return SidePanelEvent::DisconnectFromBot;
+                return SidePanelEvent::LeaveBot;
             }
         }
 

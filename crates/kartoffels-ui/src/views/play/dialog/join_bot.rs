@@ -2,7 +2,7 @@ use super::DialogEvent;
 use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
 use kartoffels_world::prelude::BotId;
 use ratatui::buffer::Buffer;
-use ratatui::layout::{ Layout, Offset, Rect};
+use ratatui::layout::{Layout, Offset, Rect};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Widget};
@@ -19,8 +19,8 @@ pub struct JoinBotDialog {
 impl JoinBotDialog {
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let area = Block::dialog_info(
-            Some(" connecting to a bot "),
-            Layout::dialog(33, 6, area),
+            Some(" joining bot "),
+            Layout::dialog(33, 4, area),
             buf,
         );
 
@@ -38,7 +38,7 @@ impl JoinBotDialog {
             .left_aligned()
             .render(area.footer(), buf);
 
-        Line::from(Action::new("enter", "connect", true))
+        Line::from(Action::new("enter", "join", true))
             .right_aligned()
             .render(area.footer(), buf);
     }
