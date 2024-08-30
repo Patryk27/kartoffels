@@ -54,10 +54,10 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
                     return Ok(Outcome::Play);
                 }
                 (KeyCode::Char('t'), Modifiers::NONE) => {
-                    return Ok(Outcome::SeeTutorial);
+                    return Ok(Outcome::OpenTutorial);
                 }
                 (KeyCode::Char('c'), Modifiers::NONE) => {
-                    return Ok(Outcome::SeeChallenges);
+                    return Ok(Outcome::OpenChallenges);
                 }
                 (KeyCode::Escape, _) => {
                     return Ok(Outcome::Quit);
@@ -72,7 +72,7 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
 #[derive(Debug)]
 pub enum Outcome {
     Play,
-    SeeTutorial,
-    SeeChallenges,
+    OpenTutorial,
+    OpenChallenges,
     Quit,
 }

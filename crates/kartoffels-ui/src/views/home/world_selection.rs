@@ -3,7 +3,7 @@ use anyhow::Result;
 use itertools::Either;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
-use ratatui::layout::{Constraint, Layout};
+use ratatui::layout::{ Layout};
 use ratatui::text::{Line, Text};
 use std::iter;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
@@ -17,8 +17,8 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
             let menu = menu(store);
 
             let area = Layout::dialog(
-                Constraint::Length(menu.width() as u16 + 4),
-                Constraint::Length(menu.height() as u16 + 2),
+                menu.width() as u16,
+                menu.height() as u16 + 2,
                 f.area(),
             );
 

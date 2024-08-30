@@ -64,5 +64,6 @@ pub enum DialogEvent {
     Close,
     JoinBot(BotId),
     UploadBot(String),
+    OpenTutorial,
     Throw(String),
 }

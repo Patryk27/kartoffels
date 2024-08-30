@@ -1,19 +1,69 @@
 use super::DialogEvent;
+use crate::{Action, BlockExt, LayoutExt, RectExt};
+use indoc::indoc;
+use ratatui::layout::Layout;
 use ratatui::prelude::{Buffer, Rect};
-use termwiz::input::InputEvent;
+use ratatui::text::Line;
+use ratatui::widgets::{Block, Paragraph, Widget, Wrap};
+use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug, Default)]
 pub struct HelpDialog;
 
 impl HelpDialog {
-    pub const WIDTH: u16 = 32;
-    pub const HEIGHT: u16 = 32;
+    const TEXT: &str = indoc! {"
+        hey there soldier and welcome to kartoffels 🫡🫡🫡
 
-    pub fn render(&self, _area: Rect, _buf: &mut Buffer) {
-        //
+        the game has a tutorial which you can open by pressing [t] now, but if \
+        you're more into discovering things yourself, here's a couple of tips:
+
+        - run `git clone https://github.com/Patryk27/kartoffel` to get a \
+        starting point - see README.md there for building instructions
+        - use your ide's `go to definition` feature to discover how \
+        robot-specific functions, such as `radar_scan()`, work
+        - press [u] to upload your bot
+        - press [w/a/s/d] to navigate the map
+        - bots are represented with the `@` char, `.` is floor etc.
+    "};
+
+    pub fn render(&self, area: Rect, buf: &mut Buffer) {
+        let text = Paragraph::new(Self::TEXT).wrap(Wrap::default());
+
+        let width = area.width - 10;
+        let height = text.line_count(width) as u16;
+
+        let area = Block::dialog_info(
+            Some(" help "),
+            Layout::dialog(width, height + 2, area),
+            buf,
+        );
+
+        text.render(area, buf);
+
+        Line::from(Action::new("esc", "go back", true))
+            .left_aligned()
+            .render(area.footer(), buf);
+
+        Line::from(Action::new("t", "go to tutorial", true))
+            .right_aligned()
+            .render(area.footer(), buf);
     }
 
-    pub fn handle(&mut self, _event: InputEvent) -> Option<DialogEvent> {
+    pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
+        if let InputEvent::Key(event) = event {
+            match (event.key, event.modifiers) {
+                (KeyCode::Escape, _) => {
+                    return Some(DialogEvent::Close);
+                }
+
+                (KeyCode::Char('t'), Modifiers::NONE) => {
+                    return Some(DialogEvent::OpenTutorial);
+                }
+
+                _ => (),
+            }
+        }
+
         None
     }
 }

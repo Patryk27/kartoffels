@@ -23,7 +23,7 @@ use termwiz::input::InputEvent;
 use tokio::select;
 use tokio_stream::StreamExt;
 
-pub async fn run(term: &mut Term, world: WorldHandle) -> Result<()> {
+pub async fn run(term: &mut Term, world: WorldHandle) -> Result<Outcome> {
     let mut updates = world.listen().await?;
 
     let update = updates
@@ -58,8 +58,8 @@ pub async fn run(term: &mut Term, world: WorldHandle) -> Result<()> {
                     ControlFlow::Continue(_) => {
                         continue;
                     }
-                    ControlFlow::Break(_) => {
-                        return Ok(());
+                    ControlFlow::Break(outcome) => {
+                        return Ok(outcome);
                     }
                 }
             }
@@ -137,7 +137,7 @@ impl View {
         &mut self,
         mut event: InputEvent,
         term: &Term,
-    ) -> Result<ControlFlow<(), ()>> {
+    ) -> Result<ControlFlow<Outcome, ()>> {
         if let Some(dialog) = &mut self.dialog {
             match dialog.handle(event) {
                 Some(DialogEvent::Close) => {
@@ -152,6 +152,10 @@ impl View {
                 Some(DialogEvent::UploadBot(src)) => {
                     self.dialog = None;
                     self.handle_upload_bot(src).await?;
+                }
+
+                Some(DialogEvent::OpenTutorial) => {
+                    return Ok(ControlFlow::Break(Outcome::OpenTutorial));
                 }
 
                 Some(DialogEvent::Throw(error)) => {
@@ -199,7 +203,9 @@ impl View {
         };
 
         match BottomPanel::handle(event, self.paused) {
-            Some(BottomPanelOutcome::Quit) => Ok(ControlFlow::Break(())),
+            Some(BottomPanelOutcome::Quit) => {
+                Ok(ControlFlow::Break(Outcome::Quit))
+            }
 
             Some(BottomPanelOutcome::Pause) => {
                 self.paused = !self.paused;
@@ -283,4 +289,10 @@ impl View {
 struct JoinedBot {
     id: BotId,
     is_followed: bool,
+}
+
+#[derive(Debug)]
+pub enum Outcome {
+    OpenTutorial,
+    Quit,
 }

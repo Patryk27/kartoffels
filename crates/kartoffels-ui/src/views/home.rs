@@ -21,11 +21,11 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
                 }
             }
 
-            intro::Outcome::SeeTutorial => {
+            intro::Outcome::OpenTutorial => {
                 return Ok(Outcome::OpenTutorial);
             }
 
-            intro::Outcome::SeeChallenges => {
+            intro::Outcome::OpenChallenges => {
                 return Ok(Outcome::OpenChallenges);
             }
 

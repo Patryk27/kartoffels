@@ -1,7 +1,7 @@
 use super::DialogEvent;
 use crate::{theme, Action, BlockExt, IntervalExt, LayoutExt, RectExt};
 use ratatui::buffer::Buffer;
-use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::layout::{ Layout, Rect};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Paragraph, Widget, Wrap};
@@ -46,15 +46,11 @@ impl UploadBotDialog {
         let width = 60;
         let height = para.line_count(width) as u16;
 
-        let area = {
-            let area = Layout::dialog(
-                Constraint::Length(width + 4),
-                Constraint::Length(height + 4),
-                area,
-            );
-
-            Block::dialog_info(Some(" uploading a bot "), area, buf)
-        };
+        let area = Block::dialog_info(
+            Some(" uploading a bot "),
+            Layout::dialog(width, height + 2, area),
+            buf,
+        );
 
         para.render(area, buf);
 

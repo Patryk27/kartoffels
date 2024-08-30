@@ -1,6 +1,6 @@
 use super::DialogEvent;
 use crate::{Action, BlockExt, LayoutExt, RectExt};
-use ratatui::layout::{Constraint, Layout};
+use ratatui::layout::{ Layout};
 use ratatui::prelude::{Buffer, Rect};
 use ratatui::text::Line;
 use ratatui::widgets::{Block, Paragraph, Widget};
@@ -18,15 +18,11 @@ impl ErrorDialog {
         let width = 50;
         let height = text.line_count(width) as u16;
 
-        let area = {
-            let area = Layout::dialog(
-                Constraint::Length(width + 4),
-                Constraint::Length(height + 4),
-                area,
-            );
-
-            Block::dialog_error(Some(" whoopsie "), area, buf)
-        };
+        let area = Block::dialog_error(
+            Some(" whoopsie "),
+            Layout::dialog(width, height + 2, area),
+            buf,
+        );
 
         text.render(area, buf);
 
