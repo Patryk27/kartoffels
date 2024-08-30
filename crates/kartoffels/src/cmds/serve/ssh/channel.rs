@@ -89,7 +89,7 @@ impl AppChannel {
                 async move {
                     match handle.data(id, stdout.into()).await {
                         Ok(_) => Ok(()),
-                        Err(_) => Err(anyhow!("got ssh channel overflow")),
+                        Err(_) => Err(anyhow!("ssh channel died")),
                     }
                 }
             })
