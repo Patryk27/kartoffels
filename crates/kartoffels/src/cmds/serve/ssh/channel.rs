@@ -104,20 +104,32 @@ impl AppChannel {
         task::spawn(async move {
             let result = task::spawn(async move {
                 kartoffels_ui::main(&mut term, &store).await
-            });
-
-            match result.await {
-                Ok(result) => {
-                    info!("ui task returned: {:?}", result);
-                }
-                Err(err) => {
-                    info!("ui task crashed: {}", err);
-                }
-            }
+            })
+            .await;
 
             _ = handle
                 .data(id, Term::exit_sequence().into_bytes().into())
                 .await;
+
+            match result {
+                Ok(result) => {
+                    info!("ui task returned: {:?}", result);
+                }
+
+                Err(err) => {
+                    _ = handle
+                        .data(
+                            id,
+                            "whoopsie, the game has crashed, sorry!\r\n"
+                                .to_string()
+                                .into_bytes()
+                                .into(),
+                        )
+                        .await;
+
+                    info!("ui task crashed: {}", err);
+                }
+            }
 
             _ = handle.close(id).await;
         });
