@@ -35,7 +35,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             area,
             mouse,
             event,
-            layout: UiLayout::Row,
+            layout: UiLayout::Col,
         }
     }
 
@@ -120,13 +120,13 @@ impl<'a, 'b> Ui<'a, 'b> {
     pub fn step(&mut self, len: u16) {
         match self.layout {
             UiLayout::Row => {
-                self.area.y += len;
-                self.area.height -= len;
+                self.area.x += len;
+                self.area.width -= len;
             }
 
             UiLayout::Col => {
-                self.area.x += len;
-                self.area.width -= len;
+                self.area.y += len;
+                self.area.height -= len;
             }
         }
     }

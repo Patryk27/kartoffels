@@ -15,7 +15,13 @@ pub struct UploadBotDialog {
 impl UploadBotDialog {
     const SPINNER: &[&str] = &["|", "/", "-", "\\"];
 
-    pub fn render(&self, ui: &mut Ui) -> Option<DialogEvent> {
+    pub fn render(&mut self, ui: &mut Ui) -> Option<DialogEvent> {
+        if ui.poll(self.spinner_interval.tick()).is_ready() {
+            self.spinner_icon += 1;
+
+            _ = ui.poll(self.spinner_interval.tick());
+        }
+
         let spinner = Self::SPINNER[self.spinner_icon % Self::SPINNER.len()];
         let spinner = Span::raw(spinner).fg(theme::GREEN);
 
@@ -44,22 +50,17 @@ impl UploadBotDialog {
         let width = 60;
         let height = para.line_count(width) as u16 + 2;
 
-        let mut event = None;
-
         ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
             para.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(), |ui| {
-                if Button::new(KeyCode::Escape, "cancel", true)
-                    .render(ui)
-                    .activated
-                {
-                    event = Some(DialogEvent::Close);
+                if Button::new(KeyCode::Escape, "cancel").render(ui).activated {
+                    Some(DialogEvent::Close)
+                } else {
+                    None
                 }
-            });
-        });
-
-        event
+            })
+        })
     }
 }
 

@@ -76,11 +76,9 @@ fn build_menu(store: &Store) -> Vec<MenuItem> {
     for (idx, (_, world)) in store.worlds.iter().enumerate() {
         let idx = idx as u8;
 
-        let btn = Button::new(
-            KeyCode::Char((b'1' + idx) as char),
-            world.name(),
-            true,
-        );
+        let btn =
+            Button::new(KeyCode::Char((b'1' + idx) as char), world.name())
+                .centered();
 
         items.push(MenuItem::Button(btn, Some(idx)));
     }
@@ -88,7 +86,7 @@ fn build_menu(store: &Store) -> Vec<MenuItem> {
     items.push(MenuItem::Line(Line::raw("")));
 
     items.push(MenuItem::Button(
-        Button::new(KeyCode::Escape, "go back", true),
+        Button::new(KeyCode::Escape, "go back").centered(),
         None,
     ));
 

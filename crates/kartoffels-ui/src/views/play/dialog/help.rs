@@ -36,14 +36,13 @@ impl HelpDialog {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(), |ui| {
-                if Button::new(KeyCode::Escape, "go back", true)
-                    .render(ui)
-                    .activated
+                if Button::new(KeyCode::Escape, "go back").render(ui).activated
                 {
                     event = Some(DialogEvent::Close);
                 }
 
-                if Button::new(KeyCode::Char('t'), "go to tutorial", true)
+                if Button::new(KeyCode::Char('t'), "go to tutorial")
+                    .right()
                     .render(ui)
                     .activated
                 {

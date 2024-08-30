@@ -44,17 +44,11 @@ impl JoinBotDialog {
                 event = self.handle(ui_event, snapshot);
             }
 
-            if Button::new(KeyCode::Escape, "cancel", true)
-                .render(ui)
-                .activated
-            {
+            if Button::new(KeyCode::Escape, "cancel").render(ui).activated {
                 event = Some(DialogEvent::Close);
             }
 
-            if Button::new(KeyCode::Enter, "join", true)
-                .render(ui)
-                .activated
-            {
+            if Button::new(KeyCode::Enter, "join").render(ui).activated {
                 event = self.handle_confirm(snapshot);
             }
 

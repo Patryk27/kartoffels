@@ -18,10 +18,7 @@ impl ErrorDialog {
         ui.error_dialog(width, height, Some(" whoopsie "), |ui| {
             text.render(ui.area(), ui.buf());
 
-            if Button::new(KeyCode::Enter, "close", true)
-                .render(ui)
-                .activated
-            {
+            if Button::new(KeyCode::Enter, "close").render(ui).activated {
                 Some(DialogEvent::Close)
             } else {
                 None

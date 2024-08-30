@@ -9,7 +9,8 @@ impl Menu {
     pub const HEIGHT: u16 = 5;
 
     pub fn render(ui: &mut Ui) -> Option<Outcome> {
-        if Button::new(KeyCode::Char('p'), "play", true)
+        if Button::new(KeyCode::Char('p'), "play")
+            .centered()
             .render(ui)
             .activated
         {
@@ -18,7 +19,8 @@ impl Menu {
 
         ui.step(1);
 
-        if Button::new(KeyCode::Char('t'), "tutorial", true)
+        if Button::new(KeyCode::Char('t'), "tutorial")
+            .centered()
             .render(ui)
             .activated
         {
@@ -27,7 +29,8 @@ impl Menu {
 
         ui.step(1);
 
-        if Button::new(KeyCode::Char('c'), "challenges", true)
+        if Button::new(KeyCode::Char('c'), "challenges")
+            .centered()
             .render(ui)
             .activated
         {
@@ -36,7 +39,8 @@ impl Menu {
 
         ui.step(2);
 
-        if Button::new(KeyCode::Escape, "quit", true)
+        if Button::new(KeyCode::Escape, "quit")
+            .centered()
             .render(ui)
             .activated
         {

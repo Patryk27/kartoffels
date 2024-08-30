@@ -1,4 +1,5 @@
 use crate::{theme, Ui};
+use ratatui::layout::Alignment;
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Widget;
@@ -9,20 +10,40 @@ use termwiz::input::{KeyCode, Modifiers};
 pub struct Button<'a> {
     pub key: KeyCode,
     pub desc: Cow<'a, str>,
+    pub align: Alignment,
     pub enabled: bool,
+    pub space_taking: bool,
 }
 
 impl<'a> Button<'a> {
-    pub fn new(
-        key: KeyCode,
-        desc: impl Into<Cow<'a, str>>,
-        enabled: bool,
-    ) -> Self {
+    pub fn new(key: KeyCode, desc: impl Into<Cow<'a, str>>) -> Self {
         Self {
             key,
             desc: desc.into(),
-            enabled,
+            align: Alignment::Left,
+            enabled: true,
+            space_taking: false,
         }
+    }
+
+    pub fn centered(mut self) -> Self {
+        self.align = Alignment::Center;
+        self
+    }
+
+    pub fn right(mut self) -> Self {
+        self.align = Alignment::Right;
+        self
+    }
+
+    pub fn enabled(mut self, enabled: bool) -> Self {
+        self.enabled = enabled;
+        self
+    }
+
+    pub fn space_taking(mut self) -> Self {
+        self.space_taking = true;
+        self
     }
 
     pub fn width(&self) -> u16 {
@@ -30,11 +51,19 @@ impl<'a> Button<'a> {
     }
 
     pub fn render(self, ui: &mut Ui) -> ButtonResponse {
+        let len = self.width();
+
         let response = ButtonResponse {
             activated: self.enabled && ui.key(self.key, Modifiers::NONE),
         };
 
-        Line::from_iter(self).centered().render(ui.area(), ui.buf());
+        Line::from_iter(&self)
+            .alignment(self.align)
+            .render(ui.area(), ui.buf());
+
+        if self.space_taking {
+            ui.step(len);
+        }
 
         response
     }
@@ -50,13 +79,13 @@ impl<'a> Button<'a> {
     }
 }
 
-impl<'a> IntoIterator for Button<'a> {
+impl<'a> IntoIterator for &'a Button<'a> {
     type Item = Span<'a>;
     type IntoIter = impl Iterator<Item = Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let key = Self::key_name(self.key);
-        let desc = self.desc;
+        let key = Button::key_name(self.key);
+        let desc = &*self.desc;
 
         let s1 = if self.enabled {
             Style::default()

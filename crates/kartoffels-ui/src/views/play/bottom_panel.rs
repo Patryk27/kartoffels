@@ -17,34 +17,42 @@ impl BottomPanel {
         let mut event = None;
 
         ui.row(|ui| {
-            if Button::new(KeyCode::Escape, "quit", enabled)
+            if Button::new(KeyCode::Escape, "quit")
+                .enabled(enabled)
+                .space_taking()
                 .render(ui)
                 .activated
             {
                 event = Some(BottomPanelEvent::Quit);
             }
 
-            ui.step(1);
+            ui.step(2);
 
-            if Button::new(KeyCode::Char('h'), "help", enabled)
+            if Button::new(KeyCode::Char('h'), "help")
+                .enabled(enabled)
+                .space_taking()
                 .render(ui)
                 .activated
             {
                 event = Some(BottomPanelEvent::Help);
             }
 
-            ui.step(1);
+            ui.step(2);
 
-            if Button::new(KeyCode::Char('p'), "pause", enabled)
+            if Button::new(KeyCode::Char('p'), "pause")
+                .enabled(enabled)
+                .space_taking()
                 .render(ui)
                 .activated
             {
                 event = Some(BottomPanelEvent::Pause);
             }
 
-            ui.step(1);
+            ui.step(2);
 
-            if Button::new(KeyCode::Char('b'), "list bots", enabled)
+            if Button::new(KeyCode::Char('b'), "list bots")
+                .enabled(enabled)
+                .space_taking()
                 .render(ui)
                 .activated
             {

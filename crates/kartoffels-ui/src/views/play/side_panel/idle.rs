@@ -18,7 +18,8 @@ impl IdleSidePanel {
         .areas(ui.area());
 
         ui.clamp(join_area, |ui| {
-            if Button::new(KeyCode::Char('j'), "join bot", enabled)
+            if Button::new(KeyCode::Char('j'), "join bot")
+                .enabled(enabled)
                 .render(ui)
                 .activated
             {
@@ -27,7 +28,8 @@ impl IdleSidePanel {
         });
 
         ui.clamp(upload_area, |ui| {
-            if Button::new(KeyCode::Char('u'), "upload bot", enabled)
+            if Button::new(KeyCode::Char('u'), "upload bot")
+                .enabled(enabled)
                 .render(ui)
                 .activated
             {
