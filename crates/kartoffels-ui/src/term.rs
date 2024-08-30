@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
-use ratatui::crossterm::event::{DisableBracketedPaste, EnableBracketedPaste};
+use ratatui::crossterm::event::{
+    DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
+    EnableMouseCapture,
+};
 use ratatui::crossterm::terminal::{
     EnterAlternateScreen, LeaveAlternateScreen,
 };
@@ -78,6 +81,7 @@ impl Term {
 
             _ = EnterAlternateScreen.write_ansi(&mut cmds);
             _ = EnableBracketedPaste.write_ansi(&mut cmds);
+            _ = EnableMouseCapture.write_ansi(&mut cmds);
 
             self.stdout.send(cmds.into_bytes()).await?;
             self.initialized = true;
@@ -96,6 +100,7 @@ impl Term {
     pub fn exit_sequence() -> String {
         let mut cmds = String::new();
 
+        _ = DisableMouseCapture.write_ansi(&mut cmds);
         _ = DisableBracketedPaste.write_ansi(&mut cmds);
         _ = LeaveAlternateScreen.write_ansi(&mut cmds);
         _ = cursor::Show.write_ansi(&mut cmds);
