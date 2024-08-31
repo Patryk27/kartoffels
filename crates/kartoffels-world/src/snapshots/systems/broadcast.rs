@@ -130,6 +130,8 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .iter()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
+                serial: render_serial(&entry.bot.bot),
+                events: render_events(&entry.bot.bot),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
             };

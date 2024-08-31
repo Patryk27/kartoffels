@@ -84,6 +84,8 @@ impl SnapshotQueuedBots {
 
 #[derive(Debug)]
 pub struct SnapshotQueuedBot {
+    pub serial: String,
+    pub events: Vec<String>,
     pub place: u8,
     pub requeued: bool,
 }

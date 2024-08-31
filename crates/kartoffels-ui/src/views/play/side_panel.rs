@@ -44,4 +44,5 @@ pub enum SidePanelResponse {
     UploadBot,
     JoinBot,
     LeaveBot,
+    ShowBotHistory,
 }

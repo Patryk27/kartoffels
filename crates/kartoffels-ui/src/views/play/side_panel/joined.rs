@@ -1,13 +1,10 @@
 use super::SidePanelResponse;
 use crate::views::play::JoinedBot;
-use crate::{BotIdExt, Ui};
+use crate::{theme, BotIdExt, Button, Ui};
 use itertools::Either;
-use kartoffels_world::prelude::{
-    BotId, Snapshot, SnapshotAliveBot, SnapshotQueuedBot,
-};
-use ratatui::layout::{Constraint, Layout, Offset};
+use kartoffels_world::prelude::Snapshot;
 use ratatui::style::Stylize;
-use ratatui::widgets::{Paragraph, Widget};
+use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct JoinedSidePanel;
@@ -19,75 +16,62 @@ impl JoinedSidePanel {
         bot: &JoinedBot,
         _enabled: bool,
     ) -> Option<SidePanelResponse> {
-        let [id_area, _, status_area, _, serial_area] = Layout::vertical([
-            Constraint::Length(2),
-            Constraint::Length(1),
-            Constraint::Length(2),
-            Constraint::Length(1),
-            Constraint::Length(2),
-        ])
-        .areas(ui.area());
-
-        ui.clamp(id_area, |ui| {
-            Self::render_id(ui, bot.id);
-        });
+        ui.line("id");
+        ui.line(bot.id.to_string().fg(bot.id.color()));
 
         match snapshot.bots.by_id(bot.id) {
             Some(Either::Left(bot)) => {
-                ui.clamp(status_area, |ui| {
-                    Self::render_status_alive(ui, bot);
-                });
+                ui.line("status");
+                ui.text("alive".fg(theme::GREEN));
+                ui.line(format!("({}s)", bot.age));
+                ui.step(1);
 
-                ui.clamp(serial_area, |ui| {
-                    Self::render_serial(ui, bot);
-                });
+                ui.line("serial port");
+                ui.line(bot.serial.as_str());
+                ui.step(1);
             }
 
             Some(Either::Right(bot)) => {
-                ui.clamp(status_area, |ui| {
-                    Self::render_status_queued(ui, bot);
-                });
+                ui.line("status");
+
+                if bot.requeued {
+                    ui.line("queued".fg(theme::PINK));
+                } else {
+                    ui.line("requeued".fg(theme::PINK));
+                }
+
+                ui.step(1);
+
+                ui.line("serial port");
+                ui.line(bot.serial.as_str());
+                ui.step(1);
             }
 
             None => {
-                // TODO
+                ui.line("status");
+                ui.line("dead".fg(theme::RED));
+                ui.step(1);
             }
         }
 
-        None
-    }
+        let mut response = None;
 
-    fn render_id(ui: &mut Ui, id: BotId) {
-        Paragraph::new("id").render(ui.area(), ui.buf());
+        if Button::new(KeyCode::Char('h'), "history")
+            .block()
+            .render(ui)
+            .pressed
+        {
+            response = Some(SidePanelResponse::ShowBotHistory);
+        }
 
-        Paragraph::new(id.to_string().fg(id.color()))
-            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
-    }
+        if Button::new(KeyCode::Char('l'), "leave bot")
+            .block()
+            .render(ui)
+            .pressed
+        {
+            response = Some(SidePanelResponse::LeaveBot);
+        }
 
-    fn render_status_alive(ui: &mut Ui, bot: &SnapshotAliveBot) {
-        Paragraph::new("status").render(ui.area(), ui.buf());
-
-        Paragraph::new(format!("{} ({}s)", "alive".green(), bot.age))
-            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
-    }
-
-    fn render_status_queued(ui: &mut Ui, bot: &SnapshotQueuedBot) {
-        Paragraph::new("status").render(ui.area(), ui.buf());
-
-        let status = if bot.requeued {
-            format!("{} ({})", "requeued".magenta(), bot.place)
-        } else {
-            format!("{} ({})", "queued".magenta(), bot.place)
-        };
-
-        Paragraph::new(status)
-            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
-    }
-
-    fn render_serial(ui: &mut Ui, bot: &SnapshotAliveBot) {
-        Paragraph::new("serial port").render(ui.area(), ui.buf());
-
-        Paragraph::new(bot.serial.as_str())
-            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
+        response
     }
 }

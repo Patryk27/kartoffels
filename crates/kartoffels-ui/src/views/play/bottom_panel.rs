@@ -19,7 +19,7 @@ impl BottomPanel {
         ui.row(|ui| {
             if Button::new(KeyCode::Escape, "quit")
                 .enabled(enabled)
-                .relative()
+                .block()
                 .render(ui)
                 .pressed
             {
@@ -30,7 +30,7 @@ impl BottomPanel {
 
             if Button::new(KeyCode::Char('h'), "help")
                 .enabled(enabled)
-                .relative()
+                .block()
                 .render(ui)
                 .pressed
             {
@@ -41,7 +41,7 @@ impl BottomPanel {
 
             if Button::new(KeyCode::Char('p'), "pause")
                 .enabled(enabled)
-                .relative()
+                .block()
                 .render(ui)
                 .pressed
             {
@@ -52,7 +52,7 @@ impl BottomPanel {
 
             if Button::new(KeyCode::Char('b'), "list bots")
                 .enabled(enabled)
-                .relative()
+                .block()
                 .render(ui)
                 .pressed
             {

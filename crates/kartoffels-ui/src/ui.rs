@@ -3,6 +3,7 @@ use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
+use ratatui::text::Text;
 use ratatui::widgets::{Block, Padding, Widget};
 use ratatui::Frame;
 use std::future::Future;
@@ -52,6 +53,10 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.event
     }
 
+    pub fn layout(&self) -> UiLayout {
+        self.layout
+    }
+
     pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
         f(&mut Ui {
             waker: self.waker,
@@ -61,6 +66,37 @@ impl<'a, 'b> Ui<'a, 'b> {
             event: self.event,
             layout: self.layout,
         })
+    }
+
+    pub fn row<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
+        self.clamp(self.area.footer(), |ui| {
+            ui.layout = UiLayout::Row;
+
+            f(ui)
+        })
+    }
+
+    pub fn step(&mut self, len: u16) {
+        match self.layout {
+            UiLayout::Row => {
+                self.area.x += len;
+                self.area.width -= len;
+            }
+
+            UiLayout::Col => {
+                self.area.y += len;
+                self.area.height -= len;
+            }
+        }
+    }
+
+    pub fn line<'x>(&mut self, text: impl Into<Text<'x>>) {
+        self.text(text);
+        self.step(1);
+    }
+
+    pub fn text<'x>(&mut self, text: impl Into<Text<'x>>) {
+        text.into().render(self.area, self.buf());
     }
 
     pub fn dialog<T>(
@@ -126,28 +162,6 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.dialog(width, height, title, theme::RED, f)
     }
 
-    pub fn row<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
-        self.clamp(self.area.footer(), |ui| {
-            ui.layout = UiLayout::Row;
-
-            f(ui)
-        })
-    }
-
-    pub fn step(&mut self, len: u16) {
-        match self.layout {
-            UiLayout::Row => {
-                self.area.x += len;
-                self.area.width -= len;
-            }
-
-            UiLayout::Col => {
-                self.area.y += len;
-                self.area.height -= len;
-            }
-        }
-    }
-
     pub fn key(&self, key: KeyCode, mods: Modifiers) -> bool {
         if let Some(InputEvent::Key(event)) = &self.event {
             if event.key == key && event.modifiers == mods {
@@ -169,6 +183,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         }
     }
 
+    // TODO: prevent double-press
     pub fn mouse_pressed(&self) -> bool {
         if let Some((_, btns)) = &self.mouse {
             btns.contains(MouseButtons::LEFT)
@@ -198,7 +213,13 @@ impl<'a, 'b> Ui<'a, 'b> {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum UiLayout {
+pub enum UiLayout {
     Row,
     Col,
+}
+
+impl UiLayout {
+    pub fn is_row(&self) -> bool {
+        matches!(self, UiLayout::Row)
+    }
 }

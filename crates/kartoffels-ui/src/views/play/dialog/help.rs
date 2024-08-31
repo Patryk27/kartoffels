@@ -36,7 +36,7 @@ impl HelpDialog {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(), |ui| {
-                if Button::new(KeyCode::Escape, "go back").render(ui).pressed {
+                if Button::new(KeyCode::Escape, "close").render(ui).pressed {
                     response = Some(DialogResponse::Close);
                 }
 

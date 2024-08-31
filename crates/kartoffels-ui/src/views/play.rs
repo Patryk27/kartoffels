@@ -211,6 +211,10 @@ impl State {
                 SidePanelResponse::LeaveBot => {
                     self.bot = None;
                 }
+
+                SidePanelResponse::ShowBotHistory => {
+                    todo!();
+                }
             },
         }
 

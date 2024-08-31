@@ -1,8 +1,9 @@
 use super::DialogResponse;
-use crate::{BotIdExt, Ui};
+use crate::{BotIdExt, Button, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::style::Stylize;
 use ratatui::widgets::{Cell, Row, StatefulWidget, Table, TableState};
+use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct BotsDialog {
@@ -25,6 +26,8 @@ impl BotsDialog {
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 4;
         let height = ui.area().height - 2;
 
+        let mut response = None;
+
         ui.info_dialog(width, height, Some(" bots "), |ui| {
             let header = Row::new(vec!["#", "id", "age", "score ⯆"]);
 
@@ -40,13 +43,24 @@ impl BotsDialog {
                     },
                 );
 
+            if Button::new(KeyCode::Escape, "close")
+                .right()
+                .block()
+                .render(ui)
+                .pressed
+            {
+                response = Some(DialogResponse::Close);
+            }
+
+            ui.step(1);
+
             Table::new(rows, Self::WIDTHS).header(header).render(
                 ui.area(),
                 ui.buf(),
                 &mut self.table,
             );
+        });
 
-            None
-        })
+        response
     }
 }

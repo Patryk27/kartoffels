@@ -12,7 +12,7 @@ pub struct Button<'a> {
     pub desc: Cow<'a, str>,
     pub alignment: Alignment,
     pub enabled: bool,
-    pub relative: bool,
+    pub block: bool,
 }
 
 impl<'a> Button<'a> {
@@ -22,7 +22,7 @@ impl<'a> Button<'a> {
             desc: desc.into(),
             alignment: Alignment::Left,
             enabled: true,
-            relative: false,
+            block: false,
         }
     }
 
@@ -41,8 +41,8 @@ impl<'a> Button<'a> {
         self
     }
 
-    pub fn relative(mut self) -> Self {
-        self.relative = true;
+    pub fn block(mut self) -> Self {
+        self.block = true;
         self
     }
 
@@ -66,8 +66,12 @@ impl<'a> Button<'a> {
         ])
         .render(area, ui.buf());
 
-        if self.relative {
-            ui.step(area.width);
+        if self.block {
+            if ui.layout().is_row() {
+                ui.step(area.width);
+            } else {
+                ui.step(area.height);
+            }
         }
 
         response
