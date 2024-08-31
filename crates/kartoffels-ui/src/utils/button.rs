@@ -104,9 +104,7 @@ impl<'a> Button<'a> {
 
     fn style(&self, response: &ButtonResponse) -> (Style, Style) {
         let key = if self.enabled {
-            if response.pressed {
-                Style::new().bold().bg(theme::FG).fg(theme::BG)
-            } else if response.hovered {
+            if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
                 Style::new().bold().fg(theme::GREEN)
@@ -116,9 +114,7 @@ impl<'a> Button<'a> {
         };
 
         let desc = if self.enabled {
-            if response.pressed {
-                Style::new().bold().bg(theme::FG).fg(theme::BG)
-            } else if response.hovered {
+            if response.pressed || response.hovered {
                 Style::new().bg(theme::GREEN).fg(theme::BG)
             } else {
                 Style::default()
