@@ -6,38 +6,38 @@ use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
 
-pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
+pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     loop {
         match intro::run(term).await? {
-            intro::Outcome::Play => {
+            intro::Response::Play => {
                 match world_selection::run(term, store).await? {
-                    world_selection::Outcome::Play(world) => {
-                        return Ok(Outcome::Play(world));
+                    world_selection::Response::Play(world) => {
+                        return Ok(Response::Play(world));
                     }
 
-                    world_selection::Outcome::Quit => {
+                    world_selection::Response::Quit => {
                         continue;
                     }
                 }
             }
 
-            intro::Outcome::OpenTutorial => {
-                return Ok(Outcome::OpenTutorial);
+            intro::Response::OpenTutorial => {
+                return Ok(Response::OpenTutorial);
             }
 
-            intro::Outcome::OpenChallenges => {
-                return Ok(Outcome::OpenChallenges);
+            intro::Response::OpenChallenges => {
+                return Ok(Response::OpenChallenges);
             }
 
-            intro::Outcome::Quit => {
-                return Ok(Outcome::Quit);
+            intro::Response::Quit => {
+                return Ok(Response::Quit);
             }
         }
     }
 }
 
 #[derive(Debug)]
-pub enum Outcome {
+pub enum Response {
     Play(WorldHandle),
     OpenTutorial,
     OpenChallenges,

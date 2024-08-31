@@ -13,5 +13,6 @@ pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
 pub const BG: Color = Color::Rgb(9, 9, 9);
 pub const FG: Color = Color::Rgb(240, 240, 240);
 
-pub const CARET_INTERVAL: Duration = Duration::from_millis(500);
-pub const SPINNER_INTERVAL: Duration = Duration::from_millis(250);
+pub const CARET_TIME: Duration = Duration::from_millis(500);
+pub const SPINNER_TIME: Duration = Duration::from_millis(250);
+pub const INTERACTION_TIME: Duration = Duration::from_millis(1000 / 60);

@@ -13,7 +13,7 @@ impl MapCanvas {
         camera: IVec2,
         paused: bool,
         enabled: bool,
-    ) -> Option<MapCanvasEvent> {
+    ) -> Option<MapCanvasResponse> {
         let area = ui.area();
         let offset = camera - ivec2(area.width as i32, area.height as i32) / 2;
 
@@ -111,25 +111,25 @@ impl MapCanvas {
         if ui.key(KeyCode::Char('w'), Modifiers::NONE)
             || ui.key(KeyCode::UpArrow, Modifiers::NONE)
         {
-            return Some(MapCanvasEvent::MoveCamera(ivec2(0, -offset.y)));
+            return Some(MapCanvasResponse::MoveCamera(ivec2(0, -offset.y)));
         }
 
         if ui.key(KeyCode::Char('a'), Modifiers::NONE)
             || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
         {
-            return Some(MapCanvasEvent::MoveCamera(ivec2(-offset.x, 0)));
+            return Some(MapCanvasResponse::MoveCamera(ivec2(-offset.x, 0)));
         }
 
         if ui.key(KeyCode::Char('s'), Modifiers::NONE)
             || ui.key(KeyCode::DownArrow, Modifiers::NONE)
         {
-            return Some(MapCanvasEvent::MoveCamera(ivec2(0, offset.y)));
+            return Some(MapCanvasResponse::MoveCamera(ivec2(0, offset.y)));
         }
 
         if ui.key(KeyCode::Char('d'), Modifiers::NONE)
             || ui.key(KeyCode::RightArrow, Modifiers::NONE)
         {
-            return Some(MapCanvasEvent::MoveCamera(ivec2(offset.x, 0)));
+            return Some(MapCanvasResponse::MoveCamera(ivec2(offset.x, 0)));
         }
 
         None
@@ -137,6 +137,6 @@ impl MapCanvas {
 }
 
 #[derive(Debug)]
-pub enum MapCanvasEvent {
+pub enum MapCanvasResponse {
     MoveCamera(IVec2),
 }

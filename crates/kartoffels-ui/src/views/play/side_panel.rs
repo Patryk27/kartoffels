@@ -19,7 +19,7 @@ impl SidePanel {
         snapshot: &Snapshot,
         bot: Option<&JoinedBot>,
         enabled: bool,
-    ) -> Option<SidePanelEvent> {
+    ) -> Option<SidePanelResponse> {
         let area = ui.area();
 
         let area = Rect {
@@ -40,7 +40,7 @@ impl SidePanel {
 }
 
 #[derive(Debug)]
-pub enum SidePanelEvent {
+pub enum SidePanelResponse {
     UploadBot,
     JoinBot,
     LeaveBot,

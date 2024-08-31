@@ -1,4 +1,4 @@
-use super::SidePanelEvent;
+use super::SidePanelResponse;
 use crate::{Button, Ui};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
@@ -7,8 +7,8 @@ use termwiz::input::KeyCode;
 pub struct IdleSidePanel;
 
 impl IdleSidePanel {
-    pub fn render(ui: &mut Ui, enabled: bool) -> Option<SidePanelEvent> {
-        let mut event = None;
+    pub fn render(ui: &mut Ui, enabled: bool) -> Option<SidePanelResponse> {
+        let mut response = None;
 
         let [_, join_area, upload_area] = Layout::vertical([
             Constraint::Fill(1),
@@ -21,9 +21,9 @@ impl IdleSidePanel {
             if Button::new(KeyCode::Char('j'), "join bot")
                 .enabled(enabled)
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(SidePanelEvent::JoinBot);
+                response = Some(SidePanelResponse::JoinBot);
             }
         });
 
@@ -31,12 +31,12 @@ impl IdleSidePanel {
             if Button::new(KeyCode::Char('u'), "upload bot")
                 .enabled(enabled)
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(SidePanelEvent::UploadBot);
+                response = Some(SidePanelResponse::UploadBot);
             }
         });
 
-        event
+        response
     }
 }

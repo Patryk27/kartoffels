@@ -1,4 +1,4 @@
-use super::DialogEvent;
+use super::DialogResponse;
 use crate::{BotIdExt, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::style::Stylize;
@@ -21,7 +21,7 @@ impl BotsDialog {
         &mut self,
         ui: &mut Ui,
         snapshot: &Snapshot,
-    ) -> Option<DialogEvent> {
+    ) -> Option<DialogResponse> {
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 4;
         let height = ui.area().height - 2;
 
@@ -49,24 +49,4 @@ impl BotsDialog {
             None
         })
     }
-
-    // pub fn handle(&mut self, event: InputEvent) -> Option<DialogEvent> {
-    //     if let InputEvent::Key(event) = &event {
-    //         match (event.key, event.modifiers) {
-    //             (KeyCode::Char('w') | KeyCode::UpArrow, Modifiers::NONE) => {
-    //                 *self.table.offset_mut() =
-    //                     self.table.offset().saturating_sub(8);
-    //             }
-
-    //             (KeyCode::Char('s') | KeyCode::DownArrow, Modifiers::NONE) => {
-    //                 *self.table.offset_mut() =
-    //                     self.table.offset().saturating_add(8);
-    //             }
-
-    //             _ => (),
-    //         }
-    //     }
-
-    //     None
-    // }
 }

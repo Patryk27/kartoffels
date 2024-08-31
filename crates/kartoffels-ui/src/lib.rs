@@ -18,25 +18,27 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
 
     loop {
         match home::run(term, store).await? {
-            home::Outcome::Play(world) => match play::run(term, world).await? {
-                play::Outcome::OpenTutorial => {
-                    todo!();
-                }
+            home::Response::Play(world) => {
+                match play::run(term, world).await? {
+                    play::Response::OpenTutorial => {
+                        todo!();
+                    }
 
-                play::Outcome::Quit => {
-                    continue;
+                    play::Response::Quit => {
+                        continue;
+                    }
                 }
-            },
+            }
 
-            home::Outcome::OpenTutorial => {
+            home::Response::OpenTutorial => {
                 todo!();
             }
 
-            home::Outcome::OpenChallenges => {
+            home::Response::OpenChallenges => {
                 todo!();
             }
 
-            home::Outcome::Quit => {
+            home::Response::Quit => {
                 return Ok(());
             }
         }

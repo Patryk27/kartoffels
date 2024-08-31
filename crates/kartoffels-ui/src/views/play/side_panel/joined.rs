@@ -1,4 +1,4 @@
-use super::SidePanelEvent;
+use super::SidePanelResponse;
 use crate::views::play::JoinedBot;
 use crate::{BotIdExt, Ui};
 use itertools::Either;
@@ -18,7 +18,7 @@ impl JoinedSidePanel {
         snapshot: &Snapshot,
         bot: &JoinedBot,
         _enabled: bool,
-    ) -> Option<SidePanelEvent> {
+    ) -> Option<SidePanelResponse> {
         let [id_area, _, status_area, _, serial_area] = Layout::vertical([
             Constraint::Length(2),
             Constraint::Length(1),

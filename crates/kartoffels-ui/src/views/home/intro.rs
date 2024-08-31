@@ -3,15 +3,14 @@ mod menu;
 
 use self::header::*;
 use self::menu::*;
-use crate::{Clear, Prompt, Term};
+use crate::{theme, Clear, Term};
 use anyhow::Result;
 use ratatui::layout::{Constraint, Layout};
+use tokio::time;
 
-pub async fn run(term: &mut Term) -> Result<Outcome> {
-    let mut prompt = Prompt::default();
-
+pub async fn run(term: &mut Term) -> Result<Response> {
     loop {
-        let mut outcome = None;
+        let mut response = None;
 
         term.draw(|ui| {
             let [_, area, _] = Layout::horizontal([
@@ -21,17 +20,15 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
             ])
             .areas(ui.area());
 
-            let [_, header_area, _, menu_area, _, prompt_area, _] =
-                Layout::vertical([
-                    Constraint::Fill(1),
-                    Constraint::Length(Header::HEIGHT),
-                    Constraint::Length(1),
-                    Constraint::Length(Menu::HEIGHT),
-                    Constraint::Length(1),
-                    Constraint::Length(1),
-                    Constraint::Fill(2),
-                ])
-                .areas(area);
+            let [_, header_area, _, menu_area, _, _] = Layout::vertical([
+                Constraint::Fill(1),
+                Constraint::Length(Header::HEIGHT),
+                Constraint::Length(1),
+                Constraint::Length(Menu::HEIGHT),
+                Constraint::Length(1),
+                Constraint::Fill(2),
+            ])
+            .areas(area);
 
             Clear::render(ui);
 
@@ -40,17 +37,15 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
             });
 
             ui.clamp(menu_area, |ui| {
-                outcome = Menu::render(ui);
-            });
-
-            ui.clamp(prompt_area, |ui| {
-                prompt.render(ui);
+                response = Menu::render(ui);
             });
         })
         .await?;
 
-        if let Some(outcome) = outcome {
-            return Ok(outcome);
+        if let Some(response) = response {
+            time::sleep(theme::INTERACTION_TIME).await;
+
+            return Ok(response);
         }
 
         term.tick().await?;
@@ -58,7 +53,7 @@ pub async fn run(term: &mut Term) -> Result<Outcome> {
 }
 
 #[derive(Debug)]
-pub enum Outcome {
+pub enum Response {
     Play,
     OpenTutorial,
     OpenChallenges,

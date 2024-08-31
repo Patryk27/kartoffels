@@ -1,36 +1,30 @@
-use crate::{Button, Clear, LayoutExt, Prompt, Term};
+use crate::{theme, Button, Clear, Term};
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
-use ratatui::layout::Layout;
 use ratatui::text::Line;
 use ratatui::widgets::Widget;
 use termwiz::input::KeyCode;
+use tokio::time;
 
-pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
-    let mut prompt = Prompt::default();
-
+pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     loop {
-        let mut outcome = None;
+        let mut response = None;
 
         term.draw(|ui| {
             Clear::render(ui);
 
             let menu = build_menu(store);
 
-            let area = {
-                let width = menu
-                    .iter()
-                    .map(|item| item.width())
-                    .max()
-                    .unwrap_or_default();
+            let width = menu
+                .iter()
+                .map(|item| item.width())
+                .max()
+                .unwrap_or_default();
 
-                let height = menu.len() as u16;
+            let height = menu.len() as u16;
 
-                Layout::dialog(width, height, ui.area())
-            };
-
-            ui.clamp(area, |ui| {
+            ui.info_dialog(width, height, Some(" play "), |ui| {
                 for item in menu {
                     match item {
                         MenuItem::Line(item) => {
@@ -38,13 +32,13 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
                         }
 
                         MenuItem::Button(item, idx) => {
-                            if item.render(ui).activated {
+                            if item.render(ui).pressed {
                                 if let Some(idx) = idx {
-                                    outcome = Some(Outcome::Play(
+                                    response = Some(Response::Play(
                                         store.worlds[idx as usize].1.clone(),
                                     ));
                                 } else {
-                                    outcome = Some(Outcome::Quit);
+                                    response = Some(Response::Quit);
                                 }
                             }
                         }
@@ -52,15 +46,14 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Outcome> {
 
                     ui.step(1);
                 }
-
-                ui.step(1);
-                prompt.render(ui);
             });
         })
         .await?;
 
-        if let Some(outcome) = outcome {
-            return Ok(outcome);
+        if let Some(response) = response {
+            time::sleep(theme::INTERACTION_TIME).await;
+
+            return Ok(response);
         }
 
         term.tick().await?;
@@ -109,7 +102,7 @@ impl MenuItem<'_> {
 }
 
 #[derive(Debug)]
-pub enum Outcome {
+pub enum Response {
     Play(WorldHandle),
     Quit,
 }

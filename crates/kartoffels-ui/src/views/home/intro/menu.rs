@@ -1,4 +1,4 @@
-use super::Outcome;
+use super::Response;
 use crate::{Button, Ui};
 use termwiz::input::KeyCode;
 
@@ -8,13 +8,13 @@ pub struct Menu;
 impl Menu {
     pub const HEIGHT: u16 = 5;
 
-    pub fn render(ui: &mut Ui) -> Option<Outcome> {
+    pub fn render(ui: &mut Ui) -> Option<Response> {
         if Button::new(KeyCode::Char('p'), "play")
             .centered()
             .render(ui)
-            .activated
+            .pressed
         {
-            return Some(Outcome::Play);
+            return Some(Response::Play);
         }
 
         ui.step(1);
@@ -22,9 +22,9 @@ impl Menu {
         if Button::new(KeyCode::Char('t'), "tutorial")
             .centered()
             .render(ui)
-            .activated
+            .pressed
         {
-            return Some(Outcome::OpenTutorial);
+            return Some(Response::OpenTutorial);
         }
 
         ui.step(1);
@@ -32,9 +32,9 @@ impl Menu {
         if Button::new(KeyCode::Char('c'), "challenges")
             .centered()
             .render(ui)
-            .activated
+            .pressed
         {
-            return Some(Outcome::OpenChallenges);
+            return Some(Response::OpenChallenges);
         }
 
         ui.step(2);
@@ -42,9 +42,9 @@ impl Menu {
         if Button::new(KeyCode::Escape, "quit")
             .centered()
             .render(ui)
-            .activated
+            .pressed
         {
-            return Some(Outcome::Quit);
+            return Some(Response::Quit);
         }
 
         None

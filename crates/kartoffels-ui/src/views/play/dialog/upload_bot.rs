@@ -1,9 +1,9 @@
-use super::DialogEvent;
+use super::DialogResponse;
 use crate::{theme, Button, RectExt, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget, Wrap};
-use termwiz::input::KeyCode;
+use termwiz::input::{InputEvent, KeyCode};
 use tokio::time::{self, Interval};
 
 #[derive(Debug)]
@@ -15,11 +15,9 @@ pub struct UploadBotDialog {
 impl UploadBotDialog {
     const SPINNER: &[&str] = &["|", "/", "-", "\\"];
 
-    pub fn render(&mut self, ui: &mut Ui) -> Option<DialogEvent> {
-        if ui.poll(self.spinner_interval.tick()).is_ready() {
+    pub fn render(&mut self, ui: &mut Ui) -> Option<DialogResponse> {
+        if ui.poll_interval(&mut self.spinner_interval) {
             self.spinner_icon += 1;
-
-            _ = ui.poll(self.spinner_interval.tick());
         }
 
         let spinner = Self::SPINNER[self.spinner_icon % Self::SPINNER.len()];
@@ -50,24 +48,30 @@ impl UploadBotDialog {
         let width = 60;
         let height = para.line_count(width) as u16 + 2;
 
+        let mut response = None;
+
         ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
             para.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(), |ui| {
-                if Button::new(KeyCode::Escape, "cancel").render(ui).activated {
-                    Some(DialogEvent::Close)
-                } else {
-                    None
+                if let Some(InputEvent::Paste(src)) = ui.event() {
+                    response = Some(DialogResponse::UploadBot(src.to_owned()));
                 }
-            })
-        })
+
+                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
+                    response = Some(DialogResponse::Close);
+                }
+            });
+        });
+
+        response
     }
 }
 
 impl Default for UploadBotDialog {
     fn default() -> Self {
         Self {
-            spinner_interval: time::interval(theme::SPINNER_INTERVAL),
+            spinner_interval: time::interval(theme::SPINNER_TIME),
             spinner_icon: 0,
         }
     }

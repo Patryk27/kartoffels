@@ -13,50 +13,50 @@ impl BottomPanel {
         ui: &mut Ui,
         paused: bool,
         enabled: bool,
-    ) -> Option<BottomPanelEvent> {
+    ) -> Option<BottomPanelResponse> {
         let mut event = None;
 
         ui.row(|ui| {
             if Button::new(KeyCode::Escape, "quit")
                 .enabled(enabled)
-                .space_taking()
+                .relative()
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(BottomPanelEvent::Quit);
+                event = Some(BottomPanelResponse::Quit);
             }
 
             ui.step(2);
 
             if Button::new(KeyCode::Char('h'), "help")
                 .enabled(enabled)
-                .space_taking()
+                .relative()
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(BottomPanelEvent::Help);
+                event = Some(BottomPanelResponse::Help);
             }
 
             ui.step(2);
 
             if Button::new(KeyCode::Char('p'), "pause")
                 .enabled(enabled)
-                .space_taking()
+                .relative()
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(BottomPanelEvent::Pause);
+                event = Some(BottomPanelResponse::Pause);
             }
 
             ui.step(2);
 
             if Button::new(KeyCode::Char('b'), "list bots")
                 .enabled(enabled)
-                .space_taking()
+                .relative()
                 .render(ui)
-                .activated
+                .pressed
             {
-                event = Some(BottomPanelEvent::ListBots);
+                event = Some(BottomPanelResponse::ListBots);
             }
         });
 
@@ -79,7 +79,7 @@ impl BottomPanel {
 }
 
 #[derive(Debug)]
-pub enum BottomPanelEvent {
+pub enum BottomPanelResponse {
     Quit,
     Help,
     Pause,

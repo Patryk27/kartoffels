@@ -1,4 +1,4 @@
-use super::DialogEvent;
+use super::DialogResponse;
 use crate::{Button, RectExt, Ui};
 use indoc::indoc;
 use ratatui::widgets::{Paragraph, Widget, Wrap};
@@ -25,32 +25,31 @@ impl HelpDialog {
         - bots are represented with the `@` char, `.` is floor etc.
     "};
 
-    pub fn render(&self, ui: &mut Ui) -> Option<DialogEvent> {
+    pub fn render(&self, ui: &mut Ui) -> Option<DialogResponse> {
         let text = Paragraph::new(Self::TEXT).wrap(Wrap::default());
         let width = cmp::min(ui.area().width - 10, 60);
         let height = text.line_count(width) as u16 + 2;
 
-        let mut event = None;
+        let mut response = None;
 
         ui.info_dialog(width, height, Some(" help "), |ui| {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(), |ui| {
-                if Button::new(KeyCode::Escape, "go back").render(ui).activated
-                {
-                    event = Some(DialogEvent::Close);
+                if Button::new(KeyCode::Escape, "go back").render(ui).pressed {
+                    response = Some(DialogResponse::Close);
                 }
 
                 if Button::new(KeyCode::Char('t'), "go to tutorial")
                     .right()
                     .render(ui)
-                    .activated
+                    .pressed
                 {
-                    event = Some(DialogEvent::OpenTutorial);
+                    response = Some(DialogResponse::OpenTutorial);
                 }
             })
         });
 
-        event
+        response
     }
 }

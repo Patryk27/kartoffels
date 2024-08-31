@@ -115,7 +115,7 @@ impl Term {
                 &waker,
                 frame,
                 self.mouse.clone(),
-                self.event.take(),
+                self.event.take().as_ref(),
             )));
         })?;
 
@@ -141,7 +141,7 @@ impl Term {
 
                 InputEvent::Mouse(event) => {
                     self.mouse = Some((
-                        uvec2(event.x as u32, event.y as u32),
+                        uvec2(event.x as u32 - 1, event.y as u32 - 1),
                         event.mouse_buttons.clone(),
                     ));
                 }

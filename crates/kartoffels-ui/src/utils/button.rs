@@ -1,5 +1,5 @@
 use crate::{theme, Ui};
-use ratatui::layout::Alignment;
+use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Widget;
@@ -10,9 +10,9 @@ use termwiz::input::{KeyCode, Modifiers};
 pub struct Button<'a> {
     pub key: KeyCode,
     pub desc: Cow<'a, str>,
-    pub align: Alignment,
+    pub alignment: Alignment,
     pub enabled: bool,
-    pub space_taking: bool,
+    pub relative: bool,
 }
 
 impl<'a> Button<'a> {
@@ -20,19 +20,19 @@ impl<'a> Button<'a> {
         Self {
             key,
             desc: desc.into(),
-            align: Alignment::Left,
+            alignment: Alignment::Left,
             enabled: true,
-            space_taking: false,
+            relative: false,
         }
     }
 
     pub fn centered(mut self) -> Self {
-        self.align = Alignment::Center;
+        self.alignment = Alignment::Center;
         self
     }
 
     pub fn right(mut self) -> Self {
-        self.align = Alignment::Right;
+        self.alignment = Alignment::Right;
         self
     }
 
@@ -41,8 +41,8 @@ impl<'a> Button<'a> {
         self
     }
 
-    pub fn space_taking(mut self) -> Self {
-        self.space_taking = true;
+    pub fn relative(mut self) -> Self {
+        self.relative = true;
         self
     }
 
@@ -51,21 +51,83 @@ impl<'a> Button<'a> {
     }
 
     pub fn render(self, ui: &mut Ui) -> ButtonResponse {
-        let len = self.width();
+        let area = self.layout(ui);
+        let response = self.response(ui, area);
+        let (style_key, style_desc) = self.style(&response);
 
-        let response = ButtonResponse {
-            activated: self.enabled && ui.key(self.key, Modifiers::NONE),
-        };
+        let key = Button::key_name(self.key);
+        let desc = &*self.desc;
 
-        Line::from_iter(&self)
-            .alignment(self.align)
-            .render(ui.area(), ui.buf());
+        Line::from_iter([
+            Span::styled("[", style_desc),
+            Span::styled(key, style_key),
+            Span::styled("] ", style_desc),
+            Span::styled(desc, style_desc),
+        ])
+        .render(area, ui.buf());
 
-        if self.space_taking {
-            ui.step(len);
+        if self.relative {
+            ui.step(area.width);
         }
 
         response
+    }
+
+    fn layout(&self, ui: &Ui) -> Rect {
+        let area = ui.area();
+        let width = self.width();
+
+        let x = match self.alignment {
+            Alignment::Left => area.x,
+            Alignment::Center => area.x + (area.width - width) / 2,
+            Alignment::Right => area.x + area.width - width,
+        };
+
+        Rect {
+            x,
+            y: area.y,
+            width,
+            height: 1,
+        }
+    }
+
+    fn response(&self, ui: &Ui, area: Rect) -> ButtonResponse {
+        let hovered = self.enabled && ui.mouse_over(area);
+        let pressed_mouse = hovered && ui.mouse_pressed();
+        let pressed_key = self.enabled && ui.key(self.key, Modifiers::NONE);
+
+        ButtonResponse {
+            hovered,
+            pressed: pressed_mouse || pressed_key,
+        }
+    }
+
+    fn style(&self, response: &ButtonResponse) -> (Style, Style) {
+        let key = if self.enabled {
+            if response.pressed {
+                Style::new().bold().bg(theme::FG).fg(theme::BG)
+            } else if response.hovered {
+                Style::new().bold().bg(theme::GREEN).fg(theme::BG)
+            } else {
+                Style::new().bold().fg(theme::GREEN)
+            }
+        } else {
+            Style::new().fg(theme::DARK_GRAY)
+        };
+
+        let desc = if self.enabled {
+            if response.pressed {
+                Style::new().bold().bg(theme::FG).fg(theme::BG)
+            } else if response.hovered {
+                Style::new().bg(theme::GREEN).fg(theme::BG)
+            } else {
+                Style::default()
+            }
+        } else {
+            Style::new().fg(theme::DARK_GRAY)
+        };
+
+        (key, desc)
     }
 
     fn key_name(key: KeyCode) -> String {
@@ -74,42 +136,13 @@ impl<'a> Button<'a> {
             KeyCode::Enter => "enter".into(),
             KeyCode::Escape => "esc".into(),
 
-            key => unimplemented!("key={:?}", key),
+            key => unimplemented!("{:?}", key),
         }
-    }
-}
-
-impl<'a> IntoIterator for &'a Button<'a> {
-    type Item = Span<'a>;
-    type IntoIter = impl Iterator<Item = Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        let key = Button::key_name(self.key);
-        let desc = &*self.desc;
-
-        let s1 = if self.enabled {
-            Style::default()
-        } else {
-            Style::new().fg(theme::DARK_GRAY)
-        };
-
-        let s2 = if self.enabled {
-            Style::new().bold().fg(theme::GREEN)
-        } else {
-            Style::new().fg(theme::DARK_GRAY)
-        };
-
-        [
-            Span::styled("[", s1),
-            Span::styled(key, s2),
-            Span::styled("] ", s1),
-            Span::styled(desc, s1),
-        ]
-        .into_iter()
     }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct ButtonResponse {
-    pub activated: bool,
+    pub hovered: bool,
+    pub pressed: bool,
 }

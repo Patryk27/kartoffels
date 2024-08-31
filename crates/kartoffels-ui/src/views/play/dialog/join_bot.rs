@@ -1,7 +1,6 @@
-use super::DialogEvent;
+use super::DialogResponse;
 use crate::{theme, Button, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
-use ratatui::layout::Offset;
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Widget;
@@ -20,17 +19,17 @@ impl JoinBotDialog {
         &mut self,
         ui: &mut Ui,
         snapshot: &Snapshot,
-    ) -> Option<DialogEvent> {
-        if ui.poll(self.caret_interval.tick()).is_ready() {
+    ) -> Option<DialogResponse> {
+        if ui.poll_interval(&mut self.caret_interval) {
             self.caret_visible = !self.caret_visible;
-
-            _ = ui.poll(self.caret_interval.tick());
         }
 
-        ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
-            let mut event = None;
+        let mut response = None;
 
+        ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
             Line::raw("enter bot id:").render(ui.area(), ui.buf());
+
+            ui.step(1);
 
             Line::from_iter([
                 Span::raw("> "),
@@ -38,29 +37,35 @@ impl JoinBotDialog {
                 Span::raw(if self.caret_visible { "_" } else { "" })
                     .fg(theme::GREEN),
             ])
-            .render(ui.area().offset(Offset { x: 0, y: 1 }), ui.buf());
+            .render(ui.area(), ui.buf());
 
-            if let Some(ui_event) = ui.event() {
-                event = self.handle(ui_event, snapshot);
+            ui.step(2);
+
+            if let Some(event) = ui.event() {
+                response = self.handle(event, snapshot);
             }
 
-            if Button::new(KeyCode::Escape, "cancel").render(ui).activated {
-                event = Some(DialogEvent::Close);
+            if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
+                response = Some(DialogResponse::Close);
             }
 
-            if Button::new(KeyCode::Enter, "join").render(ui).activated {
-                event = self.handle_confirm(snapshot);
+            if Button::new(KeyCode::Enter, "join")
+                .right()
+                .render(ui)
+                .pressed
+            {
+                response = self.handle_confirm(snapshot);
             }
+        });
 
-            event
-        })
+        response
     }
 
     fn handle(
         &mut self,
         event: &InputEvent,
         snapshot: &Snapshot,
-    ) -> Option<DialogEvent> {
+    ) -> Option<DialogResponse> {
         match event {
             InputEvent::Key(event) => match (event.key, event.modifiers) {
                 (KeyCode::Char(ch), Modifiers::NONE) => {
@@ -100,24 +105,24 @@ impl JoinBotDialog {
         }
     }
 
-    fn handle_confirm(&self, snapshot: &Snapshot) -> Option<DialogEvent> {
+    fn handle_confirm(&self, snapshot: &Snapshot) -> Option<DialogResponse> {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {
-            return Some(DialogEvent::Throw(format!(
+            return Some(DialogResponse::Throw(format!(
                 "`{}` is not a valid bot id",
                 self.id
             )));
         };
 
         if snapshot.bots.by_id(id).is_none() {
-            return Some(DialogEvent::Throw(format!(
+            return Some(DialogResponse::Throw(format!(
                 "bot `{}` was not found\n\nmaybe it's dead?",
                 id
             )));
         }
 
-        Some(DialogEvent::JoinBot(id))
+        Some(DialogResponse::JoinBot(id))
     }
 }
 
@@ -126,7 +131,7 @@ impl Default for JoinBotDialog {
         Self {
             id: Default::default(),
             caret_visible: false,
-            caret_interval: time::interval(theme::CARET_INTERVAL),
+            caret_interval: time::interval(theme::CARET_TIME),
         }
     }
 }

@@ -7,7 +7,7 @@ use self::bottom_panel::*;
 use self::dialog::*;
 use self::map_canvas::*;
 use self::side_panel::*;
-use crate::{Clear, Term, Ui};
+use crate::{theme, Clear, Term, Ui};
 use anyhow::{Context, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -16,10 +16,10 @@ use kartoffels_world::prelude::{BotId, Handle as WorldHandle, Snapshot};
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
 use std::sync::Arc;
-use tokio::select;
+use tokio::{select, time};
 use tokio_stream::StreamExt;
 
-pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Outcome> {
+pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Response> {
     let mut snapshots = handle.listen().await?;
 
     let snapshot = snapshots
@@ -37,15 +37,23 @@ pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Outcome> {
     };
 
     loop {
-        let event = term.draw(|ui| state.render(ui)).await?;
+        let response = term.draw(|ui| state.render(ui)).await?;
 
-        if let Some(event) = event {
-            if let ControlFlow::Break(outcome) = state.handle(event).await? {
-                return Ok(outcome);
+        if let Some(response) = response {
+            time::sleep(theme::INTERACTION_TIME).await;
+
+            match state.handle(response).await? {
+                ControlFlow::Continue(_) => {
+                    //
+                }
+
+                ControlFlow::Break(response) => {
+                    return Ok(response);
+                }
             }
         }
 
-        state.snapshot = select! {
+        let snapshot = select! {
             _ = term.tick() => {
                 continue;
             }
@@ -54,6 +62,10 @@ pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Outcome> {
                 snapshot.context("lost connection to the world")?
             },
         };
+
+        if !state.paused {
+            state.snapshot = snapshot;
+        }
     }
 }
 
@@ -68,7 +80,7 @@ struct State {
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui) -> Option<Event> {
+    fn render(&mut self, ui: &mut Ui) -> Option<InnerResponse> {
         if let Some(bot) = &self.bot {
             if bot.follow_with_camera {
                 if let Some(bot) = self.snapshot.bots.alive.by_id(bot.id) {
@@ -97,7 +109,7 @@ impl State {
             .clamp(bottom_area, |ui| {
                 BottomPanel::render(ui, self.paused, enabled)
             })
-            .map(Event::BottomPanel);
+            .map(InnerResponse::BottomPanel);
 
         let side_panel_event = ui
             .clamp(side_area, |ui| {
@@ -108,7 +120,7 @@ impl State {
                     enabled,
                 )
             })
-            .map(Event::SidePanel);
+            .map(InnerResponse::SidePanel);
 
         let map_canvas_event = ui
             .clamp(map_area, |ui| {
@@ -120,13 +132,13 @@ impl State {
                     enabled,
                 )
             })
-            .map(Event::MapCanvas);
+            .map(InnerResponse::MapCanvas);
 
         let dialog_event = self
             .dialog
             .as_mut()
             .and_then(|dialog| dialog.render(ui, &self.snapshot))
-            .map(Event::Dialog);
+            .map(InnerResponse::Dialog);
 
         bottom_panel_event
             .or(side_panel_event)
@@ -136,67 +148,67 @@ impl State {
 
     async fn handle(
         &mut self,
-        event: Event,
-    ) -> Result<ControlFlow<Outcome, ()>> {
+        event: InnerResponse,
+    ) -> Result<ControlFlow<Response, ()>> {
         match event {
-            Event::BottomPanel(event) => match event {
-                BottomPanelEvent::Quit => {
-                    return Ok(ControlFlow::Break(Outcome::Quit));
+            InnerResponse::BottomPanel(event) => match event {
+                BottomPanelResponse::Quit => {
+                    return Ok(ControlFlow::Break(Response::Quit));
                 }
 
-                BottomPanelEvent::Help => {
+                BottomPanelResponse::Help => {
                     self.dialog = Some(Dialog::Help(Default::default()));
                 }
 
-                BottomPanelEvent::Pause => {
+                BottomPanelResponse::Pause => {
                     self.paused = !self.paused;
                 }
 
-                BottomPanelEvent::ListBots => {
+                BottomPanelResponse::ListBots => {
                     self.dialog = Some(Dialog::Bots(Default::default()));
                 }
             },
 
-            Event::Dialog(event) => match event {
-                DialogEvent::Close => {
+            InnerResponse::Dialog(event) => match event {
+                DialogResponse::Close => {
                     self.dialog = None;
                 }
 
-                DialogEvent::JoinBot(id) => {
+                DialogResponse::JoinBot(id) => {
                     self.join_bot(id);
                 }
 
-                DialogEvent::UploadBot(src) => {
+                DialogResponse::UploadBot(src) => {
                     self.upload_bot(src).await?;
                 }
 
-                DialogEvent::OpenTutorial => {
-                    return Ok(ControlFlow::Break(Outcome::OpenTutorial));
+                DialogResponse::OpenTutorial => {
+                    return Ok(ControlFlow::Break(Response::OpenTutorial));
                 }
 
-                DialogEvent::Throw(err) => {
+                DialogResponse::Throw(err) => {
                     self.dialog = Some(Dialog::Error(ErrorDialog {
                         error: err.to_string(),
                     }));
                 }
             },
 
-            Event::MapCanvas(event) => match event {
-                MapCanvasEvent::MoveCamera(delta) => {
+            InnerResponse::MapCanvas(event) => match event {
+                MapCanvasResponse::MoveCamera(delta) => {
                     self.camera += delta;
                 }
             },
 
-            Event::SidePanel(event) => match event {
-                SidePanelEvent::UploadBot => {
+            InnerResponse::SidePanel(event) => match event {
+                SidePanelResponse::UploadBot => {
                     self.dialog = Some(Dialog::UploadBot(Default::default()));
                 }
 
-                SidePanelEvent::JoinBot => {
+                SidePanelResponse::JoinBot => {
                     self.dialog = Some(Dialog::JoinBot(Default::default()));
                 }
 
-                SidePanelEvent::LeaveBot => {
+                SidePanelResponse::LeaveBot => {
                     self.bot = None;
                 }
             },
@@ -254,15 +266,15 @@ struct JoinedBot {
 }
 
 #[derive(Debug)]
-enum Event {
-    BottomPanel(BottomPanelEvent),
-    Dialog(DialogEvent),
-    MapCanvas(MapCanvasEvent),
-    SidePanel(SidePanelEvent),
+enum InnerResponse {
+    BottomPanel(BottomPanelResponse),
+    Dialog(DialogResponse),
+    MapCanvas(MapCanvasResponse),
+    SidePanel(SidePanelResponse),
 }
 
 #[derive(Debug)]
-pub enum Outcome {
+pub enum Response {
     OpenTutorial,
     Quit,
 }

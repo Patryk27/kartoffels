@@ -11,7 +11,6 @@ pub use self::join_bot::*;
 pub use self::upload_bot::*;
 use crate::Ui;
 use kartoffels_world::prelude::{BotId, Snapshot};
-use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub enum Dialog {
@@ -27,11 +26,7 @@ impl Dialog {
         &mut self,
         ui: &mut Ui,
         snapshot: &Snapshot,
-    ) -> Option<DialogEvent> {
-        if ui.key(KeyCode::Escape, Modifiers::NONE) {
-            return Some(DialogEvent::Close);
-        }
-
+    ) -> Option<DialogResponse> {
         match self {
             Dialog::Bots(this) => this.render(ui, snapshot),
             Dialog::Error(this) => this.render(ui),
@@ -43,7 +38,7 @@ impl Dialog {
 }
 
 #[derive(Debug)]
-pub enum DialogEvent {
+pub enum DialogResponse {
     Close,
     JoinBot(BotId),
     UploadBot(String),

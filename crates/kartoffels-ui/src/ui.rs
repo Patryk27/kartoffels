@@ -1,7 +1,7 @@
-use crate::{theme, Clear, LayoutExt, RectExt};
+use crate::{theme, Clear, RectExt};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
-use ratatui::layout::{Alignment, Layout, Rect};
+use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Padding, Widget};
 use ratatui::Frame;
@@ -9,6 +9,7 @@ use std::future::Future;
 use std::pin::pin;
 use std::task::{Context, Poll, Waker};
 use termwiz::input::{InputEvent, KeyCode, Modifiers, MouseButtons};
+use tokio::time::Interval;
 
 #[derive(Debug)]
 pub struct Ui<'a, 'b> {
@@ -16,7 +17,7 @@ pub struct Ui<'a, 'b> {
     frame: &'a mut Frame<'b>,
     area: Rect,
     mouse: Option<(UVec2, MouseButtons)>,
-    event: Option<InputEvent>,
+    event: Option<&'a InputEvent>,
     layout: UiLayout,
 }
 
@@ -25,7 +26,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         waker: &'a Waker,
         frame: &'a mut Frame<'b>,
         mouse: Option<(UVec2, MouseButtons)>,
-        event: Option<InputEvent>,
+        event: Option<&'a InputEvent>,
     ) -> Self {
         let area = frame.area();
 
@@ -48,7 +49,7 @@ impl<'a, 'b> Ui<'a, 'b> {
     }
 
     pub fn event(&self) -> Option<&InputEvent> {
-        self.event.as_ref()
+        self.event
     }
 
     pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
@@ -57,7 +58,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             frame: self.frame,
             area: self.area.clamp(area),
             mouse: self.mouse.clone(),
-            event: self.event.clone(), // TODO expensive
+            event: self.event,
             layout: self.layout,
         })
     }
@@ -70,7 +71,23 @@ impl<'a, 'b> Ui<'a, 'b> {
         border_fg: Color,
         f: impl FnOnce(&mut Ui) -> T,
     ) -> T {
-        let area = Layout::dialog(width, height, self.area);
+        let area = {
+            let [_, area, _] = Layout::horizontal([
+                Constraint::Fill(1),
+                Constraint::Length(width + 4),
+                Constraint::Fill(1),
+            ])
+            .areas(self.area());
+
+            let [_, area, _] = Layout::vertical([
+                Constraint::Fill(1),
+                Constraint::Length(height + 2),
+                Constraint::Fill(2),
+            ])
+            .areas(area);
+
+            area
+        };
 
         self.clamp(area, |ui| {
             let mut block = Block::bordered()
@@ -141,11 +158,42 @@ impl<'a, 'b> Ui<'a, 'b> {
         false
     }
 
+    pub fn mouse_over(&self, area: Rect) -> bool {
+        if let Some((pos, _)) = &self.mouse {
+            area.contains(Position {
+                x: pos.x as u16,
+                y: pos.y as u16,
+            })
+        } else {
+            false
+        }
+    }
+
+    pub fn mouse_pressed(&self) -> bool {
+        if let Some((_, btns)) = &self.mouse {
+            btns.contains(MouseButtons::LEFT)
+        } else {
+            false
+        }
+    }
+
     pub fn poll<F>(&mut self, mut f: F) -> Poll<F::Output>
     where
         F: Future,
     {
         pin!(f).poll(&mut Context::from_waker(self.waker))
+    }
+
+    pub fn poll_interval(&mut self, int: &mut Interval) -> bool {
+        if self.poll(int.tick()).is_ready() {
+            // Tokio's intervals don't reschedule themselves upon a completed
+            // tick - we have to do it by hand:
+            _ = self.poll(int.tick());
+
+            true
+        } else {
+            false
+        }
     }
 }
 
