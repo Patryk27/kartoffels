@@ -1,6 +1,7 @@
 use super::DialogResponse;
 use crate::{BotIdExt, Button, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
+use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::widgets::{Cell, Row, StatefulWidget, Table, TableState};
 use termwiz::input::KeyCode;
@@ -12,7 +13,7 @@ pub struct BotsDialog {
 
 impl BotsDialog {
     const WIDTHS: [u16; 4] = [
-        4,                    // #
+        5,                    // place
         BotId::LENGTH as u16, // id
         6,                    // age
         7,                    // score
@@ -29,7 +30,7 @@ impl BotsDialog {
         let mut response = None;
 
         ui.info_dialog(width, height, Some(" bots "), |ui| {
-            let header = Row::new(vec!["#", "id", "age", "score ⯆"]);
+            let header = Row::new(vec!["place", "id", "age", "score ⯆"]);
 
             let rows =
                 snapshot.bots.alive.iter_sorted_by_scores().enumerate().map(
@@ -43,22 +44,50 @@ impl BotsDialog {
                     },
                 );
 
-            if Button::new(KeyCode::Escape, "close")
-                .right()
-                .block()
-                .render(ui)
-                .pressed
-            {
-                response = Some(DialogResponse::Close);
-            }
-
-            ui.step(1);
+            let table_area = Rect {
+                height: ui.area().height - 2,
+                ..ui.area()
+            };
 
             Table::new(rows, Self::WIDTHS).header(header).render(
-                ui.area(),
+                table_area,
                 ui.buf(),
                 &mut self.table,
             );
+
+            ui.step(1);
+
+            ui.row(|ui| {
+                if Button::new(KeyCode::Char('w'), "scroll up")
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    *self.table.offset_mut() =
+                        self.table.offset().saturating_sub(8);
+                }
+
+                ui.step(1);
+
+                if Button::new(KeyCode::Char('s'), "scroll down")
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    *self.table.offset_mut() =
+                        self.table.offset().saturating_add(8);
+                }
+
+                ui.step(1);
+
+                if Button::new(KeyCode::Escape, "close")
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    response = Some(DialogResponse::Close);
+                }
+            });
         });
 
         response
