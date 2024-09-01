@@ -9,7 +9,8 @@ use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::try_join;
+use tokio::{select, signal, try_join};
+use tokio_util::sync::CancellationToken;
 use tracing::info;
 use tracing_subscriber::fmt;
 
@@ -80,32 +81,75 @@ impl ServeCmd {
                     })?;
 
                 let store = Arc::new(store);
+                let shutdown = CancellationToken::new();
 
                 let http = {
                     let store = store.clone();
+                    let shutdown = shutdown.clone();
 
                     async {
                         if let Some(addr) = &self.http {
-                            http::start(addr, store).await
+                            http::start(addr, store, shutdown).await
                         } else {
                             Ok(())
                         }
                     }
                 };
 
-                let ssh = async {
-                    if let Some(addr) = &self.ssh {
-                        ssh::start(addr, store).await
-                    } else {
-                        Ok(())
+                let ssh = {
+                    let store = store.clone();
+                    let shutdown = shutdown.clone();
+
+                    async {
+                        if let Some(addr) = &self.ssh {
+                            ssh::start(addr, store, shutdown).await
+                        } else {
+                            Ok(())
+                        }
                     }
+                };
+
+                let shutdown = async {
+                    wait_for_shutdown().await;
+                    shutdown.cancel();
+                    store.close().await?;
+
+                    Ok(())
                 };
 
                 info!("ready");
 
-                try_join!(http, ssh)?;
+                try_join!(http, ssh, shutdown)?;
 
                 Ok(())
             })
+    }
+}
+
+async fn wait_for_shutdown() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+
+        info!("ctrl-c signal detected, shutting down");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+
+        info!("terminate signal detected, shutting down");
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
     }
 }

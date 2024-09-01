@@ -62,4 +62,12 @@ impl Store {
             worlds,
         })
     }
+
+    pub async fn close(&self) -> Result<()> {
+        for (_, world) in self.worlds.iter() {
+            world.shutdown().await?;
+        }
+
+        Ok(())
+    }
 }

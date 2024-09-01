@@ -7,23 +7,30 @@ use russh::server::{self, Auth, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
 use russh_keys::key::PublicKey;
 use std::sync::Arc;
+use tokio_util::sync::CancellationToken;
 use tracing::{info, instrument};
 
 #[derive(Debug)]
 pub struct AppClient {
     addr: String,
     store: Arc<Store>,
+    shutdown: CancellationToken,
     channels: AHashMap<ChannelId, AppChannel>,
 }
 
 impl AppClient {
-    #[instrument(skip(store))]
-    pub fn new(addr: String, store: Arc<Store>) -> Self {
+    #[instrument(skip(store, shutdown))]
+    pub fn new(
+        addr: String,
+        store: Arc<Store>,
+        shutdown: CancellationToken,
+    ) -> Self {
         info!("connection opened");
 
         Self {
             addr,
             store,
+            shutdown,
             channels: Default::default(),
         }
     }
@@ -48,10 +55,11 @@ impl server::Handler for AppClient {
         channel: Channel<Msg>,
         _: &mut Session,
     ) -> Result<bool> {
-        let created = self
-            .channels
-            .try_insert(channel.id(), AppChannel::new(self.store.clone()))
-            .is_ok();
+        let app_channel =
+            AppChannel::new(self.store.clone(), self.shutdown.clone());
+
+        let created =
+            self.channels.try_insert(channel.id(), app_channel).is_ok();
 
         info!("channel opened");
 

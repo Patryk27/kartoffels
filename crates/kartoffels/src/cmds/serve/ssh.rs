@@ -7,17 +7,24 @@ use self::client::*;
 use self::server::*;
 use anyhow::{anyhow, Context, Result};
 use ed25519_dalek::SigningKey;
+use itertools::Either;
 use kartoffels_store::Store;
 use rand::rngs::OsRng;
 use russh::server::{Config, Server as _};
 use russh_keys::key::KeyPair;
 use std::net::SocketAddr;
+use std::pin::pin;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::fs;
+use tokio::{fs, select, time};
+use tokio_util::sync::CancellationToken;
 use tracing::info;
 
-pub async fn start(addr: &SocketAddr, store: Arc<Store>) -> Result<()> {
+pub async fn start(
+    addr: &SocketAddr,
+    store: Arc<Store>,
+    shutdown: CancellationToken,
+) -> Result<()> {
     info!(?addr, "starting ssh server");
 
     let key = load_key(&store).await?;
@@ -32,9 +39,33 @@ pub async fn start(addr: &SocketAddr, store: Arc<Store>) -> Result<()> {
 
     info!("ready");
 
-    AppServer::new(store).run_on_address(config, addr).await?;
+    let mut server = AppServer::new(store, shutdown.clone());
+    let server = server.run_on_address(config, addr);
 
-    Ok(())
+    let shutdown = shutdown.cancelled();
+
+    let result = {
+        let mut server = pin!(server);
+        let mut shutdown = pin!(shutdown);
+
+        select! {
+            result = &mut server => Either::Left(result),
+            _ = &mut shutdown => Either::Right(()),
+        }
+    };
+
+    match result {
+        Either::Left(result) => Ok(result?),
+
+        Either::Right(_) => {
+            info!("shutting down");
+
+            // TODO wait for clients to disconnect
+            time::sleep(Duration::from_secs(1)).await;
+
+            Ok(())
+        }
+    }
 }
 
 async fn load_key(store: &Store) -> Result<KeyPair> {

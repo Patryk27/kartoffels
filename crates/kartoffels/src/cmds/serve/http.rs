@@ -7,11 +7,16 @@ use kartoffels_store::Store;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tokio_util::sync::CancellationToken;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::info;
 
-pub async fn start(addr: &SocketAddr, store: Arc<Store>) -> Result<()> {
+pub async fn start(
+    addr: &SocketAddr,
+    store: Arc<Store>,
+    shutdown: CancellationToken,
+) -> Result<()> {
     info!(?addr, "starting http server");
 
     let listener = TcpListener::bind(&addr).await?;
@@ -37,7 +42,9 @@ pub async fn start(addr: &SocketAddr, store: Arc<Store>) -> Result<()> {
 
     info!("ready");
 
-    axum::serve(listener, app.into_make_service()).await?;
+    axum::serve(listener, app.into_make_service())
+        .with_graceful_shutdown(shutdown.cancelled_owned())
+        .await?;
 
     Ok(())
 }

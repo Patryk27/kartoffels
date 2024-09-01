@@ -63,8 +63,6 @@ pub fn run(world: &mut World) {
         info!(?tt_ser, ?tt_io, "world saved");
 
         if let Some(shutdown) = shutdown {
-            info!("completing shutdown");
-
             _ = shutdown.tx.send(());
         }
 
