@@ -175,10 +175,12 @@ impl State {
                 }
 
                 DialogResponse::JoinBot(id) => {
+                    self.dialog = None;
                     self.join_bot(id);
                 }
 
                 DialogResponse::UploadBot(src) => {
+                    self.dialog = None;
                     self.upload_bot(src).await?;
                 }
 
@@ -196,6 +198,10 @@ impl State {
             InnerResponse::MapCanvas(event) => match event {
                 MapCanvasResponse::MoveCamera(delta) => {
                     self.camera += delta;
+                }
+
+                MapCanvasResponse::JoinBot(id) => {
+                    self.join_bot(id);
                 }
             },
 
@@ -226,6 +232,8 @@ impl State {
             id,
             follow_with_camera: true,
         });
+
+        self.paused = false;
     }
 
     async fn upload_bot(&mut self, src: String) -> Result<()> {

@@ -17,7 +17,7 @@ impl ErrorDialog {
         ui.error_dialog(width, height, Some(" whoopsie "), |ui| {
             text.render(ui.area(), ui.buf());
 
-            ui.clamp(ui.area().footer(), |ui| {
+            ui.clamp(ui.area().footer(1), |ui| {
                 if Button::new(KeyCode::Enter, "close")
                     .right()
                     .render(ui)

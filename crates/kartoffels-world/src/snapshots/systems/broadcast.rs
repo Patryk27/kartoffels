@@ -153,12 +153,12 @@ fn render_serial(bot: &AliveBot) -> String {
             continue;
         };
 
-        out.push(ch);
-        len += 1;
-
-        if len % 16 == 15 {
+        if len > 0 && len % 16 == 0 {
             out.push('\n');
         }
+
+        out.push(ch);
+        len += 1;
     }
 
     out

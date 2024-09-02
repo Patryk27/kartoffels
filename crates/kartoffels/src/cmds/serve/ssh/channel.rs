@@ -115,7 +115,7 @@ impl AppChannel {
                     _ = handle
                         .data(
                             id,
-                            "whoopsie, the game has crashed, sorry!\r\n"
+                            "whoopsie, the game has crashed!\r\n"
                                 .to_string()
                                 .into_bytes()
                                 .into(),
@@ -129,7 +129,7 @@ impl AppChannel {
                     _ = handle
                         .data(
                             id,
-                            "whoopsie, the server is shutting down, sorry!\r\n"
+                            "whoopsie, the server is shutting down!\r\n"
                                 .to_string()
                                 .into_bytes()
                                 .into(),

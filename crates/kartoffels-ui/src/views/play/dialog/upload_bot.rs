@@ -53,7 +53,7 @@ impl UploadBotDialog {
         ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
             para.render(ui.area(), ui.buf());
 
-            ui.clamp(ui.area().footer(), |ui| {
+            ui.clamp(ui.area().footer(1), |ui| {
                 if let Some(InputEvent::Paste(src)) = ui.event() {
                     response = Some(DialogResponse::UploadBot(src.to_owned()));
                 }

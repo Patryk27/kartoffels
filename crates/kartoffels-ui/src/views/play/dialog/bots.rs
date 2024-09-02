@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use crate::{BotIdExt, Button, Ui};
+use crate::{BotIdExt, Button, RectExt, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
@@ -24,10 +24,10 @@ impl BotsDialog {
         ui: &mut Ui,
         snapshot: &Snapshot,
     ) -> Option<DialogResponse> {
+        let mut response = None;
+
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 4;
         let height = ui.area().height - 2;
-
-        let mut response = None;
 
         ui.info_dialog(width, height, Some(" bots "), |ui| {
             let header = Row::new(vec!["place", "id", "age", "score ⯆"]);
@@ -44,49 +44,51 @@ impl BotsDialog {
                     },
                 );
 
-            let table_area = Rect {
+            let area = Rect {
                 height: ui.area().height - 2,
                 ..ui.area()
             };
 
             Table::new(rows, Self::WIDTHS).header(header).render(
-                table_area,
+                area,
                 ui.buf(),
                 &mut self.table,
             );
 
-            ui.step(1);
+            ui.fill(2);
 
-            ui.row(|ui| {
-                if Button::new(KeyCode::Char('w'), "scroll up")
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
-                    *self.table.offset_mut() =
-                        self.table.offset().saturating_sub(8);
-                }
+            ui.clamp(ui.area().footer(1), |ui| {
+                ui.row(|ui| {
+                    if Button::new(KeyCode::Char('w'), "scroll up")
+                        .block()
+                        .render(ui)
+                        .pressed
+                    {
+                        *self.table.offset_mut() =
+                            self.table.offset().saturating_sub(8);
+                    }
 
-                ui.step(1);
+                    ui.fill(1);
 
-                if Button::new(KeyCode::Char('s'), "scroll down")
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
-                    *self.table.offset_mut() =
-                        self.table.offset().saturating_add(8);
-                }
+                    if Button::new(KeyCode::Char('s'), "scroll down")
+                        .block()
+                        .render(ui)
+                        .pressed
+                    {
+                        *self.table.offset_mut() =
+                            self.table.offset().saturating_add(8);
+                    }
 
-                ui.step(1);
+                    ui.fill(1);
 
-                if Button::new(KeyCode::Escape, "close")
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
-                    response = Some(DialogResponse::Close);
-                }
+                    if Button::new(KeyCode::Escape, "close")
+                        .block()
+                        .render(ui)
+                        .pressed
+                    {
+                        response = Some(DialogResponse::Close);
+                    }
+                });
             });
         });
 

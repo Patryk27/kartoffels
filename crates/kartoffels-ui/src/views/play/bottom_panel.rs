@@ -26,7 +26,7 @@ impl BottomPanel {
                 event = Some(BottomPanelResponse::Quit);
             }
 
-            ui.step(2);
+            ui.fill(2);
 
             if Button::new(KeyCode::Char('h'), "help")
                 .enabled(enabled)
@@ -37,9 +37,9 @@ impl BottomPanel {
                 event = Some(BottomPanelResponse::Help);
             }
 
-            ui.step(2);
+            ui.fill(2);
 
-            if Button::new(KeyCode::Char('p'), "pause")
+            if Button::new(KeyCode::Char(' '), "pause")
                 .enabled(enabled)
                 .block()
                 .render(ui)
@@ -48,9 +48,9 @@ impl BottomPanel {
                 event = Some(BottomPanelResponse::Pause);
             }
 
-            ui.step(2);
+            ui.fill(2);
 
-            if Button::new(KeyCode::Char('b'), "list bots")
+            if Button::new(KeyCode::Char('b'), "bots")
                 .enabled(enabled)
                 .block()
                 .render(ui)

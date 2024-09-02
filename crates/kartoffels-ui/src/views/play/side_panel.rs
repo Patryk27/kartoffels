@@ -4,7 +4,7 @@ mod joined;
 use self::idle::*;
 use self::joined::*;
 use super::JoinedBot;
-use crate::Ui;
+use crate::{Clear, Ui};
 use kartoffels_world::prelude::Snapshot;
 use ratatui::layout::Rect;
 
@@ -28,6 +28,8 @@ impl SidePanel {
             width: area.width - 1,
             height: area.height,
         };
+
+        Clear::render(ui);
 
         ui.clamp(area, |ui| {
             if let Some(bot) = bot {

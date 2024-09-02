@@ -68,9 +68,9 @@ impl<'a> Button<'a> {
 
         if self.block {
             if ui.layout().is_row() {
-                ui.step(area.width);
+                ui.fill(area.width);
             } else {
-                ui.step(area.height);
+                ui.fill(area.height);
             }
         }
 
@@ -132,6 +132,7 @@ impl<'a> Button<'a> {
 
     fn key_name(key: KeyCode) -> String {
         match key {
+            KeyCode::Char(' ') => "spc".into(),
             KeyCode::Char(ch) => ch.to_string(),
             KeyCode::Enter => "enter".into(),
             KeyCode::Escape => "esc".into(),

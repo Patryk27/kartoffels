@@ -17,7 +17,7 @@ impl Menu {
             return Some(Response::Play);
         }
 
-        ui.step(1);
+        ui.fill(1);
 
         if Button::new(KeyCode::Char('t'), "tutorial")
             .centered()
@@ -27,7 +27,7 @@ impl Menu {
             return Some(Response::OpenTutorial);
         }
 
-        ui.step(1);
+        ui.fill(1);
 
         if Button::new(KeyCode::Char('c'), "challenges")
             .centered()
@@ -37,7 +37,7 @@ impl Menu {
             return Some(Response::OpenChallenges);
         }
 
-        ui.step(2);
+        ui.fill(2);
 
         if Button::new(KeyCode::Escape, "quit")
             .centered()

@@ -1,9 +1,9 @@
-use crate::{theme, Clear, RectExt};
+use crate::{theme, Clear};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::text::Text;
+use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Widget};
 use ratatui::Frame;
 use std::future::Future;
@@ -69,14 +69,14 @@ impl<'a, 'b> Ui<'a, 'b> {
     }
 
     pub fn row<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
-        self.clamp(self.area.footer(), |ui| {
+        self.clamp(self.area, |ui| {
             ui.layout = UiLayout::Row;
 
             f(ui)
         })
     }
 
-    pub fn step(&mut self, len: u16) {
+    pub fn fill(&mut self, len: u16) {
         match self.layout {
             UiLayout::Row => {
                 self.area.x += len;
@@ -92,11 +92,20 @@ impl<'a, 'b> Ui<'a, 'b> {
 
     pub fn line<'x>(&mut self, text: impl Into<Text<'x>>) {
         self.text(text);
-        self.step(1);
+        self.fill(1);
     }
 
     pub fn text<'x>(&mut self, text: impl Into<Text<'x>>) {
         text.into().render(self.area, self.buf());
+    }
+
+    pub fn span<'x>(&mut self, span: impl Into<Span<'x>>) {
+        let span = span.into();
+        let width = span.width() as u16;
+
+        span.render(self.area, self.buf());
+
+        self.fill(width);
     }
 
     pub fn dialog<T>(

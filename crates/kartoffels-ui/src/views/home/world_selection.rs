@@ -44,7 +44,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                         }
                     }
 
-                    ui.step(1);
+                    ui.fill(1);
                 }
             });
         })
