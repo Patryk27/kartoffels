@@ -1,11 +1,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct BotEvents {
-    entries: VecDeque<BotEvent>,
+    entries: VecDeque<Arc<BotEvent>>,
 }
 
 impl BotEvents {
@@ -16,13 +17,13 @@ impl BotEvents {
             self.entries.pop_front();
         }
 
-        self.entries.push_back(BotEvent {
+        self.entries.push_back(Arc::new(BotEvent {
             at: Utc::now(),
             msg,
-        });
+        }));
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &BotEvent> {
+    pub fn iter(&self) -> impl Iterator<Item = &Arc<BotEvent>> {
         self.entries.iter()
     }
 }

@@ -14,7 +14,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
             Clear::render(ui);
 
             let width = 40;
-            let height = (store.worlds.len() + 5) as u16;
+            let height = (store.worlds.len() + 6) as u16;
 
             ui.info_dialog(width, height, Some(" play "), |ui| {
                 ui.line(Line::raw("choose world:").centered());

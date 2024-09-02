@@ -36,7 +36,7 @@ pub async fn run(
         .context("lost connection to the world")?;
 
     let mut state = State {
-        camera: snapshot.map.size().as_ivec2() / 2,
+        camera: snapshot.map().size().as_ivec2() / 2,
         bot: None,
         dialog: None,
         paused: false,
@@ -91,7 +91,7 @@ impl State {
     fn render(&mut self, ui: &mut Ui) -> Option<InnerResponse> {
         if let Some(bot) = &self.bot {
             if bot.follow {
-                if let Some(bot) = self.snapshot.bots.alive.by_id(bot.id) {
+                if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
                     self.camera = bot.pos;
                 }
             }

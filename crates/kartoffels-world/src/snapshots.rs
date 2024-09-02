@@ -1,24 +1,44 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Map};
+use crate::{BotEvent, BotId, Map};
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Either;
+use std::collections::VecDeque;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Snapshot {
-    pub map: Map,
-    pub bots: SnapshotBots,
+    map: Map,
+    bots: SnapshotBots,
+}
+
+impl Snapshot {
+    pub fn map(&self) -> &Map {
+        &self.map
+    }
+
+    pub fn bots(&self) -> &SnapshotBots {
+        &self.bots
+    }
 }
 
 #[derive(Debug)]
 pub struct SnapshotBots {
-    pub alive: SnapshotAliveBots,
-    pub queued: SnapshotQueuedBots,
+    alive: SnapshotAliveBots,
+    queued: SnapshotQueuedBots,
 }
 
 impl SnapshotBots {
+    pub fn alive(&self) -> &SnapshotAliveBots {
+        &self.alive
+    }
+
+    pub fn queued(&self) -> &SnapshotQueuedBots {
+        &self.queued
+    }
+
     pub fn by_id(
         &self,
         id: BotId,
@@ -37,9 +57,9 @@ impl SnapshotBots {
 
 #[derive(Debug)]
 pub struct SnapshotAliveBots {
-    pub entries: Vec<SnapshotAliveBot>,
-    pub idx_lookup: AHashMap<BotId, u8>,
-    pub idx_by_scores: Vec<(u32, u8)>,
+    entries: Vec<SnapshotAliveBot>,
+    idx_lookup: AHashMap<BotId, u8>,
+    idx_by_scores: Vec<(u32, u8)>,
 }
 
 impl SnapshotAliveBots {
@@ -66,14 +86,14 @@ impl SnapshotAliveBots {
 pub struct SnapshotAliveBot {
     pub id: BotId,
     pub pos: IVec2,
-    pub serial: String,
-    pub events: Vec<String>,
+    pub serial: Arc<VecDeque<u32>>,
+    pub events: Vec<Arc<BotEvent>>,
     pub age: u32,
 }
 
 #[derive(Debug)]
 pub struct SnapshotQueuedBots {
-    pub entries: AHashMap<BotId, SnapshotQueuedBot>,
+    entries: AHashMap<BotId, SnapshotQueuedBot>,
 }
 
 impl SnapshotQueuedBots {
@@ -84,8 +104,8 @@ impl SnapshotQueuedBots {
 
 #[derive(Debug)]
 pub struct SnapshotQueuedBot {
-    pub serial: String,
-    pub events: Vec<String>,
+    pub serial: Arc<VecDeque<u32>>,
+    pub events: Vec<Arc<BotEvent>>,
     pub place: u8,
     pub requeued: bool,
 }

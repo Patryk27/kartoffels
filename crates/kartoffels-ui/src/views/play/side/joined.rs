@@ -7,6 +7,7 @@ use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Line;
 use ratatui::widgets::{Paragraph, Widget};
+use std::collections::VecDeque;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -27,7 +28,7 @@ impl JoinedSidePanel {
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
 
-        match world.bots.by_id(bot.id) {
+        match world.bots().by_id(bot.id) {
             Some(Either::Left(bot)) => {
                 ui.line("status".underlined());
                 ui.line(Line::from_iter([
@@ -52,7 +53,7 @@ impl JoinedSidePanel {
                 ui.clamp(area, |ui| {
                     ui.line("serial port".underlined());
 
-                    Paragraph::new(bot.serial.as_str())
+                    Paragraph::new(render_serial(&bot.serial))
                         .wrap(Default::default())
                         .render(ui.area(), ui.buf());
                 });
@@ -110,4 +111,33 @@ impl JoinedSidePanel {
 
         resp
     }
+}
+
+fn render_serial(serial: &VecDeque<u32>) -> String {
+    let mut out = String::with_capacity(256);
+    let mut buf = None;
+
+    for &ch in serial {
+        match ch {
+            0xffffff00 => {
+                buf = Some(String::with_capacity(256));
+            }
+
+            0xffffff01 => {
+                out = buf.take().unwrap_or_default();
+            }
+
+            ch => {
+                if let Some(ch) = char::from_u32(ch) {
+                    if let Some(buf) = &mut buf {
+                        buf.push(ch);
+                    } else {
+                        out.push(ch);
+                    }
+                }
+            }
+        }
+    }
+
+    out
 }

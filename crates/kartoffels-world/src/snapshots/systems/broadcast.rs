@@ -1,5 +1,7 @@
+//! TODO avoid allocating new buffers every frame
+
 use crate::{
-    AliveBot, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
+    Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
     SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileBase, World,
 };
 use std::cmp::Reverse;
@@ -75,8 +77,8 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         .map(|entry| SnapshotAliveBot {
             id: entry.id,
             pos: entry.pos,
-            serial: render_serial(entry.bot),
-            events: render_events(entry.bot),
+            serial: Arc::new(entry.bot.serial.buffer.clone()),
+            events: entry.bot.events.iter().cloned().collect(),
             age: entry.bot.timer.age(),
         })
         .collect();
@@ -127,8 +129,8 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .iter()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
-                serial: render_serial(&entry.bot.bot),
-                events: render_events(&entry.bot.bot),
+                serial: Arc::new(entry.bot.bot.serial.buffer.clone()),
+                events: entry.bot.bot.events.iter().cloned().collect(),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
             };
@@ -138,41 +140,4 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .collect();
 
     SnapshotQueuedBots { entries }
-}
-
-// TODO handle 0xffffff00 and 0xffffff01
-fn render_serial(bot: &AliveBot) -> String {
-    let mut out = String::with_capacity(256);
-    let mut buf = None;
-
-    for ch in bot.serial.buffer.iter().copied() {
-        match ch {
-            0xffffff00 => {
-                buf = Some(String::with_capacity(256));
-            }
-
-            0xffffff01 => {
-                out = buf.take().unwrap_or_default();
-            }
-
-            ch => {
-                if let Some(ch) = char::from_u32(ch) {
-                    if let Some(buf) = &mut buf {
-                        buf.push(ch);
-                    } else {
-                        out.push(ch);
-                    }
-                }
-            }
-        }
-    }
-
-    out
-}
-
-fn render_events(bot: &AliveBot) -> Vec<String> {
-    bot.events
-        .iter()
-        .map(|event| format!("> {}:\n{}", event.at, event.msg))
-        .collect()
 }

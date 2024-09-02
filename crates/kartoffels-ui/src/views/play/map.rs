@@ -34,7 +34,7 @@ impl MapCanvas {
 
                 ui.clamp(area, |ui| {
                     let tile =
-                        world.map.get(offset + ivec2(dx as i32, dy as i32));
+                        world.map().get(offset + ivec2(dx as i32, dy as i32));
 
                     Self::render_tile(
                         ui, world, bot, tile, paused, enabled, &mut resp,
@@ -111,8 +111,8 @@ impl MapCanvas {
                 ch = "@";
 
                 fg = world
-                    .bots
-                    .alive
+                    .bots()
+                    .alive()
                     .by_idx(tile.meta[0])
                     .map(|bot| bot.id.color())
                     .unwrap();
@@ -129,8 +129,8 @@ impl MapCanvas {
                 };
 
                 fg = world
-                    .bots
-                    .alive
+                    .bots()
+                    .alive()
                     .by_idx(tile.meta[0])
                     .map(|bot| bot.id.color())
                     .unwrap();
@@ -153,8 +153,8 @@ impl MapCanvas {
 
             if tile.base == TileBase::BOT {
                 let id = world
-                    .bots
-                    .alive
+                    .bots()
+                    .alive()
                     .by_idx(tile.meta[0])
                     .map(|bot| bot.id)
                     .unwrap();

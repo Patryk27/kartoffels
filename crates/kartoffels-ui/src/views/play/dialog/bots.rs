@@ -32,17 +32,19 @@ impl BotsDialog {
         ui.info_dialog(width, height, Some(" bots "), |ui| {
             let header = Row::new(vec!["nth", "id", "age", "score ⯆"]);
 
-            let rows =
-                world.bots.alive.iter_sorted_by_scores().enumerate().map(
-                    |(place, (bot, score))| {
-                        Row::new([
-                            Cell::new(format!("#{}", place + 1)),
-                            Cell::new(bot.id.to_string()).fg(bot.id.color()),
-                            Cell::new(format!("{}s", bot.age)),
-                            Cell::new(score.to_string()),
-                        ])
-                    },
-                );
+            let rows = world
+                .bots()
+                .alive()
+                .iter_sorted_by_scores()
+                .enumerate()
+                .map(|(place, (bot, score))| {
+                    Row::new([
+                        Cell::new(format!("#{}", place + 1)),
+                        Cell::new(bot.id.to_string()).fg(bot.id.color()),
+                        Cell::new(format!("{}s", bot.age)),
+                        Cell::new(score.to_string()),
+                    ])
+                });
 
             let area = Rect {
                 height: ui.area().height - 2,
