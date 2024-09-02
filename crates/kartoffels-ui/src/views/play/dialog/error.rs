@@ -5,10 +5,14 @@ use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct ErrorDialog {
-    pub error: String,
+    error: String,
 }
 
 impl ErrorDialog {
+    pub fn new(error: String) -> Self {
+        Self { error }
+    }
+
     pub fn render(&self, ui: &mut Ui) -> Option<DialogResponse> {
         let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
         let width = 50;
@@ -19,7 +23,7 @@ impl ErrorDialog {
 
             ui.clamp(ui.area().footer(1), |ui| {
                 if Button::new(KeyCode::Enter, "close")
-                    .right()
+                    .right_aligned()
                     .render(ui)
                     .pressed
                 {

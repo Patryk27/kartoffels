@@ -196,9 +196,7 @@ impl State {
                 }
 
                 DialogResponse::Throw(err) => {
-                    self.dialog = Some(Dialog::Error(ErrorDialog {
-                        error: err.to_string(),
-                    }));
+                    self.dialog = Some(Dialog::Error(ErrorDialog::new(err)));
                 }
             },
 
@@ -253,12 +251,10 @@ impl State {
         let src = match BASE64_STANDARD.decode(src) {
             Ok(src) => src,
             Err(err) => {
-                self.dialog = Some(Dialog::Error(ErrorDialog {
-                    error: format!(
-                        "couldn't decode pasted content:\n\n{}",
-                        err
-                    ),
-                }));
+                self.dialog = Some(Dialog::Error(ErrorDialog::new(format!(
+                    "couldn't decode pasted content:\n\n{}",
+                    err
+                ))));
 
                 return Ok(());
             }
@@ -268,9 +264,8 @@ impl State {
             Ok(id) => id,
 
             Err(err) => {
-                self.dialog = Some(Dialog::Error(ErrorDialog {
-                    error: err.to_string(),
-                }));
+                self.dialog =
+                    Some(Dialog::Error(ErrorDialog::new(format!("{:?}", err))));
 
                 return Ok(());
             }

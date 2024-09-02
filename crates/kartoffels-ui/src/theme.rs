@@ -12,6 +12,4 @@ pub const PINK: Color = Color::Rgb(255, 0, 128);
 pub const RED: Color = Color::Rgb(255, 0, 0);
 pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
 
-pub const CARET_TIME: Duration = Duration::from_millis(500);
-pub const SPINNER_TIME: Duration = Duration::from_millis(250);
 pub const INTERACTION_TIME: Duration = Duration::from_millis(1000 / 60);

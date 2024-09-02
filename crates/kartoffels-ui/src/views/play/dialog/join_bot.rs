@@ -1,17 +1,14 @@
 use super::DialogResponse;
-use crate::{theme, Button, Ui};
+use crate::{ Button, Caret, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
-use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Widget;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::time::{self, Interval};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct JoinBotDialog {
-    pub id: String,
-    pub caret_visible: bool,
-    pub caret_interval: Interval,
+    id: String,
+    caret: Caret,
 }
 
 impl JoinBotDialog {
@@ -22,10 +19,6 @@ impl JoinBotDialog {
     ) -> Option<DialogResponse> {
         let mut resp = None;
 
-        if ui.poll_interval(&mut self.caret_interval) {
-            self.caret_visible = !self.caret_visible;
-        }
-
         ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
             Line::raw("enter bot id:").render(ui.area(), ui.buf());
 
@@ -34,8 +27,7 @@ impl JoinBotDialog {
             Line::from_iter([
                 Span::raw("> "),
                 Span::raw(&self.id),
-                Span::raw(if self.caret_visible { "_" } else { "" })
-                    .fg(theme::GREEN),
+                self.caret.as_span(ui),
             ])
             .render(ui.area(), ui.buf());
 
@@ -50,7 +42,7 @@ impl JoinBotDialog {
             }
 
             if Button::new(KeyCode::Enter, "join")
-                .right()
+                .right_aligned()
                 .render(ui)
                 .pressed
             {
@@ -123,15 +115,5 @@ impl JoinBotDialog {
         }
 
         Some(DialogResponse::JoinBot(id))
-    }
-}
-
-impl Default for JoinBotDialog {
-    fn default() -> Self {
-        Self {
-            id: Default::default(),
-            caret_visible: false,
-            caret_interval: time::interval(theme::CARET_TIME),
-        }
     }
 }

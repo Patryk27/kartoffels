@@ -1,35 +1,50 @@
 use crate::{theme, Ui};
 use ratatui::style::{Style, Stylize};
-use ratatui::text::Text;
-use ratatui::widgets::{Block, Padding, Widget};
+use ratatui::text::{Line, Span, Text};
+use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
+use std::sync::LazyLock;
 
-const TEXT: &[&str] = &[
-    "welcome to kartoffels, a game where you're given a potato:",
-    "",
-    "     ██████     ",
-    "   ██░░░░░░██   ",
-    " ██░░░░░░░░░░██ ",
-    " ██░░░░░░░░░░██ ",
-    "   ██░░░░░░░░██ ",
-    "   oo████████oo ",
-    "   oo        oo ",
-    "",
-    "... and your job is to implement a firmware for it",
-    "",
-    "robots are limited to 64 khz cpu & 128 kb of ram and the",
-    "game happens online - you can see your robot fighting",
-    "other players' bots and you can learn from their behavior",
-    "",
-    "can you develop the best, the longest surviving, the",
-    "most deadly machine imaginable?",
-];
+static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
+    Text::from_iter([
+        Line::raw("welcome to kartoffels, a game where you're given a potato:"),
+        Line::raw(""),
+        Line::raw("     ██████     ").fg(theme::POTATO),
+        Line::raw("   ██░░░░░░██   ").fg(theme::POTATO),
+        Line::raw(" ██░░░░░░░░░░██ ").fg(theme::POTATO),
+        Line::raw(" ██░░░░░░░░░░██ ").fg(theme::POTATO),
+        Line::raw("   ██░░░░░░░░██ ").fg(theme::POTATO),
+        Line::raw("   oo████████oo ").fg(theme::POTATO),
+        Line::raw("   oo        oo ").fg(theme::POTATO),
+        Line::raw(""),
+        Line::raw("... and your job is to implement a firmware for it"),
+        Line::raw(""),
+        Line::from_iter([
+            Span::raw("you've got "),
+            Span::raw("64 khz cpu ").bold(),
+            Span::raw("and "),
+            Span::raw("128 kb of ram ").bold(),
+            Span::raw("at hand, and you"),
+        ]),
+        Line::raw("can either compete against other players in the online"),
+        Line::raw("play or indulge yourself with single-player challenges"),
+        Line::raw(""),
+        Line::raw("have fun!"),
+        Line::raw("~pwy"),
+    ])
+    .centered()
+});
 
 #[derive(Debug)]
 pub struct Header;
 
 impl Header {
-    pub const WIDTH: u16 = 58 + 2 + 2;
-    pub const HEIGHT: u16 = TEXT.len() as u16 + 2;
+    pub fn width() -> u16 {
+        58 + 2 + 2
+    }
+
+    pub fn height() -> u16 {
+        TEXT.lines.len() as u16 + 2
+    }
 
     pub fn render(ui: &mut Ui) {
         let block = Block::bordered()
@@ -43,16 +58,6 @@ impl Header {
             inner_area
         };
 
-        let mut text = Text::default();
-
-        for (idx, &line) in TEXT.iter().enumerate() {
-            if (2..=8).contains(&idx) {
-                text.push_line(line.fg(theme::POTATO));
-            } else {
-                text.push_line(line);
-            }
-        }
-
-        text.centered().render(area, ui.buf());
+        TEXT.render_ref(area, ui.buf())
     }
 }

@@ -31,7 +31,7 @@ impl<'a> Button<'a> {
         self
     }
 
-    pub fn right(mut self) -> Self {
+    pub fn right_aligned(mut self) -> Self {
         self.alignment = Alignment::Right;
         self
     }

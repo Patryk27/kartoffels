@@ -8,7 +8,7 @@ use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct BotsDialog {
-    pub table: TableState,
+    table: TableState,
 }
 
 impl BotsDialog {

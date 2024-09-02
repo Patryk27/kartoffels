@@ -1,46 +1,67 @@
 use super::DialogResponse;
-use crate::{theme, Button, RectExt, Ui};
+use crate::{theme, Button, Spinner, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Paragraph, Widget, Wrap};
+use ratatui::widgets::{Paragraph, Widget, WidgetRef, Wrap};
+use std::cmp;
+use std::sync::LazyLock;
 use termwiz::input::{InputEvent, KeyCode};
-use tokio::time::{self, Interval};
 
-#[derive(Debug)]
+static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
+    Paragraph::new(vec![
+        Line::raw("if you're following the standard template, run:"),
+        Line::raw(""),
+        Line::raw("    ./build --copy").fg(theme::WASHED_PINK),
+        Line::raw("  or").fg(theme::GRAY),
+        Line::raw("    ./build.bat --copy").fg(theme::WASHED_PINK),
+        Line::raw(""),
+        Line::raw(
+            "... and then paste your clipboard here (Ctrl+Shift+V, Cmd+V \
+             etc.) to upload the bot",
+        ),
+        Line::raw(""),
+        Line::raw(
+            "if you're not following the template, you have to just build \
+             the *.elf file, base64-encode it and then paste it here",
+        ),
+    ])
+    .wrap(Wrap::default())
+});
+
+#[derive(Debug, Default)]
 pub struct UploadBotDialog {
-    pub spinner_interval: Interval,
-    pub spinner_icon: usize,
+    spinner: Spinner,
 }
 
 impl UploadBotDialog {
-    const SPINNER: &[&str] = &["|", "/", "-", "\\"];
-
     pub fn render(&mut self, ui: &mut Ui) -> Option<DialogResponse> {
         let mut resp = None;
 
         if ui.ty().is_ssh() {
-            if ui.poll_interval(&mut self.spinner_interval) {
-                self.spinner_icon += 1;
-            }
+            let width = cmp::min(ui.area().width - 10, 60);
+            let lines = TEXT.line_count(width) as u16;
+            let height = lines + 4;
 
-            let spinner = Span::raw(
-                Self::SPINNER[self.spinner_icon % Self::SPINNER.len()],
-            )
-            .fg(theme::GREEN);
-
-            let text = Self::text(spinner);
-            let width = 60;
-            let height = text.line_count(width) as u16 + 2;
+            let spinner = self.spinner.as_span(ui);
 
             ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
-                text.render(ui.area(), ui.buf());
+                TEXT.render_ref(ui.area(), ui.buf());
 
-                ui.clamp(ui.area().footer(1), |ui| {
-                    if Button::new(KeyCode::Escape, "cancel").render(ui).pressed
-                    {
-                        resp = Some(DialogResponse::Close);
-                    }
-                });
+                ui.space(lines + 1);
+
+                Line::from_iter([
+                    spinner.clone(),
+                    Span::raw(" waiting "),
+                    spinner,
+                ])
+                .centered()
+                .render(ui.area(), ui.buf());
+
+                ui.space(2);
+
+                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
+                    resp = Some(DialogResponse::Close);
+                }
             });
         }
 
@@ -55,38 +76,5 @@ impl UploadBotDialog {
         }
 
         resp
-    }
-
-    fn text(spinner: Span<'static>) -> Paragraph<'static> {
-        Paragraph::new(vec![
-            Line::raw("if you're following the standard template, run:"),
-            Line::raw(""),
-            Line::raw("    ./build --copy").fg(theme::WASHED_PINK),
-            Line::raw("  or").fg(theme::GRAY),
-            Line::raw("    ./build.bat --copy").fg(theme::WASHED_PINK),
-            Line::raw(""),
-            Line::raw(
-                "... and then paste your clipboard here (Ctrl+Shift+V, Cmd+V \
-                 etc.) to upload the bot",
-            ),
-            Line::raw(""),
-            Line::raw(
-                "if you're not following the template, you have to just build \
-                 the *.elf file, base64-encode it and then paste it here",
-            ),
-            Line::raw(""),
-            Line::from_iter([spinner.clone(), Span::raw(" waiting "), spinner])
-                .centered(),
-        ])
-        .wrap(Wrap::default())
-    }
-}
-
-impl Default for UploadBotDialog {
-    fn default() -> Self {
-        Self {
-            spinner_interval: time::interval(theme::SPINNER_TIME),
-            spinner_icon: 0,
-        }
     }
 }

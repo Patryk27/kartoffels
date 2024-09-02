@@ -15,14 +15,14 @@ pub async fn run(term: &mut Term) -> Result<Response> {
         term.draw(|ui| {
             let [_, area, _] = Layout::horizontal([
                 Constraint::Fill(1),
-                Constraint::Length(Header::WIDTH),
+                Constraint::Length(Header::width()),
                 Constraint::Fill(1),
             ])
             .areas(ui.area());
 
             let [_, header_area, _, menu_area, _, _] = Layout::vertical([
                 Constraint::Fill(1),
-                Constraint::Length(Header::HEIGHT),
+                Constraint::Length(Header::height()),
                 Constraint::Length(1),
                 Constraint::Length(Menu::height(ui)),
                 Constraint::Length(1),

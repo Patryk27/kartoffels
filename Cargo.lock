@@ -1404,7 +1404,6 @@ dependencies = [
  "base64 0.22.1",
  "futures-util",
  "glam",
- "indoc",
  "itertools 0.12.1",
  "kartoffels-store",
  "kartoffels-world",
