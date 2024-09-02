@@ -62,7 +62,7 @@ impl UploadBotDialog {
             Line::raw("if you're following the standard template, run:"),
             Line::raw(""),
             Line::raw("    ./build --copy").fg(theme::WASHED_PINK),
-            Line::raw("  (or)").fg(theme::GRAY),
+            Line::raw("  or").fg(theme::GRAY),
             Line::raw("    ./build.bat --copy").fg(theme::WASHED_PINK),
             Line::raw(""),
             Line::raw(

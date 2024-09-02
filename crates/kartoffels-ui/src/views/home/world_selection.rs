@@ -35,6 +35,15 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 
                 ui.space(1);
 
+                if Button::new(KeyCode::Char('s'), "sandbox")
+                    .centered()
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(Response::OpenSandbox);
+                }
+
                 if Button::new(KeyCode::Char('t'), "tutorial")
                     .centered()
                     .block()
@@ -68,6 +77,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play(WorldHandle),
+    OpenSandbox,
     OpenTutorial,
     GoBack,
 }

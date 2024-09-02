@@ -6,7 +6,7 @@ use std::cmp::Reverse;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-struct State {
+pub struct State {
     next_run_at: Instant,
 }
 
@@ -18,9 +18,7 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World) {
-    let state = world.systems.get_mut::<State>();
-
+pub fn run(world: &mut World, state: &mut State) {
     if Instant::now() < state.next_run_at {
         return;
     }
@@ -32,8 +30,7 @@ pub fn run(world: &mut World) {
 
     _ = world.updates.send(snap);
 
-    world.systems.get_mut::<State>().next_run_at =
-        Instant::now() + Duration::from_millis(50);
+    state.next_run_at = Instant::now() + Duration::from_millis(50);
 }
 
 fn prepare_map(world: &World) -> Map {

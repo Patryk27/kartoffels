@@ -2,35 +2,35 @@ use crate::{AliveBot, BotId, KillBot, QueuedBot, Request, Shutdown, World};
 use anyhow::{anyhow, Result};
 use glam::IVec2;
 use kartoffels_vm as vm;
-use tracing::{info, trace};
+use std::ops::ControlFlow;
+use tokio::sync::mpsc::error::TryRecvError;
+use tracing::trace;
 
-pub fn run(world: &mut World) {
-    while let Ok(msg) = world.rx.try_recv() {
-        match msg {
-            Request::Listen { tx } => {
+pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
+    loop {
+        match world.rx.try_recv() {
+            Ok(Request::Listen { tx }) => {
                 _ = tx.send(world.updates.subscribe());
             }
 
-            Request::Pause { paused } => {
+            Ok(Request::Pause { paused }) => {
                 world.paused = paused;
             }
 
-            Request::Shutdown { tx } => {
-                info!("shutting down");
-
-                world.events.send(Shutdown { tx });
+            Ok(Request::Shutdown { tx }) => {
+                break ControlFlow::Break(Shutdown { tx: Some(tx) });
             }
 
-            Request::CreateBot {
+            Ok(Request::CreateBot {
                 src,
                 pos,
                 ephemeral,
                 tx,
-            } => {
+            }) => {
                 _ = tx.send(create_bot(world, src, pos, ephemeral));
             }
 
-            Request::RestartBot { id } => {
+            Ok(Request::RestartBot { id }) => {
                 world.events.send(KillBot {
                     id,
                     reason: "forcefully restarted".into(),
@@ -38,8 +38,16 @@ pub fn run(world: &mut World) {
                 });
             }
 
-            Request::DestroyBot { id } => {
+            Ok(Request::DestroyBot { id }) => {
                 world.bots.remove(id);
+            }
+
+            Err(TryRecvError::Empty) => {
+                break ControlFlow::Continue(());
+            }
+
+            Err(TryRecvError::Disconnected) => {
+                break ControlFlow::Break(Shutdown { tx: None });
             }
         }
     }

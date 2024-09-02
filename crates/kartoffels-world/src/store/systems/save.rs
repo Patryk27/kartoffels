@@ -1,12 +1,13 @@
-use crate::{SerializedWorld, Shutdown, World};
+use crate::{SerializedWorld, World};
 use anyhow::{Context, Result};
 use futures_util::FutureExt;
 use maybe_owned::MaybeOwned;
 use std::future::Future;
 use std::time::{Duration, Instant};
+use tokio::{runtime, task};
 use tracing::{debug, info, Instrument, Span};
 
-struct State {
+pub struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
     next_run_at: Instant,
 }
@@ -20,21 +21,20 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World) {
-    let state = world.systems.get_mut::<State>();
-    let shutdown = world.events.recv::<Shutdown>();
-
-    let Some(path) = &world.path else {
-        if let Some(shutdown) = shutdown {
-            _ = shutdown.tx.send(());
-        }
-
-        return;
-    };
-
-    if Instant::now() < state.next_run_at && shutdown.is_none() {
+pub fn run(world: &mut World, state: &mut State) {
+    if Instant::now() < state.next_run_at {
         return;
     }
+
+    state.next_run_at = next_run_at();
+
+    run_now(world, state, false);
+}
+
+pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
+    let Some(path) = &world.path else {
+        return;
+    };
 
     debug!("saving world");
 
@@ -57,15 +57,11 @@ pub fn run(world: &mut World) {
 
     let task = world.store(path).expect("couldn't save the world");
 
-    let task = tokio::spawn(
+    let task = task::spawn(
         async move {
             let (tt_ser, tt_io) = task.await?;
 
-            info!(?tt_ser, ?tt_io, "world saved");
-
-            if let Some(shutdown) = shutdown {
-                _ = shutdown.tx.send(());
-            }
+            info!(?tt_ser, ?tt_io, "saved");
 
             Ok(())
         }
@@ -73,8 +69,11 @@ pub fn run(world: &mut World) {
     )
     .map(|result| result.context("task crashed")?);
 
-    state.task = Some(Box::new(task));
-    state.next_run_at = next_run_at();
+    if blocking {
+        runtime::Handle::current().block_on(task).unwrap();
+    } else {
+        state.task = Some(Box::new(task));
+    }
 }
 
 fn next_run_at() -> Instant {

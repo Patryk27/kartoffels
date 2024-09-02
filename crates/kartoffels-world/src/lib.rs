@@ -27,6 +27,8 @@ pub mod prelude {
     pub use crate::config::Config;
     pub use crate::handle::{Handle, Request};
     pub use crate::map::{Map, Tile, TileBase};
+    pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};
+    pub use crate::policy::Policy;
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
         SnapshotQueuedBot, SnapshotQueuedBots,
@@ -50,60 +52,77 @@ use anyhow::Result;
 use kartoffels_utils::{Id, Metronome};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
+use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, oneshot};
-use tracing::{info, span, Level};
+use tracing::{debug, info, span, Level};
 
-pub fn create(_path: &Path, config: Config) -> Result<()> {
-    let _mode = config.mode.create();
-    let _theme = config.theme.create();
+pub fn create(config: Config, path: Option<&Path>) -> Handle {
+    let mut rng = SmallRng::from_entropy();
 
-    todo!();
-}
+    let name = Arc::new(config.name);
+    let mode = config.mode.create();
+    let theme = config.theme.create();
+    let policy = config.policy;
 
-pub fn spawn(id: Id, path: &Path) -> Result<Handle> {
-    let path = path.to_owned();
-    let world = SerializedWorld::load(&path)?;
+    let id = Id::new(&mut rng);
+    let map = theme.create_map(&mut rng);
+    let path = path.map(|path| path.to_owned());
 
     let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
-    let handle = Handle::new(tx, Arc::new(world.name.to_string()));
+    let handle = Handle::new(tx, name.clone());
 
-    let rt = TokioHandle::current();
-    let span = span!(Level::INFO, "world", %id);
+    World {
+        bots: Default::default(),
+        updates: broadcast::Sender::new(1),
+        events: Default::default(),
+        map,
+        mode,
+        name,
+        path,
+        paused: false,
+        policy,
+        rng,
+        rx,
+        theme,
+    }
+    .spawn(id);
 
-    thread::spawn(move || {
-        let _rt = rt.enter();
-        let _span = span.enter();
-        let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
+    handle
+}
 
-        let mut world = World {
-            bots: world.bots.into_owned(),
-            updates: broadcast::Sender::new(2),
-            events: Default::default(),
-            map: world.map.into_owned(),
-            mode: world.mode.into_owned(),
-            name: Arc::new(world.name.into_owned()),
-            path: Some(path),
-            paused: false,
-            policy: world.policy.into_owned(),
-            rng: SmallRng::from_entropy(),
-            rx,
-            systems: Default::default(),
-            theme: world.theme.into_owned(),
-        };
+pub fn resume(id: Id, path: &Path) -> Result<Handle> {
+    let path = path.to_owned();
 
-        info!("ready");
+    let world = SerializedWorld::load(&path)?;
+    let bots = world.bots.into_owned();
+    let map = world.map.into_owned();
+    let mode = world.mode.into_owned();
+    let policy = world.policy.into_owned();
+    let theme = world.theme.into_owned();
+    let name = Arc::new(world.name.into_owned());
 
-        loop {
-            world.tick();
+    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
+    let handle = Handle::new(tx, name.clone());
 
-            metronome.tick();
-            metronome.wait();
-        }
-    });
+    World {
+        bots,
+        updates: broadcast::Sender::new(1),
+        events: Default::default(),
+        map,
+        mode,
+        name,
+        path: Some(path),
+        paused: false,
+        policy,
+        rng: SmallRng::from_entropy(),
+        rx,
+        theme,
+    }
+    .spawn(id);
 
     Ok(handle)
 }
@@ -119,28 +138,71 @@ struct World {
     policy: Policy,
     rng: SmallRng,
     rx: RequestRx,
-    systems: Container,
     theme: Theme,
     updates: broadcast::Sender<Arc<Snapshot>>,
 }
 
 impl World {
-    fn tick(&mut self) {
-        handle::process_requests::run(self);
+    fn spawn(mut self, id: Id) {
+        let rt = TokioHandle::current();
+        let span = span!(Level::INFO, "world", %id);
+
+        thread::spawn(move || {
+            let _rt = rt.enter();
+            let _span = span.enter();
+
+            info!("ready");
+
+            let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
+            let mut systems = Container::default();
+
+            let shutdown = loop {
+                match self.tick(&mut systems) {
+                    ControlFlow::Continue(_) => {
+                        metronome.tick();
+                        metronome.wait();
+                    }
+
+                    ControlFlow::Break(shutdown) => {
+                        break shutdown;
+                    }
+                }
+            };
+
+            self.shutdown(&mut systems, shutdown);
+        });
+    }
+
+    fn tick(&mut self, systems: &mut Container) -> ControlFlow<Shutdown, ()> {
+        handle::process_requests::run(self)?;
 
         if !self.paused {
-            bots::spawn::run(self);
+            bots::spawn::run(self, systems.get_mut());
             bots::tick::run(self);
             bots::kill::run(self);
         }
 
-        snapshots::broadcast::run(self);
-        store::save::run(self);
-        stats::run(self);
+        snapshots::broadcast::run(self, systems.get_mut());
+        store::save::run(self, systems.get_mut());
+        stats::run(self, systems.get_mut());
+
+        ControlFlow::Continue(())
+    }
+
+    fn shutdown(mut self, systems: &mut Container, shutdown: Shutdown) {
+        debug!("shutting down");
+
+        store::save::run_now(&mut self, systems.get_mut(), true);
+
+        if let Some(tx) = shutdown.tx {
+            _ = tx.send(());
+        }
+
+        info!("shut down");
     }
 }
 
 #[derive(Debug)]
 struct Shutdown {
-    tx: oneshot::Sender<()>,
+    tx: Option<oneshot::Sender<()>>,
 }

@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 use tracing::trace;
 
 #[derive(Debug)]
-struct State {
+pub struct State {
     next_run_at: Instant,
 }
 
@@ -17,9 +17,7 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World) {
-    let state = world.systems.get_mut::<State>();
-
+pub fn run(world: &mut World, state: &mut State) {
     if Instant::now() < state.next_run_at {
         return;
     }

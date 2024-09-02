@@ -3,13 +3,13 @@ use std::any::{Any, TypeId};
 
 #[derive(Default)]
 pub struct Container {
-    values: AHashMap<TypeId, Box<dyn Any>>,
+    values: AHashMap<TypeId, Box<dyn Any + Send>>,
 }
 
 impl Container {
     pub fn get_mut<T>(&mut self) -> &mut T
     where
-        T: Default + 'static,
+        T: Default + Send + 'static,
     {
         self.values
             .entry(TypeId::of::<T>())

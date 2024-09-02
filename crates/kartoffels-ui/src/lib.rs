@@ -14,17 +14,11 @@ pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
     use self::views::*;
 
     loop {
-        match home::run(term, store).await? {
-            home::Response::Play(world) => {
-                match play::run(term, world).await? {
-                    play::Response::OpenTutorial => {
-                        todo!();
-                    }
+        let (world, ctrl) = match home::run(term, store).await? {
+            home::Response::Play(world) => (world, play::Controller::Normal),
 
-                    play::Response::GoBack => {
-                        continue;
-                    }
-                }
+            home::Response::OpenSandbox => {
+                (store.sandbox(), play::Controller::Sandbox)
             }
 
             home::Response::OpenTutorial => {
@@ -37,6 +31,16 @@ pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
 
             home::Response::Quit => {
                 return Ok(());
+            }
+        };
+
+        match play::run(term, world, ctrl).await? {
+            play::Response::OpenTutorial => {
+                todo!();
+            }
+
+            play::Response::GoBack => {
+                continue;
             }
         }
     }

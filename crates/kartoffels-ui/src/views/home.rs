@@ -15,6 +15,10 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                         return Ok(Response::Play(world));
                     }
 
+                    world_selection::Response::OpenSandbox => {
+                        return Ok(Response::OpenSandbox);
+                    }
+
                     world_selection::Response::OpenTutorial => {
                         return Ok(Response::OpenTutorial);
                     }
@@ -23,6 +27,10 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                         continue;
                     }
                 }
+            }
+
+            intro::Response::OpenSandbox => {
+                return Ok(Response::OpenSandbox);
             }
 
             intro::Response::OpenTutorial => {
@@ -43,6 +51,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play(WorldHandle),
+    OpenSandbox,
     OpenTutorial,
     OpenChallenges,
     Quit,

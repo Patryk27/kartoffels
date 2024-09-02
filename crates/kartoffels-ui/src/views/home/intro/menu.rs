@@ -8,7 +8,7 @@ pub struct Menu;
 impl Menu {
     pub fn height(ui: &Ui) -> u16 {
         if ui.ty().is_ssh() {
-            8
+            7
         } else {
             5
         }
@@ -19,6 +19,7 @@ impl Menu {
 
         if Button::new(KeyCode::Char('p'), "play")
             .centered()
+            .block()
             .render(ui)
             .pressed
         {
@@ -27,18 +28,27 @@ impl Menu {
 
         ui.space(1);
 
+        if Button::new(KeyCode::Char('s'), "sandbox")
+            .centered()
+            .block()
+            .render(ui)
+            .pressed
+        {
+            resp = Some(Response::OpenSandbox);
+        }
+
         if Button::new(KeyCode::Char('t'), "tutorial")
             .centered()
+            .block()
             .render(ui)
             .pressed
         {
             resp = Some(Response::OpenTutorial);
         }
 
-        ui.space(1);
-
         if Button::new(KeyCode::Char('c'), "challenges")
             .centered()
+            .block()
             .render(ui)
             .pressed
         {
@@ -46,7 +56,7 @@ impl Menu {
         }
 
         if ui.ty().is_ssh() {
-            ui.space(2);
+            ui.space(1);
 
             if Button::new(KeyCode::Escape, "quit")
                 .centered()

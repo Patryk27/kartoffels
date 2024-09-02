@@ -1,9 +1,11 @@
 mod bottom;
+mod ctrl;
 mod dialog;
 mod map;
 mod side;
 
 use self::bottom::*;
+pub use self::ctrl::*;
 use self::dialog::*;
 use self::map::*;
 use self::side::*;
@@ -21,7 +23,11 @@ use std::sync::Arc;
 use tokio::{select, time};
 use tokio_stream::StreamExt;
 
-pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Response> {
+pub async fn run(
+    term: &mut Term,
+    handle: WorldHandle,
+    _ctrl: Controller,
+) -> Result<Response> {
     let mut snapshots = handle.listen().await?;
 
     let snapshot = snapshots

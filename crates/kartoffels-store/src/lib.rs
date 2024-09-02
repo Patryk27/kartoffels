@@ -41,13 +41,13 @@ impl Store {
                     .parse()
                     .context("couldn't extract world id from path")?;
 
-                let world = kartoffels_world::spawn(id, &path)?;
+                let world = kartoffels_world::resume(id, &path)?;
 
                 worlds.push(world);
             };
 
             result.with_context(|| {
-                format!("couldn't spawn world: {}", path.display())
+                format!("couldn't resume world: {}", path.display())
             })?;
         }
 
@@ -59,6 +59,24 @@ impl Store {
             dir: dir.to_owned(),
             worlds,
         })
+    }
+
+    pub fn sandbox(&self) -> WorldHandle {
+        use kartoffels_world::prelude::*;
+
+        let config = Config {
+            name: "sandbox".into(),
+            mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
+                round_duration: None,
+            }),
+            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 15 }),
+            policy: Policy {
+                max_alive_bots: 16,
+                max_queued_bots: 16,
+            },
+        };
+
+        kartoffels_world::create(config, None)
     }
 
     pub async fn close(&self) -> Result<()> {

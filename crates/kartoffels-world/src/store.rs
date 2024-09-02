@@ -99,6 +99,6 @@ impl SerializedWorld<'_> {
             Ok((tt_ser, tt_io))
         });
 
-        Ok(async move { task.await.context("thread has crashed")? })
+        Ok(async move { task.await.context("task crashed")? })
     }
 }
