@@ -17,27 +17,16 @@ impl BottomPanel {
         let mut event = None;
 
         ui.row(|ui| {
-            if Button::new(KeyCode::Escape, "quit")
+            if Button::new(KeyCode::Escape, "go back")
                 .enabled(enabled)
                 .block()
                 .render(ui)
                 .pressed
             {
-                event = Some(BottomPanelResponse::Quit);
+                event = Some(BottomPanelResponse::GoBack);
             }
 
-            ui.fill(2);
-
-            if Button::new(KeyCode::Char('h'), "help")
-                .enabled(enabled)
-                .block()
-                .render(ui)
-                .pressed
-            {
-                event = Some(BottomPanelResponse::Help);
-            }
-
-            ui.fill(2);
+            ui.space(2);
 
             if Button::new(KeyCode::Char(' '), "pause")
                 .enabled(enabled)
@@ -48,7 +37,18 @@ impl BottomPanel {
                 event = Some(BottomPanelResponse::Pause);
             }
 
-            ui.fill(2);
+            ui.space(2);
+
+            if Button::new(KeyCode::Char('h'), "help")
+                .enabled(enabled)
+                .block()
+                .render(ui)
+                .pressed
+            {
+                event = Some(BottomPanelResponse::Help);
+            }
+
+            ui.space(2);
 
             if Button::new(KeyCode::Char('b'), "bots")
                 .enabled(enabled)
@@ -80,7 +80,7 @@ impl BottomPanel {
 
 #[derive(Debug)]
 pub enum BottomPanelResponse {
-    Quit,
+    GoBack,
     Help,
     Pause,
     ListBots,

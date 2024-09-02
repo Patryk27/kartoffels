@@ -2,7 +2,6 @@
 #![feature(try_blocks)]
 
 use anyhow::{Context, Result};
-use kartoffels_utils::Id;
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -11,7 +10,7 @@ use tracing::info;
 #[derive(Debug)]
 pub struct Store {
     pub dir: PathBuf,
-    pub worlds: Vec<(Id, WorldHandle)>,
+    pub worlds: Vec<WorldHandle>,
 }
 
 impl Store {
@@ -24,12 +23,6 @@ impl Store {
         while let Some(entry) = entries.next_entry().await? {
             let entry_path = entry.path();
 
-            let Some(entry_stem) =
-                entry_path.file_stem().and_then(|stem| stem.to_str())
-            else {
-                continue;
-            };
-
             let Some("world") =
                 entry_path.extension().and_then(|ext| ext.to_str())
             else {
@@ -38,22 +31,15 @@ impl Store {
 
             info!("loading: {}", entry_path.display());
 
-            let result: Result<()> = try {
-                let id = entry_stem
-                    .parse()
-                    .context("couldn't extract world id from path")?;
+            let world =
+                kartoffels_world::spawn(&entry_path).with_context(|| {
+                    format!("couldn't spawn world: {}", entry_path.display())
+                })?;
 
-                let handle = kartoffels_world::spawn(&entry_path)?;
-
-                worlds.push((id, handle));
-            };
-
-            result.with_context(|| {
-                format!("couldn't resume world: {}", entry_path.display())
-            })?;
+            worlds.push(world);
         }
 
-        worlds.sort_by_key(|(_, world)| world.name().to_owned());
+        worlds.sort_by_key(|world| world.name().to_owned());
 
         info!("ready");
 
@@ -64,7 +50,7 @@ impl Store {
     }
 
     pub async fn close(&self) -> Result<()> {
-        for (_, world) in self.worlds.iter() {
+        for world in &self.worlds {
             world.shutdown().await?;
         }
 

@@ -13,7 +13,7 @@ pub struct BotsDialog {
 
 impl BotsDialog {
     const WIDTHS: [u16; 4] = [
-        5,                    // place
+        4,                    // nth
         BotId::LENGTH as u16, // id
         6,                    // age
         7,                    // score
@@ -26,11 +26,11 @@ impl BotsDialog {
     ) -> Option<DialogResponse> {
         let mut response = None;
 
-        let width = Self::WIDTHS.iter().copied().sum::<u16>() + 4;
+        let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
         let height = ui.area().height - 2;
 
         ui.info_dialog(width, height, Some(" bots "), |ui| {
-            let header = Row::new(vec!["place", "id", "age", "score ⯆"]);
+            let header = Row::new(vec!["nth", "id", "age", "score ⯆"]);
 
             let rows =
                 snapshot.bots.alive.iter_sorted_by_scores().enumerate().map(
@@ -38,7 +38,7 @@ impl BotsDialog {
                         Row::new([
                             Cell::new(format!("#{}", place + 1)),
                             Cell::new(bot.id.to_string()).fg(bot.id.color()),
-                            Cell::new(bot.age.to_string()),
+                            Cell::new(format!("{}s", bot.age)),
                             Cell::new(score.to_string()),
                         ])
                     },
@@ -55,7 +55,7 @@ impl BotsDialog {
                 &mut self.table,
             );
 
-            ui.fill(2);
+            ui.space(2);
 
             ui.clamp(ui.area().footer(1), |ui| {
                 ui.row(|ui| {
@@ -68,7 +68,7 @@ impl BotsDialog {
                             self.table.offset().saturating_sub(8);
                     }
 
-                    ui.fill(1);
+                    ui.space(2);
 
                     if Button::new(KeyCode::Char('s'), "scroll down")
                         .block()
@@ -79,7 +79,7 @@ impl BotsDialog {
                             self.table.offset().saturating_add(8);
                     }
 
-                    ui.fill(1);
+                    ui.space(2);
 
                     if Button::new(KeyCode::Escape, "close")
                         .block()

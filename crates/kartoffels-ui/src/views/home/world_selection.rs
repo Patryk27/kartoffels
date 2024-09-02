@@ -3,7 +3,6 @@ use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::text::Line;
-use ratatui::widgets::Widget;
 use termwiz::input::KeyCode;
 use tokio::time;
 
@@ -14,37 +13,43 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
         term.draw(|ui| {
             Clear::render(ui);
 
-            let menu = build_menu(store);
-
-            let width = menu
-                .iter()
-                .map(|item| item.width())
-                .max()
-                .unwrap_or_default();
-
-            let height = menu.len() as u16;
+            let width = 40;
+            let height = (store.worlds.len() + 5) as u16;
 
             ui.info_dialog(width, height, Some(" play "), |ui| {
-                for item in menu {
-                    match item {
-                        MenuItem::Line(item) => {
-                            item.render(ui.area(), ui.buf());
-                        }
+                ui.line(Line::raw("choose world:").centered());
+                ui.space(1);
 
-                        MenuItem::Button(item, idx) => {
-                            if item.render(ui).pressed {
-                                if let Some(idx) = idx {
-                                    response = Some(Response::Play(
-                                        store.worlds[idx as usize].1.clone(),
-                                    ));
-                                } else {
-                                    response = Some(Response::Quit);
-                                }
-                            }
-                        }
+                for (idx, world) in store.worlds.iter().enumerate() {
+                    let key = KeyCode::Char((b'1' + (idx as u8)) as char);
+
+                    if Button::new(key, world.name())
+                        .centered()
+                        .block()
+                        .render(ui)
+                        .pressed
+                    {
+                        response = Some(Response::Play(world.to_owned()));
                     }
+                }
 
-                    ui.fill(1);
+                ui.space(1);
+
+                if Button::new(KeyCode::Char('t'), "tutorial")
+                    .centered()
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    response = Some(Response::OpenTutorial);
+                }
+
+                if Button::new(KeyCode::Escape, "go back")
+                    .centered()
+                    .render(ui)
+                    .pressed
+                {
+                    response = Some(Response::GoBack);
                 }
             });
         })
@@ -60,49 +65,9 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     }
 }
 
-fn build_menu(store: &Store) -> Vec<MenuItem> {
-    let mut items = vec![
-        MenuItem::Line(Line::raw("choose world:").centered()),
-        MenuItem::Line(Line::raw("")),
-    ];
-
-    for (idx, (_, world)) in store.worlds.iter().enumerate() {
-        let idx = idx as u8;
-
-        let btn =
-            Button::new(KeyCode::Char((b'1' + idx) as char), world.name())
-                .centered();
-
-        items.push(MenuItem::Button(btn, Some(idx)));
-    }
-
-    items.push(MenuItem::Line(Line::raw("")));
-
-    items.push(MenuItem::Button(
-        Button::new(KeyCode::Escape, "go back").centered(),
-        None,
-    ));
-
-    items
-}
-
-#[derive(Debug)]
-enum MenuItem<'a> {
-    Line(Line<'a>),
-    Button(Button<'a>, Option<u8>),
-}
-
-impl MenuItem<'_> {
-    fn width(&self) -> u16 {
-        match self {
-            MenuItem::Line(this) => this.width() as u16,
-            MenuItem::Button(this, _) => this.width(),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum Response {
     Play(WorldHandle),
-    Quit,
+    OpenTutorial,
+    GoBack,
 }

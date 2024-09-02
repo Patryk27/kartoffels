@@ -24,16 +24,16 @@ impl JoinedSidePanel {
 
         ui.line("id");
         ui.line(bot.id.to_string().fg(bot.id.color()));
-        ui.fill(1);
+        ui.space(1);
 
         match snapshot.bots.by_id(bot.id) {
             Some(Either::Left(bot)) => {
                 ui.line("status");
                 ui.line(Line::from_iter([
-                    "alive".fg(theme::GREEN),
-                    format!(" ({}s)", bot.age).into(),
+                    "alive ".fg(theme::GREEN),
+                    format!("({}s)", bot.age).into(),
                 ]));
-                ui.fill(1);
+                ui.space(1);
 
                 // ---
 
@@ -58,13 +58,11 @@ impl JoinedSidePanel {
                 ui.line("status");
 
                 ui.row(|ui| {
-                    if bot.requeued {
-                        ui.span("queued ".fg(theme::PINK));
-                    } else {
-                        ui.span("requeued ".fg(theme::PINK));
-                    }
+                    let status =
+                        if bot.requeued { "requeued" } else { "queued" };
 
-                    ui.span(format!("({})", bot.place));
+                    ui.span(status.fg(theme::PINK));
+                    ui.span(format!(" ({})", bot.place));
                 });
             }
 

@@ -15,7 +15,11 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                         return Ok(Response::Play(world));
                     }
 
-                    world_selection::Response::Quit => {
+                    world_selection::Response::OpenTutorial => {
+                        return Ok(Response::OpenTutorial);
+                    }
+
+                    world_selection::Response::GoBack => {
                         continue;
                     }
                 }

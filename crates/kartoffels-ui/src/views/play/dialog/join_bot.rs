@@ -29,7 +29,7 @@ impl JoinBotDialog {
         ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
             Line::raw("enter bot id:").render(ui.area(), ui.buf());
 
-            ui.fill(1);
+            ui.space(1);
 
             Line::from_iter([
                 Span::raw("> "),
@@ -39,7 +39,7 @@ impl JoinBotDialog {
             ])
             .render(ui.area(), ui.buf());
 
-            ui.fill(2);
+            ui.space(2);
 
             if let Some(event) = ui.event() {
                 response = self.handle(event, snapshot);

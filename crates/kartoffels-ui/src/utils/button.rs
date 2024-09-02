@@ -68,9 +68,9 @@ impl<'a> Button<'a> {
 
         if self.block {
             if ui.layout().is_row() {
-                ui.fill(area.width);
+                ui.space(area.width);
             } else {
-                ui.fill(area.height);
+                ui.space(area.height);
             }
         }
 

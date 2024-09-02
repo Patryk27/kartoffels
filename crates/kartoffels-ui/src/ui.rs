@@ -76,7 +76,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         })
     }
 
-    pub fn fill(&mut self, len: u16) {
+    pub fn space(&mut self, len: u16) {
         match self.layout {
             UiLayout::Row => {
                 self.area.x += len;
@@ -92,7 +92,7 @@ impl<'a, 'b> Ui<'a, 'b> {
 
     pub fn line<'x>(&mut self, text: impl Into<Text<'x>>) {
         self.text(text);
-        self.fill(1);
+        self.space(1);
     }
 
     pub fn text<'x>(&mut self, text: impl Into<Text<'x>>) {
@@ -105,7 +105,7 @@ impl<'a, 'b> Ui<'a, 'b> {
 
         span.render(self.area, self.buf());
 
-        self.fill(width);
+        self.space(width);
     }
 
     pub fn dialog<T>(

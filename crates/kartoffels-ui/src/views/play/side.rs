@@ -20,13 +20,15 @@ impl SidePanel {
         bot: Option<&JoinedBot>,
         enabled: bool,
     ) -> Option<SidePanelResponse> {
-        let area = ui.area();
+        let area = {
+            let area = ui.area();
 
-        let area = Rect {
-            x: area.x + 1,
-            y: area.y,
-            width: area.width - 1,
-            height: area.height,
+            Rect {
+                x: area.x + 1,
+                y: area.y,
+                width: area.width - 1,
+                height: area.height,
+            }
         };
 
         Clear::render(ui);

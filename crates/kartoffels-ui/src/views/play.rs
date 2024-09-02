@@ -1,12 +1,12 @@
-mod bottom_panel;
+mod bottom;
 mod dialog;
-mod map_canvas;
-mod side_panel;
+mod map;
+mod side;
 
-use self::bottom_panel::*;
+use self::bottom::*;
 use self::dialog::*;
-use self::map_canvas::*;
-use self::side_panel::*;
+use self::map::*;
+use self::side::*;
 use crate::{theme, Clear, Term, Ui};
 use anyhow::{Context, Result};
 use base64::prelude::BASE64_STANDARD;
@@ -152,8 +152,8 @@ impl State {
     ) -> Result<ControlFlow<Response, ()>> {
         match event {
             InnerResponse::BottomPanel(event) => match event {
-                BottomPanelResponse::Quit => {
-                    return Ok(ControlFlow::Break(Response::Quit));
+                BottomPanelResponse::GoBack => {
+                    return Ok(ControlFlow::Break(Response::GoBack));
                 }
 
                 BottomPanelResponse::Help => {
@@ -288,5 +288,5 @@ enum InnerResponse {
 #[derive(Debug)]
 pub enum Response {
     OpenTutorial,
-    Quit,
+    GoBack,
 }

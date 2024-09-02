@@ -171,9 +171,6 @@ impl MapCanvas {
                     *response = Some(MapCanvasResponse::JoinBot(id));
                 }
             }
-        } else {
-            fg = theme::DARK_GRAY;
-            bg = theme::BG;
         }
 
         let pos = ui.area().as_position();

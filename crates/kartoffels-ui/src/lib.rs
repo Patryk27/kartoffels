@@ -24,7 +24,7 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
                         todo!();
                     }
 
-                    play::Response::Quit => {
+                    play::Response::GoBack => {
                         continue;
                     }
                 }

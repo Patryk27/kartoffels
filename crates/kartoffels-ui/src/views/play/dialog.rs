@@ -9,7 +9,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::upload_bot::*;
-use crate::Ui;
+use crate::{Backdrop, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 
 #[derive(Debug)]
@@ -27,6 +27,8 @@ impl Dialog {
         ui: &mut Ui,
         snapshot: &Snapshot,
     ) -> Option<DialogResponse> {
+        Backdrop::render(ui);
+
         match self {
             Dialog::Bots(this) => this.render(ui, snapshot),
             Dialog::Error(this) => this.render(ui),
