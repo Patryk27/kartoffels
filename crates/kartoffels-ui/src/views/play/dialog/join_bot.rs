@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use crate::{ Button, Caret, Ui};
+use crate::{Button, Caret, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::Widget;

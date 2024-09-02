@@ -17,6 +17,7 @@ use std::io::{self, Write};
 use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::task::Waker;
 use termwiz::input::{
     InputEvent, InputParser, KeyCode, Modifiers, MouseButtons,
 };
@@ -36,6 +37,7 @@ pub struct Term {
     mouse: Option<(UVec2, MouseButtons)>,
     event: Option<InputEvent>,
     notify: Arc<Notify>,
+    waker: Waker,
 }
 
 impl Term {
@@ -59,8 +61,22 @@ impl Term {
             Terminal::with_options(backend, opts)?
         };
 
+        // ---
+
         term.clear()?;
         stdout.send(Self::enter_cmds().into_bytes()).await?;
+
+        // ---
+
+        let notify = Arc::new(Notify::new());
+
+        let waker = waker_fn::waker_fn({
+            let notify = notify.clone();
+
+            move || {
+                notify.notify_waiters();
+            }
+        });
 
         Ok(Self {
             ty,
@@ -71,7 +87,8 @@ impl Term {
             size,
             mouse: None,
             event: None,
-            notify: Arc::new(Notify::new()),
+            notify,
+            waker,
         })
     }
 
@@ -125,20 +142,11 @@ impl Term {
     where
         F: FnOnce(&mut Ui) -> T,
     {
-        // TODO constructing waker once should be enough
-        let waker = {
-            let notify = self.notify.clone();
-
-            waker_fn::waker_fn(move || {
-                notify.notify_waiters();
-            })
-        };
-
         let mut result = None;
 
         self.term.draw(|frame| {
             result = Some(render(&mut Ui::new(
-                &waker,
+                &self.waker,
                 frame,
                 self.mouse.clone(),
                 self.event.take().as_ref(),
