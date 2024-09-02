@@ -3,21 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="src/assets/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="favicon.png" />
+
     <title>Kartoffels: MMO Robot Combat Arena</title>
 
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap");
+      @font-face {
+        font-family: "Fira Code";
+        font-style: normal;
+        font-weight: 300 700;
+        src: url("fira-code.woff2") format("woff2");
+      }
 
       html,
       body {
         width: 100vw;
         height: 100vh;
-
-        font-family: "Inconsolata";
-
-        background: rgb(9, 9, 9);
         overflow: hidden;
+
+        font-family: "Fira Code";
+        background: rgb(9, 9, 9);
       }
 
       #app {
