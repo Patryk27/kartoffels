@@ -19,7 +19,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Waker;
 use termwiz::input::{
-    InputEvent, InputParser, KeyCode, Modifiers, MouseButtons,
+    InputEvent, InputParser, KeyCode, Modifiers, MouseButtons, MouseEvent,
 };
 use tokio::select;
 use tokio::sync::Notify;
@@ -34,7 +34,7 @@ pub struct Term {
     stdout: Stdout,
     term: Terminal<CrosstermBackend<WriterProxy>>,
     size: UVec2,
-    mouse: Option<(UVec2, MouseButtons)>,
+    mouse: TermMouse,
     event: Option<InputEvent>,
     notify: Arc<Notify>,
     waker: Waker,
@@ -81,12 +81,12 @@ impl Term {
         Ok(Self {
             ty,
             stdin,
-            stdin_parser: InputParser::new(),
+            stdin_parser: Default::default(),
             stdout,
             term,
             size,
-            mouse: None,
-            event: None,
+            mouse: Default::default(),
+            event: Default::default(),
             notify,
             waker,
         })
@@ -148,7 +148,7 @@ impl Term {
             result = Some(render(&mut Ui::new(
                 &self.waker,
                 frame,
-                self.mouse.clone(),
+                self.mouse.report().as_ref(),
                 self.event.take().as_ref(),
                 self.ty,
             )));
@@ -188,10 +188,7 @@ impl Term {
 
                     match event {
                         InputEvent::Mouse(event) => {
-                            self.mouse = Some((
-                                uvec2(event.x as u32 - 1, event.y as u32 - 1),
-                                event.mouse_buttons.clone(),
-                            ));
+                            self.mouse.update(event);
                         }
 
                         event => {
@@ -268,4 +265,48 @@ impl Write for WriterProxy {
 
         Ok(())
     }
+}
+
+#[derive(Clone, Debug, Default)]
+struct TermMouse {
+    pos: Option<UVec2>,
+    click: TermMouseClick,
+}
+
+impl TermMouse {
+    fn update(&mut self, event: MouseEvent) {
+        self.pos = Some(uvec2(event.x as u32, event.y as u32) - 1);
+
+        if event.mouse_buttons.contains(MouseButtons::LEFT) {
+            self.click = match self.click {
+                TermMouseClick::NotClicked => {
+                    TermMouseClick::ClickedButNotReported
+                }
+                click => click,
+            };
+        } else {
+            self.click = TermMouseClick::NotClicked;
+        }
+    }
+
+    fn report(&mut self) -> Option<(UVec2, bool)> {
+        let pos = self.pos?;
+
+        let clicked =
+            matches!(self.click, TermMouseClick::ClickedButNotReported);
+
+        if clicked {
+            self.click = TermMouseClick::ClickedAndReported;
+        }
+
+        Some((pos, clicked))
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+enum TermMouseClick {
+    #[default]
+    NotClicked,
+    ClickedButNotReported,
+    ClickedAndReported,
 }

@@ -9,7 +9,7 @@ use ratatui::Frame;
 use std::future::Future;
 use std::pin::pin;
 use std::task::{Context, Poll, Waker};
-use termwiz::input::{InputEvent, KeyCode, Modifiers, MouseButtons};
+use termwiz::input::{InputEvent, KeyCode, Modifiers};
 use tokio::time::Interval;
 
 #[derive(Debug)]
@@ -17,7 +17,7 @@ pub struct Ui<'a, 'b> {
     waker: &'a Waker,
     frame: &'a mut Frame<'b>,
     area: Rect,
-    mouse: Option<(UVec2, MouseButtons)>,
+    mouse: Option<&'a (UVec2, bool)>,
     event: Option<&'a InputEvent>,
     layout: UiLayout,
     ty: TermType,
@@ -27,7 +27,7 @@ impl<'a, 'b> Ui<'a, 'b> {
     pub fn new(
         waker: &'a Waker,
         frame: &'a mut Frame<'b>,
-        mouse: Option<(UVec2, MouseButtons)>,
+        mouse: Option<&'a (UVec2, bool)>,
         event: Option<&'a InputEvent>,
         ty: TermType,
     ) -> Self {
@@ -69,7 +69,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             waker: self.waker,
             frame: self.frame,
             area: self.area.clamp(area),
-            mouse: self.mouse.clone(),
+            mouse: self.mouse,
             event: self.event,
             layout: self.layout,
             ty: self.ty,
@@ -200,10 +200,9 @@ impl<'a, 'b> Ui<'a, 'b> {
         }
     }
 
-    // TODO: prevent double-press
     pub fn mouse_pressed(&self) -> bool {
-        if let Some((_, btns)) = &self.mouse {
-            btns.contains(MouseButtons::LEFT)
+        if let Some((_, pressed)) = &self.mouse {
+            *pressed
         } else {
             false
         }
