@@ -25,15 +25,15 @@ impl Dialog {
     pub fn render(
         &mut self,
         ui: &mut Ui,
-        snapshot: &Snapshot,
+        world: &Snapshot,
     ) -> Option<DialogResponse> {
         Backdrop::render(ui);
 
         match self {
-            Dialog::Bots(this) => this.render(ui, snapshot),
+            Dialog::Bots(this) => this.render(ui, world),
             Dialog::Error(this) => this.render(ui),
             Dialog::Help(this) => this.render(ui),
-            Dialog::JoinBot(this) => this.render(ui, snapshot),
+            Dialog::JoinBot(this) => this.render(ui, world),
             Dialog::UploadBot(this) => this.render(ui),
         }
     }

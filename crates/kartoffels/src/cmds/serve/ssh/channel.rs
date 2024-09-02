@@ -4,7 +4,7 @@ use futures_util::SinkExt;
 use glam::uvec2;
 use itertools::Either;
 use kartoffels_store::Store;
-use kartoffels_ui::Term;
+use kartoffels_ui::{Term, TermType};
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
@@ -61,7 +61,7 @@ impl AppChannel {
         let handle = session.handle();
 
         let (mut term, stdin_tx) =
-            Self::create_term(handle.clone(), id, width, height)?;
+            Self::create_term(handle.clone(), id, width, height).await?;
 
         let ui = task::spawn(async move {
             kartoffels_ui::start(&mut term, &store).await
@@ -136,7 +136,7 @@ impl AppChannel {
         Ok(())
     }
 
-    fn create_term(
+    async fn create_term(
         handle: SessionHandle,
         id: ChannelId,
         width: u32,
@@ -160,7 +160,9 @@ impl AppChannel {
             })
         });
 
-        let term = Term::new(stdin, stdout, uvec2(width, height))?;
+        let term =
+            Term::new(TermType::Ssh, stdin, stdout, uvec2(width, height))
+                .await?;
 
         Ok((term, stdin_tx))
     }

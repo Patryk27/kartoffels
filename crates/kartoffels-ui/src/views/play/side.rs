@@ -12,11 +12,11 @@ use ratatui::layout::Rect;
 pub struct SidePanel;
 
 impl SidePanel {
-    pub const WIDTH: u16 = 22;
+    pub const WIDTH: u16 = 25;
 
     pub fn render(
         ui: &mut Ui,
-        snapshot: &Snapshot,
+        world: &Snapshot,
         bot: Option<&JoinedBot>,
         enabled: bool,
     ) -> Option<SidePanelResponse> {
@@ -35,7 +35,7 @@ impl SidePanel {
 
         ui.clamp(area, |ui| {
             if let Some(bot) = bot {
-                JoinedSidePanel::render(ui, snapshot, bot, enabled)
+                JoinedSidePanel::render(ui, world, bot, enabled)
             } else {
                 IdleSidePanel::render(ui, enabled)
             }

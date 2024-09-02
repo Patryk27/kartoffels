@@ -1,6 +1,3 @@
-#![feature(impl_trait_in_assoc_type)]
-#![feature(let_chains)]
-
 mod term;
 mod theme;
 mod ui;

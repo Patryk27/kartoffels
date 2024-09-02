@@ -6,15 +6,23 @@ use termwiz::input::KeyCode;
 pub struct Menu;
 
 impl Menu {
-    pub const HEIGHT: u16 = 5;
+    pub fn height(ui: &Ui) -> u16 {
+        if ui.is_over_ssh() {
+            8
+        } else {
+            5
+        }
+    }
 
     pub fn render(ui: &mut Ui) -> Option<Response> {
+        let mut response = None;
+
         if Button::new(KeyCode::Char('p'), "play")
             .centered()
             .render(ui)
             .pressed
         {
-            return Some(Response::Play);
+            response = Some(Response::Play);
         }
 
         ui.space(1);
@@ -24,7 +32,7 @@ impl Menu {
             .render(ui)
             .pressed
         {
-            return Some(Response::OpenTutorial);
+            response = Some(Response::OpenTutorial);
         }
 
         ui.space(1);
@@ -34,19 +42,21 @@ impl Menu {
             .render(ui)
             .pressed
         {
-            return Some(Response::OpenChallenges);
+            response = Some(Response::OpenChallenges);
         }
 
-        ui.space(2);
+        if ui.is_over_ssh() {
+            ui.space(2);
 
-        if Button::new(KeyCode::Escape, "quit")
-            .centered()
-            .render(ui)
-            .pressed
-        {
-            return Some(Response::Quit);
+            if Button::new(KeyCode::Escape, "quit")
+                .centered()
+                .render(ui)
+                .pressed
+            {
+                response = Some(Response::Quit);
+            }
         }
 
-        None
+        response
     }
 }

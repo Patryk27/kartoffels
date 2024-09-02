@@ -1,4 +1,4 @@
-use crate::{theme, Clear};
+use crate::{theme, Clear, TermType};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
@@ -20,6 +20,7 @@ pub struct Ui<'a, 'b> {
     mouse: Option<(UVec2, MouseButtons)>,
     event: Option<&'a InputEvent>,
     layout: UiLayout,
+    ty: TermType,
 }
 
 impl<'a, 'b> Ui<'a, 'b> {
@@ -28,6 +29,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         frame: &'a mut Frame<'b>,
         mouse: Option<(UVec2, MouseButtons)>,
         event: Option<&'a InputEvent>,
+        ty: TermType,
     ) -> Self {
         let area = frame.area();
 
@@ -38,7 +40,12 @@ impl<'a, 'b> Ui<'a, 'b> {
             mouse,
             event,
             layout: UiLayout::Col,
+            ty,
         }
+    }
+
+    pub fn is_over_ssh(&self) -> bool {
+        matches!(self.ty, TermType::Ssh)
     }
 
     pub fn buf(&mut self) -> &mut Buffer {
@@ -65,6 +72,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             mouse: self.mouse.clone(),
             event: self.event,
             layout: self.layout,
+            ty: self.ty,
         })
     }
 

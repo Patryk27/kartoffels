@@ -20,10 +20,35 @@ impl UploadBotDialog {
             self.spinner_icon += 1;
         }
 
-        let spinner = Self::SPINNER[self.spinner_icon % Self::SPINNER.len()];
-        let spinner = Span::raw(spinner).fg(theme::GREEN);
+        let spinner =
+            Span::raw(Self::SPINNER[self.spinner_icon % Self::SPINNER.len()])
+                .fg(theme::GREEN);
 
-        let para = Paragraph::new(vec![
+        let text = Self::text(spinner);
+        let width = 60;
+        let height = text.line_count(width) as u16 + 2;
+
+        let mut response = None;
+
+        if let Some(InputEvent::Paste(src)) = ui.event() {
+            response = Some(DialogResponse::UploadBot(src.to_owned()));
+        }
+
+        ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
+            text.render(ui.area(), ui.buf());
+
+            ui.clamp(ui.area().footer(1), |ui| {
+                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
+                    response = Some(DialogResponse::Close);
+                }
+            });
+        });
+
+        response
+    }
+
+    fn text(spinner: Span<'static>) -> Paragraph<'static> {
+        Paragraph::new(vec![
             Line::raw("if you're following the standard template, run:"),
             Line::raw(""),
             Line::raw("    ./build --copy").fg(theme::WASHED_PINK),
@@ -43,28 +68,7 @@ impl UploadBotDialog {
             Line::from_iter([spinner.clone(), Span::raw(" waiting "), spinner])
                 .centered(),
         ])
-        .wrap(Wrap::default());
-
-        let width = 60;
-        let height = para.line_count(width) as u16 + 2;
-
-        let mut response = None;
-
-        ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
-            para.render(ui.area(), ui.buf());
-
-            ui.clamp(ui.area().footer(1), |ui| {
-                if let Some(InputEvent::Paste(src)) = ui.event() {
-                    response = Some(DialogResponse::UploadBot(src.to_owned()));
-                }
-
-                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
-                    response = Some(DialogResponse::Close);
-                }
-            });
-        });
-
-        response
+        .wrap(Wrap::default())
     }
 }
 

@@ -22,7 +22,7 @@ impl BotsDialog {
     pub fn render(
         &mut self,
         ui: &mut Ui,
-        snapshot: &Snapshot,
+        world: &Snapshot,
     ) -> Option<DialogResponse> {
         let mut response = None;
 
@@ -33,7 +33,7 @@ impl BotsDialog {
             let header = Row::new(vec!["nth", "id", "age", "score ⯆"]);
 
             let rows =
-                snapshot.bots.alive.iter_sorted_by_scores().enumerate().map(
+                world.bots.alive.iter_sorted_by_scores().enumerate().map(
                     |(place, (bot, score))| {
                         Row::new([
                             Cell::new(format!("#{}", place + 1)),

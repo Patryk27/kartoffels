@@ -24,7 +24,7 @@ pub async fn run(term: &mut Term) -> Result<Response> {
                 Constraint::Fill(1),
                 Constraint::Length(Header::HEIGHT),
                 Constraint::Length(1),
-                Constraint::Length(Menu::HEIGHT),
+                Constraint::Length(Menu::height(ui)),
                 Constraint::Length(1),
                 Constraint::Fill(2),
             ])

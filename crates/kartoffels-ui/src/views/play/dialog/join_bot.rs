@@ -18,7 +18,7 @@ impl JoinBotDialog {
     pub fn render(
         &mut self,
         ui: &mut Ui,
-        snapshot: &Snapshot,
+        world: &Snapshot,
     ) -> Option<DialogResponse> {
         if ui.poll_interval(&mut self.caret_interval) {
             self.caret_visible = !self.caret_visible;
@@ -42,7 +42,7 @@ impl JoinBotDialog {
             ui.space(2);
 
             if let Some(event) = ui.event() {
-                response = self.handle(event, snapshot);
+                response = self.handle(event, world);
             }
 
             if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
@@ -54,7 +54,7 @@ impl JoinBotDialog {
                 .render(ui)
                 .pressed
             {
-                response = self.handle_confirm(snapshot);
+                response = self.handle_confirm(world);
             }
         });
 
@@ -64,7 +64,7 @@ impl JoinBotDialog {
     fn handle(
         &mut self,
         event: &InputEvent,
-        snapshot: &Snapshot,
+        world: &Snapshot,
     ) -> Option<DialogResponse> {
         match event {
             InputEvent::Key(event) => match (event.key, event.modifiers) {
@@ -85,7 +85,7 @@ impl JoinBotDialog {
                 }
 
                 if self.id.len() == BotId::LENGTH {
-                    return self.handle_confirm(snapshot);
+                    return self.handle_confirm(world);
                 }
             }
 
@@ -105,7 +105,7 @@ impl JoinBotDialog {
         }
     }
 
-    fn handle_confirm(&self, snapshot: &Snapshot) -> Option<DialogResponse> {
+    fn handle_confirm(&self, world: &Snapshot) -> Option<DialogResponse> {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {
@@ -115,7 +115,7 @@ impl JoinBotDialog {
             )));
         };
 
-        if snapshot.bots.by_id(id).is_none() {
+        if world.bots.by_id(id).is_none() {
             return Some(DialogResponse::Throw(format!(
                 "bot `{}` was not found\n\nmaybe it's dead?",
                 id

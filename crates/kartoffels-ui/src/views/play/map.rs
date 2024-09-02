@@ -1,7 +1,9 @@
+use super::JoinedBot;
 use crate::{theme, BotIdExt, Ui};
 use glam::{ivec2, IVec2};
 use kartoffels_world::prelude::{BotId, Dir, Snapshot, Tile, TileBase};
 use ratatui::layout::Rect;
+use std::time::{SystemTime, UNIX_EPOCH};
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -11,6 +13,7 @@ impl MapCanvas {
     pub fn render(
         ui: &mut Ui,
         world: &Snapshot,
+        bot: Option<&JoinedBot>,
         camera: IVec2,
         paused: bool,
         enabled: bool,
@@ -36,6 +39,7 @@ impl MapCanvas {
                     Self::render_tile(
                         ui,
                         world,
+                        bot,
                         tile,
                         paused,
                         enabled,
@@ -84,6 +88,7 @@ impl MapCanvas {
     fn render_tile(
         ui: &mut Ui,
         world: &Snapshot,
+        bot: Option<&JoinedBot>,
         tile: Tile,
         paused: bool,
         enabled: bool,
@@ -127,10 +132,10 @@ impl MapCanvas {
 
             TileBase::BOT_CHEVRON => {
                 ch = match Dir::from(tile.meta[1]) {
-                    Dir::Up => "⇡",
-                    Dir::Right => "⇢",
-                    Dir::Down => "⇣",
-                    Dir::Left => "⇠",
+                    Dir::Up => "↑",
+                    Dir::Right => "→",
+                    Dir::Down => "↓",
+                    Dir::Left => "←",
                 };
 
                 fg = world
@@ -156,19 +161,35 @@ impl MapCanvas {
                 bg = theme::BG;
             }
 
-            if tile.base == TileBase::BOT && ui.mouse_over(ui.area()) {
-                fg = theme::BG;
-                bg = theme::GREEN;
+            if tile.base == TileBase::BOT {
+                let id = world
+                    .bots
+                    .alive
+                    .by_idx(tile.meta[0])
+                    .map(|bot| bot.id)
+                    .unwrap();
 
-                if ui.mouse_pressed() {
-                    let id = world
-                        .bots
-                        .alive
-                        .by_idx(tile.meta[0])
-                        .map(|bot| bot.id)
-                        .unwrap();
+                if ui.mouse_over(ui.area()) {
+                    fg = theme::BG;
+                    bg = theme::GREEN;
 
-                    *response = Some(MapCanvasResponse::JoinBot(id));
+                    if ui.mouse_pressed() {
+                        *response = Some(MapCanvasResponse::JoinBot(id));
+                    }
+                } else if let Some(bot) = bot {
+                    if bot.id == id {
+                        let blink = SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_millis()
+                            % 1000
+                            >= 500;
+
+                        if blink {
+                            fg = theme::BG;
+                            bg = theme::GREEN;
+                        }
+                    }
                 }
             }
         }

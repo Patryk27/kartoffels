@@ -6,6 +6,7 @@ use kartoffels_world::prelude::Snapshot;
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Line;
+use ratatui::widgets::{Paragraph, Widget};
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -16,19 +17,19 @@ impl JoinedSidePanel {
 
     pub fn render(
         ui: &mut Ui,
-        snapshot: &Snapshot,
+        world: &Snapshot,
         bot: &JoinedBot,
         enabled: bool,
     ) -> Option<SidePanelResponse> {
         let mut response = None;
 
-        ui.line("id");
+        ui.line("id".underlined());
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
 
-        match snapshot.bots.by_id(bot.id) {
+        match world.bots.by_id(bot.id) {
             Some(Either::Left(bot)) => {
-                ui.line("status");
+                ui.line("status".underlined());
                 ui.line(Line::from_iter([
                     "alive ".fg(theme::GREEN),
                     format!("({}s)", bot.age).into(),
@@ -49,17 +50,23 @@ impl JoinedSidePanel {
                 };
 
                 ui.clamp(area, |ui| {
-                    ui.line("serial port");
-                    ui.line(bot.serial.as_str());
+                    ui.line("serial port".underlined());
+
+                    Paragraph::new(bot.serial.as_str())
+                        .wrap(Default::default())
+                        .render(ui.area(), ui.buf());
                 });
             }
 
             Some(Either::Right(bot)) => {
-                ui.line("status");
+                ui.line("status".underlined());
 
                 ui.row(|ui| {
-                    let status =
-                        if bot.requeued { "requeued" } else { "queued" };
+                    let status = if bot.requeued {
+                        "killed, requeued"
+                    } else {
+                        "killed, queued"
+                    };
 
                     ui.span(status.fg(theme::PINK));
                     ui.span(format!(" ({})", bot.place));
@@ -67,8 +74,8 @@ impl JoinedSidePanel {
             }
 
             None => {
-                ui.line("status");
-                ui.line("dead".fg(theme::RED));
+                ui.line("status".underlined());
+                ui.line("killed, dead".fg(theme::RED));
             }
         }
 

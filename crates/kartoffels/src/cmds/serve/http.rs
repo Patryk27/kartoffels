@@ -7,7 +7,7 @@ use axum::Router;
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::Term;
+use kartoffels_ui::{Term, TermType};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -57,6 +57,14 @@ async fn handle_connect(
     AxumState(store): AxumState<Arc<Store>>,
     socket: WebSocketUpgrade,
 ) -> impl IntoResponse {
+    // We already buffer our stdout by relying on Ratatui, there's no need for
+    // extra buffering on the socket's side
+    let socket = socket.write_buffer_size(0);
+
+    // We need ~256 Kb for *.elf file upload (128 Kb, but base64'd), let's round
+    // to 512 Kb for good measure
+    let socket = socket.max_message_size(512 * 1024);
+
     socket.on_upgrade(|socket| async move {
         info!("connection opened");
 
@@ -74,10 +82,13 @@ async fn handle_connect(
         let stdout =
             stdout.with(|stdout| async move { Ok(Message::Binary(stdout)) });
 
-        let size = uvec2(80, 40);
+        let stdin = Box::pin(stdin);
+        let stdout = Box::pin(stdout);
+        let size = uvec2(0, 0);
 
-        let mut term =
-            Term::new(Box::pin(stdin), Box::pin(stdout), size).unwrap();
+        let mut term = Term::new(TermType::Http, stdin, stdout, size)
+            .await
+            .unwrap();
 
         match kartoffels_ui::start(&mut term, &store).await {
             Ok(()) => {

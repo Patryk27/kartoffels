@@ -146,19 +146,11 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
 // TODO handle 0xffffff00 and 0xffffff01
 fn render_serial(bot: &AliveBot) -> String {
     let mut out = String::with_capacity(256);
-    let mut len = 0;
 
     for ch in bot.serial.buffer.iter().copied() {
-        let Some(ch) = char::from_u32(ch) else {
-            continue;
-        };
-
-        if len > 0 && len % 16 == 0 {
-            out.push('\n');
+        if let Some(ch) = char::from_u32(ch) {
+            out.push(ch);
         }
-
-        out.push(ch);
-        len += 1;
     }
 
     out

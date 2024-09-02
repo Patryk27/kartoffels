@@ -12,7 +12,9 @@ use anyhow::{Context, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use glam::IVec2;
-use kartoffels_world::prelude::{BotId, Handle as WorldHandle, Snapshot};
+use kartoffels_world::prelude::{
+    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot,
+};
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
 use std::sync::Arc;
@@ -42,7 +44,7 @@ pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Response> {
         if let Some(response) = response {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            match state.handle(response).await? {
+            match state.handle(response, term).await? {
                 ControlFlow::Continue(_) => {
                     //
                 }
@@ -75,14 +77,14 @@ struct State {
     bot: Option<JoinedBot>,
     dialog: Option<Dialog>,
     paused: bool,
-    snapshot: Arc<Snapshot>,
+    snapshot: Arc<WorldSnapshot>,
     handle: WorldHandle,
 }
 
 impl State {
     fn render(&mut self, ui: &mut Ui) -> Option<InnerResponse> {
         if let Some(bot) = &self.bot {
-            if bot.follow_with_camera {
+            if bot.follow {
                 if let Some(bot) = self.snapshot.bots.alive.by_id(bot.id) {
                     self.camera = bot.pos;
                 }
@@ -105,13 +107,13 @@ impl State {
 
         Clear::render(ui);
 
-        let bottom_panel_event = ui
+        let bottom_response = ui
             .clamp(bottom_area, |ui| {
                 BottomPanel::render(ui, self.paused, enabled)
             })
             .map(InnerResponse::BottomPanel);
 
-        let side_panel_event = ui
+        let side_response = ui
             .clamp(side_area, |ui| {
                 SidePanel::render(
                     ui,
@@ -122,11 +124,12 @@ impl State {
             })
             .map(InnerResponse::SidePanel);
 
-        let map_canvas_event = ui
+        let map_response = ui
             .clamp(map_area, |ui| {
                 MapCanvas::render(
                     ui,
                     &self.snapshot,
+                    self.bot.as_ref(),
                     self.camera,
                     self.paused,
                     enabled,
@@ -134,24 +137,25 @@ impl State {
             })
             .map(InnerResponse::MapCanvas);
 
-        let dialog_event = self
+        let dialog_response = self
             .dialog
             .as_mut()
             .and_then(|dialog| dialog.render(ui, &self.snapshot))
             .map(InnerResponse::Dialog);
 
-        bottom_panel_event
-            .or(side_panel_event)
-            .or(map_canvas_event)
-            .or(dialog_event)
+        bottom_response
+            .or(side_response)
+            .or(map_response)
+            .or(dialog_response)
     }
 
     async fn handle(
         &mut self,
-        event: InnerResponse,
+        response: InnerResponse,
+        term: &mut Term,
     ) -> Result<ControlFlow<Response, ()>> {
-        match event {
-            InnerResponse::BottomPanel(event) => match event {
+        match response {
+            InnerResponse::BottomPanel(response) => match response {
                 BottomPanelResponse::GoBack => {
                     return Ok(ControlFlow::Break(Response::GoBack));
                 }
@@ -169,7 +173,7 @@ impl State {
                 }
             },
 
-            InnerResponse::Dialog(event) => match event {
+            InnerResponse::Dialog(response) => match response {
                 DialogResponse::Close => {
                     self.dialog = None;
                 }
@@ -195,9 +199,13 @@ impl State {
                 }
             },
 
-            InnerResponse::MapCanvas(event) => match event {
+            InnerResponse::MapCanvas(response) => match response {
                 MapCanvasResponse::MoveCamera(delta) => {
                     self.camera += delta;
+
+                    if let Some(bot) = &mut self.bot {
+                        bot.follow = false;
+                    }
                 }
 
                 MapCanvasResponse::JoinBot(id) => {
@@ -205,9 +213,14 @@ impl State {
                 }
             },
 
-            InnerResponse::SidePanel(event) => match event {
+            InnerResponse::SidePanel(response) => match response {
                 SidePanelResponse::UploadBot => {
-                    self.dialog = Some(Dialog::UploadBot(Default::default()));
+                    if term.is_over_ssh() {
+                        self.dialog =
+                            Some(Dialog::UploadBot(Default::default()));
+                    } else {
+                        term.send(vec![0x04]).await?;
+                    }
                 }
 
                 SidePanelResponse::JoinBot => {
@@ -228,11 +241,7 @@ impl State {
     }
 
     fn join_bot(&mut self, id: BotId) {
-        self.bot = Some(JoinedBot {
-            id,
-            follow_with_camera: true,
-        });
-
+        self.bot = Some(JoinedBot { id, follow: true });
         self.paused = false;
     }
 
@@ -274,7 +283,7 @@ impl State {
 #[derive(Debug)]
 struct JoinedBot {
     id: BotId,
-    follow_with_camera: bool,
+    follow: bool,
 }
 
 #[derive(Debug)]

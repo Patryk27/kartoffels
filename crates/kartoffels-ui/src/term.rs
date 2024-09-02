@@ -27,6 +27,7 @@ pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + Sync>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
 
 pub struct Term {
+    ty: TermType,
     stdin: Stdin,
     stdin_parser: InputParser,
     stdout: Stdout,
@@ -35,15 +36,19 @@ pub struct Term {
     mouse: Option<(UVec2, MouseButtons)>,
     event: Option<InputEvent>,
     notify: Arc<Notify>,
-    initialized: bool,
 }
 
 impl Term {
-    pub fn new(stdin: Stdin, stdout: Stdout, size: UVec2) -> Result<Self> {
+    pub async fn new(
+        ty: TermType,
+        stdin: Stdin,
+        stdout: Stdout,
+        size: UVec2,
+    ) -> Result<Self> {
         let stdin = Box::pin(stdin);
-        let stdout = Box::pin(stdout);
+        let mut stdout = Box::pin(stdout);
 
-        let term = {
+        let mut term = {
             let writer = WriterProxy::default();
             let backend = CrosstermBackend::new(writer);
 
@@ -54,7 +59,11 @@ impl Term {
             Terminal::with_options(backend, opts)?
         };
 
+        term.clear()?;
+        stdout.send(Self::enter_sequence().into_bytes()).await?;
+
         Ok(Self {
+            ty,
             stdin,
             stdin_parser: InputParser::new(),
             stdout,
@@ -63,7 +72,6 @@ impl Term {
             mouse: None,
             event: None,
             notify: Arc::new(Notify::new()),
-            initialized: false,
         })
     }
 
@@ -88,20 +96,18 @@ impl Term {
         cmds
     }
 
+    pub fn is_over_ssh(&self) -> bool {
+        matches!(self.ty, TermType::Ssh)
+    }
+
+    pub fn size(&self) -> UVec2 {
+        self.size
+    }
+
     pub async fn draw<F, T>(&mut self, render: F) -> Result<T>
     where
         F: FnOnce(&mut Ui) -> T,
     {
-        if !self.initialized {
-            self.term.clear()?;
-
-            self.stdout
-                .send(Self::enter_sequence().into_bytes())
-                .await?;
-
-            self.initialized = true;
-        }
-
         // TODO constructing waker once should be enough
         let waker = {
             let notify = self.notify.clone();
@@ -119,6 +125,7 @@ impl Term {
                 frame,
                 self.mouse.clone(),
                 self.event.take().as_ref(),
+                self.ty,
             )));
         })?;
 
@@ -137,8 +144,8 @@ impl Term {
             let bytes = bytes.ok_or_else(|| anyhow!("lost stdin"))??;
 
             if let Some(size) = bytes.strip_prefix(&[0x04]) {
-                let cols = size.get(0).copied().unwrap_or(0);
-                let rows = size.get(1).copied().unwrap_or(0);
+                let cols = size.first().copied().unwrap_or(0);
+                let rows = size.last().copied().unwrap_or(0);
 
                 self.size = uvec2(cols as u32, rows as u32);
                 self.term.resize(Self::viewport_rect(self.size))?;
@@ -173,8 +180,10 @@ impl Term {
         Ok(())
     }
 
-    pub fn size(&self) -> UVec2 {
-        self.size
+    pub async fn send(&mut self, data: Vec<u8>) -> Result<()> {
+        self.stdout.send(data).await?;
+
+        Ok(())
     }
 
     async fn flush(&mut self) -> Result<()> {
@@ -198,6 +207,12 @@ impl Term {
             height: size.y.min(255) as u16,
         }
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum TermType {
+    Http,
+    Ssh,
 }
 
 #[derive(Default)]
