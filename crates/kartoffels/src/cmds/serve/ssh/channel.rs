@@ -8,7 +8,6 @@ use kartoffels_ui::Term;
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
-use termwiz::input::{InputEvent, InputParser, KeyCode, Modifiers};
 use tokio::sync::mpsc;
 use tokio::{select, task};
 use tokio_stream::wrappers::ReceiverStream;
@@ -24,8 +23,7 @@ pub enum AppChannel {
     },
 
     Ready {
-        stdin_tx: mpsc::Sender<InputEvent>,
-        stdin_parser: InputParser,
+        stdin_tx: mpsc::Sender<Vec<u8>>,
     },
 }
 
@@ -34,39 +32,15 @@ impl AppChannel {
         AppChannel::AwaitingPty { store, shutdown }
     }
 
-    pub async fn data(
-        &mut self,
-        id: ChannelId,
-        data: &[u8],
-        session: &mut Session,
-    ) -> Result<()> {
-        let AppChannel::Ready {
-            stdin_tx,
-            stdin_parser,
-        } = self
-        else {
+    pub async fn data(&mut self, data: &[u8]) -> Result<()> {
+        let AppChannel::Ready { stdin_tx } = self else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
-        for event in stdin_parser.parse_as_vec(data, false) {
-            if let InputEvent::Key(event) = &event {
-                if event.key == KeyCode::Char('c')
-                    && event.modifiers == Modifiers::CTRL
-                {
-                    session
-                        .data(id, Term::leave_sequence().into_bytes().into());
-
-                    session.close(id);
-
-                    break;
-                }
-            }
-
-            stdin_tx
-                .send(event)
-                .await
-                .map_err(|_| anyhow!("ui thread has died"))?;
-        }
+        stdin_tx
+            .send(data.to_vec())
+            .await
+            .map_err(|_| anyhow!("ui thread has died"))?;
 
         Ok(())
     }
@@ -89,10 +63,9 @@ impl AppChannel {
         let (mut term, stdin_tx) =
             Self::create_term(handle.clone(), id, width, height)?;
 
-        let ui =
-            task::spawn(
-                async move { kartoffels_ui::main(&mut term, &store).await },
-            );
+        let ui = task::spawn(async move {
+            kartoffels_ui::start(&mut term, &store).await
+        });
 
         task::spawn(async move {
             let result = select! {
@@ -141,10 +114,7 @@ impl AppChannel {
             _ = handle.close(id).await;
         });
 
-        *self = AppChannel::Ready {
-            stdin_tx,
-            stdin_parser: InputParser::default(),
-        };
+        *self = AppChannel::Ready { stdin_tx };
 
         Ok(())
     }
@@ -159,10 +129,7 @@ impl AppChannel {
         };
 
         stdin_tx
-            .send(InputEvent::Resized {
-                cols: width as usize,
-                rows: height as usize,
-            })
+            .send(vec![0x04, width as u8, height as u8])
             .await
             .map_err(|_| anyhow!("ui thread has died"))?;
 
@@ -174,7 +141,7 @@ impl AppChannel {
         id: ChannelId,
         width: u32,
         height: u32,
-    ) -> Result<(Term, mpsc::Sender<InputEvent>)> {
+    ) -> Result<(Term, mpsc::Sender<Vec<u8>>)> {
         let (stdin_tx, stdin_rx) = mpsc::channel(32);
         let stdin = Box::pin(ReceiverStream::new(stdin_rx).map(Ok));
 

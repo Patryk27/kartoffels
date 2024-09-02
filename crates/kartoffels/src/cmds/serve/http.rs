@@ -1,9 +1,13 @@
 use anyhow::Result;
+use axum::extract::ws::Message;
 use axum::extract::{DefaultBodyLimit, State as AxumState, WebSocketUpgrade};
 use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
+use futures_util::{SinkExt, StreamExt};
+use glam::uvec2;
 use kartoffels_store::Store;
+use kartoffels_ui::Term;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
@@ -50,36 +54,38 @@ pub async fn start(
 }
 
 async fn handle_connect(
-    AxumState(_store): AxumState<Arc<Store>>,
+    AxumState(store): AxumState<Arc<Store>>,
     socket: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    socket.on_upgrade(|_socket| async move {
-        // info!("connection opened");
+    socket.on_upgrade(|socket| async move {
+        info!("connection opened");
 
-        // let (stdout, stdin) = socket.split();
+        let (stdout, stdin) = socket.split();
 
-        // let stdin = stdin.map(|msg| match msg {
-        //     Ok(Message::Binary(msg)) if msg.len() == 1 => Ok(msg[0]),
-        //     Ok(msg) => Err(anyhow!(
-        //         "unexpected message type: {:?}",
-        //         mem::discriminant(&msg)
-        //     )),
-        //     Err(err) => Err(err.into()),
-        // });
+        let stdin = stdin.filter_map(|msg| async move {
+            match msg {
+                Ok(Message::Text(msg)) => Some(Ok(msg.into_bytes())),
+                Ok(Message::Binary(msg)) => Some(Ok(msg)),
+                Ok(_) => None,
+                Err(err) => Some(Err(err.into())),
+            }
+        });
 
-        // let stdout =
-        //     stdout.with(|stdout| async move { Ok(Message::Binary(stdout)) });
+        let stdout =
+            stdout.with(|stdout| async move { Ok(Message::Binary(stdout)) });
 
-        // let stdin = Stdin::new(stdin);
-        // let stdout = Stdout::new(stdout);
+        let size = uvec2(80, 40);
 
-        // match ui::start(&server, stdin, stdout).await {
-        //     Ok(()) => {
-        //         info!("connection closed");
-        //     }
-        //     Err(err) => {
-        //         info!("connection closed: {:?}", err);
-        //     }
-        // }
+        let mut term =
+            Term::new(Box::pin(stdin), Box::pin(stdout), size).unwrap();
+
+        match kartoffels_ui::start(&mut term, &store).await {
+            Ok(()) => {
+                info!("connection closed");
+            }
+            Err(err) => {
+                info!("connection closed: {:?}", err);
+            }
+        }
     })
 }

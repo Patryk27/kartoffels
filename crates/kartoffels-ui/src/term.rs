@@ -2,7 +2,6 @@ use crate::Ui;
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
-use itertools::Either;
 use ratatui::crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
     EnableMouseCapture,
@@ -18,15 +17,18 @@ use std::io::{self, Write};
 use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
-use termwiz::input::{InputEvent, MouseButtons};
+use termwiz::input::{
+    InputEvent, InputParser, KeyCode, Modifiers, MouseButtons,
+};
 use tokio::select;
 use tokio::sync::Notify;
 
-pub type Stdin = Pin<Box<dyn Stream<Item = Result<InputEvent>> + Send + Sync>>;
+pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + Sync>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
 
 pub struct Term {
     stdin: Stdin,
+    stdin_parser: InputParser,
     stdout: Stdout,
     term: Terminal<CrosstermBackend<WriterProxy>>,
     size: UVec2,
@@ -54,6 +56,7 @@ impl Term {
 
         Ok(Self {
             stdin,
+            stdin_parser: InputParser::new(),
             stdout,
             term,
             size,
@@ -125,29 +128,44 @@ impl Term {
     }
 
     pub async fn tick(&mut self) -> Result<()> {
-        let event = select! {
-            event = self.stdin.next() => Either::Left(event),
-            _ = self.notify.notified() => Either::Right(())
+        let bytes = select! {
+            bytes = self.stdin.next() => Some(bytes),
+            _ = self.notify.notified() => None,
         };
 
-        if let Either::Left(event) = event {
-            let event = event.ok_or_else(|| anyhow!("lost stdin"))??;
+        if let Some(bytes) = bytes {
+            let bytes = bytes.ok_or_else(|| anyhow!("lost stdin"))??;
 
-            match event {
-                InputEvent::Resized { cols, rows } => {
-                    self.size = uvec2(cols as u32, rows as u32);
-                    self.term.resize(Self::viewport_rect(self.size))?;
-                }
+            if let Some(size) = bytes.strip_prefix(&[0x04]) {
+                let cols = size.get(0).copied().unwrap_or(0);
+                let rows = size.get(1).copied().unwrap_or(0);
 
-                InputEvent::Mouse(event) => {
-                    self.mouse = Some((
-                        uvec2(event.x as u32 - 1, event.y as u32 - 1),
-                        event.mouse_buttons.clone(),
-                    ));
-                }
+                self.size = uvec2(cols as u32, rows as u32);
+                self.term.resize(Self::viewport_rect(self.size))?;
+            } else {
+                let events = self.stdin_parser.parse_as_vec(&bytes, false);
 
-                event => {
-                    self.event = Some(event);
+                for event in events {
+                    if let InputEvent::Key(event) = &event {
+                        if event.key == KeyCode::Char('c')
+                            && event.modifiers == Modifiers::CTRL
+                        {
+                            return Err(anyhow!("got C-c"));
+                        }
+                    }
+
+                    match event {
+                        InputEvent::Mouse(event) => {
+                            self.mouse = Some((
+                                uvec2(event.x as u32 - 1, event.y as u32 - 1),
+                                event.mouse_buttons.clone(),
+                            ));
+                        }
+
+                        event => {
+                            self.event = Some(event);
+                        }
+                    }
                 }
             }
         }

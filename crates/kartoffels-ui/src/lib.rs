@@ -13,7 +13,7 @@ use self::utils::*;
 use anyhow::Result;
 use kartoffels_store::Store;
 
-pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
+pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
     use self::views::*;
 
     loop {

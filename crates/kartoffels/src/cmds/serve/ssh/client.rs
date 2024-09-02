@@ -96,9 +96,9 @@ impl server::Handler for AppClient {
         &mut self,
         id: ChannelId,
         data: &[u8],
-        session: &mut Session,
+        _: &mut Session,
     ) -> Result<()> {
-        self.channel_mut(id)?.data(id, data, session).await?;
+        self.channel_mut(id)?.data(data).await?;
 
         Ok(())
     }
