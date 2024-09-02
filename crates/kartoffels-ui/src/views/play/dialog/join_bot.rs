@@ -20,11 +20,11 @@ impl JoinBotDialog {
         ui: &mut Ui,
         world: &Snapshot,
     ) -> Option<DialogResponse> {
+        let mut resp = None;
+
         if ui.poll_interval(&mut self.caret_interval) {
             self.caret_visible = !self.caret_visible;
         }
-
-        let mut response = None;
 
         ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
             Line::raw("enter bot id:").render(ui.area(), ui.buf());
@@ -42,11 +42,11 @@ impl JoinBotDialog {
             ui.space(2);
 
             if let Some(event) = ui.event() {
-                response = self.handle(event, world);
+                resp = self.handle(event, world);
             }
 
             if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
-                response = Some(DialogResponse::Close);
+                resp = Some(DialogResponse::Close);
             }
 
             if Button::new(KeyCode::Enter, "join")
@@ -54,11 +54,11 @@ impl JoinBotDialog {
                 .render(ui)
                 .pressed
             {
-                response = self.handle_confirm(world);
+                resp = self.handle_confirm(world);
             }
         });
 
-        response
+        resp
     }
 
     fn handle(

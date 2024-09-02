@@ -8,7 +8,7 @@ use tokio::time;
 
 pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     loop {
-        let mut response = None;
+        let mut resp = None;
 
         term.draw(|ui| {
             Clear::render(ui);
@@ -29,7 +29,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                         .render(ui)
                         .pressed
                     {
-                        response = Some(Response::Play(world.to_owned()));
+                        resp = Some(Response::Play(world.to_owned()));
                     }
                 }
 
@@ -41,7 +41,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                     .render(ui)
                     .pressed
                 {
-                    response = Some(Response::OpenTutorial);
+                    resp = Some(Response::OpenTutorial);
                 }
 
                 if Button::new(KeyCode::Escape, "go back")
@@ -49,16 +49,16 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                     .render(ui)
                     .pressed
                 {
-                    response = Some(Response::GoBack);
+                    resp = Some(Response::GoBack);
                 }
             });
         })
         .await?;
 
-        if let Some(response) = response {
+        if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            return Ok(response);
+            return Ok(resp);
         }
 
         term.tick().await?;

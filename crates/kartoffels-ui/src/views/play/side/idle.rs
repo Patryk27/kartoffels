@@ -8,7 +8,7 @@ pub struct IdleSidePanel;
 
 impl IdleSidePanel {
     pub fn render(ui: &mut Ui, enabled: bool) -> Option<SidePanelResponse> {
-        let mut response = None;
+        let mut resp = None;
 
         let [_, join_area, upload_area] = Layout::vertical([
             Constraint::Fill(1),
@@ -23,7 +23,7 @@ impl IdleSidePanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(SidePanelResponse::JoinBot);
+                resp = Some(SidePanelResponse::JoinBot);
             }
         });
 
@@ -33,10 +33,10 @@ impl IdleSidePanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(SidePanelResponse::UploadBot);
+                resp = Some(SidePanelResponse::UploadBot);
             }
         });
 
-        response
+        resp
     }
 }

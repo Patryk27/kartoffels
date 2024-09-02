@@ -44,8 +44,8 @@ impl<'a, 'b> Ui<'a, 'b> {
         }
     }
 
-    pub fn is_over_ssh(&self) -> bool {
-        matches!(self.ty, TermType::Ssh)
+    pub fn ty(&self) -> TermType {
+        self.ty
     }
 
     pub fn buf(&mut self) -> &mut Buffer {

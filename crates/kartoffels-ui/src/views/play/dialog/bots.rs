@@ -24,7 +24,7 @@ impl BotsDialog {
         ui: &mut Ui,
         world: &Snapshot,
     ) -> Option<DialogResponse> {
-        let mut response = None;
+        let mut resp = None;
 
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
         let height = ui.area().height - 2;
@@ -86,12 +86,12 @@ impl BotsDialog {
                         .render(ui)
                         .pressed
                     {
-                        response = Some(DialogResponse::Close);
+                        resp = Some(DialogResponse::Close);
                     }
                 });
             });
         });
 
-        response
+        resp
     }
 }

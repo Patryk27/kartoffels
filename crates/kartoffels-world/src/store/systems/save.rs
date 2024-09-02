@@ -4,7 +4,7 @@ use futures_util::FutureExt;
 use maybe_owned::MaybeOwned;
 use std::future::Future;
 use std::time::{Duration, Instant};
-use tracing::{debug, info};
+use tracing::{debug, info, Instrument, Span};
 
 struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
@@ -57,17 +57,20 @@ pub fn run(world: &mut World) {
 
     let task = world.store(path).expect("couldn't save the world");
 
-    let task = tokio::spawn(async move {
-        let (tt_ser, tt_io) = task.await?;
+    let task = tokio::spawn(
+        async move {
+            let (tt_ser, tt_io) = task.await?;
 
-        info!(?tt_ser, ?tt_io, "world saved");
+            info!(?tt_ser, ?tt_io, "world saved");
 
-        if let Some(shutdown) = shutdown {
-            _ = shutdown.tx.send(());
+            if let Some(shutdown) = shutdown {
+                _ = shutdown.tx.send(());
+            }
+
+            Ok(())
         }
-
-        Ok(())
-    })
+        .instrument(Span::current()),
+    )
     .map(|result| result.context("task crashed")?);
 
     state.task = Some(Box::new(task));

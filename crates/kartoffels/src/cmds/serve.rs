@@ -56,8 +56,8 @@ impl ServeCmd {
             println!("starting");
         } else {
             tracing_subscriber::fmt()
-                .with_env_filter(filter)
                 .event_format(fmt::format::Format::default().without_time())
+                .with_env_filter(filter)
                 .init();
         }
 
@@ -117,8 +117,6 @@ impl ServeCmd {
                     Ok(())
                 };
 
-                info!("ready");
-
                 try_join!(http, ssh, shutdown)?;
 
                 Ok(())
@@ -132,7 +130,7 @@ async fn wait_for_shutdown() {
             .await
             .expect("failed to install Ctrl+C handler");
 
-        info!("ctrl-c signal detected, shutting down");
+        info!("got the C-c signal, shutting down");
     };
 
     #[cfg(unix)]
@@ -142,7 +140,7 @@ async fn wait_for_shutdown() {
             .recv()
             .await;
 
-        info!("terminate signal detected, shutting down");
+        info!("got the termination signal, shutting down");
     };
 
     #[cfg(not(unix))]

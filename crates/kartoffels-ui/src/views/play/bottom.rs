@@ -14,7 +14,7 @@ impl BottomPanel {
         paused: bool,
         enabled: bool,
     ) -> Option<BottomPanelResponse> {
-        let mut response = None;
+        let mut resp = None;
 
         ui.row(|ui| {
             if Button::new(KeyCode::Escape, "go back")
@@ -23,7 +23,7 @@ impl BottomPanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(BottomPanelResponse::GoBack);
+                resp = Some(BottomPanelResponse::GoBack);
             }
 
             ui.space(2);
@@ -34,7 +34,7 @@ impl BottomPanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(BottomPanelResponse::Pause);
+                resp = Some(BottomPanelResponse::Pause);
             }
 
             ui.space(2);
@@ -45,7 +45,7 @@ impl BottomPanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(BottomPanelResponse::Help);
+                resp = Some(BottomPanelResponse::Help);
             }
 
             ui.space(2);
@@ -56,7 +56,7 @@ impl BottomPanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(BottomPanelResponse::ListBots);
+                resp = Some(BottomPanelResponse::ListBots);
             }
         });
 
@@ -74,7 +74,7 @@ impl BottomPanel {
                 .render(area, ui.buf());
         }
 
-        response
+        resp
     }
 }
 

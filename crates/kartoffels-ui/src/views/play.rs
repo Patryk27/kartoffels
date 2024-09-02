@@ -39,12 +39,12 @@ pub async fn run(term: &mut Term, handle: WorldHandle) -> Result<Response> {
     };
 
     loop {
-        let response = term.draw(|ui| state.render(ui)).await?;
+        let resp = term.draw(|ui| state.render(ui)).await?;
 
-        if let Some(response) = response {
+        if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            match state.handle(response, term).await? {
+            match state.handle(resp, term).await? {
                 ControlFlow::Continue(_) => {
                     //
                 }
@@ -107,13 +107,13 @@ impl State {
 
         Clear::render(ui);
 
-        let bottom_response = ui
+        let bottom_resp = ui
             .clamp(bottom_area, |ui| {
                 BottomPanel::render(ui, self.paused, enabled)
             })
             .map(InnerResponse::BottomPanel);
 
-        let side_response = ui
+        let side_resp = ui
             .clamp(side_area, |ui| {
                 SidePanel::render(
                     ui,
@@ -124,7 +124,7 @@ impl State {
             })
             .map(InnerResponse::SidePanel);
 
-        let map_response = ui
+        let map_resp = ui
             .clamp(map_area, |ui| {
                 MapCanvas::render(
                     ui,
@@ -137,24 +137,21 @@ impl State {
             })
             .map(InnerResponse::MapCanvas);
 
-        let dialog_response = self
+        let dialog_resp = self
             .dialog
             .as_mut()
             .and_then(|dialog| dialog.render(ui, &self.snapshot))
             .map(InnerResponse::Dialog);
 
-        bottom_response
-            .or(side_response)
-            .or(map_response)
-            .or(dialog_response)
+        bottom_resp.or(side_resp).or(map_resp).or(dialog_resp)
     }
 
     async fn handle(
         &mut self,
-        response: InnerResponse,
+        resp: InnerResponse,
         term: &mut Term,
     ) -> Result<ControlFlow<Response, ()>> {
-        match response {
+        match resp {
             InnerResponse::BottomPanel(response) => match response {
                 BottomPanelResponse::GoBack => {
                     return Ok(ControlFlow::Break(Response::GoBack));
@@ -215,12 +212,11 @@ impl State {
 
             InnerResponse::SidePanel(response) => match response {
                 SidePanelResponse::UploadBot => {
-                    if term.is_over_ssh() {
-                        self.dialog =
-                            Some(Dialog::UploadBot(Default::default()));
-                    } else {
+                    if term.ty().is_http() {
                         term.send(vec![0x04]).await?;
                     }
+
+                    self.dialog = Some(Dialog::UploadBot(Default::default()));
                 }
 
                 SidePanelResponse::JoinBot => {

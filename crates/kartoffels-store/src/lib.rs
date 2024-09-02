@@ -21,22 +21,34 @@ impl Store {
         let mut entries = fs::read_dir(dir).await?;
 
         while let Some(entry) = entries.next_entry().await? {
-            let entry_path = entry.path();
+            let path = entry.path();
 
-            let Some("world") =
-                entry_path.extension().and_then(|ext| ext.to_str())
+            let Some(entry_stem) =
+                path.file_stem().and_then(|stem| stem.to_str())
             else {
                 continue;
             };
 
-            info!("loading: {}", entry_path.display());
+            let Some("world") = path.extension().and_then(|ext| ext.to_str())
+            else {
+                continue;
+            };
 
-            let world =
-                kartoffels_world::spawn(&entry_path).with_context(|| {
-                    format!("couldn't spawn world: {}", entry_path.display())
-                })?;
+            info!("loading: {}", path.display());
 
-            worlds.push(world);
+            let result: Result<()> = try {
+                let id = entry_stem
+                    .parse()
+                    .context("couldn't extract world id from path")?;
+
+                let world = kartoffels_world::spawn(id, &path)?;
+
+                worlds.push(world);
+            };
+
+            result.with_context(|| {
+                format!("couldn't spawn world: {}", path.display())
+            })?;
         }
 
         worlds.sort_by_key(|world| world.name().to_owned());

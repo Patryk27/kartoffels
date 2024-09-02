@@ -47,7 +47,7 @@ pub(crate) use self::store::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
 use anyhow::Result;
-use kartoffels_utils::Metronome;
+use kartoffels_utils::{Id, Metronome};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use std::path::{Path, PathBuf};
@@ -55,6 +55,7 @@ use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, oneshot};
+use tracing::{info, span, Level};
 
 pub fn create(_path: &Path, config: Config) -> Result<()> {
     let _mode = config.mode.create();
@@ -63,7 +64,7 @@ pub fn create(_path: &Path, config: Config) -> Result<()> {
     todo!();
 }
 
-pub fn spawn(path: &Path) -> Result<Handle> {
+pub fn spawn(id: Id, path: &Path) -> Result<Handle> {
     let path = path.to_owned();
     let world = SerializedWorld::load(&path)?;
 
@@ -71,8 +72,13 @@ pub fn spawn(path: &Path) -> Result<Handle> {
     let handle = Handle::new(tx, Arc::new(world.name.to_string()));
 
     let rt = TokioHandle::current();
+    let span = span!(Level::INFO, "world", %id);
 
     thread::spawn(move || {
+        let _rt = rt.enter();
+        let _span = span.enter();
+        let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
+
         let mut world = World {
             bots: world.bots.into_owned(),
             updates: broadcast::Sender::new(2),
@@ -89,8 +95,7 @@ pub fn spawn(path: &Path) -> Result<Handle> {
             theme: world.theme.into_owned(),
         };
 
-        let _rt = rt.enter();
-        let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
+        info!("ready");
 
         loop {
             world.tick();

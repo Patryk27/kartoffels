@@ -16,35 +16,45 @@ impl UploadBotDialog {
     const SPINNER: &[&str] = &["|", "/", "-", "\\"];
 
     pub fn render(&mut self, ui: &mut Ui) -> Option<DialogResponse> {
-        if ui.poll_interval(&mut self.spinner_interval) {
-            self.spinner_icon += 1;
+        let mut resp = None;
+
+        if ui.ty().is_ssh() {
+            if ui.poll_interval(&mut self.spinner_interval) {
+                self.spinner_icon += 1;
+            }
+
+            let spinner = Span::raw(
+                Self::SPINNER[self.spinner_icon % Self::SPINNER.len()],
+            )
+            .fg(theme::GREEN);
+
+            let text = Self::text(spinner);
+            let width = 60;
+            let height = text.line_count(width) as u16 + 2;
+
+            ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
+                text.render(ui.area(), ui.buf());
+
+                ui.clamp(ui.area().footer(1), |ui| {
+                    if Button::new(KeyCode::Escape, "cancel").render(ui).pressed
+                    {
+                        resp = Some(DialogResponse::Close);
+                    }
+                });
+            });
         }
-
-        let spinner =
-            Span::raw(Self::SPINNER[self.spinner_icon % Self::SPINNER.len()])
-                .fg(theme::GREEN);
-
-        let text = Self::text(spinner);
-        let width = 60;
-        let height = text.line_count(width) as u16 + 2;
-
-        let mut response = None;
 
         if let Some(InputEvent::Paste(src)) = ui.event() {
-            response = Some(DialogResponse::UploadBot(src.to_owned()));
+            if src.is_empty() {
+                // A bit hacky, but that's the most sane way for the http
+                // frontend to inform us that user's cancelled the uploading
+                resp = Some(DialogResponse::Close);
+            } else {
+                resp = Some(DialogResponse::UploadBot(src.to_owned()));
+            }
         }
 
-        ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
-            text.render(ui.area(), ui.buf());
-
-            ui.clamp(ui.area().footer(1), |ui| {
-                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
-                    response = Some(DialogResponse::Close);
-                }
-            });
-        });
-
-        response
+        resp
     }
 
     fn text(spinner: Span<'static>) -> Paragraph<'static> {

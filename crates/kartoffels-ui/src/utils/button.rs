@@ -52,8 +52,8 @@ impl<'a> Button<'a> {
 
     pub fn render(self, ui: &mut Ui) -> ButtonResponse {
         let area = self.layout(ui);
-        let response = self.response(ui, area);
-        let (style_key, style_desc) = self.style(&response);
+        let resp = self.response(ui, area);
+        let (style_key, style_desc) = self.style(&resp);
 
         let key = Button::key_name(self.key);
         let desc = &*self.desc;
@@ -74,7 +74,7 @@ impl<'a> Button<'a> {
             }
         }
 
-        response
+        resp
     }
 
     fn layout(&self, ui: &Ui) -> Rect {

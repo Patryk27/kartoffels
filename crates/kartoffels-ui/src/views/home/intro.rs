@@ -10,7 +10,7 @@ use tokio::time;
 
 pub async fn run(term: &mut Term) -> Result<Response> {
     loop {
-        let mut response = None;
+        let mut resp = None;
 
         term.draw(|ui| {
             let [_, area, _] = Layout::horizontal([
@@ -37,15 +37,15 @@ pub async fn run(term: &mut Term) -> Result<Response> {
             });
 
             ui.clamp(menu_area, |ui| {
-                response = Menu::render(ui);
+                resp = Menu::render(ui);
             });
         })
         .await?;
 
-        if let Some(response) = response {
+        if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            return Ok(response);
+            return Ok(resp);
         }
 
         term.tick().await?;

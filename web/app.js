@@ -21,7 +21,15 @@ document.fonts.ready.then(() => {
   term.loadAddon(termFit);
   term.loadAddon(new WebglAddon());
 
-  const socket = new WebSocket("ws:localhost:1313");
+  term.attachCustomKeyEventHandler((event) => {
+    // Prevent xterm from catching C-v, so that it invokes the usual paste
+    // event - better for the UX
+    if (event.type === "keydown" && event.key === "v" && event.ctrlKey) {
+      return false;
+    }
+  });
+
+  const socket = new WebSocket("ws://localhost:1313");
 
   socket.onopen = () => {
     term.loadAddon(
@@ -62,10 +70,8 @@ document.fonts.ready.then(() => {
 
   socket.onclose = () => {
     setTimeout(() => {
-      term.reset();
-
       term.write(
-        "error: lost connection to the server - try refreshing the page",
+        "\n\rconnection to server closed",
       );
     }, 150);
   };
@@ -79,11 +85,17 @@ document.fonts.ready.then(() => {
 
     input.type = "file";
 
+    input.oncancel = () => {
+      term.paste("");
+    };
+
     input.onchange = (event) => {
       const reader = new FileReader();
 
       reader.onload = () => {
-        term.paste(btoa(new Uint8Array(reader.result)));
+        term.paste(
+          btoa(String.fromCodePoint(...new Uint8Array(reader.result))),
+        );
       };
 
       reader.readAsArrayBuffer(event.target.files[0]);

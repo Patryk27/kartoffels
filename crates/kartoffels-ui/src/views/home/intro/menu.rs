@@ -7,7 +7,7 @@ pub struct Menu;
 
 impl Menu {
     pub fn height(ui: &Ui) -> u16 {
-        if ui.is_over_ssh() {
+        if ui.ty().is_ssh() {
             8
         } else {
             5
@@ -15,14 +15,14 @@ impl Menu {
     }
 
     pub fn render(ui: &mut Ui) -> Option<Response> {
-        let mut response = None;
+        let mut resp = None;
 
         if Button::new(KeyCode::Char('p'), "play")
             .centered()
             .render(ui)
             .pressed
         {
-            response = Some(Response::Play);
+            resp = Some(Response::Play);
         }
 
         ui.space(1);
@@ -32,7 +32,7 @@ impl Menu {
             .render(ui)
             .pressed
         {
-            response = Some(Response::OpenTutorial);
+            resp = Some(Response::OpenTutorial);
         }
 
         ui.space(1);
@@ -42,10 +42,10 @@ impl Menu {
             .render(ui)
             .pressed
         {
-            response = Some(Response::OpenChallenges);
+            resp = Some(Response::OpenChallenges);
         }
 
-        if ui.is_over_ssh() {
+        if ui.ty().is_ssh() {
             ui.space(2);
 
             if Button::new(KeyCode::Escape, "quit")
@@ -53,10 +53,10 @@ impl Menu {
                 .render(ui)
                 .pressed
             {
-                response = Some(Response::Quit);
+                resp = Some(Response::Quit);
             }
         }
 
-        response
+        resp
     }
 }

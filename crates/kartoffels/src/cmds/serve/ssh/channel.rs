@@ -2,7 +2,6 @@ use anyhow::{anyhow, Result};
 use futures_util::sink::drain;
 use futures_util::SinkExt;
 use glam::uvec2;
-use itertools::Either;
 use kartoffels_store::Store;
 use kartoffels_ui::{Term, TermType};
 use russh::server::{Handle as SessionHandle, Session};
@@ -63,51 +62,35 @@ impl AppChannel {
         let (mut term, stdin_tx) =
             Self::create_term(handle.clone(), id, width, height).await?;
 
-        let ui = task::spawn(async move {
+        let result = task::spawn(async move {
             kartoffels_ui::start(&mut term, &store).await
         });
 
         task::spawn(async move {
             let result = select! {
-                result = ui => Either::Left(result),
-                _ = shutdown.cancelled() => Either::Right(()),
+                result = result => Some(result),
+                _ = shutdown.cancelled() => None,
             };
 
             _ = handle
-                .data(id, Term::leave_sequence().into_bytes().into())
+                .data(id, Term::leave_cmds().into_bytes().into())
                 .await;
 
             match result {
-                Either::Left(Ok(result)) => {
-                    info!("ui task returned: {:?}", result);
+                Some(Ok(result)) => {
+                    info!("ui task finished: {:?}", result);
                 }
 
-                Either::Left(Err(err)) => {
+                Some(Err(err)) => {
                     info!("ui task crashed: {}", err);
 
-                    _ = handle
-                        .data(
-                            id,
-                            "whoopsie, the game has crashed!\r\n"
-                                .to_string()
-                                .into_bytes()
-                                .into(),
-                        )
-                        .await;
+                    _ = handle.data(id, Term::crashed_msg().into()).await;
                 }
 
-                Either::Right(_) => {
+                None => {
                     info!("ui task aborted: shutting down");
 
-                    _ = handle
-                        .data(
-                            id,
-                            "whoopsie, the server is shutting down!\r\n"
-                                .to_string()
-                                .into_bytes()
-                                .into(),
-                        )
-                        .await;
+                    _ = handle.data(id, Term::shutting_down_msg().into()).await;
                 }
             }
 

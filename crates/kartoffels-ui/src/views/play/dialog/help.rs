@@ -26,18 +26,18 @@ impl HelpDialog {
     "};
 
     pub fn render(&self, ui: &mut Ui) -> Option<DialogResponse> {
+        let mut resp = None;
+
         let text = Paragraph::new(Self::TEXT).wrap(Wrap::default());
         let width = cmp::min(ui.area().width - 10, 60);
         let height = text.line_count(width) as u16 + 2;
-
-        let mut response = None;
 
         ui.info_dialog(width, height, Some(" help "), |ui| {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(1), |ui| {
                 if Button::new(KeyCode::Escape, "close").render(ui).pressed {
-                    response = Some(DialogResponse::Close);
+                    resp = Some(DialogResponse::Close);
                 }
 
                 if Button::new(KeyCode::Char('t'), "go to tutorial")
@@ -45,11 +45,11 @@ impl HelpDialog {
                     .render(ui)
                     .pressed
                 {
-                    response = Some(DialogResponse::OpenTutorial);
+                    resp = Some(DialogResponse::OpenTutorial);
                 }
             })
         });
 
-        response
+        resp
     }
 }

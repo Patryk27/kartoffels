@@ -21,7 +21,7 @@ impl JoinedSidePanel {
         bot: &JoinedBot,
         enabled: bool,
     ) -> Option<SidePanelResponse> {
-        let mut response = None;
+        let mut resp = None;
 
         ui.line("id".underlined());
         ui.line(bot.id.to_string().fg(bot.id.color()));
@@ -65,7 +65,7 @@ impl JoinedSidePanel {
                     let status = if bot.requeued {
                         "killed, requeued"
                     } else {
-                        "killed, queued"
+                        "queued"
                     };
 
                     ui.span(status.fg(theme::PINK));
@@ -95,19 +95,19 @@ impl JoinedSidePanel {
                 .render(ui)
                 .pressed
             {
-                response = Some(SidePanelResponse::ShowBotHistory);
+                resp = Some(SidePanelResponse::ShowBotHistory);
             }
 
-            if Button::new(KeyCode::Char('l'), "leave bot")
+            if Button::new(KeyCode::Char('l'), "leave")
                 .enabled(enabled)
                 .block()
                 .render(ui)
                 .pressed
             {
-                response = Some(SidePanelResponse::LeaveBot);
+                resp = Some(SidePanelResponse::LeaveBot);
             }
         });
 
-        response
+        resp
     }
 }

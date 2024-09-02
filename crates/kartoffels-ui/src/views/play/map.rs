@@ -18,7 +18,7 @@ impl MapCanvas {
         paused: bool,
         enabled: bool,
     ) -> Option<MapCanvasResponse> {
-        let mut response = None;
+        let mut resp = None;
 
         let area = ui.area();
         let offset = camera - ivec2(area.width as i32, area.height as i32) / 2;
@@ -37,13 +37,7 @@ impl MapCanvas {
                         world.map.get(offset + ivec2(dx as i32, dy as i32));
 
                     Self::render_tile(
-                        ui,
-                        world,
-                        bot,
-                        tile,
-                        paused,
-                        enabled,
-                        &mut response,
+                        ui, world, bot, tile, paused, enabled, &mut resp,
                     );
                 });
             }
@@ -56,33 +50,29 @@ impl MapCanvas {
             if ui.key(KeyCode::Char('w'), Modifiers::NONE)
                 || ui.key(KeyCode::UpArrow, Modifiers::NONE)
             {
-                response =
-                    Some(MapCanvasResponse::MoveCamera(ivec2(0, -offset.y)));
+                resp = Some(MapCanvasResponse::MoveCamera(ivec2(0, -offset.y)));
             }
 
             if ui.key(KeyCode::Char('a'), Modifiers::NONE)
                 || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
             {
-                response =
-                    Some(MapCanvasResponse::MoveCamera(ivec2(-offset.x, 0)));
+                resp = Some(MapCanvasResponse::MoveCamera(ivec2(-offset.x, 0)));
             }
 
             if ui.key(KeyCode::Char('s'), Modifiers::NONE)
                 || ui.key(KeyCode::DownArrow, Modifiers::NONE)
             {
-                response =
-                    Some(MapCanvasResponse::MoveCamera(ivec2(0, offset.y)));
+                resp = Some(MapCanvasResponse::MoveCamera(ivec2(0, offset.y)));
             }
 
             if ui.key(KeyCode::Char('d'), Modifiers::NONE)
                 || ui.key(KeyCode::RightArrow, Modifiers::NONE)
             {
-                response =
-                    Some(MapCanvasResponse::MoveCamera(ivec2(offset.x, 0)));
+                resp = Some(MapCanvasResponse::MoveCamera(ivec2(offset.x, 0)));
             }
         }
 
-        response
+        resp
     }
 
     fn render_tile(

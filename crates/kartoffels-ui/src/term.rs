@@ -7,7 +7,7 @@ use ratatui::crossterm::event::{
     EnableMouseCapture,
 };
 use ratatui::crossterm::terminal::{
-    EnterAlternateScreen, LeaveAlternateScreen,
+    self, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use ratatui::crossterm::{cursor, Command};
 use ratatui::layout::Rect;
@@ -60,7 +60,7 @@ impl Term {
         };
 
         term.clear()?;
-        stdout.send(Self::enter_sequence().into_bytes()).await?;
+        stdout.send(Self::enter_cmds().into_bytes()).await?;
 
         Ok(Self {
             ty,
@@ -75,7 +75,7 @@ impl Term {
         })
     }
 
-    pub fn enter_sequence() -> String {
+    pub fn enter_cmds() -> String {
         let mut cmds = String::new();
 
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
@@ -85,7 +85,7 @@ impl Term {
         cmds
     }
 
-    pub fn leave_sequence() -> String {
+    pub fn leave_cmds() -> String {
         let mut cmds = String::new();
 
         _ = DisableMouseCapture.write_ansi(&mut cmds);
@@ -96,8 +96,25 @@ impl Term {
         cmds
     }
 
-    pub fn is_over_ssh(&self) -> bool {
-        matches!(self.ty, TermType::Ssh)
+    pub fn reset_cmds() -> Vec<u8> {
+        let mut cmd = String::new();
+
+        _ = terminal::Clear(terminal::ClearType::All).write_ansi(&mut cmd);
+        _ = cursor::MoveTo(0, 0).write_ansi(&mut cmd);
+
+        cmd.into()
+    }
+
+    pub fn crashed_msg() -> Vec<u8> {
+        "whoopsie, the game has crashed!\r\n".into()
+    }
+
+    pub fn shutting_down_msg() -> Vec<u8> {
+        "whoopsie, the server is shutting down!\r\n".into()
+    }
+
+    pub fn ty(&self) -> TermType {
+        self.ty
     }
 
     pub fn size(&self) -> UVec2 {
@@ -213,6 +230,16 @@ impl Term {
 pub enum TermType {
     Http,
     Ssh,
+}
+
+impl TermType {
+    pub fn is_http(&self) -> bool {
+        matches!(self, TermType::Http)
+    }
+
+    pub fn is_ssh(&self) -> bool {
+        matches!(self, TermType::Ssh)
+    }
 }
 
 #[derive(Default)]
