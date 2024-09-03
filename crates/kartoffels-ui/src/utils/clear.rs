@@ -13,10 +13,8 @@ impl Clear {
     pub fn render_ex(area: Rect, buf: &mut Buffer) {
         for x in area.left()..area.right() {
             for y in area.top()..area.bottom() {
-                buf[(x, y)]
-                    .set_symbol(" ")
-                    .set_fg(theme::FG)
-                    .set_bg(theme::BG);
+                buf[(x, y)].reset();
+                buf[(x, y)].set_fg(theme::FG).set_bg(theme::BG);
             }
         }
     }

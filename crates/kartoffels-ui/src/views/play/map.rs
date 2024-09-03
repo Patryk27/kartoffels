@@ -1,8 +1,10 @@
-use super::JoinedBot;
+use super::{JoinedBot, Response, State};
 use crate::{theme, BotIdExt, Ui};
+use anyhow::Result;
 use glam::{ivec2, IVec2};
 use kartoffels_world::prelude::{BotId, Dir, Snapshot, Tile, TileBase};
 use ratatui::layout::Rect;
+use std::ops::ControlFlow;
 use std::time::{SystemTime, UNIX_EPOCH};
 use termwiz::input::{KeyCode, Modifiers};
 
@@ -194,4 +196,27 @@ impl MapCanvas {
 pub enum MapCanvasResponse {
     MoveCamera(IVec2),
     JoinBot(BotId),
+}
+
+impl MapCanvasResponse {
+    pub fn handle(
+        self,
+        state: &mut State,
+    ) -> Result<ControlFlow<Response, ()>> {
+        match self {
+            MapCanvasResponse::MoveCamera(delta) => {
+                state.camera += delta;
+
+                if let Some(bot) = &mut state.bot {
+                    bot.is_followed = false;
+                }
+            }
+
+            MapCanvasResponse::JoinBot(id) => {
+                state.join_bot(id);
+            }
+        }
+
+        Ok(ControlFlow::Continue(()))
+    }
 }

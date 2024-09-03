@@ -1,5 +1,5 @@
 use super::SidePanelResponse;
-use crate::views::play::JoinedBot;
+use crate::views::play::{Controller, JoinedBot};
 use crate::{theme, BotIdExt, Button, RectExt, Ui};
 use itertools::Either;
 use kartoffels_world::prelude::Snapshot;
@@ -14,10 +14,9 @@ use termwiz::input::KeyCode;
 pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
-    const FOOTER_HEIGHT: u16 = 3;
-
     pub fn render(
         ui: &mut Ui,
+        ctrl: &Controller,
         world: &Snapshot,
         bot: &JoinedBot,
         enabled: bool,
@@ -27,6 +26,8 @@ impl JoinedSidePanel {
         ui.line("id".underlined());
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
+
+        let footer_height = if ctrl.is_sandbox() { 5 } else { 3 };
 
         match world.bots().by_id(bot.id) {
             Some(Either::Left(bot)) => {
@@ -46,7 +47,7 @@ impl JoinedSidePanel {
                         x: area.x,
                         y: area.y,
                         width: area.width,
-                        height: area.height - Self::FOOTER_HEIGHT - 1,
+                        height: area.height - footer_height - 1,
                     }
                 };
 
@@ -75,19 +76,24 @@ impl JoinedSidePanel {
             }
 
             None => {
-                ui.line("status".underlined());
-                ui.line("killed, dead".fg(theme::RED));
+                //
             }
         }
 
-        ui.clamp(ui.area().footer(Self::FOOTER_HEIGHT), |ui| {
-            if Button::new(KeyCode::Char('f'), "follow")
+        ui.clamp(ui.area().footer(footer_height), |ui| {
+            let follow_caption = if bot.is_followed {
+                "stop following"
+            } else {
+                "follow"
+            };
+
+            if Button::new(KeyCode::Char('f'), follow_caption)
                 .enabled(enabled)
                 .block()
                 .render(ui)
                 .pressed
             {
-                todo!();
+                resp = Some(SidePanelResponse::FollowBot);
             }
 
             if Button::new(KeyCode::Char('h'), "history")
@@ -97,6 +103,26 @@ impl JoinedSidePanel {
                 .pressed
             {
                 resp = Some(SidePanelResponse::ShowBotHistory);
+            }
+
+            if ctrl.is_sandbox() {
+                if Button::new(KeyCode::Char('R'), "restart")
+                    .enabled(enabled)
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(SidePanelResponse::RestartBot);
+                }
+
+                if Button::new(KeyCode::Char('D'), "destroy")
+                    .enabled(enabled)
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(SidePanelResponse::DestroyBot);
+                }
             }
 
             if Button::new(KeyCode::Char('l'), "leave")

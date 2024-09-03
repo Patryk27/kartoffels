@@ -96,9 +96,9 @@ struct State {
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui) -> Option<InnerResponse> {
+    fn render(&mut self, ui: &mut Ui) -> Option<StateResponse> {
         if let Some(bot) = &self.bot {
-            if bot.follow {
+            if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
                     self.camera = bot.pos;
                 }
@@ -125,18 +125,19 @@ impl State {
             .clamp(bottom_area, |ui| {
                 BottomPanel::render(ui, &self.ctrl, self.paused, enabled)
             })
-            .map(InnerResponse::BottomPanel);
+            .map(StateResponse::BottomPanel);
 
         let side_resp = ui
             .clamp(side_area, |ui| {
                 SidePanel::render(
                     ui,
+                    &self.ctrl,
                     &self.snapshot,
                     self.bot.as_ref(),
                     enabled,
                 )
             })
-            .map(InnerResponse::SidePanel);
+            .map(StateResponse::SidePanel);
 
         let map_resp = ui
             .clamp(map_area, |ui| {
@@ -149,112 +150,36 @@ impl State {
                     enabled,
                 )
             })
-            .map(InnerResponse::MapCanvas);
+            .map(StateResponse::MapCanvas);
 
         let dialog_resp = self
             .dialog
             .as_mut()
             .and_then(|dialog| dialog.render(ui, &self.snapshot))
-            .map(InnerResponse::Dialog);
+            .map(StateResponse::Dialog);
 
         bottom_resp.or(side_resp).or(map_resp).or(dialog_resp)
     }
 
     async fn handle(
         &mut self,
-        resp: InnerResponse,
+        resp: StateResponse,
         term: &mut Term,
     ) -> Result<ControlFlow<Response, ()>> {
         match resp {
-            InnerResponse::BottomPanel(response) => match response {
-                BottomPanelResponse::GoBack => {
-                    return Ok(ControlFlow::Break(Response::GoBack));
-                }
-
-                BottomPanelResponse::Help => {
-                    self.dialog = Some(Dialog::Help(Default::default()));
-                }
-
-                BottomPanelResponse::Pause => {
-                    self.paused = !self.paused;
-                }
-
-                BottomPanelResponse::ListBots => {
-                    self.dialog = Some(Dialog::Bots(Default::default()));
-                }
-
-                BottomPanelResponse::ConfigureWorld => {
-                    self.dialog =
-                        Some(Dialog::ConfigureWorld(Default::default()));
-                }
-            },
-
-            InnerResponse::Dialog(response) => match response {
-                DialogResponse::Close => {
-                    self.dialog = None;
-                }
-
-                DialogResponse::JoinBot(id) => {
-                    self.dialog = None;
-                    self.join_bot(id);
-                }
-
-                DialogResponse::UploadBot(src) => {
-                    self.dialog = None;
-                    self.upload_bot(src).await?;
-                }
-
-                DialogResponse::OpenTutorial => {
-                    return Ok(ControlFlow::Break(Response::OpenTutorial));
-                }
-
-                DialogResponse::Throw(err) => {
-                    self.dialog = Some(Dialog::Error(ErrorDialog::new(err)));
-                }
-            },
-
-            InnerResponse::MapCanvas(response) => match response {
-                MapCanvasResponse::MoveCamera(delta) => {
-                    self.camera += delta;
-
-                    if let Some(bot) = &mut self.bot {
-                        bot.follow = false;
-                    }
-                }
-
-                MapCanvasResponse::JoinBot(id) => {
-                    self.join_bot(id);
-                }
-            },
-
-            InnerResponse::SidePanel(response) => match response {
-                SidePanelResponse::UploadBot => {
-                    if term.ty().is_http() {
-                        term.send(vec![0x04]).await?;
-                    }
-
-                    self.dialog = Some(Dialog::UploadBot(Default::default()));
-                }
-
-                SidePanelResponse::JoinBot => {
-                    self.dialog = Some(Dialog::JoinBot(Default::default()));
-                }
-
-                SidePanelResponse::LeaveBot => {
-                    self.bot = None;
-                }
-
-                SidePanelResponse::ShowBotHistory => {
-                    todo!();
-                }
-            },
+            StateResponse::BottomPanel(resp) => resp.handle(self).await,
+            StateResponse::Dialog(resp) => resp.handle(self).await,
+            StateResponse::MapCanvas(resp) => resp.handle(self),
+            StateResponse::SidePanel(resp) => resp.handle(self, term).await,
         }
-
-        Ok(ControlFlow::Continue(()))
     }
 
     fn join_bot(&mut self, id: BotId) {
-        self.bot = Some(JoinedBot { id, follow: true });
+        self.bot = Some(JoinedBot {
+            id,
+            is_followed: true,
+        });
+
         self.paused = false;
     }
 
@@ -293,11 +218,11 @@ impl State {
 #[derive(Debug)]
 struct JoinedBot {
     id: BotId,
-    follow: bool,
+    is_followed: bool,
 }
 
 #[derive(Debug)]
-enum InnerResponse {
+enum StateResponse {
     BottomPanel(BottomPanelResponse),
     Dialog(DialogResponse),
     MapCanvas(MapCanvasResponse),

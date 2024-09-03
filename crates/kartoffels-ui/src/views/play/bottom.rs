@@ -1,9 +1,11 @@
-use super::Controller;
+use super::{Controller, Dialog, Response, State};
 use crate::{theme, Button, Ui};
+use anyhow::Result;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
 use ratatui::widgets::Widget;
+use std::ops::ControlFlow;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -64,7 +66,7 @@ impl BottomPanel {
             if ctrl.is_sandbox() {
                 ui.space(2);
 
-                if Button::new(KeyCode::Char('c'), "configure world")
+                if Button::new(KeyCode::Char('C'), "configure world")
                     .enabled(enabled)
                     .block()
                     .render(ui)
@@ -100,4 +102,39 @@ pub enum BottomPanelResponse {
     Pause,
     ListBots,
     ConfigureWorld,
+}
+
+impl BottomPanelResponse {
+    pub async fn handle(
+        self,
+        state: &mut State,
+    ) -> Result<ControlFlow<Response, ()>> {
+        match self {
+            BottomPanelResponse::GoBack => {
+                return Ok(ControlFlow::Break(Response::GoBack));
+            }
+
+            BottomPanelResponse::Help => {
+                state.dialog = Some(Dialog::Help(Default::default()));
+            }
+
+            BottomPanelResponse::Pause => {
+                state.paused = !state.paused;
+
+                if state.ctrl.is_sandbox() {
+                    state.handle.pause(state.paused).await?;
+                }
+            }
+
+            BottomPanelResponse::ListBots => {
+                state.dialog = Some(Dialog::Bots(Default::default()));
+            }
+
+            BottomPanelResponse::ConfigureWorld => {
+                state.dialog = Some(Dialog::ConfigureWorld(Default::default()));
+            }
+        }
+
+        Ok(ControlFlow::Continue(()))
+    }
 }
