@@ -1,19 +1,22 @@
 mod bottom;
-mod ctrl;
 mod dialog;
 mod map;
+mod policy;
 mod side;
 
 use self::bottom::*;
-pub use self::ctrl::*;
 use self::dialog::*;
 use self::map::*;
+pub use self::policy::*;
 use self::side::*;
-use crate::{theme, Clear, Term, Ui};
+use crate::{DriverEvent, DriverEventRx};
 use anyhow::{Context, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use futures_util::{stream, Stream};
 use glam::IVec2;
+use itertools::Either;
+use kartoffels_ui::{theme, Clear, Term, Ui};
 use kartoffels_world::prelude::{
     BotId, Handle as WorldHandle, Snapshot as WorldSnapshot,
 };
@@ -25,25 +28,12 @@ use tokio_stream::StreamExt;
 
 pub async fn run(
     term: &mut Term,
-    handle: WorldHandle,
-    ctrl: Controller,
+    mut driver: DriverEventRx,
 ) -> Result<Response> {
-    let mut snapshots = handle.listen().await?;
+    let mut state = State::default();
 
-    let snapshot = snapshots
-        .next()
-        .await
-        .context("lost connection to the world")?;
-
-    let mut state = State {
-        ctrl,
-        camera: snapshot.map().size().as_ivec2() / 2,
-        bot: None,
-        dialog: None,
-        paused: false,
-        snapshot,
-        handle,
-    };
+    let mut snapshots: Box<dyn Stream<Item = _> + Send + Unpin> =
+        Box::new(stream::pending());
 
     loop {
         let mut resp = None;
@@ -56,43 +46,82 @@ pub async fn run(
         if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            match state.handle(resp, term).await? {
-                ControlFlow::Continue(_) => {
-                    //
-                }
-
-                ControlFlow::Break(response) => {
-                    return Ok(response);
-                }
+            if let ControlFlow::Break(response) =
+                state.handle(resp, term).await?
+            {
+                return Ok(response);
             }
         }
 
-        let snapshot = select! {
+        let event = select! {
             result = term.tick() => {
-                result?;
+                #[allow(clippy::question_mark)]
+                if let Err(err) = result {
+                    return Err(err);
+                }
+
                 continue;
             }
 
             snapshot = snapshots.next() => {
-                snapshot.context("lost connection to the world")?
+                Either::Left(snapshot.context("world has crashed")?)
             },
+
+            Some(event) = driver.recv() => {
+                Either::Right(event)
+            }
         };
 
-        if !state.paused {
-            state.snapshot = snapshot;
+        match event {
+            Either::Left(snapshot) => {
+                if !state.paused {
+                    state.snapshot = snapshot;
+                }
+            }
+
+            Either::Right(event) => match event {
+                DriverEvent::Join(handle) => {
+                    snapshots = Box::new(handle.listen().await?);
+
+                    let snapshot = snapshots
+                        .next()
+                        .await
+                        .context("lost connection to the world")?;
+
+                    state.camera = snapshot.map().size().as_ivec2() / 2;
+                    state.snapshot = snapshot;
+                    state.handle = Some(handle);
+                }
+
+                DriverEvent::Pause(paused) => {
+                    state.pause(paused).await?;
+                }
+
+                DriverEvent::SetPolicy(policy) => {
+                    state.policy = policy;
+                }
+
+                DriverEvent::OpenDialog(dialog) => {
+                    state.dialog = Some(Dialog::Custom(dialog));
+                }
+
+                DriverEvent::CloseDialog => {
+                    state.dialog = None;
+                }
+            },
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Default)]
 struct State {
-    ctrl: Controller,
     camera: IVec2,
     bot: Option<JoinedBot>,
     dialog: Option<Dialog>,
     paused: bool,
+    policy: Policy,
     snapshot: Arc<WorldSnapshot>,
-    handle: WorldHandle,
+    handle: Option<WorldHandle>,
 }
 
 impl State {
@@ -123,7 +152,13 @@ impl State {
 
         let bottom_resp = ui
             .clamp(bottom_area, |ui| {
-                BottomPanel::render(ui, &self.ctrl, self.paused, enabled)
+                BottomPanel::render(
+                    ui,
+                    &self.policy,
+                    self.handle.as_ref(),
+                    self.paused,
+                    enabled,
+                )
             })
             .map(StateResponse::BottomPanel);
 
@@ -131,10 +166,10 @@ impl State {
             .clamp(side_area, |ui| {
                 SidePanel::render(
                     ui,
-                    &self.ctrl,
+                    &self.policy,
                     &self.snapshot,
                     self.bot.as_ref(),
-                    enabled,
+                    enabled && self.handle.is_some(),
                 )
             })
             .map(StateResponse::SidePanel);
@@ -147,7 +182,7 @@ impl State {
                     self.bot.as_ref(),
                     self.camera,
                     self.paused,
-                    enabled,
+                    enabled && self.handle.is_some(),
                 )
             })
             .map(StateResponse::MapCanvas);
@@ -174,6 +209,18 @@ impl State {
         }
     }
 
+    async fn pause(&mut self, paused: bool) -> Result<()> {
+        self.paused = paused;
+
+        if self.policy.propagate_pause {
+            if let Some(handle) = &self.handle {
+                handle.pause(self.paused).await?;
+            }
+        }
+
+        Ok(())
+    }
+
     fn join_bot(&mut self, id: BotId) {
         self.bot = Some(JoinedBot {
             id,
@@ -198,7 +245,13 @@ impl State {
             }
         };
 
-        let id = match self.handle.create_bot(src, None, false).await {
+        let id = match self
+            .handle
+            .as_ref()
+            .unwrap()
+            .create_bot(src, None, false)
+            .await
+        {
             Ok(id) => id,
 
             Err(err) => {

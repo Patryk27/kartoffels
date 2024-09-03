@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use crate::{theme, Button, RectExt, Ui};
+use kartoffels_ui::{theme, Button, RectExt, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, WidgetRef, Wrap};

@@ -1,9 +1,9 @@
 mod intro;
 mod world_selection;
 
-use crate::Term;
 use anyhow::Result;
 use kartoffels_store::Store;
+use kartoffels_ui::Term;
 use kartoffels_world::prelude::Handle as WorldHandle;
 
 pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {

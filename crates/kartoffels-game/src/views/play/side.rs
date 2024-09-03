@@ -3,9 +3,9 @@ mod joined;
 
 use self::idle::*;
 use self::joined::*;
-use super::{Controller, Dialog, JoinedBot, Response, State};
-use crate::{Clear, Term, Ui};
+use super::{Dialog, JoinedBot, Policy, Response, State};
 use anyhow::Result;
+use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::Snapshot;
 use ratatui::layout::Rect;
 use std::ops::ControlFlow;
@@ -18,7 +18,7 @@ impl SidePanel {
 
     pub fn render(
         ui: &mut Ui,
-        ctrl: &Controller,
+        policy: &Policy,
         world: &Snapshot,
         bot: Option<&JoinedBot>,
         enabled: bool,
@@ -38,7 +38,7 @@ impl SidePanel {
 
         ui.clamp(area, |ui| {
             if let Some(bot) = bot {
-                JoinedSidePanel::render(ui, ctrl, world, bot, enabled)
+                JoinedSidePanel::render(ui, policy, world, bot, enabled)
             } else {
                 IdleSidePanel::render(ui, enabled)
             }
@@ -82,13 +82,13 @@ impl SidePanelResponse {
 
             SidePanelResponse::RestartBot => {
                 if let Some(bot) = &state.bot {
-                    state.handle.restart_bot(bot.id).await?;
+                    state.handle.as_ref().unwrap().restart_bot(bot.id).await?;
                 }
             }
 
             SidePanelResponse::DestroyBot => {
                 if let Some(bot) = state.bot.take() {
-                    state.handle.destroy_bot(bot.id).await?;
+                    state.handle.as_ref().unwrap().destroy_bot(bot.id).await?;
                 }
             }
 

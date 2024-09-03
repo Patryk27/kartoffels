@@ -3,8 +3,8 @@ mod menu;
 
 use self::header::*;
 use self::menu::*;
-use crate::{theme, Clear, Term};
 use anyhow::Result;
+use kartoffels_ui::{theme, Clear, Term};
 use ratatui::layout::{Constraint, Layout};
 use tokio::time;
 

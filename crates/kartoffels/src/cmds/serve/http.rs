@@ -111,7 +111,7 @@ async fn handle_connect(
         };
 
         let result = task::spawn(async move {
-            kartoffels_ui::start(&mut term, &store).await
+            kartoffels_game::start(&mut term, &store).await
         });
 
         let result = select! {

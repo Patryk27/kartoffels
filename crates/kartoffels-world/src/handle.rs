@@ -17,7 +17,7 @@ pub struct Handle {
 }
 
 impl Handle {
-    const ERR_LOST: &'static str = "world has crashed";
+    const ERR: &'static str = "world has crashed";
 
     pub(crate) fn new(tx: RequestTx, name: Arc<String>) -> Self {
         Self { tx, name }
@@ -32,9 +32,9 @@ impl Handle {
 
         self.send(Request::Listen { tx }).await?;
 
-        let rx = rx.await.context(Self::ERR_LOST)?;
+        let rx = rx.await.context(Self::ERR)?;
 
-        Ok(BroadcastStream::new(rx).filter_map(|update| update.ok()))
+        Ok(BroadcastStream::new(rx).filter_map(|msg| msg.ok()))
     }
 
     pub async fn pause(&self, paused: bool) -> Result<()> {
@@ -48,7 +48,7 @@ impl Handle {
 
         self.send(Request::Shutdown { tx }).await?;
 
-        rx.await.context(Self::ERR_LOST)
+        rx.await.context(Self::ERR)
     }
 
     pub async fn create_bot(
@@ -67,7 +67,7 @@ impl Handle {
         })
         .await?;
 
-        rx.await.context(Self::ERR_LOST)?
+        rx.await.context(Self::ERR)?
     }
 
     pub async fn restart_bot(&self, id: BotId) -> Result<()> {
@@ -86,7 +86,7 @@ impl Handle {
         self.tx
             .send(request)
             .await
-            .map_err(|_| anyhow!("{}", Self::ERR_LOST))?;
+            .map_err(|_| anyhow!("{}", Self::ERR))?;
 
         Ok(())
     }

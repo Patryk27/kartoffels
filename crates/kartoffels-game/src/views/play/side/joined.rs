@@ -1,7 +1,9 @@
 use super::SidePanelResponse;
-use crate::views::play::{Controller, JoinedBot};
-use crate::{theme, BotIdExt, Button, RectExt, Ui};
+use crate::play::Policy;
+use crate::views::play::JoinedBot;
+use crate::BotIdExt;
 use itertools::Either;
+use kartoffels_ui::{theme, Button, RectExt, Ui};
 use kartoffels_world::prelude::Snapshot;
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
@@ -16,7 +18,7 @@ pub struct JoinedSidePanel;
 impl JoinedSidePanel {
     pub fn render(
         ui: &mut Ui,
-        ctrl: &Controller,
+        policy: &Policy,
         world: &Snapshot,
         bot: &JoinedBot,
         enabled: bool,
@@ -27,7 +29,7 @@ impl JoinedSidePanel {
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
 
-        let footer_height = if ctrl.is_sandbox() { 5 } else { 3 };
+        let footer_height = if policy.can_manage_bots { 5 } else { 3 };
 
         match world.bots().by_id(bot.id) {
             Some(Either::Left(bot)) => {
@@ -96,7 +98,7 @@ impl JoinedSidePanel {
                 resp = Some(SidePanelResponse::FollowBot);
             }
 
-            if Button::new(KeyCode::Char('h'), "history")
+            if Button::new(KeyCode::Char('i'), "history")
                 .enabled(enabled)
                 .block()
                 .render(ui)
@@ -105,7 +107,7 @@ impl JoinedSidePanel {
                 resp = Some(SidePanelResponse::ShowBotHistory);
             }
 
-            if ctrl.is_sandbox() {
+            if policy.can_manage_bots {
                 if Button::new(KeyCode::Char('R'), "restart")
                     .enabled(enabled)
                     .block()

@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use crate::{Button, RectExt, Ui};
+use kartoffels_ui::{Button, RectExt, Ui};
 use ratatui::widgets::{Paragraph, Widget};
 use termwiz::input::KeyCode;
 

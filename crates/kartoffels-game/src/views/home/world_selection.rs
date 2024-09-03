@@ -1,6 +1,6 @@
-use crate::{theme, Button, Clear, Term};
 use anyhow::Result;
 use kartoffels_store::Store;
+use kartoffels_ui::{theme, Button, Clear, Term};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::text::Line;
 use termwiz::input::KeyCode;

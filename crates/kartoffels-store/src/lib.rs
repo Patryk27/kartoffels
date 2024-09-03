@@ -2,7 +2,7 @@
 #![feature(try_blocks)]
 
 use anyhow::{Context, Result};
-use kartoffels_world::prelude::Handle as WorldHandle;
+use kartoffels_world::prelude::{Config as WorldConfig, Handle as WorldHandle};
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::info;
@@ -61,21 +61,8 @@ impl Store {
         })
     }
 
-    pub fn sandbox(&self) -> WorldHandle {
-        use kartoffels_world::prelude::*;
-
-        let config = Config {
-            name: "sandbox".into(),
-            mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-                round_duration: None,
-            }),
-            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 15 }),
-            policy: Policy {
-                max_alive_bots: 16,
-                max_queued_bots: 16,
-            },
-        };
-
+    pub fn create_world(&self, config: WorldConfig) -> WorldHandle {
+        // TODO add limits
         kartoffels_world::create(config, None)
     }
 

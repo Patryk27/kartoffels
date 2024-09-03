@@ -1370,6 +1370,7 @@ dependencies = [
  "glam",
  "indoc",
  "itertools 0.12.1",
+ "kartoffels-game",
  "kartoffels-store",
  "kartoffels-ui",
  "kartoffels-world",
@@ -1383,6 +1384,26 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kartoffels-game"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "futures-util",
+ "glam",
+ "itertools 0.12.1",
+ "kartoffels-store",
+ "kartoffels-ui",
+ "kartoffels-world",
+ "rand",
+ "ratatui",
+ "termwiz",
+ "tokio",
+ "tokio-stream",
+ "waker-fn",
 ]
 
 [[package]]
@@ -1405,8 +1426,6 @@ dependencies = [
  "futures-util",
  "glam",
  "itertools 0.12.1",
- "kartoffels-store",
- "kartoffels-world",
  "rand",
  "ratatui",
  "termwiz",

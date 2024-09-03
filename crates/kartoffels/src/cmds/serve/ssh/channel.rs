@@ -63,7 +63,7 @@ impl AppChannel {
             Self::create_term(handle.clone(), id, width, height).await?;
 
         let result = task::spawn(async move {
-            kartoffels_ui::start(&mut term, &store).await
+            kartoffels_game::start(&mut term, &store).await
         });
 
         task::spawn(async move {

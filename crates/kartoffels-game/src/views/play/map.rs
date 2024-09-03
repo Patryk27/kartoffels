@@ -1,7 +1,8 @@
 use super::{JoinedBot, Response, State};
-use crate::{theme, BotIdExt, Ui};
+use crate::BotIdExt;
 use anyhow::Result;
 use glam::{ivec2, IVec2};
+use kartoffels_ui::{theme, Ui};
 use kartoffels_world::prelude::{BotId, Dir, Snapshot, Tile, TileBase};
 use ratatui::layout::Rect;
 use std::ops::ControlFlow;

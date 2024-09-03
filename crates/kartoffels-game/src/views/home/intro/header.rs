@@ -1,4 +1,4 @@
-use crate::{theme, Ui};
+use kartoffels_ui::{theme, Ui};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};

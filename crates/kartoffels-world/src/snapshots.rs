@@ -8,7 +8,7 @@ use itertools::Either;
 use std::collections::VecDeque;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Snapshot {
     map: Map,
     bots: SnapshotBots,
@@ -24,7 +24,7 @@ impl Snapshot {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SnapshotBots {
     alive: SnapshotAliveBots,
     queued: SnapshotQueuedBots,
@@ -53,9 +53,13 @@ impl SnapshotBots {
 
         None
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.alive.is_empty() && self.queued.is_empty()
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SnapshotAliveBots {
     entries: Vec<SnapshotAliveBot>,
     idx_lookup: AHashMap<BotId, u8>,
@@ -80,6 +84,10 @@ impl SnapshotAliveBots {
             Some((bot, *score))
         })
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
 }
 
 #[derive(Debug)]
@@ -91,7 +99,7 @@ pub struct SnapshotAliveBot {
     pub age: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SnapshotQueuedBots {
     entries: AHashMap<BotId, SnapshotQueuedBot>,
 }
@@ -99,6 +107,10 @@ pub struct SnapshotQueuedBots {
 impl SnapshotQueuedBots {
     pub fn by_id(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
         self.entries.get(&id)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
     }
 }
 

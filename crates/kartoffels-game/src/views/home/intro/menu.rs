@@ -1,5 +1,5 @@
 use super::Response;
-use crate::{Button, Ui};
+use kartoffels_ui::{Button, Ui};
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]

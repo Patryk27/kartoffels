@@ -1,5 +1,5 @@
 use super::SidePanelResponse;
-use crate::{Button, Ui};
+use kartoffels_ui::{Button, Ui};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
 

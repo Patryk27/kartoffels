@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use crate::Ui;
+use kartoffels_ui::Ui;
 
 #[derive(Debug, Default)]
 pub struct ConfigureWorldDialog {

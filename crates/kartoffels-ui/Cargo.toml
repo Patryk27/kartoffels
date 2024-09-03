@@ -4,9 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-kartoffels-store = { path = "../kartoffels-store" }
-kartoffels-world = { path = "../kartoffels-world" }
-
 anyhow.workspace = true
 base64.workspace = true
 futures-util.workspace = true

@@ -12,12 +12,11 @@ pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::upload_bot::*;
 use super::{Response, State};
-use crate::{Backdrop, Ui};
 use anyhow::Result;
+use kartoffels_ui::{Backdrop, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use std::ops::ControlFlow;
 
-#[derive(Debug)]
 pub enum Dialog {
     Bots(BotsDialog),
     ConfigureWorld(ConfigureWorldDialog),
@@ -25,6 +24,7 @@ pub enum Dialog {
     Help(HelpDialog),
     JoinBot(JoinBotDialog),
     UploadBot(UploadBotDialog),
+    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
 }
 
 impl Dialog {
@@ -42,6 +42,11 @@ impl Dialog {
             Dialog::Help(this) => this.render(ui),
             Dialog::JoinBot(this) => this.render(ui, world),
             Dialog::UploadBot(this) => this.render(ui),
+
+            Dialog::Custom(this) => {
+                (this)(ui);
+                None
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 use super::DialogResponse;
-use crate::{BotIdExt, Button, RectExt, Ui};
+use crate::BotIdExt;
+use kartoffels_ui::{Button, RectExt, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;

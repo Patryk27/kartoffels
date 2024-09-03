@@ -1,6 +1,7 @@
-use super::{Controller, Dialog, Response, State};
-use crate::{theme, Button, Ui};
+use super::{Dialog, Policy, Response, State};
 use anyhow::Result;
+use kartoffels_ui::{theme, Button, Ui};
+use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -14,7 +15,8 @@ pub struct BottomPanel;
 impl BottomPanel {
     pub fn render(
         ui: &mut Ui,
-        ctrl: &Controller,
+        policy: &Policy,
+        handle: Option<&WorldHandle>,
         paused: bool,
         enabled: bool,
     ) -> Option<BottomPanelResponse> {
@@ -33,7 +35,7 @@ impl BottomPanel {
             ui.space(2);
 
             if Button::new(KeyCode::Char(' '), "pause")
-                .enabled(enabled)
+                .enabled(enabled && handle.is_some())
                 .block()
                 .render(ui)
                 .pressed
@@ -55,7 +57,7 @@ impl BottomPanel {
             ui.space(2);
 
             if Button::new(KeyCode::Char('b'), "bots")
-                .enabled(enabled)
+                .enabled(enabled && handle.is_some())
                 .block()
                 .render(ui)
                 .pressed
@@ -63,7 +65,7 @@ impl BottomPanel {
                 resp = Some(BottomPanelResponse::ListBots);
             }
 
-            if ctrl.is_sandbox() {
+            if policy.can_configure_world {
                 ui.space(2);
 
                 if Button::new(KeyCode::Char('C'), "configure world")
@@ -119,11 +121,7 @@ impl BottomPanelResponse {
             }
 
             BottomPanelResponse::Pause => {
-                state.paused = !state.paused;
-
-                if state.ctrl.is_sandbox() {
-                    state.handle.pause(state.paused).await?;
-                }
+                state.pause(!state.paused).await?;
             }
 
             BottomPanelResponse::ListBots => {
