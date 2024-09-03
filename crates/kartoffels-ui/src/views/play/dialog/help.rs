@@ -1,34 +1,36 @@
 use super::DialogResponse;
-use crate::{Button, RectExt, Ui};
-use ratatui::text::Line;
+use crate::{theme, Button, RectExt, Ui};
+use ratatui::style::Stylize;
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, WidgetRef, Wrap};
-use std::cmp;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
 
 static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
     Paragraph::new(vec![
-        Line::raw("hey there soldier and welcome to kartoffels 🫡🫡🫡"),
+        Line::raw("welcome to kartoffels 🫡"),
         Line::raw(""),
-        Line::raw(
-            "the game has a built-in tutorial which you can open by pressing \
-             [t] now, but if you're more into discovering things yourself, \
-             here's a couple of tips:",
-        ),
+        Line::from_iter([
+            Span::raw("there's a built-in tutorial which you can open by pressing ["),
+            Span::raw("t").fg(theme::GREEN),
+            Span::raw("] now, but if you're more into discovering things yourself, here's a couple of tips to start you off:"),
+        ]),
         Line::raw(""),
-        Line::raw(
-            "- run `git clone https://github.com/Patryk27/kartoffel` to get a \
-             starting point - see README.md there for building instructions",
-        ),
-        Line::raw(
-            "- use your ide's `go to definition` feature to discover how \
-             robot-specific functions, such as `radar_scan()`, work",
-        ),
+        Line::from_iter([
+            Span::raw("- run `"),
+            Span::raw("git clone https://github.com/Patryk27/kartoffel").fg(theme::WASHED_PINK),
+            Span::raw("` to download the template repository"),
+        ]),
+        Line::raw("- once you have the template, see README.md for building instructions"),
+        Line::from_iter([
+            Span::raw("- use your ide's `"),
+            Span::raw("go to definition").fg(theme::WASHED_PINK),
+            Span::raw("` feature to discover how robot-specific functions work"),
+        ]),
         Line::raw("- press [u] to upload your bot"),
         Line::raw("- press [w/a/s/d] to navigate the map"),
-        Line::raw(
-            "- bots are represented with the `@` char, `.` is floor etc.",
-        ),
+        Line::raw("- bots are represented with the `@` char, `.` is floor etc."),
+        Line::raw("- you're smart, you'll figure out the rest"),
     ])
     .wrap(Wrap::default())
 });
@@ -40,7 +42,7 @@ impl HelpDialog {
     pub fn render(&self, ui: &mut Ui) -> Option<DialogResponse> {
         let mut resp = None;
 
-        let width = cmp::min(ui.area().width - 10, 60);
+        let width = ui.area().width - 10;
         let height = TEXT.line_count(width) as u16 + 2;
 
         ui.info_dialog(width, height, Some(" help "), |ui| {
@@ -51,7 +53,7 @@ impl HelpDialog {
                     resp = Some(DialogResponse::Close);
                 }
 
-                if Button::new(KeyCode::Char('t'), "go to tutorial")
+                if Button::new(KeyCode::Char('t'), "open tutorial")
                     .right_aligned()
                     .render(ui)
                     .pressed

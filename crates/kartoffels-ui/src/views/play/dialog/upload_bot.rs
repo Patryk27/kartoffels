@@ -15,15 +15,12 @@ static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
         Line::raw("  or").fg(theme::GRAY),
         Line::raw("    ./build.bat --copy").fg(theme::WASHED_PINK),
         Line::raw(""),
-        Line::raw(
-            "... and then paste your clipboard here (Ctrl+Shift+V, Cmd+V \
-             etc.) to upload the bot",
-        ),
+        Line::raw("... and then paste your clipboard here (Ctrl+Shift+V, Cmd+V etc.) to upload the bot"),
         Line::raw(""),
-        Line::raw(
-            "if you're not following the template, you have to just build \
-             the *.elf file, base64-encode it and then paste it here",
-        ),
+        Line::raw("if you're not following the template, you have to build the *.elf file, base64-encode it and then paste it here, like:"),
+        Line::raw(""),
+        Line::raw("    cargo build --release").fg(theme::WASHED_PINK),
+        Line::raw("    base64 target/foo/bar | wl-copy").fg(theme::WASHED_PINK),
     ])
     .wrap(Wrap::default())
 });
