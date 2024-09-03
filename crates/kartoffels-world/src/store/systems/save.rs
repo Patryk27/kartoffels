@@ -5,7 +5,7 @@ use maybe_owned::MaybeOwned;
 use std::future::Future;
 use std::time::{Duration, Instant};
 use tokio::{runtime, task};
-use tracing::{debug, info, Instrument, Span};
+use tracing::{debug, Instrument, Span};
 
 pub struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
@@ -61,7 +61,7 @@ pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
         async move {
             let (tt_ser, tt_io) = task.await?;
 
-            info!(?tt_ser, ?tt_io, "saved");
+            debug!(?tt_ser, ?tt_io, "saved");
 
             Ok(())
         }
