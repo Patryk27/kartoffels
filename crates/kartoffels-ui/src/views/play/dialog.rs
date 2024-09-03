@@ -1,10 +1,12 @@
 mod bots;
+mod configure_world;
 mod error;
 mod help;
 mod join_bot;
 mod upload_bot;
 
 pub use self::bots::*;
+pub use self::configure_world::*;
 pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
@@ -15,6 +17,7 @@ use kartoffels_world::prelude::{BotId, Snapshot};
 #[derive(Debug)]
 pub enum Dialog {
     Bots(BotsDialog),
+    ConfigureWorld(ConfigureWorldDialog),
     Error(ErrorDialog),
     Help(HelpDialog),
     JoinBot(JoinBotDialog),
@@ -31,6 +34,7 @@ impl Dialog {
 
         match self {
             Dialog::Bots(this) => this.render(ui, world),
+            Dialog::ConfigureWorld(this) => this.render(ui),
             Dialog::Error(this) => this.render(ui),
             Dialog::Help(this) => this.render(ui),
             Dialog::JoinBot(this) => this.render(ui, world),

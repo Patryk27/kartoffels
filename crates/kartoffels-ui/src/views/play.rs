@@ -26,7 +26,7 @@ use tokio_stream::StreamExt;
 pub async fn run(
     term: &mut Term,
     handle: WorldHandle,
-    _ctrl: Controller,
+    ctrl: Controller,
 ) -> Result<Response> {
     let mut snapshots = handle.listen().await?;
 
@@ -36,6 +36,7 @@ pub async fn run(
         .context("lost connection to the world")?;
 
     let mut state = State {
+        ctrl,
         camera: snapshot.map().size().as_ivec2() / 2,
         bot: None,
         dialog: None,
@@ -79,6 +80,7 @@ pub async fn run(
 
 #[derive(Debug)]
 struct State {
+    ctrl: Controller,
     camera: IVec2,
     bot: Option<JoinedBot>,
     dialog: Option<Dialog>,
@@ -115,7 +117,7 @@ impl State {
 
         let bottom_resp = ui
             .clamp(bottom_area, |ui| {
-                BottomPanel::render(ui, self.paused, enabled)
+                BottomPanel::render(ui, &self.ctrl, self.paused, enabled)
             })
             .map(InnerResponse::BottomPanel);
 
@@ -173,6 +175,11 @@ impl State {
 
                 BottomPanelResponse::ListBots => {
                     self.dialog = Some(Dialog::Bots(Default::default()));
+                }
+
+                BottomPanelResponse::ConfigureWorld => {
+                    self.dialog =
+                        Some(Dialog::ConfigureWorld(Default::default()));
                 }
             },
 

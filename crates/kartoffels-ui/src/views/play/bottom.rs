@@ -1,3 +1,4 @@
+use super::Controller;
 use crate::{theme, Button, Ui};
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
@@ -11,6 +12,7 @@ pub struct BottomPanel;
 impl BottomPanel {
     pub fn render(
         ui: &mut Ui,
+        ctrl: &Controller,
         paused: bool,
         enabled: bool,
     ) -> Option<BottomPanelResponse> {
@@ -58,6 +60,19 @@ impl BottomPanel {
             {
                 resp = Some(BottomPanelResponse::ListBots);
             }
+
+            if ctrl.is_sandbox() {
+                ui.space(2);
+
+                if Button::new(KeyCode::Char('c'), "configure world")
+                    .enabled(enabled)
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(BottomPanelResponse::ConfigureWorld);
+                }
+            }
         });
 
         if paused {
@@ -84,4 +99,5 @@ pub enum BottomPanelResponse {
     Help,
     Pause,
     ListBots,
+    ConfigureWorld,
 }
