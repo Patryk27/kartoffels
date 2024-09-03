@@ -63,7 +63,8 @@ pub async fn run(
         }
 
         let snapshot = select! {
-            _ = term.tick() => {
+            result = term.tick() => {
+                result?;
                 continue;
             }
 
