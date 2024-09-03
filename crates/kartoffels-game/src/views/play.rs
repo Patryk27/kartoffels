@@ -46,10 +46,13 @@ pub async fn run(
         if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
 
-            if let ControlFlow::Break(response) =
-                state.handle(resp, term).await?
-            {
-                return Ok(response);
+            match state.handle(resp, term).await? {
+                ControlFlow::Continue(_) => {
+                    continue;
+                }
+                ControlFlow::Break(resp) => {
+                    return Ok(resp);
+                }
             }
         }
 
