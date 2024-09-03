@@ -29,6 +29,7 @@ static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
         ]),
         Line::raw("- press [u] to upload your bot"),
         Line::raw("- press [w/a/s/d] to navigate the map"),
+        Line::raw("- you can also use the mouse!"),
         Line::raw("- bots are represented with the `@` char, `.` is floor etc."),
         Line::raw("- you're smart, you'll figure out the rest"),
     ])
