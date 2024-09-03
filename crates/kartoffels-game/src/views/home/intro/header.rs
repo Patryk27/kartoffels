@@ -26,7 +26,7 @@ static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
             Span::raw("at hand and you can"),
         ]),
         Line::raw("either compete against other players in the online play"),
-        Line::raw("or indulge yourself with single-player challenges"),
+        Line::raw("or indulge yourself in single-player challenges"),
         Line::raw(""),
         Line::raw("have fun!"),
         Line::raw("~pwy"),
