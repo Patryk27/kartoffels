@@ -46,7 +46,12 @@ pub async fn run(
     };
 
     loop {
-        let resp = term.draw(|ui| state.render(ui)).await?;
+        let mut resp = None;
+
+        term.draw(|ui| {
+            resp = state.render(ui);
+        })
+        .await?;
 
         if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;

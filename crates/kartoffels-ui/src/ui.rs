@@ -14,33 +14,33 @@ use tokio::time::Interval;
 
 #[derive(Debug)]
 pub struct Ui<'a, 'b> {
+    ty: TermType,
     waker: &'a Waker,
     frame: &'a mut Frame<'b>,
     area: Rect,
     mouse: Option<&'a (UVec2, bool)>,
     event: Option<&'a InputEvent>,
     layout: UiLayout,
-    ty: TermType,
 }
 
 impl<'a, 'b> Ui<'a, 'b> {
     pub fn new(
+        ty: TermType,
         waker: &'a Waker,
         frame: &'a mut Frame<'b>,
         mouse: Option<&'a (UVec2, bool)>,
         event: Option<&'a InputEvent>,
-        ty: TermType,
     ) -> Self {
         let area = frame.area();
 
         Self {
+            ty,
             waker,
             frame,
             area,
             mouse,
             event,
             layout: UiLayout::Col,
-            ty,
         }
     }
 
@@ -66,13 +66,13 @@ impl<'a, 'b> Ui<'a, 'b> {
 
     pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
         f(&mut Ui {
+            ty: self.ty,
             waker: self.waker,
             frame: self.frame,
             area: self.area.clamp(area),
             mouse: self.mouse,
             event: self.event,
             layout: self.layout,
-            ty: self.ty,
         })
     }
 

@@ -1,4 +1,4 @@
-use crate::Ui;
+use crate::{Clear, Ui};
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
@@ -12,6 +12,7 @@ use ratatui::crossterm::terminal::{
 use ratatui::crossterm::{cursor, Command};
 use ratatui::layout::Rect;
 use ratatui::prelude::CrosstermBackend;
+use ratatui::widgets::{Paragraph, Widget};
 use ratatui::{Terminal, TerminalOptions, Viewport};
 use std::io::{self, Write};
 use std::mem;
@@ -138,25 +139,40 @@ impl Term {
         self.size
     }
 
-    pub async fn draw<F, T>(&mut self, render: F) -> Result<T>
+    pub async fn draw<F>(&mut self, render: F) -> Result<()>
     where
-        F: FnOnce(&mut Ui) -> T,
+        F: FnOnce(&mut Ui),
     {
-        let mut result = None;
+        if self.size.x < 50 || self.size.y < 25 {
+            self.term.draw(|frame| {
+                let area = frame.area();
+                let buf = frame.buffer_mut();
 
-        self.term.draw(|frame| {
-            result = Some(render(&mut Ui::new(
-                &self.waker,
-                frame,
-                self.mouse.report().as_ref(),
-                self.event.take().as_ref(),
-                self.ty,
-            )));
-        })?;
+                Clear::render_ex(area, buf);
+
+                Paragraph::new(
+                    "whoopsie, your terminal is too small to play kartoffels 😭😭\
+                     \n\n\
+                     reduce font size or something to get at least 50x25 chars",
+                )
+                .wrap(Default::default())
+                .render(area, buf);
+            })?;
+        } else {
+            self.term.draw(|frame| {
+                render(&mut Ui::new(
+                    self.ty,
+                    &self.waker,
+                    frame,
+                    self.mouse.report().as_ref(),
+                    self.event.take().as_ref(),
+                ));
+            })?;
+        }
 
         self.flush().await?;
 
-        Ok(result.unwrap())
+        Ok(())
     }
 
     pub async fn tick(&mut self) -> Result<()> {
