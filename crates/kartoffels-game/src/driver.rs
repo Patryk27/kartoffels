@@ -1,7 +1,8 @@
 use crate::play::Policy;
 use anyhow::{anyhow, Result};
 use kartoffels_ui::{theme, Ui};
-use kartoffels_world::prelude::Handle as WorldHandle;
+use kartoffels_world::prelude::{Handle as WorldHandle, Snapshot};
+use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time;
 
@@ -26,8 +27,14 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn pause(&self, paused: bool) -> Result<()> {
-        self.send(DriverEvent::Pause(paused)).await?;
+    pub async fn pause(&self) -> Result<()> {
+        self.send(DriverEvent::Pause).await?;
+
+        Ok(())
+    }
+
+    pub async fn resume(&self) -> Result<()> {
+        self.send(DriverEvent::Resume).await?;
 
         Ok(())
     }
@@ -89,6 +96,32 @@ impl DrivenGame {
         Ok(())
     }
 
+    pub async fn poll<T>(
+        &self,
+        mut f: impl FnMut(&Snapshot) -> Poll<T> + Send + Sync + 'static,
+    ) -> Result<T>
+    where
+        T: Send + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        let mut tx = Some(tx);
+
+        self.send(DriverEvent::Poll(Box::new(move |world| {
+            if let Poll::Ready(result) = f(world) {
+                if let Some(tx) = tx.take() {
+                    _ = tx.send(result);
+                }
+
+                Poll::Ready(())
+            } else {
+                Poll::Pending
+            }
+        })))
+        .await?;
+
+        Ok(rx.await?)
+    }
+
     async fn send(&self, event: DriverEvent) -> Result<()> {
         self.tx
             .send(event)
@@ -102,11 +135,14 @@ impl DrivenGame {
 pub type DriverEventTx = mpsc::Sender<DriverEvent>;
 pub type DriverEventRx = mpsc::Receiver<DriverEvent>;
 
+#[allow(clippy::type_complexity)]
 pub enum DriverEvent {
     Join(WorldHandle),
-    Pause(bool),
+    Pause,
+    Resume,
     SetPolicy(Policy),
     UpdatePolicy(Box<dyn FnOnce(&mut Policy) + Send + Sync>),
     OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     CloseDialog,
+    Poll(Box<dyn FnMut(&Snapshot) -> Poll<()> + Send + Sync>),
 }

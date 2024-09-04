@@ -1,16 +1,8 @@
-use crate::{DeadBot, KillBot, QueuedBot, World};
+use crate::{DeadBot, Event, KillBot, QueuedBot, World};
+use std::sync::Arc;
 use tracing::trace;
 
-pub fn run(world: &mut World) {
-    while let Some(event) = world.events.recv() {
-        run_now(world, event);
-    }
-}
-
-pub(super) fn run_now(
-    world: &mut World,
-    KillBot { id, reason, killer }: KillBot,
-) {
+pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
     trace!(?id, ?reason, ?killer, "bot killed");
 
     world.mode.on_bot_killed(id, killer);
@@ -24,6 +16,8 @@ pub(super) fn run_now(
             killer.bot.log(format!("stabbed {}", id));
         }
     }
+
+    _ = world.events.send(Arc::new(Event::BotKilled { id }));
 
     match bot.reset(&mut world.rng) {
         Ok(mut bot) => {

@@ -34,7 +34,7 @@ pub fn run(world: &mut World, state: &mut State) {
             world.bots.queued.len(),
             world.policy.max_queued_bots
         ),
-        format!("connections = {}", world.updates.receiver_count()),
+        format!("connections = {}", world.snapshots.receiver_count()),
         format!("vcpu = {} khz", state.ticks / 1_000),
     ];
 

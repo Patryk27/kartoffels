@@ -35,6 +35,8 @@ pub async fn run(
     let mut snapshots: Box<dyn Stream<Item = _> + Send + Unpin> =
         Box::new(stream::pending());
 
+    let mut poll = None;
+
     loop {
         let mut resp = None;
 
@@ -77,14 +79,14 @@ pub async fn run(
 
         match event {
             Either::Left(snapshot) => {
-                if !state.paused || state.snapshot.is_default() {
+                if !state.paused {
                     state.snapshot = snapshot;
                 }
             }
 
             Either::Right(event) => match event {
                 DriverEvent::Join(handle) => {
-                    snapshots = Box::new(handle.listen().await?);
+                    snapshots = Box::new(handle.snapshots());
 
                     let snapshot = snapshots
                         .next()
@@ -96,8 +98,12 @@ pub async fn run(
                     state.handle = Some(handle);
                 }
 
-                DriverEvent::Pause(paused) => {
-                    state.pause(paused).await?;
+                DriverEvent::Pause => {
+                    state.pause(true).await?;
+                }
+
+                DriverEvent::Resume => {
+                    state.pause(false).await?;
                 }
 
                 DriverEvent::SetPolicy(policy) => {
@@ -115,7 +121,17 @@ pub async fn run(
                 DriverEvent::CloseDialog => {
                     state.dialog = None;
                 }
+
+                DriverEvent::Poll(f) => {
+                    poll = Some(f);
+                }
             },
+        }
+
+        if let Some(f) = &mut poll {
+            if f(&state.snapshot).is_ready() {
+                poll = None;
+            }
         }
     }
 }
@@ -233,8 +249,6 @@ impl State {
             id,
             is_followed: true,
         });
-
-        self.paused = false;
     }
 
     async fn upload_bot(&mut self, src: String) -> Result<()> {
@@ -270,6 +284,7 @@ impl State {
         };
 
         self.join_bot(id);
+        self.paused = false;
 
         Ok(())
     }

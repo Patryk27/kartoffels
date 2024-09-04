@@ -11,12 +11,15 @@ use termwiz::input::KeyCode;
 #[rustfmt::skip]
 pub static DIALOG_01: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
-        CLine::new("hey there, welcome to kartoffels 🫡"),
+        CLine::new("hey there and welcome to kartoffels 🫡"),
         CLine::new(""),
-        CLine::new("let's get down to business, to defeat the bots!"),
-        CLine::new("something something, i'll make a man out of you, idk"),
-        CLine::new(""),
-        CLine::new("estimated tutorial time: couple of minutes"),
+        CLine::from_iter([
+            Span::raw(
+                "in a couple minutes you're going to be, like, the bots' boss, \
+                 so let's get down to business!"
+            ),
+            Span::raw("*").fg(theme::RED),
+        ]),
         CLine::new(""),
         CLine::new("lesson #1:").bold(),
         CLine::new("you can navigate the interface using keyboard and/or mouse"),
@@ -24,6 +27,15 @@ pub static DIALOG_01: LazyLock<Dialog> = LazyLock::new(|| Dialog {
         CLine::new(""),
         CLine::new("lesson #2:").bold(),
         CLine::new("pressing Ctrl-c will always bring you to the main menu"),
+        CLine::new(""),
+        CLine::from_iter([
+            Span::raw("* ").fg(theme::RED),
+            Span::raw(
+                "kartoffels ltd is not responsible for loss of hearing, loss \
+                 of sight, sudden feeling of the flight and fight syndrome, \
+                 wanting to do origami but being unable to etc."
+            ),
+        ]).fg(theme::DARK_GRAY).right_aligned(),
     ],
 
     actions: vec![(
@@ -37,11 +49,8 @@ pub static DIALOG_02: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
         CLine::new("wow, you're learning so fast"),
         CLine::new(""),
-        CLine::new("look at you, sailing through the air majestically. like an eagle. piloting a blimp. i'm proud of you."),
-        CLine::new(""),
         CLine::from_iter([
-            Span::raw("anyway,"),
-            Span::raw(" NEXT LESSON!").bold(),
+            Span::raw("NEXT LESSON!").bold(),
             Span::raw(" -- run this:"),
         ]),
         CLine::new(""),
@@ -51,7 +60,7 @@ pub static DIALOG_02: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     ],
 
     actions: vec![(
-        Button::new(KeyCode::Enter, "got it").right_aligned(),
+        Button::new(KeyCode::Enter, "i'm ready").right_aligned(),
         "ok",
     )],
 });
@@ -59,7 +68,10 @@ pub static DIALOG_02: LazyLock<Dialog> = LazyLock::new(|| Dialog {
 #[rustfmt::skip]
 pub static DIALOG_03: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
-        CLine::new("perhaps i should mention that we'll be using rust, are you comfortable with that?"),
+        CLine::new(
+            "perhaps i should mention that we'll be using rust, are you \
+             comfortable with that?",
+        ),
     ],
 
     actions: vec![(
@@ -68,31 +80,47 @@ pub static DIALOG_03: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     )],
 });
 
-pub static DIALOG_04: LazyLock<Dialog> = LazyLock::new(|| {
-    Dialog {
+#[rustfmt::skip]
+pub static DIALOG_04: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
-        CLine::new("faboulous! launch vscode, vim or whatever makes your life colorful and open `main.rs` from the cloned repository"),
+        CLine::new("faboulous!").fg(theme::PINK).bold(),
         CLine::new(""),
-        CLine::new("you see, writing a bot is similar to writing a regular rust program - but it's also different, very different"),
+        CLine::new(
+            "launch vscode, vim, emacs or whatever makes your life colorful \
+             and open `main.rs` from the cloned repository"
+        ),
         CLine::new(""),
-        CLine::new("first of all, you don't have access to the standard library - there's no `println!()`, no `std::fs()` etc."),
+        CLine::new(
+            "for, you see, writing a bot is similar to writing a regular rust \
+             program - but it's also different, mucho different",
+        ),
         CLine::new(""),
-        CLine::new("everything your robot has access to is a couple of peripherals, like motor, radar or serial port"),
+        CLine::new(
+            "say, you don't have access to the standard library - there's no \
+             `println!()`, no `std::fs` etc; everything your robot has access \
+             to is a bit of memory, motor, radar and serial port, like the \
+             people in ancient rome did",
+        ),
     ],
 
     actions: vec![(
         Button::new(KeyCode::Enter, "got it").right_aligned(),
         "ok",
     )],
-}
 });
 
 #[rustfmt::skip]
 pub static DIALOG_05: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
-        CLine::new("as you can see in the code, our robot currently doesn't do much - it just calls `motor_step()` over and over"),
+        CLine::new(
+            "anyway, as you can see in the code, our robot currently doesn't \
+             do much - it just calls `motor_step()` over and over",
+        ),
         CLine::new(""),
-        CLine::new("this function is responsible for moving the robot one tile forward in the direction it is currently facing"),
+        CLine::new(
+            "this function is responsible for moving the robot one tile \
+             forward in the direction it is currently facing",
+        ),
         CLine::new(""),
         CLine::from_iter([
             Span::raw("boooring").bold(),
@@ -107,9 +135,15 @@ pub static DIALOG_05: LazyLock<Dialog> = LazyLock::new(|| Dialog {
         CLine::web("    ./build").fg(theme::WASHED_PINK),
         CLine::ssh("    ./build --copy").fg(theme::WASHED_PINK),
         CLine::new(""),
-        CLine::new("... and having done so, press enter to close this window and then press `u` to upload the bot"),
+        CLine::new(
+            "... and having done so, press enter to close this window and then \
+             press `u` to upload the bot",
+        ),
         CLine::web(""),
-        CLine::web("when the file picker opens, choose a file called `kartoffel` - it should be located next to `README.md` etc."),
+        CLine::web(
+            "when the file picker opens, choose a file called `kartoffel` - it \
+             should be located next to `README.md` etc.",
+        ),
     ],
 
     actions: vec![(
@@ -123,11 +157,14 @@ pub static DIALOG_06: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
         CLine::new("nice!"),
         CLine::new(""),
-        CLine::new("you, [subject name here] must be the pride of [subject hometown here].")
+        CLine::new(
+            "you, [subject name here] must be the pride of [subject hometown \
+             here].",
+        )
     ],
 
     actions: vec![(
-        Button::new(KeyCode::Enter, "am i?").right_aligned(),
+        Button::new(KeyCode::Enter, "i am").right_aligned(),
         "ok",
     )],
 });
@@ -135,15 +172,46 @@ pub static DIALOG_06: LazyLock<Dialog> = LazyLock::new(|| Dialog {
 #[rustfmt::skip]
 pub static DIALOG_07: LazyLock<Dialog> = LazyLock::new(|| Dialog {
     text: vec![
-        CLine::new("okie, the game has been automatically paused to show you the humoristic element"),
+        CLine::new(
+            "the game has been automatically paused to show you the humoristic \
+             element a moment ago",
+        ),
         CLine::new(""),
-        CLine::new("now close this dialogue, press space to unpause the game and let's see the bot in action"),
+        CLine::new(
+            "now, close this dialogue, press space to unpause the game and \
+             let's see the bot in action",
+        ),
         CLine::new(""),
-        CLine::new("fwiw, the `.` symbol represents floor (like in nethack) and `@` is your bot"),
+        CLine::new(
+            "if everything goes correctly, we should see the robot driving \
+             forward and falling out the map",
+        ),
     ],
 
     actions: vec![(
-        Button::new(KeyCode::Enter, "got it").right_aligned(),
+        Button::new(KeyCode::Enter, "let's see the robot driving").right_aligned(),
+        "ok",
+    )],
+});
+
+#[rustfmt::skip]
+pub static DIALOG_08: LazyLock<Dialog> = LazyLock::new(|| Dialog {
+    text: vec![
+        CLine::new("nice!").fg(theme::GREEN),
+        CLine::new(""),
+        CLine::new(
+            "i mean, not nice, because we're dead - but it's nice relatively \
+             speaking",
+        ),
+        CLine::new(""),
+        CLine::new(
+            "after a bot dies, the game automatically restarts it - close this \
+             dialog, unpause the game and let's see that",
+        ),
+    ],
+
+    actions: vec![(
+        Button::new(KeyCode::Enter, "let's see the robot dying again").right_aligned(),
         "ok",
     )],
 });
@@ -160,14 +228,16 @@ impl Dialog {
         game: &DrivenGame,
     ) -> Result<&'static str> {
         game.dialog(move |ui, resp| {
-            let text: Text = self
-                .text
-                .iter()
-                .filter(|line| line.matches(ui))
-                .map(|line| line.inner.clone())
-                .collect();
+            let text = {
+                let text: Text = self
+                    .text
+                    .iter()
+                    .filter(|line| line.matches(ui))
+                    .map(|line| line.inner.clone())
+                    .collect();
 
-            let text = Paragraph::new(text).wrap(Default::default());
+                Paragraph::new(text).wrap(Default::default())
+            };
 
             let width = cmp::min(60, ui.area().width - 4);
             let height = text.line_count(width) as u16 + 2;
@@ -215,6 +285,11 @@ impl CLine {
             inner: Line::raw(content),
             cond: Some(CLineCondition::ShowOnlyOnWeb),
         }
+    }
+
+    fn right_aligned(mut self) -> Self {
+        self.inner = self.inner.right_aligned();
+        self
     }
 
     fn matches(&self, ui: &Ui) -> bool {

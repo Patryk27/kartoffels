@@ -6,6 +6,7 @@
 mod bot;
 mod bots;
 mod config;
+mod events;
 mod handle;
 mod map;
 mod mode;
@@ -20,11 +21,14 @@ mod cfg {
     pub const SIM_HZ: u32 = 64_000;
     pub const SIM_TICKS: u32 = 1024;
     pub const MAX_REQUEST_BACKLOG: usize = 1024;
+    pub const MAX_EVENT_BACKLOG: usize = 1024;
+    pub const MAX_SNAPSHOT_BACKLOG: usize = 1;
 }
 
 pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::config::Config;
+    pub use crate::events::Event;
     pub use crate::handle::{Handle, Request};
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};
@@ -40,6 +44,7 @@ pub mod prelude {
 pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
 pub(crate) use self::config::*;
+pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
@@ -72,13 +77,11 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
     let map = theme.create_map(&mut rng);
     let path = path.map(|path| path.to_owned());
 
-    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
-    let handle = Handle::new(tx, name.clone());
+    let (handle, rx) = handle(name.clone());
 
     World {
         bots: Default::default(),
-        updates: broadcast::Sender::new(1),
-        events: Default::default(),
+        events: handle.inner.events.clone(),
         map,
         mode,
         name,
@@ -87,6 +90,7 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
         policy,
         rng,
         rx,
+        snapshots: handle.inner.snapshots.clone(),
         theme,
     }
     .spawn(id);
@@ -105,13 +109,11 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     let theme = world.theme.into_owned();
     let name = Arc::new(world.name.into_owned());
 
-    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
-    let handle = Handle::new(tx, name.clone());
+    let (handle, rx) = handle(name.clone());
 
     World {
         bots,
-        updates: broadcast::Sender::new(1),
-        events: Default::default(),
+        events: handle.inner.events.clone(),
         map,
         mode,
         name,
@@ -120,6 +122,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         policy,
         rng: SmallRng::from_entropy(),
         rx,
+        snapshots: handle.inner.snapshots.clone(),
         theme,
     }
     .spawn(id);
@@ -127,9 +130,26 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     Ok(handle)
 }
 
+fn handle(name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
+    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
+    let events = broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG);
+    let snapshots = broadcast::Sender::new(cfg::MAX_SNAPSHOT_BACKLOG);
+
+    let handle = Handle {
+        inner: Arc::new(HandleInner {
+            tx,
+            name,
+            events: events.clone(),
+            snapshots: snapshots.clone(),
+        }),
+    };
+
+    (handle, rx)
+}
+
 struct World {
     bots: Bots,
-    events: Events,
+    events: broadcast::Sender<Arc<Event>>,
     map: Map,
     mode: Mode,
     name: Arc<String>,
@@ -138,8 +158,8 @@ struct World {
     policy: Policy,
     rng: SmallRng,
     rx: RequestRx,
+    snapshots: broadcast::Sender<Arc<Snapshot>>,
     theme: Theme,
-    updates: broadcast::Sender<Arc<Snapshot>>,
 }
 
 impl World {
@@ -179,7 +199,6 @@ impl World {
         if !self.paused {
             bots::spawn::run(self, systems.get_mut());
             bots::tick::run(self);
-            bots::kill::run(self);
         }
 
         snapshots::broadcast::run(self, systems.get_mut());

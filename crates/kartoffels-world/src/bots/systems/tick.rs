@@ -30,9 +30,7 @@ fn tick(world: &mut World) {
         };
 
         if let Some(kill) = kill {
-            // A bit hacky, but we need to process the event as soon as possible
-            // so that the bot disappears from the map etc.
-            super::kill::run_now(world, kill);
+            super::kill::run(world, kill);
         }
     }
 }

@@ -9,10 +9,6 @@ use tracing::trace;
 pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     loop {
         match world.rx.try_recv() {
-            Ok(Request::Listen { tx }) => {
-                _ = tx.send(world.updates.subscribe());
-            }
-
             Ok(Request::Pause { paused }) => {
                 world.paused = paused;
             }
@@ -31,11 +27,14 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
             }
 
             Ok(Request::RestartBot { id }) => {
-                world.events.send(KillBot {
-                    id,
-                    reason: "forcefully restarted".into(),
-                    killer: None,
-                });
+                crate::bots::kill::run(
+                    world,
+                    KillBot {
+                        id,
+                        reason: "forcefully restarted".into(),
+                        killer: None,
+                    },
+                );
             }
 
             Ok(Request::DestroyBot { id }) => {

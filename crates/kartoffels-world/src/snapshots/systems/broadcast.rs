@@ -30,7 +30,7 @@ pub fn run(world: &mut World, state: &mut State) {
         bots: prepare_bots(world),
     });
 
-    _ = world.updates.send(snap);
+    _ = world.snapshots.send(snap);
 
     state.next_run_at = Instant::now() + Duration::from_millis(50);
 }

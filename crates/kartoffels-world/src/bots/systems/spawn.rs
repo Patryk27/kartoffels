@@ -1,6 +1,7 @@
-use crate::{Bots, Map, QueuedBot, World};
+use crate::{Bots, Event, Map, QueuedBot, World};
 use glam::IVec2;
 use rand::RngCore;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::trace;
 
@@ -72,6 +73,8 @@ pub fn run(world: &mut World, state: &mut State) {
     });
 
     world.bots.alive.add(id, pos, bot);
+
+    _ = world.events.send(Arc::new(Event::BotSpawned { id }));
 }
 
 fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {

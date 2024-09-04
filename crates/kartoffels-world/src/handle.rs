@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Snapshot};
+use crate::{BotId, Event, Snapshot};
 use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
@@ -12,29 +12,24 @@ use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
 pub struct Handle {
-    pub(super) tx: RequestTx,
-    pub(super) name: Arc<String>,
+    pub(super) inner: Arc<HandleInner>,
 }
 
 impl Handle {
     const ERR: &'static str = "world has crashed";
 
-    pub(crate) fn new(tx: RequestTx, name: Arc<String>) -> Self {
-        Self { tx, name }
-    }
-
     pub fn name(&self) -> &str {
-        &self.name
+        &self.inner.name
     }
 
-    pub async fn listen(&self) -> Result<impl Stream<Item = Arc<Snapshot>>> {
-        let (tx, rx) = oneshot::channel();
+    pub fn events(&self) -> impl Stream<Item = Arc<Event>> {
+        BroadcastStream::new(self.inner.events.subscribe())
+            .filter_map(|msg| msg.ok())
+    }
 
-        self.send(Request::Listen { tx }).await?;
-
-        let rx = rx.await.context(Self::ERR)?;
-
-        Ok(BroadcastStream::new(rx).filter_map(|msg| msg.ok()))
+    pub fn snapshots(&self) -> impl Stream<Item = Arc<Snapshot>> {
+        BroadcastStream::new(self.inner.snapshots.subscribe())
+            .filter_map(|msg| msg.ok())
     }
 
     pub async fn pause(&self, paused: bool) -> Result<()> {
@@ -83,7 +78,8 @@ impl Handle {
     }
 
     async fn send(&self, request: Request) -> Result<()> {
-        self.tx
+        self.inner
+            .tx
             .send(request)
             .await
             .map_err(|_| anyhow!("{}", Self::ERR))?;
@@ -92,14 +88,18 @@ impl Handle {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct HandleInner {
+    pub tx: RequestTx,
+    pub name: Arc<String>,
+    pub events: broadcast::Sender<Arc<Event>>,
+    pub snapshots: broadcast::Sender<Arc<Snapshot>>,
+}
+
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
 pub enum Request {
-    Listen {
-        tx: oneshot::Sender<broadcast::Receiver<Arc<Snapshot>>>,
-    },
-
     Pause {
         paused: bool,
     },

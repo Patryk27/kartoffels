@@ -22,10 +22,6 @@ impl Snapshot {
     pub fn bots(&self) -> &SnapshotBots {
         &self.bots
     }
-
-    pub fn is_default(&self) -> bool {
-        self.map.size() == Default::default()
-    }
 }
 
 #[derive(Debug, Default)]
@@ -57,10 +53,6 @@ impl SnapshotBots {
 
         None
     }
-
-    pub fn is_empty(&self) -> bool {
-        self.alive.is_empty() && self.queued.is_empty()
-    }
 }
 
 #[derive(Debug, Default)]
@@ -77,6 +69,10 @@ impl SnapshotAliveBots {
 
     pub fn by_idx(&self, idx: u8) -> Option<&SnapshotAliveBot> {
         self.entries.get(idx as usize)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &SnapshotAliveBot> {
+        self.entries.iter()
     }
 
     pub fn iter_sorted_by_scores(
@@ -111,10 +107,6 @@ pub struct SnapshotQueuedBots {
 impl SnapshotQueuedBots {
     pub fn by_id(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
         self.entries.get(&id)
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
     }
 }
 

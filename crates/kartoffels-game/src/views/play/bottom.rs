@@ -34,7 +34,9 @@ impl BottomPanel {
 
             ui.space(2);
 
-            if Button::new(KeyCode::Char(' '), "pause")
+            let label = if paused { "resume" } else { "pause" };
+
+            if Button::new(KeyCode::Char(' '), label)
                 .enabled(enabled && handle.is_some() && policy.can_pause_world)
                 .block()
                 .render(ui)

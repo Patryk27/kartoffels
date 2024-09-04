@@ -5,10 +5,11 @@ use crate::DrivenGame;
 use anyhow::{Context, Result};
 use kartoffels_store::Store;
 use kartoffels_world::prelude::{
-    ArenaThemeConfig, Config, DeathmatchModeConfig, ModeConfig,
+    ArenaThemeConfig, Config, DeathmatchModeConfig, Event, ModeConfig,
     Policy as WorldPolicy, ThemeConfig,
 };
 use std::future;
+use std::task::Poll;
 use tokio_stream::StreamExt;
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
@@ -38,19 +39,28 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
         },
     });
 
+    let mut events = world.events();
+
     game.join(world.clone()).await?;
 
-    let mut snapshots = world.listen().await?;
-
-    loop {
-        let msg = snapshots.next().await.context("world has crashed")?;
-
-        if !msg.bots().is_empty() {
-            break;
+    game.poll(|world| {
+        if world.bots().alive().is_empty() {
+            Poll::Pending
+        } else {
+            Poll::Ready(())
         }
-    }
+    })
+    .await?;
 
-    game.pause(true).await?;
+    game.pause().await?;
+
+    let _bot_id = loop {
+        let event = events.next().await.context("world has crashed")?;
+
+        if let Event::BotSpawned { id } = &*event {
+            break *id;
+        }
+    };
 
     assets::DIALOG_06.show(&game).await?;
     assets::DIALOG_07.show(&game).await?;
@@ -59,6 +69,26 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
         policy.can_pause_world = true;
     })
     .await?;
+
+    loop {
+        let event = events.next().await.context("world has crashed")?;
+
+        if let Event::BotKilled { .. } = &*event {
+            break;
+        }
+    }
+
+    game.pause().await?;
+
+    assets::DIALOG_08.show(&game).await?;
+
+    loop {
+        let event = events.next().await.context("world has crashed")?;
+
+        if let Event::BotKilled { .. } = &*event {
+            break;
+        }
+    }
 
     future::pending().await
 }
