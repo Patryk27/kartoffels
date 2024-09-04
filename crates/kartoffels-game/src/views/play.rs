@@ -77,7 +77,7 @@ pub async fn run(
 
         match event {
             Either::Left(snapshot) => {
-                if !state.paused {
+                if !state.paused || state.snapshot.is_default() {
                     state.snapshot = snapshot;
                 }
             }
@@ -102,6 +102,10 @@ pub async fn run(
 
                 DriverEvent::SetPolicy(policy) => {
                     state.policy = policy;
+                }
+
+                DriverEvent::UpdatePolicy(f) => {
+                    f(&mut state.policy);
                 }
 
                 DriverEvent::OpenDialog(dialog) => {
@@ -215,7 +219,7 @@ impl State {
     async fn pause(&mut self, paused: bool) -> Result<()> {
         self.paused = paused;
 
-        if self.policy.propagate_pause {
+        if self.policy.pause_is_propagated {
             if let Some(handle) = &self.handle {
                 handle.pause(self.paused).await?;
             }

@@ -6,7 +6,7 @@ use ratatui::widgets::Widget;
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Button<'a> {
     pub key: KeyCode,
     pub desc: Cow<'a, str>,
@@ -50,7 +50,7 @@ impl<'a> Button<'a> {
         (Self::key_name(self.key).len() + self.desc.len() + 3) as u16
     }
 
-    pub fn render(self, ui: &mut Ui) -> ButtonResponse {
+    pub fn render(&self, ui: &mut Ui) -> ButtonResponse {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (style_key, style_desc) = self.style(&resp);

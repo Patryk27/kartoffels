@@ -1,30 +1,37 @@
+mod assets;
+
 use crate::play::Policy;
 use crate::DrivenGame;
 use anyhow::{Context, Result};
 use kartoffels_store::Store;
-use kartoffels_ui::Button;
 use kartoffels_world::prelude::{
     ArenaThemeConfig, Config, DeathmatchModeConfig, ModeConfig,
     Policy as WorldPolicy, ThemeConfig,
 };
 use std::future;
-use termwiz::input::KeyCode;
 use tokio_stream::StreamExt;
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     game.set_policy(Policy {
+        can_pause_world: false,
         can_configure_world: false,
         can_manage_bots: false,
-        propagate_pause: true,
+        pause_is_propagated: true,
     })
     .await?;
+
+    assets::DIALOG_01.show(&game).await?;
+    assets::DIALOG_02.show(&game).await?;
+    assets::DIALOG_03.show(&game).await?;
+    assets::DIALOG_04.show(&game).await?;
+    assets::DIALOG_05.show(&game).await?;
 
     let world = store.create_world(Config {
         name: "sandbox".into(),
         mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
             round_duration: None,
         }),
-        theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 15 }),
+        theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 10 }),
         policy: WorldPolicy {
             max_alive_bots: 16,
             max_queued_bots: 16,
@@ -32,22 +39,6 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     });
 
     game.join(world.clone()).await?;
-
-    game.dialog(move |ui, close| {
-        ui.info_dialog(32, 3, Some(" tutorial "), |ui| {
-            ui.line("hey there 🫡");
-            ui.space(1);
-
-            if Button::new(KeyCode::Enter, "got it")
-                .right_aligned()
-                .render(ui)
-                .pressed
-            {
-                _ = close.take().unwrap().send(());
-            }
-        });
-    })
-    .await?;
 
     let mut snapshots = world.listen().await?;
 
@@ -61,19 +52,11 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
 
     game.pause(true).await?;
 
-    game.dialog(move |ui, close| {
-        ui.info_dialog(32, 3, Some(" tutorial "), |ui| {
-            ui.line("nice!");
-            ui.space(1);
+    assets::DIALOG_06.show(&game).await?;
+    assets::DIALOG_07.show(&game).await?;
 
-            if Button::new(KeyCode::Enter, "got it")
-                .right_aligned()
-                .render(ui)
-                .pressed
-            {
-                _ = close.take().unwrap().send(());
-            }
-        });
+    game.update_policy(|policy| {
+        policy.can_pause_world = true;
     })
     .await?;
 

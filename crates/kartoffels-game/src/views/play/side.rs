@@ -65,7 +65,7 @@ impl SidePanelResponse {
     ) -> Result<ControlFlow<Response, ()>> {
         match self {
             SidePanelResponse::UploadBot => {
-                if term.ty().is_http() {
+                if term.ty().is_web() {
                     term.send(vec![0x04]).await?;
                 }
 

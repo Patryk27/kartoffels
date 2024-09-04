@@ -22,6 +22,10 @@ impl Snapshot {
     pub fn bots(&self) -> &SnapshotBots {
         &self.bots
     }
+
+    pub fn is_default(&self) -> bool {
+        self.map.size() == Default::default()
+    }
 }
 
 #[derive(Debug, Default)]

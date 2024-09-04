@@ -5,9 +5,10 @@ use std::future;
 
 pub async fn run(game: DrivenGame) -> Result<()> {
     game.set_policy(Policy {
+        can_pause_world: true,
         can_configure_world: true,
         can_manage_bots: true,
-        propagate_pause: true,
+        pause_is_propagated: true,
     })
     .await?;
 

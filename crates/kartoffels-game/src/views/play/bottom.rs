@@ -35,7 +35,7 @@ impl BottomPanel {
             ui.space(2);
 
             if Button::new(KeyCode::Char(' '), "pause")
-                .enabled(enabled && handle.is_some())
+                .enabled(enabled && handle.is_some() && policy.can_pause_world)
                 .block()
                 .render(ui)
                 .pressed

@@ -105,9 +105,7 @@ async fn handle_connect(
             let stdout = Box::pin(stdout);
             let size = uvec2(0, 0);
 
-            Term::new(TermType::Http, stdin, stdout, size)
-                .await
-                .unwrap()
+            Term::new(TermType::Web, stdin, stdout, size).await.unwrap()
         };
 
         let result = task::spawn(async move {

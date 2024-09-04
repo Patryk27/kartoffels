@@ -1,8 +1,9 @@
 use crate::play::Policy;
 use anyhow::{anyhow, Result};
-use kartoffels_ui::Ui;
+use kartoffels_ui::{theme, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use tokio::sync::{mpsc, oneshot};
+use tokio::time;
 
 #[derive(Debug)]
 pub struct DrivenGame {
@@ -37,6 +38,15 @@ impl DrivenGame {
         Ok(())
     }
 
+    pub async fn update_policy(
+        &self,
+        f: impl FnOnce(&mut Policy) + Send + Sync + 'static,
+    ) -> Result<()> {
+        self.send(DriverEvent::UpdatePolicy(Box::new(f))).await?;
+
+        Ok(())
+    }
+
     pub async fn dialog<T>(
         &self,
         mut dialog: impl FnMut(&mut Ui, &mut Option<oneshot::Sender<T>>)
@@ -56,6 +66,8 @@ impl DrivenGame {
         .await?;
 
         let result = rx.await?;
+
+        time::sleep(theme::INTERACTION_TIME).await;
 
         self.close_dialog().await?;
 
@@ -94,6 +106,7 @@ pub enum DriverEvent {
     Join(WorldHandle),
     Pause(bool),
     SetPolicy(Policy),
+    UpdatePolicy(Box<dyn FnOnce(&mut Policy) + Send + Sync>),
     OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     CloseDialog,
 }

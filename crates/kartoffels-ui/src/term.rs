@@ -249,17 +249,17 @@ impl Term {
 
 #[derive(Clone, Copy, Debug)]
 pub enum TermType {
-    Http,
     Ssh,
+    Web,
 }
 
 impl TermType {
-    pub fn is_http(&self) -> bool {
-        matches!(self, TermType::Http)
-    }
-
     pub fn is_ssh(&self) -> bool {
         matches!(self, TermType::Ssh)
+    }
+
+    pub fn is_web(&self) -> bool {
+        matches!(self, TermType::Web)
     }
 }
 
