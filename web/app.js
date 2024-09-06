@@ -42,8 +42,8 @@ document.fonts.ready.then(() => {
       const packet = new Uint8Array(3);
 
       packet[0] = 0x04;
-      packet[1] = event.cols;
-      packet[2] = event.rows;
+      packet[1] = Math.min(event.cols, 255);
+      packet[2] = Math.min(event.rows, 255);
 
       socket.send(packet);
     });

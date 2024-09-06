@@ -42,6 +42,8 @@ pub struct Term {
 }
 
 impl Term {
+    pub const CMD_RESIZE: u8 = 0x04;
+
     pub async fn new(
         ty: TermType,
         stdin: Stdin,
@@ -184,7 +186,7 @@ impl Term {
         if let Some(bytes) = bytes {
             let bytes = bytes.ok_or_else(|| anyhow!("lost stdin"))??;
 
-            if let Some(size) = bytes.strip_prefix(&[0x04]) {
+            if let Some(size) = bytes.strip_prefix(&[Self::CMD_RESIZE]) {
                 let cols = size.first().copied().unwrap_or(0);
                 let rows = size.last().copied().unwrap_or(0);
 

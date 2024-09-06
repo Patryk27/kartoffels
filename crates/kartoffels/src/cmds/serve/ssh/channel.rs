@@ -111,8 +111,11 @@ impl AppChannel {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
+        let width = width.min(255);
+        let height = height.min(255);
+
         stdin_tx
-            .send(vec![0x04, width as u8, height as u8])
+            .send(vec![Term::CMD_RESIZE, width as u8, height as u8])
             .await
             .map_err(|_| anyhow!("ui thread has died"))?;
 
