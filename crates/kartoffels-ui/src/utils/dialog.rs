@@ -1,3 +1,4 @@
+use super::FromMarkdown;
 use crate::{Button, Ui};
 use ratatui::style::{Style, Styled};
 use ratatui::text::{Line, Span, Text};
@@ -6,13 +7,13 @@ use std::cmp;
 use termwiz::input::KeyCode;
 
 #[derive(Clone, Debug)]
-pub struct Dialog<'a, T> {
-    pub title: Option<&'a str>,
-    pub body: Vec<DialogLine<'a>>,
-    pub buttons: Vec<DialogButton<'a, T>>,
+pub struct Dialog<T> {
+    pub title: Option<&'static str>,
+    pub body: Vec<DialogLine>,
+    pub buttons: Vec<DialogButton<T>>,
 }
 
-impl<'a, T> Dialog<'a, T>
+impl<T> Dialog<T>
 where
     T: Clone,
 {
@@ -49,31 +50,36 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct DialogLine<'a> {
-    inner: Line<'a>,
+pub struct DialogLine {
+    inner: Line<'static>,
     cond: Option<DialogLineCondition>,
 }
 
-impl<'a> DialogLine<'a> {
-    pub fn raw(content: &'a str) -> Self {
+impl DialogLine {
+    pub fn new(content: impl AsRef<str>) -> Self {
         Self {
-            inner: Line::raw(content),
+            inner: Line::md(content.as_ref()),
             cond: None,
         }
     }
 
-    pub fn ssh(content: &'a str) -> Self {
+    pub fn ssh(content: impl AsRef<str>) -> Self {
         Self {
-            inner: Line::raw(content),
             cond: Some(DialogLineCondition::ShowOnlyOnSsh),
+            ..Self::new(content)
         }
     }
 
-    pub fn web(content: &'a str) -> Self {
+    pub fn web(content: impl AsRef<str>) -> Self {
         Self {
-            inner: Line::raw(content),
             cond: Some(DialogLineCondition::ShowOnlyOnWeb),
+            ..Self::new(content)
         }
+    }
+
+    pub fn centered(mut self) -> Self {
+        self.inner = self.inner.centered();
+        self
     }
 
     pub fn right_aligned(mut self) -> Self {
@@ -90,7 +96,25 @@ impl<'a> DialogLine<'a> {
     }
 }
 
-impl<'a> Styled for DialogLine<'a> {
+impl<'a> FromIterator<Span<'a>> for DialogLine {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = Span<'a>>,
+    {
+        Self {
+            inner: iter
+                .into_iter()
+                .map(|span| Span {
+                    content: span.content.into_owned().into(),
+                    style: span.style,
+                })
+                .collect(),
+            cond: None,
+        }
+    }
+}
+
+impl Styled for DialogLine {
     type Item = Self;
 
     fn style(&self) -> Style {
@@ -108,18 +132,6 @@ impl<'a> Styled for DialogLine<'a> {
     }
 }
 
-impl<'a> FromIterator<Span<'a>> for DialogLine<'a> {
-    fn from_iter<T>(iter: T) -> Self
-    where
-        T: IntoIterator<Item = Span<'a>>,
-    {
-        Self {
-            inner: iter.into_iter().collect(),
-            cond: None,
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 enum DialogLineCondition {
     ShowOnlyOnSsh,
@@ -127,24 +139,24 @@ enum DialogLineCondition {
 }
 
 #[derive(Clone, Debug)]
-pub struct DialogButton<'a, T> {
-    btn: Button<'a>,
+pub struct DialogButton<T> {
+    btn: Button<'static>,
     resp: T,
 }
 
-impl<'a, T> DialogButton<'a, T> {
-    pub fn new(key: KeyCode, label: &'a str, resp: T) -> Self {
+impl<T> DialogButton<T> {
+    pub fn new(key: KeyCode, label: impl AsRef<str>, resp: T) -> Self {
         Self {
-            btn: Button::new(key, label),
+            btn: Button::new(key, label.as_ref().to_owned()),
             resp,
         }
     }
 
-    pub fn abort(label: &'a str, resp: T) -> Self {
+    pub fn abort(label: impl AsRef<str>, resp: T) -> Self {
         Self::new(KeyCode::Escape, label, resp)
     }
 
-    pub fn confirm(label: &'a str, resp: T) -> Self {
+    pub fn confirm(label: impl AsRef<str>, resp: T) -> Self {
         Self::new(KeyCode::Enter, label, resp).right_aligned()
     }
 

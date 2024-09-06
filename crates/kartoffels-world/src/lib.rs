@@ -55,6 +55,7 @@ pub(crate) use self::store::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
 use anyhow::Result;
+use glam::IVec2;
 use kartoffels_utils::{Id, Metronome};
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
@@ -92,6 +93,7 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
         rng,
         rx,
         snapshots: handle.inner.snapshots.clone(),
+        spawn_point: None,
         theme,
     }
     .spawn(id);
@@ -124,6 +126,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         rng: SmallRng::from_entropy(),
         rx,
         snapshots: handle.inner.snapshots.clone(),
+        spawn_point: None,
         theme,
     }
     .spawn(id);
@@ -161,6 +164,7 @@ struct World {
     rng: SmallRng,
     rx: RequestRx,
     snapshots: broadcast::Sender<Arc<Snapshot>>,
+    spawn_point: Option<IVec2>,
     theme: Theme,
 }
 

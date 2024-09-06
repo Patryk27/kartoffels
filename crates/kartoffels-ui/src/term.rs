@@ -1,4 +1,4 @@
-use crate::{Clear, Ui};
+use crate::{Abort, Clear, Ui};
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
@@ -7,7 +7,7 @@ use ratatui::crossterm::event::{
     EnableMouseCapture,
 };
 use ratatui::crossterm::terminal::{
-    self, EnterAlternateScreen, LeaveAlternateScreen,
+    self, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
 };
 use ratatui::crossterm::{cursor, Command};
 use ratatui::layout::Rect;
@@ -21,11 +21,10 @@ use std::sync::Arc;
 use std::task::Waker;
 use termwiz::escape::osc::Selection;
 use termwiz::escape::OperatingSystemCommand;
-use termwiz::input::{
-    InputEvent, InputParser, KeyCode, Modifiers, MouseButtons, MouseEvent,
-};
+use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
 use tokio::select;
 use tokio::sync::Notify;
+use tracing::warn;
 
 pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + Sync>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
@@ -103,6 +102,7 @@ impl Term {
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
         _ = EnableBracketedPaste.write_ansi(&mut cmds);
         _ = EnableMouseCapture.write_ansi(&mut cmds);
+        _ = SetTitle("kartoffels").write_ansi(&mut cmds);
 
         cmds
     }
@@ -213,10 +213,16 @@ impl Term {
 
                 for event in events {
                     if let InputEvent::Key(event) = &event {
-                        if event.key == KeyCode::Char('c')
-                            && event.modifiers == Modifiers::CTRL
-                        {
-                            return Err(anyhow!("got C-c"));
+                        match (event.key, event.modifiers) {
+                            Abort::SOFT_BINDING => {
+                                return Err(Error::new(Abort { soft: true }));
+                            }
+
+                            Abort::HARD_BINDING => {
+                                return Err(Error::new(Abort { soft: false }));
+                            }
+
+                            _ => (),
                         }
                     }
 
@@ -226,6 +232,10 @@ impl Term {
                         }
 
                         event => {
+                            if self.event.is_some() {
+                                warn!("missed event: {:?}", self.event);
+                            }
+
                             self.event = Some(event);
                         }
                     }

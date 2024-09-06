@@ -6,7 +6,6 @@ use self::steps::*;
 use crate::DrivenGame;
 use anyhow::Result;
 use kartoffels_store::Store;
-use std::future;
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     let mut ctxt = StepCtxt {
@@ -15,14 +14,8 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
         world: None,
     };
 
-    match step01::run(&mut ctxt).await? {
-        step01::Response::Abort => {
-            return Ok(());
-        }
-
-        step01::Response::Confirm => {
-            //
-        }
+    if !step01::run(&mut ctxt).await? {
+        return Ok(());
     }
 
     step02::run(&mut ctxt).await?;
@@ -32,6 +25,8 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     step06::run(&mut ctxt).await?;
     step07::run(&mut ctxt).await?;
     step08::run(&mut ctxt).await?;
+    step09::run(&mut ctxt).await?;
+    step10::run(&mut ctxt).await?;
 
-    future::pending().await
+    Ok(())
 }

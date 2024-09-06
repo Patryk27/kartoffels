@@ -1431,6 +1431,7 @@ dependencies = [
  "termwiz",
  "tokio",
  "tokio-stream",
+ "tracing",
  "waker-fn",
 ]
 

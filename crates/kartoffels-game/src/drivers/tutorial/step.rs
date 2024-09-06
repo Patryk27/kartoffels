@@ -14,10 +14,7 @@ pub struct StepCtxt<'a> {
 }
 
 impl StepCtxt<'_> {
-    pub async fn dialog<T>(
-        &self,
-        dialog: &'static Dialog<'static, T>,
-    ) -> Result<T>
+    pub async fn dialog<T>(&self, dialog: &'static Dialog<T>) -> Result<T>
     where
         T: Clone + Send + Sync + 'static,
     {

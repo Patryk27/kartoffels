@@ -1,46 +1,16 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static INSTRUCTION: LazyLock<Vec<DialogLine<'static>>> = LazyLock::new(|| vec![
-    DialogLine::raw("if you're on windows, run this:"),
-    DialogLine::web("    ./build.bat").fg(theme::WASHED_PINK),
-    DialogLine::ssh("    ./build.bat --copy").fg(theme::WASHED_PINK),
-    DialogLine::raw(""),
-    DialogLine::raw("otherwise, run this:"),
-    DialogLine::web("    ./build").fg(theme::WASHED_PINK),
-    DialogLine::ssh("    ./build --copy").fg(theme::WASHED_PINK),
-    DialogLine::raw(""),
-    DialogLine::raw(
-        "... and having done so, press enter to close this window and then \
-         press `u` to upload the bot",
-    ),
-    DialogLine::web(""),
-    DialogLine::web(
-        "when the file picker opens, choose a file called `kartoffel` - it \
-         should be located next to `README.md` etc.",
-    ),
-]);
-
-#[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw(
-            "anyway, as you can see in the code, our robot currently doesn't \
-             do much - it just calls `motor_step()` over and over",
+        DialogLine::new(
+            "as you can see, the code in `main.rs` just calls a couple of \
+             functions in a loop - but before we jump into more thorough \
+             explanations, let's see the robot in action"
         ),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "this function is responsible for moving the robot one tile \
-             forward in the direction it is currently facing",
-        ),
-        DialogLine::raw(""),
-        DialogLine::from_iter([
-            Span::raw("boooring").bold(),
-            Span::raw(" - let's see the robot in action !!"),
-        ]),
-        DialogLine::raw(""),
+        DialogLine::new(""),
     ]
     .into_iter()
     .chain(INSTRUCTION.clone())
@@ -56,25 +26,30 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     buttons: vec![DialogButton::confirm("got it", HelpDialogResponse::Close)],
 });
 
+#[rustfmt::skip]
+static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
+    DialogLine::new("if you're on linux, macos, freebsd etc., run this:"),
+    DialogLine::web("    ./build"),
+    DialogLine::ssh("    ./build --copy"),
+    DialogLine::new(""),
+    DialogLine::new("if you're on windows, run this:"),
+    DialogLine::web("    ./build.bat"),
+    DialogLine::ssh("    ./build.bat --copy"),
+    DialogLine::new(""),
+    DialogLine::new(
+        "having done so, press enter to close this window and then press [`u`] \
+         to upload the bot",
+    ),
+    DialogLine::web(""),
+    DialogLine::web(
+        "when the file picker opens, choose a file called `kartoffel` - it \
+         should be located next to `README.md` etc.",
+    ),
+]);
+
 pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
     ctxt.dialog(&DIALOG).await?;
     ctxt.game.set_help(&HELP).await?;
-
-    ctxt.world = Some(ctxt.store.create_world(Config {
-        name: "sandbox".into(),
-        mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-            round_duration: None,
-        }),
-        theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
-        policy: WorldPolicy {
-            max_alive_bots: 16,
-            max_queued_bots: 16,
-        },
-    }));
-
-    let mut events = ctxt.world().events();
-
-    ctxt.game.join(ctxt.world().clone()).await?;
 
     ctxt.game
         .update_policy(|policy| {
@@ -83,8 +58,8 @@ pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
         .await?;
 
     ctxt.game
-        .poll(|world| {
-            if world.bots().alive().is_empty() {
+        .poll(|ctxt| {
+            if ctxt.world.bots().alive().is_empty() {
                 Poll::Pending
             } else {
                 Poll::Ready(())
@@ -94,9 +69,5 @@ pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
 
     ctxt.game.pause().await?;
 
-    loop {
-        if let Event::BotSpawned { .. } = &*events.next().await? {
-            return Ok(());
-        }
-    }
+    Ok(())
 }

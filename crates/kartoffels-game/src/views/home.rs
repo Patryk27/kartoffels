@@ -16,11 +16,11 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                     }
 
                     world_selection::Response::OpenSandbox => {
-                        return Ok(Response::OpenSandbox);
+                        return Ok(Response::Sandbox);
                     }
 
                     world_selection::Response::OpenTutorial => {
-                        return Ok(Response::OpenTutorial);
+                        return Ok(Response::Tutorial);
                     }
 
                     world_selection::Response::GoBack => {
@@ -29,16 +29,16 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
                 }
             }
 
-            intro::Response::OpenSandbox => {
-                return Ok(Response::OpenSandbox);
+            intro::Response::Tutorial => {
+                return Ok(Response::Tutorial);
             }
 
-            intro::Response::OpenTutorial => {
-                return Ok(Response::OpenTutorial);
+            intro::Response::Sandbox => {
+                return Ok(Response::Sandbox);
             }
 
-            intro::Response::OpenChallenges => {
-                return Ok(Response::OpenChallenges);
+            intro::Response::Challenges => {
+                return Ok(Response::Challenges);
             }
 
             intro::Response::Quit => {
@@ -51,8 +51,8 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play(WorldHandle),
-    OpenSandbox,
-    OpenTutorial,
-    OpenChallenges,
+    Tutorial,
+    Sandbox,
+    Challenges,
     Quit,
 }

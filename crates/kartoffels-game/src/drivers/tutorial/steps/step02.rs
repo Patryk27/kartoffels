@@ -1,28 +1,28 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw("wow, you're learning so fast"),
-        DialogLine::raw(""),
-        DialogLine::from_iter([
-            Span::raw("NEXT LESSON!").bold(),
-            Span::raw(" -- run this:"),
-        ]),
-        DialogLine::raw(""),
-        DialogLine::raw("    git clone -b tutorial github.com/patryk27/kartoffel")
-            .fg(theme::WASHED_PINK),
-        DialogLine::raw(""),
-        DialogLine::raw("... and press enter once you're ready"),
+        DialogLine::new("lesson #1:").bold(),
+        DialogLine::new("- you can navigate the interface using keyboard and/or mouse"),
+        DialogLine::ssh("  (that includes when you're connected through the terminal)"),
+        DialogLine::new(""),
+        DialogLine::new("lesson #2:").bold(),
+        DialogLine::new("- pressing Ctrl-a will bring you to the main menu"),
+        DialogLine::ssh("- pressing Ctrl-c will disconnect you"),
+        DialogLine::new(""),
+        DialogLine::new("lesson #3:").bold(),
+        DialogLine::new("- don't lick yellow snow"),
     ],
 
     buttons: vec![
-        DialogButton::confirm("i'm ready", ()),
+        DialogButton::confirm("sure", ()),
     ],
 });
 
+#[allow(clippy::while_let_loop)]
 pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
     ctxt.dialog(&DIALOG).await?;
 

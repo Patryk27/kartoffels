@@ -1,27 +1,22 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, Response>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw("hey there and welcome to kartoffels 🫡"),
-        DialogLine::raw(""),
+        DialogLine::new("hey there and welcome to kartoffels 🫡"),
+        DialogLine::new(""),
         DialogLine::from_iter([
             Span::raw(
-                "in a couple of minutes we'll make a bots' boss out of you, so \
-                 let's get down to business!"
+                "in just a couple of minutes we're going to make a bots' boss \
+                 out of you, so buckle up and let's get started! "
             ),
             Span::raw("*").fg(theme::RED),
         ]),
-        DialogLine::raw(""),
-        DialogLine::raw("lesson #1:").bold(),
-        DialogLine::raw("you can navigate the interface using keyboard and/or mouse"),
-        DialogLine::raw("(that includes when you're connected through the terminal)"),
-        DialogLine::raw(""),
-        DialogLine::raw("lesson #2:").bold(),
-        DialogLine::raw("pressing Ctrl-c will always bring you to the main menu"),
-        DialogLine::raw(""),
+        DialogLine::new(""),
+        DialogLine::new("ready?").fg(theme::GREEN).bold().centered(),
+        DialogLine::new(""),
         DialogLine::from_iter([
             Span::raw("* ").fg(theme::RED),
             Span::raw(
@@ -33,18 +28,12 @@ static DIALOG: LazyLock<Dialog<'static, Response>> = LazyLock::new(|| Dialog {
     ],
 
     buttons: vec![
-        DialogButton::abort("leave tutorial", Response::Abort),
-        DialogButton::confirm("got it", Response::Confirm),
+        DialogButton::abort("no, leave tutorial", false),
+        DialogButton::confirm("yes, start tutorial", true),
     ],
 });
 
-#[derive(Clone, Copy, Debug)]
-pub enum Response {
-    Abort,
-    Confirm,
-}
-
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<Response> {
+pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<bool> {
     ctxt.game
         .set_policy(Policy {
             ui_enabled: false,
@@ -55,5 +44,23 @@ pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<Response> {
         })
         .await?;
 
+    ctxt.world = Some({
+        let world = ctxt.store.create_world(Config {
+            name: "sandbox".into(),
+            mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
+                round_duration: None,
+            }),
+            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
+            policy: WorldPolicy {
+                max_alive_bots: 16,
+                max_queued_bots: 16,
+            },
+        });
+
+        world.set_spawn_point(ivec2(12, 12)).await?;
+        world
+    });
+
+    ctxt.game.join(ctxt.world().clone()).await?;
     ctxt.dialog(&DIALOG).await
 }

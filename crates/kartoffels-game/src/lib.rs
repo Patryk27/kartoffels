@@ -8,12 +8,32 @@ use self::utils::*;
 use self::views::*;
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_ui::Term;
+use kartoffels_ui::{Abort, Term};
 use std::future::Future;
 use std::pin::Pin;
 use tokio::select;
 
-pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
+pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
+    loop {
+        match main_ex(term, store).await {
+            Ok(_) => {
+                return Ok(());
+            }
+
+            Err(err) => {
+                if let Some(abort) = err.downcast_ref::<Abort>() {
+                    if abort.soft {
+                        continue;
+                    }
+                }
+
+                return Err(err);
+            }
+        }
+    }
+}
+
+async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
     loop {
         let driver_rx;
         let driver_fut: Pin<Box<dyn Future<Output = _> + Send + Sync>>;
@@ -26,21 +46,21 @@ pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
                 driver_fut = Box::pin(drivers::online::run(world, tx));
             }
 
-            home::Response::OpenSandbox => {
-                let (tx, rx) = DrivenGame::new();
-
-                driver_rx = rx;
-                driver_fut = Box::pin(drivers::sandbox::run(tx));
-            }
-
-            home::Response::OpenTutorial => {
+            home::Response::Tutorial => {
                 let (tx, rx) = DrivenGame::new();
 
                 driver_rx = rx;
                 driver_fut = Box::pin(drivers::tutorial::run(store, tx));
             }
 
-            home::Response::OpenChallenges => {
+            home::Response::Sandbox => {
+                let (tx, rx) = DrivenGame::new();
+
+                driver_rx = rx;
+                driver_fut = Box::pin(drivers::sandbox::run(tx));
+            }
+
+            home::Response::Challenges => {
                 todo!();
             }
 

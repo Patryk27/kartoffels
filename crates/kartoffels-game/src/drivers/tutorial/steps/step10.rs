@@ -4,17 +4,10 @@ use super::prelude::*;
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
-    body: vec![
-        DialogLine::new("nice!"),
-        DialogLine::new(""),
-        DialogLine::new(
-            "you, _[subject name here]_ must be the pride of _[subject \
-             hometown here]_.",
-        )
-    ],
+    body: vec![],
 
     buttons: vec![
-        DialogButton::confirm("i am", ()),
+        DialogButton::confirm("will do", ()),
     ],
 });
 

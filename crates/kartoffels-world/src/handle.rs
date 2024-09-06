@@ -92,6 +92,12 @@ impl Handle {
         Ok(())
     }
 
+    pub async fn set_spawn_point(&self, at: IVec2) -> Result<()> {
+        self.send(Request::SetSpawnPoint { at }).await?;
+
+        Ok(())
+    }
+
     async fn send(&self, request: Request) -> Result<()> {
         self.inner
             .tx
@@ -137,6 +143,10 @@ pub enum Request {
 
     DestroyBot {
         id: BotId,
+    },
+
+    SetSpawnPoint {
+        at: IVec2,
     },
 }
 

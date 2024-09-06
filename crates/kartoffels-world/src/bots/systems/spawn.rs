@@ -33,27 +33,19 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     };
 
-    // ---
+    let pos = match determine_spawn_point(
+        &mut world.rng,
+        &world.map,
+        &world.bots,
+        world.spawn_point,
+        bot,
+    ) {
+        Ok(pos) => pos,
 
-    let pos = if let Some(pos) = bot.pos {
-        if is_pos_valid(&world.map, &world.bots, pos) {
-            pos
-        } else {
-            trace!(
-                ?pos,
-                "can't dequeue pending bot: requested spawn point is taken",
-            );
-
+        Err(err) => {
+            trace!("can't dequeue pending bot: {}", err);
             return;
         }
-    } else if let Some(pos) =
-        sample_pos(&mut world.rng, &world.map, &world.bots)
-    {
-        pos
-    } else {
-        trace!("can't dequeue pending bot: couldn't find empty tile");
-
-        return;
     };
 
     // Unwrap-safety: We've just made sure that the queue is not empty
@@ -75,6 +67,32 @@ pub fn run(world: &mut World, state: &mut State) {
     world.bots.alive.add(id, pos, bot);
 
     _ = world.events.send(Arc::new(Event::BotSpawned { id }));
+}
+
+fn determine_spawn_point(
+    rng: &mut impl RngCore,
+    map: &Map,
+    bots: &Bots,
+    spawn_point: Option<IVec2>,
+    bot: &QueuedBot,
+) -> Result<IVec2, &'static str> {
+    if let Some(pos) = bot.pos {
+        return if is_pos_valid(map, bots, pos) {
+            Ok(pos)
+        } else {
+            Err("bot's spawn point is taken")
+        };
+    }
+
+    if let Some(pos) = spawn_point {
+        return if is_pos_valid(map, bots, pos) {
+            Ok(pos)
+        } else {
+            Err("world's spawn point is taken")
+        };
+    }
+
+    sample_pos(rng, map, bots).ok_or("couldn't find empty tile")
 }
 
 fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {

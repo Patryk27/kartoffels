@@ -25,6 +25,7 @@ use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::mem;
 
+// TODO rename to just `bot` (?)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
 pub struct AliveBot {

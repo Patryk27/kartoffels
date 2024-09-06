@@ -131,7 +131,12 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
         }
 
         if let Some(f) = &mut poll {
-            if f(&state.snapshot).is_ready() {
+            let ctxt = PollCtxt {
+                world: &state.snapshot,
+                paused: state.paused,
+            };
+
+            if f(ctxt).is_ready() {
                 poll = None;
             }
         }
@@ -306,4 +311,10 @@ enum StateResponse {
     Dialog(DialogResponse),
     MapCanvas(MapCanvasResponse),
     SidePanel(SidePanelResponse),
+}
+
+#[derive(Debug)]
+pub struct PollCtxt<'a> {
+    pub world: &'a WorldSnapshot,
+    pub paused: bool,
 }

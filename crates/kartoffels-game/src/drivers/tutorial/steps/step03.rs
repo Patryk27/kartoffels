@@ -1,23 +1,44 @@
 use super::prelude::*;
 
+const CMD: &str = "git clone -b tutorial github.com/patryk27/kartoffel";
+
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw(
-            "perhaps i should mention that we'll be using rust, are you \
-             comfortable with that?",
-        ),
+        DialogLine::new("look at you, learning so fast - *NEXT LESSON!*"),
+        DialogLine::new(""),
+        DialogLine::new("run this:"),
+        DialogLine::new(format!("    {}", CMD)),
+        DialogLine::new(""),
+        DialogLine::new("... and press enter once you're ready"),
     ],
 
     buttons: vec![
-        DialogButton::confirm("sure why not", ()),
+        DialogButton::new(KeyCode::Char('c'), "copy command", "copy"),
+        DialogButton::confirm("i'm ready", "ready"),
     ],
 });
 
+#[allow(clippy::while_let_loop)]
 pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.dialog(&DIALOG).await?;
+    loop {
+        match ctxt.dialog(&DIALOG).await? {
+            "copy" => {
+                // TODO HACK
+                ctxt.game
+                    .open_dialog(|ui| {
+                        ui.copy(CMD);
+                    })
+                    .await?;
+            }
+
+            _ => {
+                break;
+            }
+        }
+    }
 
     Ok(())
 }

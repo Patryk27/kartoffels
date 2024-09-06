@@ -1,28 +1,32 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw("faboulous!").fg(theme::PINK).bold(),
-        DialogLine::raw(""),
-        DialogLine::raw(
+        DialogLine::new("faboulous!").fg(theme::PINK).bold(),
+        DialogLine::new(""),
+        DialogLine::new(
             "launch vscode, vim, emacs or whatever makes your life colorful \
              and open `main.rs` from the cloned repository"
         ),
-        DialogLine::raw(""),
-        DialogLine::raw(
+        DialogLine::new(""),
+        DialogLine::new(
             "for, you see, writing a bot is similar to writing a regular rust \
              program - but it's also different, mucho different",
         ),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "say, you don't have access to the standard library - there's no \
-             `println!()`, no `std::fs` etc; everything your robot has access \
-             to is a bit of memory, motor, radar and serial port, like the \
-             people in ancient rome did",
+        DialogLine::new(""),
+        DialogLine::new(
+            "like, _you-dont-have-access-to-standard-library_ different"
         ),
+        DialogLine::new(""),
+        DialogLine::new(
+            "there's no `println!()`, no `std::fs` etc., everything a bot has \
+             access to is a bit of memory, motor, radar and serial port",
+        ),
+        DialogLine::new(""),
+        DialogLine::new("you know, like the people in ancient rome did"),
     ],
 
     buttons: vec![

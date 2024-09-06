@@ -1,28 +1,23 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw(
-            "the game has been automatically paused to show you the humoristic \
-             element a moment ago",
+        DialogLine::new(
+            "the game is currently paused - close this window, press [`spc`] \
+             (aka space) to resume and let's see the bot in action",
         ),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "now, close this dialogue, press space to unpause the game and \
-             let's see the bot in action",
-        ),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "if everything goes correctly, we should see the robot driving \
-             forward and falling out the map",
+        DialogLine::new(""),
+        DialogLine::new(
+            "if everything goes correctly, we should see the robot driving in \
+             squares, *how exquisite*!",
         ),
     ],
 
     buttons: vec![
-        DialogButton::confirm("let's see the robot driving", ()),
+        DialogButton::confirm("yes, let's see the robot driving in squares", ()),
     ],
 });
 
@@ -31,9 +26,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
     body: vec![
-        DialogLine::raw(
-            "press space to unpause the game and let's see the bot in action",
-        ),
+        DialogLine::new("press space to resume the game"),
     ],
 
     buttons: vec![DialogButton::confirm("got it", HelpDialogResponse::Close)],
@@ -49,13 +42,17 @@ pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
         })
         .await?;
 
-    let mut events = ctxt.world().events();
+    ctxt.game
+        .poll(|ctxt| {
+            if ctxt.paused {
+                Poll::Pending
+            } else {
+                Poll::Ready(())
+            }
+        })
+        .await?;
 
-    loop {
-        let event = events.next().await?;
+    time::sleep(Duration::from_secs(6)).await;
 
-        if let Event::BotKilled { .. } = &*event {
-            return Ok(());
-        }
-    }
+    Ok(())
 }

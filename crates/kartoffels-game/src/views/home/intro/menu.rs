@@ -17,7 +17,7 @@ impl Menu {
     pub fn render(ui: &mut Ui) -> Option<Response> {
         let mut resp = None;
 
-        if Button::new(KeyCode::Char('p'), "play")
+        if Button::new(KeyCode::Enter, "online play")
             .centered()
             .block()
             .render(ui)
@@ -28,22 +28,22 @@ impl Menu {
 
         ui.space(1);
 
-        if Button::new(KeyCode::Char('s'), "sandbox")
-            .centered()
-            .block()
-            .render(ui)
-            .pressed
-        {
-            resp = Some(Response::OpenSandbox);
-        }
-
         if Button::new(KeyCode::Char('t'), "tutorial")
             .centered()
             .block()
             .render(ui)
             .pressed
         {
-            resp = Some(Response::OpenTutorial);
+            resp = Some(Response::Tutorial);
+        }
+
+        if Button::new(KeyCode::Char('s'), "sandbox")
+            .centered()
+            .block()
+            .render(ui)
+            .pressed
+        {
+            resp = Some(Response::Sandbox);
         }
 
         if Button::new(KeyCode::Char('c'), "challenges")
@@ -52,7 +52,7 @@ impl Menu {
             .render(ui)
             .pressed
         {
-            resp = Some(Response::OpenChallenges);
+            resp = Some(Response::Challenges);
         }
 
         if ui.ty().is_ssh() {

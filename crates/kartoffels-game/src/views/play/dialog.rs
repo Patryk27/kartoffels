@@ -16,6 +16,7 @@ use anyhow::Result;
 use kartoffels_ui::{Backdrop, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use std::ops::ControlFlow;
+use termwiz::input::{KeyCode, Modifiers};
 
 pub enum Dialog {
     Bots(BotsDialog),
@@ -47,8 +48,12 @@ impl Dialog {
                     ui.copy(payload);
                     None
                 }
+
                 Some(HelpDialogResponse::Close) => Some(DialogResponse::Close),
-                None => None,
+
+                None => ui
+                    .key(KeyCode::Escape, Modifiers::NONE)
+                    .then_some(DialogResponse::Close),
             },
 
             Dialog::Custom(this) => {

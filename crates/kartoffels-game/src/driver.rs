@@ -1,7 +1,7 @@
-use crate::play::{HelpDialogRef, Policy};
+use crate::play::{HelpDialogRef, Policy, PollCtxt};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::Ui;
-use kartoffels_world::prelude::{Handle as WorldHandle, Snapshot};
+use kartoffels_world::prelude::Handle as WorldHandle;
 use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
 
@@ -76,7 +76,7 @@ impl DrivenGame {
 
     pub async fn poll<T>(
         &self,
-        mut f: impl FnMut(&Snapshot) -> Poll<T> + Send + Sync + 'static,
+        mut f: impl FnMut(PollCtxt) -> Poll<T> + Send + Sync + 'static,
     ) -> Result<T>
     where
         T: Send + 'static,
@@ -123,5 +123,5 @@ pub enum DriverEvent {
     OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     CloseDialog,
     SetHelp(HelpDialogRef),
-    Poll(Box<dyn FnMut(&Snapshot) -> Poll<()> + Send + Sync>),
+    Poll(Box<dyn FnMut(PollCtxt) -> Poll<()> + Send + Sync>),
 }

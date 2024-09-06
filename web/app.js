@@ -1,8 +1,9 @@
-import { Terminal } from "@xterm/xterm";
-import { AttachAddon } from "@xterm/addon-attach";
-import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
 import "@xterm/xterm/css/xterm.css";
+import { AttachAddon } from "@xterm/addon-attach";
+import { ClipboardAddon } from "@xterm/addon-clipboard";
+import { FitAddon } from "@xterm/addon-fit";
+import { Terminal } from "@xterm/xterm";
+import { WebglAddon } from "@xterm/addon-webgl";
 
 const $app = document.getElementById("app");
 
@@ -20,6 +21,7 @@ document.fonts.ready.then(() => {
   term.write("connecting...");
   term.loadAddon(termFit);
   term.loadAddon(new WebglAddon());
+  term.loadAddon(new ClipboardAddon());
 
   term.attachCustomKeyEventHandler((event) => {
     // Prevent xterm from catching C-v, so that it invokes the usual paste
@@ -70,9 +72,7 @@ document.fonts.ready.then(() => {
 
   socket.onclose = () => {
     setTimeout(() => {
-      term.write(
-        "\n\rconnection to server closed",
-      );
+      term.write("\n\rconnection to server closed");
     }, 150);
   };
 

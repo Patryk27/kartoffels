@@ -55,8 +55,8 @@ pub async fn run(term: &mut Term) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play,
-    OpenSandbox,
-    OpenTutorial,
-    OpenChallenges,
+    Tutorial,
+    Sandbox,
+    Challenges,
     Quit,
 }

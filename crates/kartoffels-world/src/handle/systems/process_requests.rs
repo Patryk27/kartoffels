@@ -41,6 +41,10 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 world.bots.remove(id);
             }
 
+            Ok(Request::SetSpawnPoint { at }) => {
+                world.spawn_point = Some(at);
+            }
+
             Err(TryRecvError::Empty) => {
                 break ControlFlow::Continue(());
             }

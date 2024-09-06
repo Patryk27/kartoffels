@@ -1,55 +1,62 @@
 use super::prelude::*;
 
 #[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<'static, ()>> = LazyLock::new(|| Dialog {
+static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::raw("cool!").fg(theme::GREEN),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "i mean, not cool, because we're dead - but relatively speaking \
-             it's progress",
+        DialogLine::new("cool!").fg(theme::GREEN),
+        DialogLine::new(""),
+        DialogLine::new("now let's try to unwrap what the code does:"),
+        DialogLine::new(""),
+        DialogLine::new("# motor_step()"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "this boi causes the bot to move one tile in the direction the \
+             robot is currently facing (north / east / west / south)",
         ),
-        DialogLine::raw(""),
-        DialogLine::raw(
-            "after a bot dies, the game automatically revives it - close this \
-             dialog, unpause the game and let's see that",
+        DialogLine::new(""),
+        DialogLine::new("# motor_turn_*()"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "this boi causes the bot to turn left (counterclockwise) or \
+             right (clockwise)",
+        ),
+        DialogLine::new(""),
+        DialogLine::new("# motor_wait()"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "this boi waits until the motor is ready to accept another command",
+        ),
+        DialogLine::new(""),
+        DialogLine::new(
+            "waiting for readiness is important, because the cpu is much \
+             faster than motor, so - say - calling `motor_step()` two times in \
+             a row without `motor_wait()` in-between would actually move the \
+             bot just one tile forward"
         ),
     ],
 
     buttons: vec![
-        DialogButton::confirm("let's see the robot dying again", ()),
+        DialogButton::confirm("got it", ()),
     ],
-});
-
-#[rustfmt::skip]
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
-    title: Some(" help "),
-
-    body: vec![
-        DialogLine::raw(
-            "press space to unpause the game and let's see the bot in action, \
-             again",
-        ),
-    ],
-
-    buttons: vec![DialogButton::confirm("got it", HelpDialogResponse::Close)],
 });
 
 pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.game.pause().await?;
+    let bot_id = ctxt
+        .world()
+        .snapshots()
+        .next()
+        .await?
+        .bots()
+        .alive()
+        .iter()
+        .next()
+        .unwrap()
+        .id;
 
+    ctxt.world().destroy_bot(bot_id).await?;
     ctxt.dialog(&DIALOG).await?;
-    ctxt.game.set_help(&HELP).await?;
 
-    let mut events = ctxt.world().events();
-
-    loop {
-        let event = events.next().await.context("world has crashed")?;
-
-        if let Event::BotKilled { .. } = &*event {
-            return Ok(());
-        }
-    }
+    Ok(())
 }

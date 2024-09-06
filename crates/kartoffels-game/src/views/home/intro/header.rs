@@ -1,6 +1,6 @@
-use kartoffels_ui::{theme, Ui};
+use kartoffels_ui::{theme, FromMarkdown, Ui};
 use ratatui::style::{Style, Stylize};
-use ratatui::text::{Line, Span, Text};
+use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
 use std::sync::LazyLock;
 
@@ -18,13 +18,7 @@ static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
         Line::raw(""),
         Line::raw("... and your job is to implement a firmware for it"),
         Line::raw(""),
-        Line::from_iter([
-            Span::raw("you've got "),
-            Span::raw("64 khz cpu ").bold(),
-            Span::raw("+ "),
-            Span::raw("128 kb ram ").bold(),
-            Span::raw("at hand and you can"),
-        ]),
+        Line::md("you've got *64 khz cpu* & *128 kb ram* at hand and you can"),
         Line::raw("either compete against other players in the online play"),
         Line::raw("or indulge yourself in single-player challenges"),
         Line::raw(""),
