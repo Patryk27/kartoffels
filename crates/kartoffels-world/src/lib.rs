@@ -1,6 +1,7 @@
 #![feature(extract_if)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
+#![feature(type_alias_impl_trait)]
 #![allow(clippy::result_unit_err)]
 
 mod bot;
@@ -29,7 +30,7 @@ pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::config::Config;
     pub use crate::events::Event;
-    pub use crate::handle::{Handle, Request};
+    pub use crate::handle::{EventStream, Handle, Request, SnapshotStream};
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};
     pub use crate::policy::Policy;
@@ -77,7 +78,7 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
     let map = theme.create_map(&mut rng);
     let path = path.map(|path| path.to_owned());
 
-    let (handle, rx) = handle(name.clone());
+    let (handle, rx) = handle(id, name.clone());
 
     World {
         bots: Default::default(),
@@ -109,7 +110,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     let theme = world.theme.into_owned();
     let name = Arc::new(world.name.into_owned());
 
-    let (handle, rx) = handle(name.clone());
+    let (handle, rx) = handle(id, name.clone());
 
     World {
         bots,
@@ -130,13 +131,14 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     Ok(handle)
 }
 
-fn handle(name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
+fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
     let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
     let events = broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG);
     let snapshots = broadcast::Sender::new(cfg::MAX_SNAPSHOT_BACKLOG);
 
     let handle = Handle {
         inner: Arc::new(HandleInner {
+            id,
             tx,
             name,
             events: events.clone(),

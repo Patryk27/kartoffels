@@ -1,7 +1,8 @@
 mod term;
-pub mod theme;
 mod ui;
 mod utils;
+
+pub mod theme;
 
 pub use self::term::*;
 pub use self::ui::*;

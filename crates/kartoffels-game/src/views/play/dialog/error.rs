@@ -18,7 +18,7 @@ impl ErrorDialog {
         let width = 50;
         let height = text.line_count(width) as u16 + 2;
 
-        ui.error_dialog(width, height, Some(" whoopsie "), |ui| {
+        ui.error_window(width, height, Some(" whoopsie "), |ui| {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(1), |ui| {

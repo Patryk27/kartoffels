@@ -48,7 +48,7 @@ pub async fn run(term: &mut Term) -> Result<Response> {
             return Ok(resp);
         }
 
-        term.tick().await?;
+        term.poll().await?;
     }
 }
 

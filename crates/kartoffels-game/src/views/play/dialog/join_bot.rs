@@ -19,7 +19,7 @@ impl JoinBotDialog {
     ) -> Option<DialogResponse> {
         let mut resp = None;
 
-        ui.info_dialog(26, 4, Some(" joining bot "), |ui| {
+        ui.info_window(26, 4, Some(" joining bot "), |ui| {
             Line::raw("enter bot id:").render(ui.area(), ui.buf());
 
             ui.space(1);

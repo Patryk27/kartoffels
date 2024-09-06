@@ -1,4 +1,4 @@
-use super::{JoinedBot, Response, State};
+use super::{JoinedBot, State};
 use crate::BotIdExt;
 use anyhow::Result;
 use glam::{ivec2, IVec2};
@@ -200,10 +200,7 @@ pub enum MapCanvasResponse {
 }
 
 impl MapCanvasResponse {
-    pub fn handle(
-        self,
-        state: &mut State,
-    ) -> Result<ControlFlow<Response, ()>> {
+    pub fn handle(self, state: &mut State) -> Result<ControlFlow<(), ()>> {
         match self {
             MapCanvasResponse::MoveCamera(delta) => {
                 state.camera += delta;

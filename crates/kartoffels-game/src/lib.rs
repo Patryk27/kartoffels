@@ -51,19 +51,9 @@ pub async fn start(term: &mut Term, store: &Store) -> Result<()> {
 
         let game_fut = play::run(term, driver_rx);
 
-        let result = select! {
-            result = game_fut => result,
-            result = driver_fut => result.map(|_| play::Response::GoBack),
-        };
-
-        match result? {
-            play::Response::OpenTutorial => {
-                todo!();
-            }
-
-            play::Response::GoBack => {
-                continue;
-            }
+        select! {
+            result = game_fut => result?,
+            result = driver_fut => result?,
         }
     }
 }

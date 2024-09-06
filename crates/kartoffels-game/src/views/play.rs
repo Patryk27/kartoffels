@@ -6,6 +6,7 @@ mod side;
 
 use self::bottom::*;
 use self::dialog::*;
+pub use self::dialog::{HelpDialog, HelpDialogRef, HelpDialogResponse};
 use self::map::*;
 pub use self::policy::*;
 use self::side::*;
@@ -26,10 +27,7 @@ use std::sync::Arc;
 use tokio::{select, time};
 use tokio_stream::StreamExt;
 
-pub async fn run(
-    term: &mut Term,
-    mut driver: DriverEventRx,
-) -> Result<Response> {
+pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     let mut state = State::default();
 
     let mut snapshots: Box<dyn Stream<Item = _> + Send + Unpin> =
@@ -52,14 +50,14 @@ pub async fn run(
                 ControlFlow::Continue(_) => {
                     continue;
                 }
-                ControlFlow::Break(resp) => {
-                    return Ok(resp);
+                ControlFlow::Break(_) => {
+                    return Ok(());
                 }
             }
         }
 
         let event = select! {
-            result = term.tick() => {
+            result = term.poll() => {
                 #[allow(clippy::question_mark)]
                 if let Err(err) = result {
                     return Err(err);
@@ -69,7 +67,7 @@ pub async fn run(
             }
 
             snapshot = snapshots.next() => {
-                Either::Left(snapshot.context("world has crashed")?)
+                Either::Left(snapshot.context("lost connection to the world")?)
             },
 
             Some(event) = driver.recv() => {
@@ -86,7 +84,7 @@ pub async fn run(
 
             Either::Right(event) => match event {
                 DriverEvent::Join(handle) => {
-                    snapshots = Box::new(handle.snapshots());
+                    snapshots = Box::new(handle.snapshots().into_inner());
 
                     let snapshot = snapshots
                         .next()
@@ -122,6 +120,10 @@ pub async fn run(
                     state.dialog = None;
                 }
 
+                DriverEvent::SetHelp(help) => {
+                    state.help = Some(help);
+                }
+
                 DriverEvent::Poll(f) => {
                     poll = Some(f);
                 }
@@ -140,6 +142,7 @@ pub async fn run(
 struct State {
     camera: IVec2,
     bot: Option<JoinedBot>,
+    help: Option<HelpDialogRef>,
     dialog: Option<Dialog>,
     paused: bool,
     policy: Policy,
@@ -169,7 +172,7 @@ impl State {
         ])
         .areas(main_area);
 
-        let enabled = self.dialog.is_none();
+        let enabled = self.policy.ui_enabled && self.dialog.is_none();
 
         Clear::render(ui);
 
@@ -179,6 +182,7 @@ impl State {
                     ui,
                     &self.policy,
                     self.handle.as_ref(),
+                    self.help.is_some(),
                     self.paused,
                     enabled,
                 )
@@ -223,7 +227,7 @@ impl State {
         &mut self,
         resp: StateResponse,
         term: &mut Term,
-    ) -> Result<ControlFlow<Response, ()>> {
+    ) -> Result<ControlFlow<(), ()>> {
         match resp {
             StateResponse::BottomPanel(resp) => resp.handle(self).await,
             StateResponse::Dialog(resp) => resp.handle(self).await,
@@ -302,10 +306,4 @@ enum StateResponse {
     Dialog(DialogResponse),
     MapCanvas(MapCanvasResponse),
     SidePanel(SidePanelResponse),
-}
-
-#[derive(Debug)]
-pub enum Response {
-    OpenTutorial,
-    GoBack,
 }

@@ -29,7 +29,7 @@ impl JoinedSidePanel {
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
 
-        let footer_height = if policy.can_manage_bots { 5 } else { 3 };
+        let footer_height = if policy.user_can_manage_bots { 5 } else { 3 };
 
         match world.bots().by_id(bot.id) {
             Some(Either::Left(bot)) => {
@@ -107,7 +107,7 @@ impl JoinedSidePanel {
                 resp = Some(SidePanelResponse::ShowBotHistory);
             }
 
-            if policy.can_manage_bots {
+            if policy.user_can_manage_bots {
                 if Button::new(KeyCode::Char('R'), "restart")
                     .enabled(enabled)
                     .block()

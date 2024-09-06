@@ -1,10 +1,9 @@
-use crate::play::Policy;
+use crate::play::{HelpDialogRef, Policy};
 use anyhow::{anyhow, Result};
-use kartoffels_ui::{theme, Ui};
+use kartoffels_ui::Ui;
 use kartoffels_world::prelude::{Handle as WorldHandle, Snapshot};
 use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
-use tokio::time;
 
 #[derive(Debug)]
 pub struct DrivenGame {
@@ -12,7 +11,7 @@ pub struct DrivenGame {
 }
 
 impl DrivenGame {
-    const ERR: &'static str = "world has crashed";
+    const ERR: &'static str = "lost connection to the game";
 
     pub fn new() -> (Self, DriverEventRx) {
         let (tx, rx) = mpsc::channel(1);
@@ -54,33 +53,6 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn dialog<T>(
-        &self,
-        mut dialog: impl FnMut(&mut Ui, &mut Option<oneshot::Sender<T>>)
-            + Send
-            + Sync
-            + 'static,
-    ) -> Result<T>
-    where
-        T: Send + Sync + 'static,
-    {
-        let (tx, rx) = oneshot::channel();
-        let mut tx = Some(tx);
-
-        self.open_dialog(move |ui| {
-            dialog(ui, &mut tx);
-        })
-        .await?;
-
-        let result = rx.await?;
-
-        time::sleep(theme::INTERACTION_TIME).await;
-
-        self.close_dialog().await?;
-
-        Ok(result)
-    }
-
     pub async fn open_dialog(
         &self,
         dialog: impl FnMut(&mut Ui) + Send + Sync + 'static,
@@ -92,6 +64,12 @@ impl DrivenGame {
 
     pub async fn close_dialog(&self) -> Result<()> {
         self.send(DriverEvent::CloseDialog).await?;
+
+        Ok(())
+    }
+
+    pub async fn set_help(&self, dialog: HelpDialogRef) -> Result<()> {
+        self.send(DriverEvent::SetHelp(dialog)).await?;
 
         Ok(())
     }
@@ -144,5 +122,6 @@ pub enum DriverEvent {
     UpdatePolicy(Box<dyn FnOnce(&mut Policy) + Send + Sync>),
     OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     CloseDialog,
+    SetHelp(HelpDialogRef),
     Poll(Box<dyn FnMut(&Snapshot) -> Poll<()> + Send + Sync>),
 }

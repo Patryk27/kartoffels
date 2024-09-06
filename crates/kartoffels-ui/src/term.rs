@@ -19,6 +19,8 @@ use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Waker;
+use termwiz::escape::osc::Selection;
+use termwiz::escape::OperatingSystemCommand;
 use termwiz::input::{
     InputEvent, InputParser, KeyCode, Modifiers, MouseButtons, MouseEvent,
 };
@@ -161,6 +163,8 @@ impl Term {
                 .render(area, buf);
             })?;
         } else {
+            let mut to_copy = Vec::new();
+
             self.term.draw(|frame| {
                 render(&mut Ui::new(
                     self.ty,
@@ -168,8 +172,20 @@ impl Term {
                     frame,
                     self.mouse.report().as_ref(),
                     self.event.take().as_ref(),
+                    &mut to_copy,
                 ));
             })?;
+
+            for payload in to_copy {
+                let cmd = OperatingSystemCommand::SetSelection(
+                    Selection::CLIPBOARD,
+                    payload,
+                )
+                .to_string()
+                .into_bytes();
+
+                self.stdout.send(cmd).await?;
+            }
         }
 
         self.flush().await?;
@@ -177,7 +193,7 @@ impl Term {
         Ok(())
     }
 
-    pub async fn tick(&mut self) -> Result<()> {
+    pub async fn poll(&mut self) -> Result<()> {
         let bytes = select! {
             bytes = self.stdin.next() => Some(bytes),
             _ = self.notify.notified() => None,

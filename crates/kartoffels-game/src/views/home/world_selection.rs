@@ -16,7 +16,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
             let width = 40;
             let height = (store.worlds.len() + 6) as u16;
 
-            ui.info_dialog(width, height, Some(" play "), |ui| {
+            ui.info_window(width, height, Some(" play "), |ui| {
                 ui.line(Line::raw("choose world:").centered());
                 ui.space(1);
 
@@ -70,7 +70,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
             return Ok(resp);
         }
 
-        term.tick().await?;
+        term.poll().await?;
     }
 }
 

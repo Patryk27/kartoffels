@@ -3,7 +3,7 @@ mod joined;
 
 use self::idle::*;
 use self::joined::*;
-use super::{Dialog, JoinedBot, Policy, Response, State};
+use super::{Dialog, JoinedBot, Policy, State};
 use anyhow::Result;
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::Snapshot;
@@ -62,7 +62,7 @@ impl SidePanelResponse {
         self,
         state: &mut State,
         term: &mut Term,
-    ) -> Result<ControlFlow<Response, ()>> {
+    ) -> Result<ControlFlow<(), ()>> {
         match self {
             SidePanelResponse::UploadBot => {
                 if term.ty().is_web() {

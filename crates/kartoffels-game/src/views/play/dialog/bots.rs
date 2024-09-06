@@ -30,7 +30,7 @@ impl BotsDialog {
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
         let height = ui.area().height - 2;
 
-        ui.info_dialog(width, height, Some(" bots "), |ui| {
+        ui.info_window(width, height, Some(" bots "), |ui| {
             let header = Row::new(vec!["nth", "id", "age", "score ⯆"]);
 
             let rows = world

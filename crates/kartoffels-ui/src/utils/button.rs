@@ -9,17 +9,17 @@ use termwiz::input::{KeyCode, Modifiers};
 #[derive(Clone, Debug)]
 pub struct Button<'a> {
     pub key: KeyCode,
-    pub desc: Cow<'a, str>,
+    pub label: Cow<'a, str>,
     pub alignment: Alignment,
     pub enabled: bool,
     pub block: bool,
 }
 
 impl<'a> Button<'a> {
-    pub fn new(key: KeyCode, desc: impl Into<Cow<'a, str>>) -> Self {
+    pub fn new(key: KeyCode, label: impl Into<Cow<'a, str>>) -> Self {
         Self {
             key,
-            desc: desc.into(),
+            label: label.into(),
             alignment: Alignment::Left,
             enabled: true,
             block: false,
@@ -47,22 +47,22 @@ impl<'a> Button<'a> {
     }
 
     pub fn width(&self) -> u16 {
-        (Self::key_name(self.key).len() + self.desc.len() + 3) as u16
+        (Self::key_name(self.key).len() + self.label.len() + 3) as u16
     }
 
     pub fn render(&self, ui: &mut Ui) -> ButtonResponse {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
-        let (style_key, style_desc) = self.style(&resp);
+        let (key_style, label_style) = self.style(&resp);
 
         let key = Button::key_name(self.key);
-        let desc = &*self.desc;
+        let label = &*self.label;
 
         Line::from_iter([
-            Span::styled("[", style_desc),
-            Span::styled(key, style_key),
-            Span::styled("] ", style_desc),
-            Span::styled(desc, style_desc),
+            Span::styled("[", label_style),
+            Span::styled(key, key_style),
+            Span::styled("] ", label_style),
+            Span::styled(label, label_style),
         ])
         .render(area, ui.buf());
 
@@ -117,7 +117,7 @@ impl<'a> Button<'a> {
             Style::new().fg(theme::DARK_GRAY)
         };
 
-        let desc = if self.enabled {
+        let label = if self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -127,7 +127,7 @@ impl<'a> Button<'a> {
             Style::new().fg(theme::DARK_GRAY)
         };
 
-        (key, desc)
+        (key, label)
     }
 
     fn key_name(key: KeyCode) -> String {

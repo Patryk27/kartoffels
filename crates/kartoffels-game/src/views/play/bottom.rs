@@ -1,4 +1,4 @@
-use super::{Dialog, Policy, Response, State};
+use super::{Dialog, Policy, State};
 use anyhow::Result;
 use kartoffels_ui::{theme, Button, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
@@ -17,6 +17,7 @@ impl BottomPanel {
         ui: &mut Ui,
         policy: &Policy,
         handle: Option<&WorldHandle>,
+        has_help: bool,
         paused: bool,
         enabled: bool,
     ) -> Option<BottomPanelResponse> {
@@ -37,7 +38,9 @@ impl BottomPanel {
             let label = if paused { "resume" } else { "pause" };
 
             if Button::new(KeyCode::Char(' '), label)
-                .enabled(enabled && handle.is_some() && policy.can_pause_world)
+                .enabled(
+                    enabled && handle.is_some() && policy.user_can_pause_world,
+                )
                 .block()
                 .render(ui)
                 .pressed
@@ -47,16 +50,18 @@ impl BottomPanel {
 
             ui.space(2);
 
-            if Button::new(KeyCode::Char('h'), "help")
-                .enabled(enabled)
-                .block()
-                .render(ui)
-                .pressed
-            {
-                resp = Some(BottomPanelResponse::Help);
-            }
+            if has_help {
+                if Button::new(KeyCode::Char('h'), "help")
+                    .enabled(enabled)
+                    .block()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(BottomPanelResponse::Help);
+                }
 
-            ui.space(2);
+                ui.space(2);
+            }
 
             if Button::new(KeyCode::Char('b'), "bots")
                 .enabled(enabled && handle.is_some())
@@ -67,7 +72,7 @@ impl BottomPanel {
                 resp = Some(BottomPanelResponse::ListBots);
             }
 
-            if policy.can_configure_world {
+            if policy.user_can_configure_world {
                 ui.space(2);
 
                 if Button::new(KeyCode::Char('C'), "configure world")
@@ -112,14 +117,16 @@ impl BottomPanelResponse {
     pub async fn handle(
         self,
         state: &mut State,
-    ) -> Result<ControlFlow<Response, ()>> {
+    ) -> Result<ControlFlow<(), ()>> {
         match self {
             BottomPanelResponse::GoBack => {
-                return Ok(ControlFlow::Break(Response::GoBack));
+                return Ok(ControlFlow::Break(()));
             }
 
             BottomPanelResponse::Help => {
-                state.dialog = Some(Dialog::Help(Default::default()));
+                if let Some(dialog) = state.help {
+                    state.dialog = Some(Dialog::Help(dialog));
+                }
             }
 
             BottomPanelResponse::Pause => {

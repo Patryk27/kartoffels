@@ -55,7 +55,7 @@ impl UploadBotDialog {
                 text_height + 4
             };
 
-            ui.info_dialog(width, height, Some(" uploading a bot "), |ui| {
+            ui.info_window(width, height, Some(" uploading a bot "), |ui| {
                 TEXT.render_ref(ui.area(), ui.buf());
 
                 ui.space(text_height + 1);

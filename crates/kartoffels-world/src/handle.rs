@@ -5,6 +5,7 @@ use crate::{BotId, Event, Snapshot};
 use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
+use kartoffels_utils::Id;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
@@ -16,20 +17,34 @@ pub struct Handle {
 }
 
 impl Handle {
-    const ERR: &'static str = "world has crashed";
+    const ERR: &'static str = "lost connection to the world";
+
+    pub fn id(&self) -> Id {
+        self.inner.id
+    }
 
     pub fn name(&self) -> &str {
         &self.inner.name
     }
 
-    pub fn events(&self) -> impl Stream<Item = Arc<Event>> {
-        BroadcastStream::new(self.inner.events.subscribe())
-            .filter_map(|msg| msg.ok())
+    pub fn events(&self) -> EventStream {
+        let stream = BroadcastStream::new(self.inner.events.subscribe())
+            .filter_map(|msg| msg.ok());
+
+        EventStream {
+            id: self.inner.id,
+            stream: Box::new(stream),
+        }
     }
 
-    pub fn snapshots(&self) -> impl Stream<Item = Arc<Snapshot>> {
-        BroadcastStream::new(self.inner.snapshots.subscribe())
-            .filter_map(|msg| msg.ok())
+    pub fn snapshots(&self) -> SnapshotStream {
+        let stream = BroadcastStream::new(self.inner.snapshots.subscribe())
+            .filter_map(|msg| msg.ok());
+
+        SnapshotStream {
+            id: self.inner.id,
+            stream: Box::new(stream),
+        }
     }
 
     pub async fn pause(&self, paused: bool) -> Result<()> {
@@ -91,6 +106,7 @@ impl Handle {
 #[derive(Clone, Debug)]
 pub struct HandleInner {
     pub tx: RequestTx,
+    pub id: Id,
     pub name: Arc<String>,
     pub events: broadcast::Sender<Arc<Event>>,
     pub snapshots: broadcast::Sender<Arc<Snapshot>>,
@@ -122,4 +138,38 @@ pub enum Request {
     DestroyBot {
         id: BotId,
     },
+}
+
+pub struct EventStream {
+    id: Id,
+    stream: Box<dyn Stream<Item = Arc<Event>> + Send + Sync + Unpin>,
+}
+
+impl EventStream {
+    pub async fn next(&mut self) -> Result<Arc<Event>> {
+        self.stream
+            .next()
+            .await
+            .with_context(|| format!("lost connection to world `{}`", self.id))
+    }
+}
+
+pub struct SnapshotStream {
+    id: Id,
+    stream: Box<dyn Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin>,
+}
+
+impl SnapshotStream {
+    pub async fn next(&mut self) -> Result<Arc<Snapshot>> {
+        self.stream
+            .next()
+            .await
+            .with_context(|| format!("lost connection to world `{}`", self.id))
+    }
+
+    pub fn into_inner(
+        self,
+    ) -> Box<dyn Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin> {
+        self.stream
+    }
 }

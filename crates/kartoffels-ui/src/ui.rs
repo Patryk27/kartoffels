@@ -20,6 +20,7 @@ pub struct Ui<'a, 'b> {
     area: Rect,
     mouse: Option<&'a (UVec2, bool)>,
     event: Option<&'a InputEvent>,
+    to_copy: &'a mut Vec<String>,
     layout: UiLayout,
 }
 
@@ -30,6 +31,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         frame: &'a mut Frame<'b>,
         mouse: Option<&'a (UVec2, bool)>,
         event: Option<&'a InputEvent>,
+        to_copy: &'a mut Vec<String>,
     ) -> Self {
         let area = frame.area();
 
@@ -40,6 +42,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             area,
             mouse,
             event,
+            to_copy,
             layout: UiLayout::Col,
         }
     }
@@ -72,6 +75,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             area: self.area.clamp(area),
             mouse: self.mouse,
             event: self.event,
+            to_copy: self.to_copy,
             layout: self.layout,
         })
     }
@@ -116,7 +120,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.space(width);
     }
 
-    pub fn dialog<T>(
+    pub fn window<T>(
         &mut self,
         width: u16,
         height: u16,
@@ -159,24 +163,24 @@ impl<'a, 'b> Ui<'a, 'b> {
         })
     }
 
-    pub fn info_dialog<T>(
+    pub fn info_window<T>(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
         f: impl FnOnce(&mut Ui) -> T,
     ) -> T {
-        self.dialog(width, height, title, theme::GREEN, f)
+        self.window(width, height, title, theme::GREEN, f)
     }
 
-    pub fn error_dialog<T>(
+    pub fn error_window<T>(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
         f: impl FnOnce(&mut Ui) -> T,
     ) -> T {
-        self.dialog(width, height, title, theme::RED, f)
+        self.window(width, height, title, theme::RED, f)
     }
 
     pub fn key(&self, key: KeyCode, mods: Modifiers) -> bool {
@@ -225,6 +229,10 @@ impl<'a, 'b> Ui<'a, 'b> {
         } else {
             false
         }
+    }
+
+    pub fn copy(&mut self, payload: &str) {
+        self.to_copy.push(payload.to_owned());
     }
 }
 

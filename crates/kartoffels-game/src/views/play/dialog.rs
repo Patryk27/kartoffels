@@ -11,7 +11,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::upload_bot::*;
-use super::{Response, State};
+use super::State;
 use anyhow::Result;
 use kartoffels_ui::{Backdrop, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
@@ -20,11 +20,11 @@ use std::ops::ControlFlow;
 pub enum Dialog {
     Bots(BotsDialog),
     ConfigureWorld(ConfigureWorldDialog),
+    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     Error(ErrorDialog),
-    Help(HelpDialog),
+    Help(HelpDialogRef),
     JoinBot(JoinBotDialog),
     UploadBot(UploadBotDialog),
-    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
 }
 
 impl Dialog {
@@ -39,9 +39,17 @@ impl Dialog {
             Dialog::Bots(this) => this.render(ui, world),
             Dialog::ConfigureWorld(this) => this.render(ui),
             Dialog::Error(this) => this.render(ui),
-            Dialog::Help(this) => this.render(ui),
             Dialog::JoinBot(this) => this.render(ui, world),
             Dialog::UploadBot(this) => this.render(ui),
+
+            Dialog::Help(this) => match this.render(ui) {
+                Some(HelpDialogResponse::Copy(payload)) => {
+                    ui.copy(payload);
+                    None
+                }
+                Some(HelpDialogResponse::Close) => Some(DialogResponse::Close),
+                None => None,
+            },
 
             Dialog::Custom(this) => {
                 (this)(ui);
@@ -56,7 +64,6 @@ pub enum DialogResponse {
     Close,
     JoinBot(BotId),
     UploadBot(String),
-    OpenTutorial,
     Throw(String),
 }
 
@@ -64,7 +71,7 @@ impl DialogResponse {
     pub async fn handle(
         self,
         state: &mut State,
-    ) -> Result<ControlFlow<Response, ()>> {
+    ) -> Result<ControlFlow<(), ()>> {
         match self {
             DialogResponse::Close => {
                 state.dialog = None;
@@ -78,10 +85,6 @@ impl DialogResponse {
             DialogResponse::UploadBot(src) => {
                 state.dialog = None;
                 state.upload_bot(src).await?;
-            }
-
-            DialogResponse::OpenTutorial => {
-                return Ok(ControlFlow::Break(Response::OpenTutorial));
             }
 
             DialogResponse::Throw(err) => {
