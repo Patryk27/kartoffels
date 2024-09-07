@@ -7,8 +7,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     body: vec![
         DialogLine::new(
             "as you can see, the code in `main.rs` just calls a couple of \
-             functions in a loop - but before we jump into more thorough \
-             explanations, let's see the robot in action"
+             functions in a loop - but before we jump into explanations, let's \
+             see the robot in action!"
         ),
         DialogLine::new(""),
     ]
@@ -16,14 +16,19 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     .chain(INSTRUCTION.clone())
     .collect(),
 
-    buttons: vec![DialogButton::confirm("i have done so", ())],
+    buttons: vec![
+        DialogButton::confirm("i have done so", ()),
+    ],
 });
 
 #[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
     body: INSTRUCTION.clone(),
-    buttons: vec![DialogButton::confirm("got it", HelpDialogResponse::Close)],
+
+    buttons: vec![
+        DialogButton::confirm("got it", HelpDialogResponse::Close),
+    ],
 });
 
 #[rustfmt::skip]
@@ -37,8 +42,8 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
     DialogLine::ssh("    ./build.bat --copy"),
     DialogLine::new(""),
     DialogLine::new(
-        "having done so, press enter to close this window and then press [`u`] \
-         to upload the bot",
+        "... and having done so, press [`enter`] to close this message and \
+         then press [`u`] to upload the bot",
     ),
     DialogLine::web(""),
     DialogLine::web(
@@ -47,26 +52,11 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
     ),
 ]);
 
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.dialog(&DIALOG).await?;
-    ctxt.game.set_help(&HELP).await?;
-
-    ctxt.game
-        .update_policy(|policy| {
-            policy.ui_enabled = true;
-        })
-        .await?;
-
-    ctxt.game
-        .poll(|ctxt| {
-            if ctxt.world.bots().alive().is_empty() {
-                Poll::Pending
-            } else {
-                Poll::Ready(())
-            }
-        })
-        .await?;
-
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.set_help(Some(&HELP)).await?;
+    ctxt.wait_until_bot_is_uploaded().await?;
+    ctxt.game.set_help(None).await?;
     ctxt.game.pause().await?;
 
     Ok(())

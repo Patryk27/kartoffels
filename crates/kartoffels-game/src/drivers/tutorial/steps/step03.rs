@@ -12,7 +12,7 @@ static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
         DialogLine::new("run this:"),
         DialogLine::new(format!("    {}", CMD)),
         DialogLine::new(""),
-        DialogLine::new("... and press enter once you're ready"),
+        DialogLine::new("... and press [`enter`] once you're ready"),
     ],
 
     buttons: vec![
@@ -22,9 +22,9 @@ static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
 });
 
 #[allow(clippy::while_let_loop)]
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     loop {
-        match ctxt.dialog(&DIALOG).await? {
+        match ctxt.run_dialog(&DIALOG).await? {
             "copy" => {
                 // TODO HACK
                 ctxt.game

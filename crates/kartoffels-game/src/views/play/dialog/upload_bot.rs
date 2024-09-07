@@ -73,7 +73,7 @@ impl UploadBotDialog {
                 if let Some(alert) = &mut self.ctrlv_alert {
                     ui.line(
                         Line::raw("try using Ctrl+Shift+V instead of Ctrl+V")
-                            .fg(theme::POTATO)
+                            .fg(theme::YELLOW)
                             .bold()
                             .centered(),
                     );

@@ -9,18 +9,10 @@ use kartoffels_world::prelude::Handle as WorldHandle;
 pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     loop {
         match intro::run(term).await? {
-            intro::Response::Play => {
+            intro::Response::OnlinePlay => {
                 match world_selection::run(term, store).await? {
-                    world_selection::Response::Play(world) => {
+                    world_selection::Response::OnlinePlay(world) => {
                         return Ok(Response::Play(world));
-                    }
-
-                    world_selection::Response::OpenSandbox => {
-                        return Ok(Response::Sandbox);
-                    }
-
-                    world_selection::Response::OpenTutorial => {
-                        return Ok(Response::Tutorial);
                     }
 
                     world_selection::Response::GoBack => {

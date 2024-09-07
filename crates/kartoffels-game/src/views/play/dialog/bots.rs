@@ -63,7 +63,6 @@ impl BotsDialog {
             ui.clamp(ui.area().footer(1), |ui| {
                 ui.row(|ui| {
                     if Button::new(KeyCode::Char('w'), "scroll up")
-                        .block()
                         .render(ui)
                         .pressed
                     {
@@ -74,7 +73,6 @@ impl BotsDialog {
                     ui.space(2);
 
                     if Button::new(KeyCode::Char('s'), "scroll down")
-                        .block()
                         .render(ui)
                         .pressed
                     {
@@ -84,10 +82,7 @@ impl BotsDialog {
 
                     ui.space(2);
 
-                    if Button::new(KeyCode::Escape, "close")
-                        .block()
-                        .render(ui)
-                        .pressed
+                    if Button::new(KeyCode::Escape, "close").render(ui).pressed
                     {
                         resp = Some(DialogResponse::Close);
                     }

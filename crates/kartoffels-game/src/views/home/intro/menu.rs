@@ -17,20 +17,18 @@ impl Menu {
     pub fn render(ui: &mut Ui) -> Option<Response> {
         let mut resp = None;
 
-        if Button::new(KeyCode::Enter, "online play")
+        if Button::new(KeyCode::Char('p'), "online play")
             .centered()
-            .block()
             .render(ui)
             .pressed
         {
-            resp = Some(Response::Play);
+            resp = Some(Response::OnlinePlay);
         }
 
         ui.space(1);
 
         if Button::new(KeyCode::Char('t'), "tutorial")
             .centered()
-            .block()
             .render(ui)
             .pressed
         {
@@ -39,7 +37,6 @@ impl Menu {
 
         if Button::new(KeyCode::Char('s'), "sandbox")
             .centered()
-            .block()
             .render(ui)
             .pressed
         {
@@ -48,7 +45,6 @@ impl Menu {
 
         if Button::new(KeyCode::Char('c'), "challenges")
             .centered()
-            .block()
             .render(ui)
             .pressed
         {

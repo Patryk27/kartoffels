@@ -14,9 +14,9 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
             Clear::render(ui);
 
             let width = 40;
-            let height = (store.worlds.len() + 6) as u16;
+            let height = (store.worlds.len() + 4) as u16;
 
-            ui.info_window(width, height, Some(" play "), |ui| {
+            ui.info_window(width, height, Some(" online play "), |ui| {
                 ui.line(Line::raw("choose world:").centered());
                 ui.space(1);
 
@@ -25,33 +25,14 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 
                     if Button::new(key, world.name())
                         .centered()
-                        .block()
                         .render(ui)
                         .pressed
                     {
-                        resp = Some(Response::Play(world.to_owned()));
+                        resp = Some(Response::OnlinePlay(world.to_owned()));
                     }
                 }
 
                 ui.space(1);
-
-                if Button::new(KeyCode::Char('s'), "sandbox")
-                    .centered()
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(Response::OpenSandbox);
-                }
-
-                if Button::new(KeyCode::Char('t'), "tutorial")
-                    .centered()
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(Response::OpenTutorial);
-                }
 
                 if Button::new(KeyCode::Escape, "go back")
                     .centered()
@@ -76,8 +57,6 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 
 #[derive(Debug)]
 pub enum Response {
-    Play(WorldHandle),
-    OpenSandbox,
-    OpenTutorial,
+    OnlinePlay(WorldHandle),
     GoBack,
 }

@@ -18,8 +18,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     ],
 });
 
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.run_dialog(&DIALOG).await?;
 
     Ok(())
 }

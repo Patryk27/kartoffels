@@ -1,4 +1,4 @@
-use crate::play::{HelpDialogRef, Policy, PollCtxt};
+use crate::play::{HelpDialogRef, Permissions, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::Ui;
 use kartoffels_world::prelude::Handle as WorldHandle;
@@ -38,17 +38,17 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn set_policy(&self, policy: Policy) -> Result<()> {
-        self.send(DriverEvent::SetPolicy(policy)).await?;
+    pub async fn set_perms(&self, perms: Permissions) -> Result<()> {
+        self.send(DriverEvent::SetPerms(perms)).await?;
 
         Ok(())
     }
 
-    pub async fn update_policy(
+    pub async fn update_perms(
         &self,
-        f: impl FnOnce(&mut Policy) + Send + Sync + 'static,
+        f: impl FnOnce(&mut Permissions) + Send + Sync + 'static,
     ) -> Result<()> {
-        self.send(DriverEvent::UpdatePolicy(Box::new(f))).await?;
+        self.send(DriverEvent::UpdatePerms(Box::new(f))).await?;
 
         Ok(())
     }
@@ -68,8 +68,14 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn set_help(&self, dialog: HelpDialogRef) -> Result<()> {
+    pub async fn set_help(&self, dialog: Option<HelpDialogRef>) -> Result<()> {
         self.send(DriverEvent::SetHelp(dialog)).await?;
+
+        Ok(())
+    }
+
+    pub async fn set_status(&self, status: Option<String>) -> Result<()> {
+        self.send(DriverEvent::SetStatus(status)).await?;
 
         Ok(())
     }
@@ -113,15 +119,15 @@ impl DrivenGame {
 pub type DriverEventTx = mpsc::Sender<DriverEvent>;
 pub type DriverEventRx = mpsc::Receiver<DriverEvent>;
 
-#[allow(clippy::type_complexity)]
 pub enum DriverEvent {
     Join(WorldHandle),
     Pause,
     Resume,
-    SetPolicy(Policy),
-    UpdatePolicy(Box<dyn FnOnce(&mut Policy) + Send + Sync>),
+    SetPerms(Permissions),
+    UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send + Sync>),
     OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     CloseDialog,
-    SetHelp(HelpDialogRef),
-    Poll(Box<dyn FnMut(PollCtxt) -> Poll<()> + Send + Sync>),
+    SetHelp(Option<HelpDialogRef>),
+    SetStatus(Option<String>),
+    Poll(PollFn),
 }

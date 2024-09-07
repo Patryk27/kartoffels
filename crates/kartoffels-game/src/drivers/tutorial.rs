@@ -8,11 +8,7 @@ use anyhow::Result;
 use kartoffels_store::Store;
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
-    let mut ctxt = StepCtxt {
-        store,
-        game,
-        world: None,
-    };
+    let mut ctxt = StepCtxt::new(store, game).await?;
 
     if !step01::run(&mut ctxt).await? {
         return Ok(());

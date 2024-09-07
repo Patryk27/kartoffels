@@ -22,6 +22,7 @@ pub struct Ui<'a, 'b> {
     event: Option<&'a InputEvent>,
     to_copy: &'a mut Vec<String>,
     layout: UiLayout,
+    enabled: bool,
 }
 
 impl<'a, 'b> Ui<'a, 'b> {
@@ -44,6 +45,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             event,
             to_copy,
             layout: UiLayout::Col,
+            enabled: true,
         }
     }
 
@@ -67,22 +69,47 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.layout
     }
 
-    pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
+
+    fn with<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
         f(&mut Ui {
             ty: self.ty,
             waker: self.waker,
             frame: self.frame,
-            area: self.area.clamp(area),
+            area: self.area,
             mouse: self.mouse,
             event: self.event,
             to_copy: self.to_copy,
             layout: self.layout,
+            enabled: self.enabled,
+        })
+    }
+
+    pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
+        self.with(|ui| {
+            ui.area = ui.area.clamp(area);
+
+            f(ui)
         })
     }
 
     pub fn row<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
-        self.clamp(self.area, |ui| {
+        self.with(|ui| {
             ui.layout = UiLayout::Row;
+
+            f(ui)
+        })
+    }
+
+    pub fn enable<T>(
+        &mut self,
+        enabled: bool,
+        f: impl FnOnce(&mut Ui) -> T,
+    ) -> T {
+        self.with(|ui| {
+            ui.enabled = ui.enabled && enabled;
 
             f(ui)
         })

@@ -53,6 +53,10 @@ impl SnapshotBots {
 
         None
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.alive.is_empty() && self.queued.is_empty()
+    }
 }
 
 #[derive(Debug, Default)]
@@ -107,6 +111,10 @@ pub struct SnapshotQueuedBots {
 impl SnapshotQueuedBots {
     pub fn by_id(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
         self.entries.get(&id)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
     }
 }
 

@@ -3,10 +3,9 @@ mod joined;
 
 use self::idle::*;
 use self::joined::*;
-use super::{Dialog, JoinedBot, Policy, State};
+use super::{Dialog, State};
 use anyhow::Result;
 use kartoffels_ui::{Clear, Term, Ui};
-use kartoffels_world::prelude::Snapshot;
 use ratatui::layout::Rect;
 use std::ops::ControlFlow;
 
@@ -16,13 +15,7 @@ pub struct SidePanel;
 impl SidePanel {
     pub const WIDTH: u16 = 25;
 
-    pub fn render(
-        ui: &mut Ui,
-        policy: &Policy,
-        world: &Snapshot,
-        bot: Option<&JoinedBot>,
-        enabled: bool,
-    ) -> Option<SidePanelResponse> {
+    pub fn render(ui: &mut Ui, state: &State) -> Option<SidePanelResponse> {
         let area = {
             let area = ui.area();
 
@@ -36,12 +29,16 @@ impl SidePanel {
 
         Clear::render(ui);
 
-        ui.clamp(area, |ui| {
-            if let Some(bot) = bot {
-                JoinedSidePanel::render(ui, policy, world, bot, enabled)
-            } else {
-                IdleSidePanel::render(ui, enabled)
-            }
+        ui.enable(state.handle.is_some(), |ui| {
+            ui.clamp(area, |ui| {
+                if let Some(bot) = &state.bot {
+                    JoinedSidePanel::render(ui, state, bot)
+                } else {
+                    ui.enable(!state.paused, |ui| {
+                        IdleSidePanel::render(ui, state)
+                    })
+                }
+            })
         })
     }
 }

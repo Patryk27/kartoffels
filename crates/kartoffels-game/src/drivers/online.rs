@@ -26,7 +26,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("# controls"),
         DialogLine::new(""),
         DialogLine::new("- use mouse or keyboard"),
-        DialogLine::new("- press [`w`/`a`/`s`/`d`] to navigate the map"),
+        DialogLine::new("- press [`w`/`a`/`s`/`d`] (or arrows) to navigate the map"),
         DialogLine::new("- press [`u`] to upload a bot"),
         DialogLine::new("- click on any bot to join it"),
         DialogLine::new(""),
@@ -54,7 +54,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
 });
 
 pub async fn run(handle: WorldHandle, game: DrivenGame) -> Result<()> {
-    game.set_help(&HELP).await?;
+    game.set_help(Some(&HELP)).await?;
     game.join(handle).await?;
 
     future::pending().await

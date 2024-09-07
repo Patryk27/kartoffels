@@ -6,8 +6,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
 
     body: vec![
         DialogLine::new(
-            "the game is currently paused - close this window, press [`spc`] \
-             (aka space) to resume and let's see the bot in action",
+            "anyway, close this message to resume the game and let's see the \
+             robot in action",
         ),
         DialogLine::new(""),
         DialogLine::new(
@@ -21,38 +21,13 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     ],
 });
 
-#[rustfmt::skip]
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
-    title: Some(" help "),
-
-    body: vec![
-        DialogLine::new("press space to resume the game"),
-    ],
-
-    buttons: vec![DialogButton::confirm("got it", HelpDialogResponse::Close)],
-});
-
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.dialog(&DIALOG).await?;
-    ctxt.game.set_help(&HELP).await?;
-
-    ctxt.game
-        .update_policy(|policy| {
-            policy.user_can_pause_world = true;
-        })
-        .await?;
-
-    ctxt.game
-        .poll(|ctxt| {
-            if ctxt.paused {
-                Poll::Pending
-            } else {
-                Poll::Ready(())
-            }
-        })
-        .await?;
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.resume().await?;
 
     time::sleep(Duration::from_secs(6)).await;
+
+    ctxt.destroy_bots().await?;
 
     Ok(())
 }

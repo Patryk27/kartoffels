@@ -1,30 +1,36 @@
-use super::{JoinedBot, State};
+use super::State;
 use crate::BotIdExt;
 use anyhow::Result;
 use glam::{ivec2, IVec2};
 use kartoffels_ui::{theme, Ui};
-use kartoffels_world::prelude::{BotId, Dir, Snapshot, Tile, TileBase};
+use kartoffels_world::prelude::{BotId, Dir, Tile, TileBase};
 use ratatui::layout::Rect;
 use std::ops::ControlFlow;
 use std::time::{SystemTime, UNIX_EPOCH};
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct MapCanvas;
+pub struct Map;
 
-impl MapCanvas {
-    pub fn render(
-        ui: &mut Ui,
-        world: &Snapshot,
-        bot: Option<&JoinedBot>,
-        camera: IVec2,
-        paused: bool,
-        enabled: bool,
-    ) -> Option<MapCanvasResponse> {
+impl Map {
+    pub fn render(ui: &mut Ui, state: &State) -> Option<MapResponse> {
         let mut resp = None;
 
+        Self::render_tiles(ui, state, &mut resp);
+        Self::process_keys(ui, &mut resp);
+
+        resp
+    }
+
+    fn render_tiles(
+        ui: &mut Ui,
+        state: &State,
+        resp: &mut Option<MapResponse>,
+    ) {
         let area = ui.area();
-        let offset = camera - ivec2(area.width as i32, area.height as i32) / 2;
+
+        let offset =
+            state.camera - ivec2(area.width as i32, area.height as i32) / 2;
 
         for dy in 0..area.height {
             for dx in 0..area.width {
@@ -36,56 +42,22 @@ impl MapCanvas {
                 };
 
                 ui.clamp(area, |ui| {
-                    let tile =
-                        world.map().get(offset + ivec2(dx as i32, dy as i32));
+                    let tile = state
+                        .snapshot
+                        .map()
+                        .get(offset + ivec2(dx as i32, dy as i32));
 
-                    Self::render_tile(
-                        ui, world, bot, tile, paused, enabled, &mut resp,
-                    );
+                    Self::render_tile(ui, state, tile, resp);
                 });
             }
         }
-
-        if enabled {
-            let offset =
-                ivec2(ui.area().width as i32, ui.area().height as i32) / 5;
-
-            if ui.key(KeyCode::Char('w'), Modifiers::NONE)
-                || ui.key(KeyCode::UpArrow, Modifiers::NONE)
-            {
-                resp = Some(MapCanvasResponse::MoveCamera(ivec2(0, -offset.y)));
-            }
-
-            if ui.key(KeyCode::Char('a'), Modifiers::NONE)
-                || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
-            {
-                resp = Some(MapCanvasResponse::MoveCamera(ivec2(-offset.x, 0)));
-            }
-
-            if ui.key(KeyCode::Char('s'), Modifiers::NONE)
-                || ui.key(KeyCode::DownArrow, Modifiers::NONE)
-            {
-                resp = Some(MapCanvasResponse::MoveCamera(ivec2(0, offset.y)));
-            }
-
-            if ui.key(KeyCode::Char('d'), Modifiers::NONE)
-                || ui.key(KeyCode::RightArrow, Modifiers::NONE)
-            {
-                resp = Some(MapCanvasResponse::MoveCamera(ivec2(offset.x, 0)));
-            }
-        }
-
-        resp
     }
 
     fn render_tile(
         ui: &mut Ui,
-        world: &Snapshot,
-        bot: Option<&JoinedBot>,
+        state: &State,
         tile: Tile,
-        paused: bool,
-        enabled: bool,
-        response: &mut Option<MapCanvasResponse>,
+        resp: &mut Option<MapResponse>,
     ) {
         let ch;
         let mut fg;
@@ -113,7 +85,8 @@ impl MapCanvas {
             TileBase::BOT => {
                 ch = "@";
 
-                fg = world
+                fg = state
+                    .snapshot
                     .bots()
                     .alive()
                     .by_idx(tile.meta[0])
@@ -131,7 +104,8 @@ impl MapCanvas {
                     Dir::Left => "←",
                 };
 
-                fg = world
+                fg = state
+                    .snapshot
                     .bots()
                     .alive()
                     .by_idx(tile.meta[0])
@@ -148,14 +122,15 @@ impl MapCanvas {
             }
         };
 
-        if enabled {
-            if paused && tile.base != TileBase::BOT {
+        if ui.enabled() {
+            if state.paused && tile.base != TileBase::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
 
             if tile.base == TileBase::BOT {
-                let id = world
+                let id = state
+                    .snapshot
                     .bots()
                     .alive()
                     .by_idx(tile.meta[0])
@@ -167,9 +142,9 @@ impl MapCanvas {
                     bg = theme::GREEN;
 
                     if ui.mouse_pressed() {
-                        *response = Some(MapCanvasResponse::JoinBot(id));
+                        *resp = Some(MapResponse::JoinBot(id));
                     }
-                } else if let Some(bot) = bot {
+                } else if let Some(bot) = &state.bot {
                     if bot.id == id {
                         let blink = SystemTime::now()
                             .duration_since(UNIX_EPOCH)
@@ -191,18 +166,50 @@ impl MapCanvas {
 
         ui.buf()[pos].set_symbol(ch).set_fg(fg).set_bg(bg);
     }
+
+    fn process_keys(ui: &Ui, resp: &mut Option<MapResponse>) {
+        if !ui.enabled() {
+            return;
+        }
+
+        let offset = ivec2(ui.area().width as i32, ui.area().height as i32) / 5;
+
+        if ui.key(KeyCode::Char('w'), Modifiers::NONE)
+            || ui.key(KeyCode::UpArrow, Modifiers::NONE)
+        {
+            *resp = Some(MapResponse::MoveCamera(ivec2(0, -offset.y)));
+        }
+
+        if ui.key(KeyCode::Char('a'), Modifiers::NONE)
+            || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
+        {
+            *resp = Some(MapResponse::MoveCamera(ivec2(-offset.x, 0)));
+        }
+
+        if ui.key(KeyCode::Char('s'), Modifiers::NONE)
+            || ui.key(KeyCode::DownArrow, Modifiers::NONE)
+        {
+            *resp = Some(MapResponse::MoveCamera(ivec2(0, offset.y)));
+        }
+
+        if ui.key(KeyCode::Char('d'), Modifiers::NONE)
+            || ui.key(KeyCode::RightArrow, Modifiers::NONE)
+        {
+            *resp = Some(MapResponse::MoveCamera(ivec2(offset.x, 0)));
+        }
+    }
 }
 
 #[derive(Debug)]
-pub enum MapCanvasResponse {
+pub enum MapResponse {
     MoveCamera(IVec2),
     JoinBot(BotId),
 }
 
-impl MapCanvasResponse {
+impl MapResponse {
     pub fn handle(self, state: &mut State) -> Result<ControlFlow<(), ()>> {
         match self {
-            MapCanvasResponse::MoveCamera(delta) => {
+            MapResponse::MoveCamera(delta) => {
                 state.camera += delta;
 
                 if let Some(bot) = &mut state.bot {
@@ -210,7 +217,7 @@ impl MapCanvasResponse {
                 }
             }
 
-            MapCanvasResponse::JoinBot(id) => {
+            MapResponse::JoinBot(id) => {
                 state.join_bot(id);
             }
         }

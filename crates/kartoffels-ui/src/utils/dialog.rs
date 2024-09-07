@@ -38,11 +38,13 @@ where
             body.render_ref(ui.area(), ui.buf());
             ui.space(height - 1);
 
-            for button in &self.buttons {
-                if button.btn.render(ui).pressed {
-                    resp = Some(button.resp.clone());
+            ui.row(|ui| {
+                for button in &self.buttons {
+                    if button.btn.render(ui).pressed {
+                        resp = Some(button.resp.clone());
+                    }
                 }
-            }
+            });
         });
 
         resp

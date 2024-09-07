@@ -1,17 +1,17 @@
 mod bottom;
 mod dialog;
 mod map;
-mod policy;
+mod perms;
 mod side;
 
 use self::bottom::*;
 use self::dialog::*;
 pub use self::dialog::{HelpDialog, HelpDialogRef, HelpDialogResponse};
 use self::map::*;
-pub use self::policy::*;
+pub use self::perms::*;
 use self::side::*;
 use crate::{DriverEvent, DriverEventRx};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use futures_util::{stream, Stream};
@@ -19,21 +19,21 @@ use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{theme, Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot,
+    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
+    SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
 use std::sync::Arc;
+use std::task::Poll;
 use tokio::{select, time};
-use tokio_stream::StreamExt;
 
 pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     let mut state = State::default();
 
-    let mut snapshots: Box<dyn Stream<Item = _> + Send + Unpin> =
-        Box::new(stream::pending());
-
-    let mut poll = None;
+    let mut snapshots: Box<
+        dyn Stream<Item = Arc<WorldSnapshot>> + Send + Unpin,
+    > = Box::new(stream::pending());
 
     loop {
         let mut resp = None;
@@ -44,9 +44,7 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
         .await?;
 
         if let Some(resp) = resp {
-            time::sleep(theme::INTERACTION_TIME).await;
-
-            match state.handle(resp, term).await? {
+            match state.handle_response(resp, term).await? {
                 ControlFlow::Continue(_) => {
                     continue;
                 }
@@ -57,116 +55,60 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
         }
 
         let event = select! {
+            snapshot = snapshots.next_or_err() => {
+                Some(Either::Left(snapshot?))
+            },
+
+            Some(event) = driver.recv() => {
+                Some(Either::Right(event))
+            }
+
             result = term.poll() => {
                 #[allow(clippy::question_mark)]
                 if let Err(err) = result {
                     return Err(err);
                 }
 
-                continue;
-            }
-
-            snapshot = snapshots.next() => {
-                Either::Left(snapshot.context("lost connection to the world")?)
-            },
-
-            Some(event) = driver.recv() => {
-                Either::Right(event)
+                None
             }
         };
 
         match event {
-            Either::Left(snapshot) => {
-                if !state.paused {
-                    state.snapshot = snapshot;
+            Some(Either::Left(snapshot)) => {
+                state.handle_snapshot(snapshot);
+            }
+
+            Some(Either::Right(event)) => {
+                if let Some(new_snapshots) = state.handle_event(event).await? {
+                    snapshots = Box::new(new_snapshots);
                 }
             }
 
-            Either::Right(event) => match event {
-                DriverEvent::Join(handle) => {
-                    snapshots = Box::new(handle.snapshots().into_inner());
-
-                    let snapshot = snapshots
-                        .next()
-                        .await
-                        .context("lost connection to the world")?;
-
-                    state.camera = snapshot.map().size().as_ivec2() / 2;
-                    state.snapshot = snapshot;
-                    state.handle = Some(handle);
-                }
-
-                DriverEvent::Pause => {
-                    state.pause(true).await?;
-                }
-
-                DriverEvent::Resume => {
-                    state.pause(false).await?;
-                }
-
-                DriverEvent::SetPolicy(policy) => {
-                    state.policy = policy;
-                }
-
-                DriverEvent::UpdatePolicy(f) => {
-                    f(&mut state.policy);
-                }
-
-                DriverEvent::OpenDialog(dialog) => {
-                    state.dialog = Some(Dialog::Custom(dialog));
-                }
-
-                DriverEvent::CloseDialog => {
-                    state.dialog = None;
-                }
-
-                DriverEvent::SetHelp(help) => {
-                    state.help = Some(help);
-                }
-
-                DriverEvent::Poll(f) => {
-                    poll = Some(f);
-                }
-            },
-        }
-
-        if let Some(f) = &mut poll {
-            let ctxt = PollCtxt {
-                world: &state.snapshot,
-                paused: state.paused,
-            };
-
-            if f(ctxt).is_ready() {
-                poll = None;
+            None => {
+                //
             }
         }
+
+        state.poll();
     }
 }
 
 #[derive(Default)]
 struct State {
-    camera: IVec2,
     bot: Option<JoinedBot>,
-    help: Option<HelpDialogRef>,
+    camera: IVec2,
     dialog: Option<Dialog>,
-    paused: bool,
-    policy: Policy,
-    snapshot: Arc<WorldSnapshot>,
     handle: Option<WorldHandle>,
+    help: Option<HelpDialogRef>,
+    paused: bool,
+    perms: Permissions,
+    poll: Option<PollFn>,
+    snapshot: Arc<WorldSnapshot>,
+    status: Option<String>,
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui) -> Option<StateResponse> {
-        if let Some(bot) = &self.bot {
-            if bot.is_followed {
-                if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
-                    self.camera = bot.pos;
-                }
-            }
-        }
-
-        // ---
-
+    fn render(&mut self, ui: &mut Ui) -> Option<Response> {
         let [main_area, bottom_area] =
             Layout::vertical([Constraint::Fill(1), Constraint::Length(1)])
                 .areas(ui.area());
@@ -177,74 +119,152 @@ impl State {
         ])
         .areas(main_area);
 
-        let enabled = self.policy.ui_enabled && self.dialog.is_none();
-
         Clear::render(ui);
 
-        let bottom_resp = ui
-            .clamp(bottom_area, |ui| {
-                BottomPanel::render(
-                    ui,
-                    &self.policy,
-                    self.handle.as_ref(),
-                    self.help.is_some(),
-                    self.paused,
-                    enabled,
-                )
-            })
-            .map(StateResponse::BottomPanel);
+        let mut resp = None;
 
-        let side_resp = ui
-            .clamp(side_area, |ui| {
-                SidePanel::render(
-                    ui,
-                    &self.policy,
-                    &self.snapshot,
-                    self.bot.as_ref(),
-                    enabled && self.handle.is_some(),
-                )
-            })
-            .map(StateResponse::SidePanel);
+        if let Some(bot) = &self.bot {
+            if bot.is_followed {
+                if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
+                    self.camera = bot.pos;
+                }
+            }
+        }
 
-        let map_resp = ui
-            .clamp(map_area, |ui| {
-                MapCanvas::render(
-                    ui,
-                    &self.snapshot,
-                    self.bot.as_ref(),
-                    self.camera,
-                    self.paused,
-                    enabled && self.handle.is_some(),
-                )
-            })
-            .map(StateResponse::MapCanvas);
+        ui.enable(self.dialog.is_none(), |ui| {
+            if let Some(inner_resp) =
+                ui.clamp(bottom_area, |ui| BottomPanel::render(ui, self))
+            {
+                resp = Some(Response::BottomPanel(inner_resp));
+            }
 
-        let dialog_resp = self
-            .dialog
-            .as_mut()
-            .and_then(|dialog| dialog.render(ui, &self.snapshot))
-            .map(StateResponse::Dialog);
+            if let Some(inner_resp) =
+                ui.clamp(side_area, |ui| SidePanel::render(ui, self))
+            {
+                resp = Some(Response::SidePanel(inner_resp));
+            }
 
-        bottom_resp.or(side_resp).or(map_resp).or(dialog_resp)
+            if let Some(inner_resp) =
+                ui.clamp(map_area, |ui| Map::render(ui, self))
+            {
+                resp = Some(Response::Map(inner_resp));
+            }
+        });
+
+        if let Some(dialog) = &mut self.dialog {
+            if let Some(inner_resp) = dialog.render(ui, &self.snapshot) {
+                resp = Some(Response::Dialog(inner_resp));
+            }
+        }
+
+        resp
     }
 
-    async fn handle(
+    async fn handle_response(
         &mut self,
-        resp: StateResponse,
+        resp: Response,
         term: &mut Term,
     ) -> Result<ControlFlow<(), ()>> {
+        time::sleep(theme::INTERACTION_TIME).await;
+
         match resp {
-            StateResponse::BottomPanel(resp) => resp.handle(self).await,
-            StateResponse::Dialog(resp) => resp.handle(self).await,
-            StateResponse::MapCanvas(resp) => resp.handle(self),
-            StateResponse::SidePanel(resp) => resp.handle(self, term).await,
+            Response::BottomPanel(resp) => resp.handle(self).await,
+            Response::Dialog(resp) => resp.handle(self).await,
+            Response::Map(resp) => resp.handle(self),
+            Response::SidePanel(resp) => resp.handle(self, term).await,
+        }
+    }
+
+    fn handle_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
+        if self.paused {
+            return;
+        }
+
+        self.snapshot = snapshot;
+
+        if let Some(bot) = &mut self.bot {
+            let exists = self.snapshot.bots().by_id(bot.id).is_some();
+
+            bot.exists |= exists;
+
+            if bot.exists && !exists {
+                self.bot = None;
+            }
+        }
+    }
+
+    async fn handle_event(
+        &mut self,
+        event: DriverEvent,
+    ) -> Result<Option<SnapshotStream>> {
+        match event {
+            DriverEvent::Join(handle) => {
+                let mut snapshots = handle.snapshots();
+                let snapshot = snapshots.next_or_err().await?;
+
+                self.camera = snapshot.map().size().as_ivec2() / 2;
+                self.snapshot = snapshot;
+                self.handle = Some(handle);
+
+                return Ok(Some(snapshots));
+            }
+
+            DriverEvent::Pause => {
+                self.pause(true).await?;
+            }
+
+            DriverEvent::Resume => {
+                self.pause(false).await?;
+            }
+
+            DriverEvent::SetPerms(perms) => {
+                self.perms = perms;
+            }
+
+            DriverEvent::UpdatePerms(f) => {
+                f(&mut self.perms);
+            }
+
+            DriverEvent::OpenDialog(dialog) => {
+                self.dialog = Some(Dialog::Custom(dialog));
+            }
+
+            DriverEvent::CloseDialog => {
+                self.dialog = None;
+            }
+
+            DriverEvent::SetHelp(help) => {
+                self.help = help;
+            }
+
+            DriverEvent::SetStatus(status) => {
+                self.status = status;
+            }
+
+            DriverEvent::Poll(f) => {
+                self.poll = Some(f);
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn poll(&mut self) {
+        if let Some(poll) = &mut self.poll {
+            let ctxt = PollCtxt {
+                world: &self.snapshot,
+            };
+
+            if poll(ctxt).is_ready() {
+                self.poll = None;
+            }
         }
     }
 
     async fn pause(&mut self, paused: bool) -> Result<()> {
         self.paused = paused;
 
-        if self.policy.pause_is_propagated {
+        if self.perms.propagate_pause {
             if let Some(handle) = &self.handle {
                 handle.pause(self.paused).await?;
             }
@@ -256,6 +276,7 @@ impl State {
     fn join_bot(&mut self, id: BotId) {
         self.bot = Some(JoinedBot {
             id,
+            exists: false,
             is_followed: true,
         });
     }
@@ -302,19 +323,21 @@ impl State {
 #[derive(Debug)]
 struct JoinedBot {
     id: BotId,
+    exists: bool,
     is_followed: bool,
 }
 
 #[derive(Debug)]
-enum StateResponse {
+enum Response {
     BottomPanel(BottomPanelResponse),
     Dialog(DialogResponse),
-    MapCanvas(MapCanvasResponse),
+    Map(MapResponse),
     SidePanel(SidePanelResponse),
 }
 
 #[derive(Debug)]
 pub struct PollCtxt<'a> {
     pub world: &'a WorldSnapshot,
-    pub paused: bool,
 }
+
+pub type PollFn = Box<dyn FnMut(PollCtxt) -> Poll<()> + Send + Sync>;

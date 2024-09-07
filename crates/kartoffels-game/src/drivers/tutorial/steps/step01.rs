@@ -33,34 +33,6 @@ static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
     ],
 });
 
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<bool> {
-    ctxt.game
-        .set_policy(Policy {
-            ui_enabled: false,
-            user_can_pause_world: false,
-            user_can_configure_world: false,
-            user_can_manage_bots: false,
-            pause_is_propagated: true,
-        })
-        .await?;
-
-    ctxt.world = Some({
-        let world = ctxt.store.create_world(Config {
-            name: "sandbox".into(),
-            mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-                round_duration: None,
-            }),
-            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
-            policy: WorldPolicy {
-                max_alive_bots: 16,
-                max_queued_bots: 16,
-            },
-        });
-
-        world.set_spawn_point(ivec2(12, 12)).await?;
-        world
-    });
-
-    ctxt.game.join(ctxt.world().clone()).await?;
-    ctxt.dialog(&DIALOG).await
+pub async fn run(ctxt: &mut StepCtxt) -> Result<bool> {
+    ctxt.run_dialog(&DIALOG).await
 }

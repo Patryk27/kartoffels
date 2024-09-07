@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
 use kartoffels_utils::Id;
+use std::future::Future;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_stream::wrappers::BroadcastStream;
@@ -28,23 +29,13 @@ impl Handle {
     }
 
     pub fn events(&self) -> EventStream {
-        let stream = BroadcastStream::new(self.inner.events.subscribe())
-            .filter_map(|msg| msg.ok());
-
-        EventStream {
-            id: self.inner.id,
-            stream: Box::new(stream),
-        }
+        BroadcastStream::new(self.inner.events.subscribe())
+            .filter_map(|msg| msg.ok())
     }
 
     pub fn snapshots(&self) -> SnapshotStream {
-        let stream = BroadcastStream::new(self.inner.snapshots.subscribe())
-            .filter_map(|msg| msg.ok());
-
-        SnapshotStream {
-            id: self.inner.id,
-            stream: Box::new(stream),
-        }
+        BroadcastStream::new(self.inner.snapshots.subscribe())
+            .filter_map(|msg| msg.ok())
     }
 
     pub async fn pause(&self, paused: bool) -> Result<()> {
@@ -150,36 +141,37 @@ pub enum Request {
     },
 }
 
-pub struct EventStream {
-    id: Id,
-    stream: Box<dyn Stream<Item = Arc<Event>> + Send + Sync + Unpin>,
+// ---
+
+pub type EventStream = impl Stream<Item = Arc<Event>> + Send + Sync + Unpin;
+
+pub trait EventStreamExt {
+    fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Event>>>;
 }
 
-impl EventStream {
-    pub async fn next(&mut self) -> Result<Arc<Event>> {
-        self.stream
-            .next()
-            .await
-            .with_context(|| format!("lost connection to world `{}`", self.id))
+impl<T> EventStreamExt for T
+where
+    T: Stream<Item = Arc<Event>> + Unpin,
+{
+    async fn next_or_err(&mut self) -> Result<Arc<Event>> {
+        self.next().await.context(Handle::ERR)
     }
 }
 
-pub struct SnapshotStream {
-    id: Id,
-    stream: Box<dyn Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin>,
+// ---
+
+pub type SnapshotStream =
+    impl Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin;
+
+pub trait SnapshotStreamExt {
+    fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Snapshot>>>;
 }
 
-impl SnapshotStream {
-    pub async fn next(&mut self) -> Result<Arc<Snapshot>> {
-        self.stream
-            .next()
-            .await
-            .with_context(|| format!("lost connection to world `{}`", self.id))
-    }
-
-    pub fn into_inner(
-        self,
-    ) -> Box<dyn Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin> {
-        self.stream
+impl<T> SnapshotStreamExt for T
+where
+    T: Stream<Item = Arc<Snapshot>> + Unpin,
+{
+    async fn next_or_err(&mut self) -> Result<Arc<Snapshot>> {
+        self.next().await.context(Handle::ERR)
     }
 }

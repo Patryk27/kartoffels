@@ -30,7 +30,10 @@ pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::config::Config;
     pub use crate::events::Event;
-    pub use crate::handle::{EventStream, Handle, Request, SnapshotStream};
+    pub use crate::handle::{
+        EventStream, EventStreamExt, Handle, Request, SnapshotStream,
+        SnapshotStreamExt,
+    };
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};
     pub use crate::policy::Policy;

@@ -37,17 +37,19 @@ impl JoinBotDialog {
                 resp = self.handle(event, world);
             }
 
-            if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
-                resp = Some(DialogResponse::Close);
-            }
+            ui.row(|ui| {
+                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
+                    resp = Some(DialogResponse::Close);
+                }
 
-            if Button::new(KeyCode::Enter, "join")
-                .right_aligned()
-                .render(ui)
-                .pressed
-            {
-                resp = self.handle_confirm(world);
-            }
+                if Button::new(KeyCode::Enter, "join")
+                    .right_aligned()
+                    .render(ui)
+                    .pressed
+                {
+                    resp = self.handle_confirm(world);
+                }
+            });
         });
 
         resp

@@ -12,7 +12,6 @@ pub struct Button<'a> {
     pub label: Cow<'a, str>,
     pub alignment: Alignment,
     pub enabled: bool,
-    pub block: bool,
 }
 
 impl<'a> Button<'a> {
@@ -22,7 +21,6 @@ impl<'a> Button<'a> {
             label: label.into(),
             alignment: Alignment::Left,
             enabled: true,
-            block: false,
         }
     }
 
@@ -41,11 +39,6 @@ impl<'a> Button<'a> {
         self
     }
 
-    pub fn block(mut self) -> Self {
-        self.block = true;
-        self
-    }
-
     pub fn width(&self) -> u16 {
         (Self::key_name(self.key).len() + self.label.len() + 3) as u16
     }
@@ -53,7 +46,7 @@ impl<'a> Button<'a> {
     pub fn render(&self, ui: &mut Ui) -> ButtonResponse {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
-        let (key_style, label_style) = self.style(&resp);
+        let (key_style, label_style) = self.style(ui, &resp);
 
         let key = Button::key_name(self.key);
         let label = &*self.label;
@@ -66,12 +59,10 @@ impl<'a> Button<'a> {
         ])
         .render(area, ui.buf());
 
-        if self.block {
-            if ui.layout().is_row() {
-                ui.space(area.width);
-            } else {
-                ui.space(area.height);
-            }
+        if ui.layout().is_row() {
+            ui.space(area.width);
+        } else {
+            ui.space(area.height);
         }
 
         resp
@@ -96,18 +87,23 @@ impl<'a> Button<'a> {
     }
 
     fn response(&self, ui: &Ui, area: Rect) -> ButtonResponse {
-        let hovered = self.enabled && ui.mouse_over(area);
-        let pressed_mouse = hovered && ui.mouse_pressed();
-        let pressed_key = self.enabled && ui.key(self.key, Modifiers::NONE);
+        let hovered = ui.enabled() && self.enabled && ui.mouse_over(area);
 
-        ButtonResponse {
-            hovered,
-            pressed: pressed_mouse || pressed_key,
-        }
+        let pressed = {
+            let by_mouse = hovered && ui.mouse_pressed();
+
+            let by_keyboard = ui.enabled()
+                && self.enabled
+                && ui.key(self.key, Modifiers::NONE);
+
+            by_mouse || by_keyboard
+        };
+
+        ButtonResponse { hovered, pressed }
     }
 
-    fn style(&self, response: &ButtonResponse) -> (Style, Style) {
-        let key = if self.enabled {
+    fn style(&self, ui: &Ui, response: &ButtonResponse) -> (Style, Style) {
+        let key = if ui.enabled() && self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -117,7 +113,7 @@ impl<'a> Button<'a> {
             Style::new().fg(theme::DARK_GRAY)
         };
 
-        let label = if self.enabled {
+        let label = if ui.enabled() && self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bg(theme::GREEN).fg(theme::BG)
             } else {

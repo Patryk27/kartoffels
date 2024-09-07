@@ -1,7 +1,6 @@
-use super::{Dialog, Policy, State};
+use super::{Dialog, State};
 use anyhow::Result;
 use kartoffels_ui::{theme, Button, Ui};
-use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -13,35 +12,24 @@ use termwiz::input::KeyCode;
 pub struct BottomPanel;
 
 impl BottomPanel {
-    pub fn render(
-        ui: &mut Ui,
-        policy: &Policy,
-        handle: Option<&WorldHandle>,
-        has_help: bool,
-        paused: bool,
-        enabled: bool,
-    ) -> Option<BottomPanelResponse> {
+    pub fn render(ui: &mut Ui, state: &State) -> Option<BottomPanelResponse> {
         let mut resp = None;
 
         ui.row(|ui| {
-            if Button::new(KeyCode::Escape, "go back")
-                .enabled(enabled)
-                .block()
-                .render(ui)
-                .pressed
-            {
+            if Button::new(KeyCode::Escape, "go back").render(ui).pressed {
                 resp = Some(BottomPanelResponse::GoBack);
             }
 
             ui.space(2);
 
-            let label = if paused { "resume" } else { "pause" };
+            // ---
+
+            let label = if state.paused { "resume" } else { "pause" };
 
             if Button::new(KeyCode::Char(' '), label)
                 .enabled(
-                    enabled && handle.is_some() && policy.user_can_pause_world,
+                    state.handle.is_some() && state.perms.user_can_pause_world,
                 )
-                .block()
                 .render(ui)
                 .pressed
             {
@@ -50,34 +38,32 @@ impl BottomPanel {
 
             ui.space(2);
 
-            if has_help {
-                if Button::new(KeyCode::Char('h'), "help")
-                    .enabled(enabled)
-                    .block()
-                    .render(ui)
-                    .pressed
-                {
+            // ---
+
+            if state.help.is_some() {
+                if Button::new(KeyCode::Char('h'), "help").render(ui).pressed {
                     resp = Some(BottomPanelResponse::Help);
                 }
 
                 ui.space(2);
             }
 
+            // ---
+
             if Button::new(KeyCode::Char('b'), "bots")
-                .enabled(enabled && handle.is_some())
-                .block()
+                .enabled(state.handle.is_some())
                 .render(ui)
                 .pressed
             {
                 resp = Some(BottomPanelResponse::ListBots);
             }
 
-            if policy.user_can_configure_world {
+            // ---
+
+            if state.perms.user_can_configure_world {
                 ui.space(2);
 
                 if Button::new(KeyCode::Char('C'), "configure world")
-                    .enabled(enabled)
-                    .block()
                     .render(ui)
                     .pressed
                 {
@@ -86,7 +72,7 @@ impl BottomPanel {
             }
         });
 
-        if paused {
+        if state.paused {
             let area = Rect {
                 x: ui.area().width - 6,
                 y: ui.area().y,
@@ -97,6 +83,20 @@ impl BottomPanel {
             Span::raw("PAUSED")
                 .fg(theme::FG)
                 .bg(theme::RED)
+                .render(area, ui.buf());
+        } else if let Some(status) = &state.status {
+            let width = status.len() as u16;
+
+            let area = Rect {
+                x: ui.area().width - width,
+                y: ui.area().y,
+                width,
+                height: 1,
+            };
+
+            Span::raw(status)
+                .fg(theme::BG)
+                .bg(theme::YELLOW)
                 .render(area, ui.buf());
         }
 

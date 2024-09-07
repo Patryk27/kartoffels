@@ -35,29 +35,29 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
 
 async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
     loop {
-        let driver_rx;
-        let driver_fut: Pin<Box<dyn Future<Output = _> + Send + Sync>>;
+        let game;
+        let driver: Pin<Box<dyn Future<Output = _> + Send + Sync>>;
 
         match home::run(term, store).await? {
             home::Response::Play(world) => {
                 let (tx, rx) = DrivenGame::new();
 
-                driver_rx = rx;
-                driver_fut = Box::pin(drivers::online::run(world, tx));
+                game = play::run(term, rx);
+                driver = Box::pin(drivers::online::run(world, tx));
             }
 
             home::Response::Tutorial => {
                 let (tx, rx) = DrivenGame::new();
 
-                driver_rx = rx;
-                driver_fut = Box::pin(drivers::tutorial::run(store, tx));
+                game = play::run(term, rx);
+                driver = Box::pin(drivers::tutorial::run(store, tx));
             }
 
             home::Response::Sandbox => {
                 let (tx, rx) = DrivenGame::new();
 
-                driver_rx = rx;
-                driver_fut = Box::pin(drivers::sandbox::run(tx));
+                game = play::run(term, rx);
+                driver = Box::pin(drivers::sandbox::run(tx));
             }
 
             home::Response::Challenges => {
@@ -69,11 +69,9 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
             }
         };
 
-        let game_fut = play::run(term, driver_rx);
-
         select! {
-            result = game_fut => result?,
-            result = driver_fut => result?,
+            result = game => result?,
+            result = driver => result?,
         }
     }
 }

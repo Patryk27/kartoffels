@@ -10,8 +10,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::ssh("  (that includes when you're connected through the terminal)"),
         DialogLine::new(""),
         DialogLine::new("lesson #2:").bold(),
-        DialogLine::new("- pressing Ctrl-a will bring you to the main menu"),
-        DialogLine::ssh("- pressing Ctrl-c will disconnect you"),
+        DialogLine::new("- pressing [`Ctrl-a`] will bring you to the main menu"),
+        DialogLine::ssh("- pressing [`Ctrl-c`] will disconnect you"),
         DialogLine::new(""),
         DialogLine::new("lesson #3:").bold(),
         DialogLine::new("- don't lick yellow snow"),
@@ -23,8 +23,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
 });
 
 #[allow(clippy::while_let_loop)]
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    ctxt.dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.run_dialog(&DIALOG).await?;
 
     Ok(())
 }

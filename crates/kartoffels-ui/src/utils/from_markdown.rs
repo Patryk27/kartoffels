@@ -31,7 +31,7 @@ impl FromMarkdown for Line<'static> {
                 let mut span = String::new();
 
                 loop {
-                    let ch = chars.next().expect("unterminated tag: *");
+                    let ch = chars.next().expect("unterminated tag");
 
                     if ch == tag {
                         break;

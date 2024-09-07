@@ -7,7 +7,9 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     body: vec![
         DialogLine::new("cool!").fg(theme::GREEN),
         DialogLine::new(""),
-        DialogLine::new("now let's try to unwrap what the code does:"),
+        DialogLine::new(
+            "now let's try to unwrap what the code in `main.rs` does:",
+        ),
         DialogLine::new(""),
         DialogLine::new("# motor_step()"),
         DialogLine::new(""),
@@ -42,21 +44,8 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     ],
 });
 
-pub async fn run(ctxt: &mut StepCtxt<'_>) -> Result<()> {
-    let bot_id = ctxt
-        .world()
-        .snapshots()
-        .next()
-        .await?
-        .bots()
-        .alive()
-        .iter()
-        .next()
-        .unwrap()
-        .id;
-
-    ctxt.world().destroy_bot(bot_id).await?;
-    ctxt.dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.run_dialog(&DIALOG).await?;
 
     Ok(())
 }
