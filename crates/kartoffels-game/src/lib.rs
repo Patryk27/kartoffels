@@ -7,6 +7,7 @@ use self::driver::*;
 use self::utils::*;
 use self::views::*;
 use anyhow::Result;
+use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Abort, Term};
 use std::future::Future;
@@ -14,6 +15,15 @@ use std::pin::Pin;
 use tokio::select;
 
 pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
+    // Wait for terminal size to settle.
+    //
+    // This matters mostly (only?) for the web, where we initially report (0,0)
+    // and then wait for xterm's FitAddon() to kick in and report the actual
+    // size.
+    while term.size() == uvec2(0, 0) {
+        term.poll().await?;
+    }
+
     loop {
         match main_ex(term, store).await {
             Ok(_) => {

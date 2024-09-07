@@ -22,8 +22,7 @@ mod cfg {
     pub const SIM_HZ: u32 = 64_000;
     pub const SIM_TICKS: u32 = 1024;
     pub const MAX_REQUEST_BACKLOG: usize = 1024;
-    pub const MAX_EVENT_BACKLOG: usize = 1024;
-    pub const MAX_SNAPSHOT_BACKLOG: usize = 1;
+    pub const MAX_EVENT_BACKLOG: usize = 128;
 }
 
 pub mod prelude {
@@ -41,7 +40,9 @@ pub mod prelude {
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
         SnapshotQueuedBot, SnapshotQueuedBots,
     };
-    pub use crate::theme::{ArenaThemeConfig, DungeonThemeConfig, ThemeConfig};
+    pub use crate::theme::{
+        ArenaThemeConfig, DungeonTheme, DungeonThemeConfig, ThemeConfig,
+    };
     pub use crate::utils::Dir;
 }
 
@@ -67,7 +68,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
-use tokio::sync::{broadcast, mpsc, oneshot};
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
 use tracing::{debug, info, span, Level};
 
 pub fn create(config: Config, path: Option<&Path>) -> Handle {
@@ -139,16 +140,14 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
 
 fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
     let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
-    let events = broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG);
-    let snapshots = broadcast::Sender::new(cfg::MAX_SNAPSHOT_BACKLOG);
 
     let handle = Handle {
         inner: Arc::new(HandleInner {
             id,
             tx,
             name,
-            events: events.clone(),
-            snapshots: snapshots.clone(),
+            events: broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG),
+            snapshots: watch::Sender::new(Default::default()),
         }),
     };
 
@@ -166,7 +165,7 @@ struct World {
     policy: Policy,
     rng: SmallRng,
     rx: RequestRx,
-    snapshots: broadcast::Sender<Arc<Snapshot>>,
+    snapshots: watch::Sender<Arc<Snapshot>>,
     spawn_point: Option<IVec2>,
     theme: Theme,
 }

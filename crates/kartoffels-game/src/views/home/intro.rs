@@ -3,12 +3,13 @@ mod menu;
 
 use self::header::*;
 use self::menu::*;
+use super::Background;
 use anyhow::Result;
-use kartoffels_ui::{theme, Clear, Term};
+use kartoffels_ui::{theme, Term};
 use ratatui::layout::{Constraint, Layout};
 use tokio::time;
 
-pub async fn run(term: &mut Term) -> Result<Response> {
+pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
     loop {
         let mut resp = None;
 
@@ -20,17 +21,23 @@ pub async fn run(term: &mut Term) -> Result<Response> {
             ])
             .areas(ui.area());
 
-            let [_, header_area, _, menu_area, _, _] = Layout::vertical([
+            let [_, header_area, _, menu_area, _] = Layout::vertical([
                 Constraint::Fill(1),
                 Constraint::Length(Header::height()),
-                Constraint::Length(1),
+                Constraint::Fill(1),
                 Constraint::Length(Menu::height(ui)),
-                Constraint::Length(1),
-                Constraint::Fill(2),
+                Constraint::Fill(1),
             ])
             .areas(area);
 
-            Clear::render(ui);
+            let [_, menu_area, _] = Layout::horizontal([
+                Constraint::Fill(1),
+                Constraint::Length(Menu::width()),
+                Constraint::Fill(1),
+            ])
+            .areas(menu_area);
+
+            bg.render(ui);
 
             ui.clamp(header_area, |ui| {
                 Header::render(ui);

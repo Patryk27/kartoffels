@@ -28,14 +28,18 @@ impl Room {
 
     pub fn connect_with(&self, other: Self) -> Option<Corridor> {
         let start = ivec2(
-            cmp::min(self.max.x, other.max.x),
-            cmp::max(self.min.y, other.min.y),
+            cmp::min(self.max.x - 1, other.max.x - 1),
+            cmp::max(self.min.y + 1, other.min.y + 1),
         );
 
         let end = ivec2(
-            cmp::max(self.min.x, other.min.x),
-            cmp::min(self.max.y, other.max.y),
+            cmp::max(self.min.x + 1, other.min.x + 1),
+            cmp::min(self.max.y - 1, other.max.y - 1),
         );
+
+        if start.distance_squared(end) >= 300 {
+            return None;
+        }
 
         if end.x > start.x && end.y > start.y {
             Some(Corridor {
@@ -101,13 +105,13 @@ mod tests {
         const TEST_1: TestCase = TestCase {
             lhs: room(ivec2(0, 0), ivec2(4, 4)),
             rhs: room(ivec2(8, 1), ivec2(12, 5)),
-            expected: Some(corr_h(ivec2(4, 2), 5)),
+            expected: Some(corr_h(ivec2(3, 2), 7)),
         };
 
         const TEST_2: TestCase = TestCase {
             lhs: room(ivec2(0, 0), ivec2(4, 4)),
             rhs: room(ivec2(1, 8), ivec2(5, 12)),
-            expected: Some(corr_v(ivec2(2, 4), 5)),
+            expected: Some(corr_v(ivec2(2, 3), 7)),
         };
 
         const TEST_3: TestCase = TestCase {

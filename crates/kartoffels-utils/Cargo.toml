@@ -9,6 +9,7 @@ chrono.workspace = true
 ciborium.workspace = true
 glam.workspace = true
 itertools.workspace = true
+pretty_assertions.workspace = true
 rand.workspace = true
 rand_chacha.workspace = true
 serde.workspace = true

@@ -46,7 +46,7 @@ impl Map {
         }
     }
 
-    pub fn rand_pos(&self, rng: &mut impl RngCore) -> IVec2 {
+    pub fn sample_pos(&self, rng: &mut impl RngCore) -> IVec2 {
         uvec2(rng.gen_range(0..self.size.x), rng.gen_range(0..self.size.y))
             .as_ivec2()
     }
@@ -79,7 +79,7 @@ impl fmt::Display for Map {
                 _ = write!(line, "{}", self.tiles[idx].base as char);
             }
 
-            writeln!(f, "{}", line.trim())?;
+            writeln!(f, "{}", line.trim_end())?;
         }
 
         Ok(())
@@ -107,6 +107,10 @@ impl Tile {
 
     pub const fn is_floor(&self) -> bool {
         self.base == TileBase::FLOOR
+    }
+
+    pub const fn is_wall(&self) -> bool {
+        self.base == TileBase::WALL_H || self.base == TileBase::WALL_V
     }
 }
 

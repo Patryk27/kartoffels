@@ -3,10 +3,12 @@ mod room;
 
 use self::corridor::*;
 use self::room::*;
-use crate::{Map, Tile, TileBase};
+use crate::{Dir, Map, Tile, TileBase};
+use anyhow::{anyhow, Context, Result};
 use glam::{ivec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DungeonTheme {
@@ -18,46 +20,33 @@ impl DungeonTheme {
         Self { config }
     }
 
-    pub(super) fn create_map(&self, rng: &mut impl RngCore) -> Map {
-        let mut map = Map::new(Tile::new(TileBase::VOID), self.config.size);
-        let rooms = self.generate_rooms(rng, &map);
-        let corrs = self.generate_corridors(rng, &rooms);
+    pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
+        let min_occupied_tiles = self.config.size.element_product() / 4;
 
-        for room in rooms {
-            room.render(&mut map);
-        }
+        for _ in 0..128 {
+            let mut map = self.create_empty_map();
+            let rooms = self.generate_rooms(rng, &map);
+            let corrs = self.generate_corridors(&rooms);
 
-        for corr in corrs {
-            corr.render(&mut map);
-        }
+            self.render_features(&mut map, rooms, corrs);
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                let point = ivec2(x as i32, y as i32);
+            self.remove_unreachable_features(rng, &mut map)
+                .context("couldn't remove unreachable features")?;
 
-                match map.get(point).base {
-                    TileBase::WALL_H => {
-                        if map.get(point - ivec2(0, 1)).is_floor()
-                            && map.get(point + ivec2(0, 1)).is_floor()
-                        {
-                            map.set(point, Tile::new(TileBase::FLOOR));
-                        }
-                    }
-
-                    TileBase::WALL_V => {
-                        if map.get(point - ivec2(1, 0)).is_floor()
-                            && map.get(point + ivec2(1, 0)).is_floor()
-                        {
-                            map.set(point, Tile::new(TileBase::FLOOR));
-                        }
-                    }
-
-                    _ => (),
-                }
+            if self.count_occupied_tiles(&map) < min_occupied_tiles {
+                continue;
             }
+
+            return Ok(map);
         }
 
-        map
+        Err(anyhow!(
+            "couldn't generate a valid dungeon within the time limit"
+        ))
+    }
+
+    fn create_empty_map(&self) -> Map {
+        Map::new(Tile::new(TileBase::VOID), self.config.size)
     }
 
     fn generate_rooms(&self, rng: &mut impl RngCore, map: &Map) -> Vec<Room> {
@@ -68,8 +57,8 @@ impl DungeonTheme {
             tries += 1;
 
             let room = {
-                let size = ivec2(rng.gen_range(4..=16), rng.gen_range(4..=16));
-                let min = map.rand_pos(rng);
+                let size = ivec2(rng.gen_range(4..=20), rng.gen_range(4..=10));
+                let min = map.sample_pos(rng);
                 let max = min + size;
 
                 Room { min, max }
@@ -92,42 +81,137 @@ impl DungeonTheme {
         rooms
     }
 
-    fn generate_corridors(
-        &self,
-        rng: &mut impl RngCore,
-        rooms: &[Room],
-    ) -> Vec<Corridor> {
-        if rooms.len() <= 1 {
-            return Default::default();
-        }
-
+    fn generate_corridors(&self, rooms: &[Room]) -> Vec<Corridor> {
         let mut corrs = Vec::new();
 
         for lhs_id in 0..rooms.len() {
-            let mut lhs_corrs = 0;
-
-            for _ in 0..64 {
-                let rhs_id = rng.gen_range(0..rooms.len());
-
-                if rhs_id == lhs_id {
-                    continue;
-                }
-
+            for rhs_id in (lhs_id + 1)..rooms.len() {
                 let lhs = rooms[lhs_id];
                 let rhs = rooms[rhs_id];
 
                 if let Some(corr) = lhs.connect_with(rhs) {
-                    lhs_corrs += 1;
                     corrs.push(corr);
-
-                    if lhs_corrs >= 3 {
-                        break;
-                    }
                 }
             }
         }
 
         corrs
+    }
+
+    fn render_features(
+        &self,
+        map: &mut Map,
+        rooms: Vec<Room>,
+        corrs: Vec<Corridor>,
+    ) {
+        for room in rooms {
+            room.render(map);
+        }
+
+        for corr in corrs {
+            corr.render(map);
+        }
+    }
+
+    fn remove_unreachable_features(
+        &self,
+        rng: &mut impl RngCore,
+        map: &mut Map,
+    ) -> Result<()> {
+        const NOT_VISITED: u8 = 0;
+        const VISITED: u8 = 1;
+
+        let room_pos = (0..1024)
+            .find_map(|_| {
+                let pos = map.sample_pos(rng);
+
+                if map.get(pos).is_floor() {
+                    Some(pos)
+                } else {
+                    None
+                }
+            })
+            .context("couldn't find any room")?;
+
+        map.set(
+            room_pos,
+            Tile {
+                base: TileBase::FLOOR,
+                meta: [VISITED, 0, 0],
+            },
+        );
+
+        let mut stack = VecDeque::from_iter([room_pos]);
+
+        while let Some(pos) = stack.pop_front() {
+            for dir in Dir::all() {
+                let pos = pos + dir.as_vec();
+                let tile = map.get(pos);
+
+                if tile.is_floor() && tile.meta[0] == NOT_VISITED {
+                    map.set(
+                        pos,
+                        Tile {
+                            base: TileBase::FLOOR,
+                            meta: [VISITED, 0, 0],
+                        },
+                    );
+
+                    stack.push_back(pos);
+                }
+            }
+        }
+
+        // ---
+
+        for y in 0..map.size().y {
+            for x in 0..map.size().x {
+                let pos = ivec2(x as i32, y as i32);
+                let tile = map.get(pos);
+
+                if tile.is_floor() && tile.meta[0] == NOT_VISITED {
+                    map.set(pos, Tile::new(TileBase::VOID));
+                }
+            }
+        }
+
+        for y in 0..map.size().y {
+            for x in 0..map.size().x {
+                let pos = ivec2(x as i32, y as i32);
+                let tile = map.get(pos);
+
+                if tile.is_wall() {
+                    let mut has_floor_nearby = false;
+
+                    for dy in -1..=1 {
+                        for dx in -1..=1 {
+                            has_floor_nearby |=
+                                map.get(pos + ivec2(dx, dy)).is_floor();
+                        }
+                    }
+
+                    if !has_floor_nearby {
+                        map.set(pos, Tile::new(TileBase::VOID));
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn count_occupied_tiles(&self, map: &Map) -> u32 {
+        let mut tiles = 0;
+
+        for y in 0..map.size().y {
+            for x in 0..map.size().x {
+                if !map.get(ivec2(x as i32, y as i32)).is_void() {
+                    tiles += 1;
+                }
+            }
+        }
+
+        tiles
     }
 }
 
@@ -140,24 +224,27 @@ pub struct DungeonThemeConfig {
 mod tests {
     use super::*;
     use glam::uvec2;
-    use pretty_assertions as pa;
+    use kartoffels_utils::Asserter;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
-    use std::fs;
+    use std::path::Path;
+    use test_case::test_case;
 
-    #[test]
-    fn test() {
+    #[test_case("small-1", uvec2(40, 20))]
+    #[test_case("small-2", uvec2(20, 40))]
+    #[test_case("medium", uvec2(80, 60))]
+    #[test_case("large", uvec2(128, 128))]
+    #[test_case("huge", uvec2(256, 256))]
+    fn test(case: &str, size: UVec2) {
+        let dir = Path::new("src").join("theme").join("dungeon").join("tests");
+
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-        let actual = DungeonTheme::new(DungeonThemeConfig {
-            size: uvec2(80, 60),
-        })
-        .create_map(&mut rng)
-        .to_string();
+        let actual = DungeonTheme::new(DungeonThemeConfig { size })
+            .create_map(&mut rng)
+            .unwrap()
+            .to_string();
 
-        let expected =
-            fs::read_to_string("src/theme/dungeon/tests/expected.txt").unwrap();
-
-        pa::assert_eq!(expected, actual);
+        Asserter::new(dir).assert(format!("{}.txt", case), actual);
     }
 }

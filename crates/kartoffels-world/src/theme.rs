@@ -21,7 +21,7 @@ impl Theme {
     pub fn create_map(&self, rng: &mut impl RngCore) -> Map {
         match self {
             Theme::Arena(this) => this.create_map(),
-            Theme::Dungeon(this) => this.create_map(rng),
+            Theme::Dungeon(this) => this.create_map(rng).unwrap(),
         }
     }
 }

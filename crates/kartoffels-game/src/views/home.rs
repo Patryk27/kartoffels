@@ -1,16 +1,20 @@
+mod background;
 mod intro;
 mod world_selection;
 
+use self::background::*;
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::Handle as WorldHandle;
 
 pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
+    let mut bg = Background::new(term);
+
     loop {
-        match intro::run(term).await? {
+        match intro::run(term, &mut bg).await? {
             intro::Response::OnlinePlay => {
-                match world_selection::run(term, store).await? {
+                match world_selection::run(term, store, &mut bg).await? {
                     world_selection::Response::OnlinePlay(world) => {
                         return Ok(Response::Play(world));
                     }

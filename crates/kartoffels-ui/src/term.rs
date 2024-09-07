@@ -147,7 +147,7 @@ impl Term {
     where
         F: FnOnce(&mut Ui),
     {
-        if self.size.x < 50 || self.size.y < 25 {
+        if self.size.x < 50 || self.size.y < 30 {
             self.term.draw(|frame| {
                 let area = frame.area();
                 let buf = frame.buffer_mut();
@@ -155,9 +155,9 @@ impl Term {
                 Clear::render_ex(area, buf);
 
                 Paragraph::new(
-                    "whoopsie, your terminal is too small to play kartoffels 😭😭\
+                    "whoopsie, your terminal is too small to play kartoffels\
                      \n\n\
-                     reduce font size or something to get at least 50x25 chars",
+                     buy something with at least 50x30 characters",
                 )
                 .wrap(Default::default())
                 .render(area, buf);
@@ -218,7 +218,7 @@ impl Term {
                                 return Err(Error::new(Abort { soft: true }));
                             }
 
-                            Abort::HARD_BINDING => {
+                            Abort::HARD_BINDING if self.ty.is_ssh() => {
                                 return Err(Error::new(Abort { soft: false }));
                             }
 

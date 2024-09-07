@@ -24,8 +24,7 @@ pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kartoffels_utils::{cbor_to_json, json_to_cbor};
-    use pretty_assertions as pa;
+    use kartoffels_utils::{cbor_to_json, json_to_cbor, Asserter};
     use std::fs;
     use std::path::Path;
     use test_case::test_case;
@@ -36,14 +35,11 @@ mod tests {
     fn test(version: u32) {
         let dir = Path::new("src")
             .join("store")
-            .join("world")
             .join("migrations")
             .join(format!("v{}", version))
             .join("test");
 
         let given_path = dir.join("given.json");
-        let expected_path = dir.join("expected.json");
-        let expected_new_path = dir.join("expected.json.new");
 
         let given = fs::read_to_string(&given_path).unwrap();
         let given = serde_json::from_str(&given).unwrap();
@@ -53,17 +49,6 @@ mod tests {
         let actual = cbor_to_json(actual);
         let actual = serde_json::to_string_pretty(&actual).unwrap();
 
-        let expected = fs::read_to_string(&expected_path)
-            .unwrap_or_default()
-            .trim()
-            .to_owned();
-
-        if expected == actual {
-            _ = fs::remove_file(&expected_new_path);
-        } else {
-            _ = fs::write(&expected_new_path, &actual);
-        }
-
-        pa::assert_eq!(expected, actual);
+        Asserter::new(dir).assert("expected.json", actual);
     }
 }

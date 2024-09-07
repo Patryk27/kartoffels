@@ -19,8 +19,8 @@ pub enum Dir {
 }
 
 impl Dir {
-    pub fn all() -> [Self; 4] {
-        [Dir::Up, Dir::Right, Dir::Down, Dir::Left]
+    pub fn all() -> impl Iterator<Item = Self> {
+        [Dir::Up, Dir::Right, Dir::Down, Dir::Left].into_iter()
     }
 
     #[must_use]

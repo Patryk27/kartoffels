@@ -4,7 +4,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
-use ratatui::widgets::{Block, Padding, Widget};
+use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
 use ratatui::Frame;
 use std::future::Future;
 use std::pin::pin;
@@ -147,6 +147,17 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.space(width);
     }
 
+    pub fn block<T>(
+        &mut self,
+        block: Block,
+        f: impl FnOnce(&mut Ui) -> T,
+    ) -> T {
+        Clear::render(self);
+        block.render_ref(self.area(), self.buf());
+
+        self.clamp(block.inner(self.area()), f)
+    }
+
     pub fn window<T>(
         &mut self,
         width: u16,
@@ -182,11 +193,7 @@ impl<'a, 'b> Ui<'a, 'b> {
                 block = block.title(title).title_alignment(Alignment::Center);
             }
 
-            let inner_area = block.inner(ui.area());
-
-            Clear::render(ui);
-            block.render(ui.area(), ui.buf());
-            ui.clamp(inner_area, f)
+            ui.block(block, f)
         })
     }
 

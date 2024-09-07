@@ -8,8 +8,8 @@ use glam::IVec2;
 use kartoffels_utils::Id;
 use std::future::Future;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot};
-use tokio_stream::wrappers::BroadcastStream;
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tokio_stream::wrappers::{BroadcastStream, WatchStream};
 use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
@@ -34,8 +34,7 @@ impl Handle {
     }
 
     pub fn snapshots(&self) -> SnapshotStream {
-        BroadcastStream::new(self.inner.snapshots.subscribe())
-            .filter_map(|msg| msg.ok())
+        WatchStream::new(self.inner.snapshots.subscribe())
     }
 
     pub async fn pause(&self, paused: bool) -> Result<()> {
@@ -106,7 +105,7 @@ pub struct HandleInner {
     pub id: Id,
     pub name: Arc<String>,
     pub events: broadcast::Sender<Arc<Event>>,
-    pub snapshots: broadcast::Sender<Arc<Snapshot>>,
+    pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
 pub type RequestTx = mpsc::Sender<Request>;

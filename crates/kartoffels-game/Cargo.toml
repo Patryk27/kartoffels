@@ -14,6 +14,7 @@ futures-util.workspace = true
 glam.workspace = true
 itertools.workspace = true
 rand.workspace = true
+rand_chacha.workspace = true
 ratatui.workspace = true
 termwiz.workspace = true
 tokio-stream.workspace = true

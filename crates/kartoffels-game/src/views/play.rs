@@ -200,10 +200,9 @@ impl State {
         match event {
             DriverEvent::Join(handle) => {
                 let mut snapshots = handle.snapshots();
-                let snapshot = snapshots.next_or_err().await?;
 
-                self.camera = snapshot.map().size().as_ivec2() / 2;
-                self.snapshot = snapshot;
+                self.snapshot = snapshots.next_or_err().await?;
+                self.camera = self.snapshot.map().center();
                 self.handle = Some(handle);
 
                 return Ok(Some(snapshots));

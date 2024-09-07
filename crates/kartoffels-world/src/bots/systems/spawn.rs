@@ -99,7 +99,7 @@ fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {
     let mut nth = 0;
 
     loop {
-        let pos = map.rand_pos(rng);
+        let pos = map.sample_pos(rng);
 
         if is_pos_valid(map, bots, pos) {
             return Some(pos);

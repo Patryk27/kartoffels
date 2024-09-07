@@ -1,7 +1,7 @@
-use kartoffels_ui::{theme, FromMarkdown, Ui};
+use kartoffels_ui::{theme, Clear, FromMarkdown, Ui};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Text};
-use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
+use ratatui::widgets::{Block, Padding, WidgetRef};
 use std::sync::LazyLock;
 
 static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
@@ -41,17 +41,14 @@ impl Header {
     }
 
     pub fn render(ui: &mut Ui) {
+        Clear::render(ui);
+
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
-        let area = {
-            let inner_area = block.inner(ui.area());
-
-            block.render(ui.area(), ui.buf());
-            inner_area
-        };
-
-        TEXT.render_ref(area, ui.buf())
+        ui.block(block, |ui| {
+            TEXT.render_ref(ui.area(), ui.buf());
+        })
     }
 }

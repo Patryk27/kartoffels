@@ -1,20 +1,25 @@
+use super::Background;
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Button, Clear, Term};
+use kartoffels_ui::{theme, Button, Term};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use ratatui::text::Line;
 use termwiz::input::KeyCode;
 use tokio::time;
 
-pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
+pub async fn run(
+    term: &mut Term,
+    store: &Store,
+    bg: &mut Background,
+) -> Result<Response> {
     loop {
         let mut resp = None;
 
         term.draw(|ui| {
-            Clear::render(ui);
-
             let width = 40;
             let height = (store.worlds.len() + 4) as u16;
+
+            bg.render(ui);
 
             ui.info_window(width, height, Some(" online play "), |ui| {
                 ui.line(Line::raw("choose world:").centered());
