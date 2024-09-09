@@ -1,3 +1,4 @@
+#![feature(cmp_minmax)]
 #![feature(extract_if)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
@@ -97,7 +98,7 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
         rng,
         rx,
         snapshots: handle.inner.snapshots.clone(),
-        spawn_point: None,
+        spawn: (None, None),
         theme,
     }
     .spawn(id);
@@ -130,7 +131,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         rng: SmallRng::from_entropy(),
         rx,
         snapshots: handle.inner.snapshots.clone(),
-        spawn_point: None,
+        spawn: (None, None),
         theme,
     }
     .spawn(id);
@@ -166,7 +167,7 @@ struct World {
     rng: SmallRng,
     rx: RequestRx,
     snapshots: watch::Sender<Arc<Snapshot>>,
-    spawn_point: Option<IVec2>,
+    spawn: (Option<IVec2>, Option<Dir>),
     theme: Theme,
 }
 

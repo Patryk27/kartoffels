@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Event, Snapshot};
+use crate::{BotId, Dir, Event, Map, Snapshot};
 use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
@@ -55,17 +55,10 @@ impl Handle {
         &self,
         src: Vec<u8>,
         pos: Option<IVec2>,
-        ephemeral: bool,
     ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::CreateBot {
-            src,
-            pos,
-            ephemeral,
-            tx,
-        })
-        .await?;
+        self.send(Request::CreateBot { src, pos, tx }).await?;
 
         rx.await.context(Self::ERR)?
     }
@@ -82,8 +75,18 @@ impl Handle {
         Ok(())
     }
 
-    pub async fn set_spawn_point(&self, at: IVec2) -> Result<()> {
-        self.send(Request::SetSpawnPoint { at }).await?;
+    pub async fn set_spawn(
+        &self,
+        point: Option<IVec2>,
+        dir: Option<Dir>,
+    ) -> Result<()> {
+        self.send(Request::SetSpawn { point, dir }).await?;
+
+        Ok(())
+    }
+
+    pub async fn set_map(&self, map: Map) -> Result<()> {
+        self.send(Request::SetMap { map }).await?;
 
         Ok(())
     }
@@ -123,7 +126,6 @@ pub enum Request {
     CreateBot {
         src: Vec<u8>,
         pos: Option<IVec2>,
-        ephemeral: bool,
         tx: oneshot::Sender<Result<BotId>>,
     },
 
@@ -135,8 +137,13 @@ pub enum Request {
         id: BotId,
     },
 
-    SetSpawnPoint {
-        at: IVec2,
+    SetSpawn {
+        point: Option<IVec2>,
+        dir: Option<Dir>,
+    },
+
+    SetMap {
+        map: Map,
     },
 }
 

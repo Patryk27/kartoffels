@@ -25,7 +25,9 @@ impl JoinedSidePanel {
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
 
-        let footer_height = if state.perms.user_can_manage_bots {
+        let footer_height = if state.perms.single_bot_mode {
+            1
+        } else if state.perms.user_can_manage_bots {
             5
         } else {
             3
@@ -102,44 +104,56 @@ impl JoinedSidePanel {
     ) -> Option<SidePanelResponse> {
         let mut resp = None;
 
-        let follow_caption = if bot.is_followed {
-            "stop following"
+        if state.perms.single_bot_mode {
+            #[allow(clippy::collapsible_if)]
+            if state.perms.user_can_manage_bots {
+                if Button::new(KeyCode::Char('D'), "destroy")
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(SidePanelResponse::DestroyBot);
+                }
+            }
         } else {
-            "follow"
-        };
+            let follow_caption = if bot.is_followed {
+                "stop following"
+            } else {
+                "follow"
+            };
 
-        if Button::new(KeyCode::Char('f'), follow_caption)
-            .render(ui)
-            .pressed
-        {
-            resp = Some(SidePanelResponse::FollowBot);
-        }
-
-        if Button::new(KeyCode::Char('i'), "history")
-            .render(ui)
-            .pressed
-        {
-            resp = Some(SidePanelResponse::ShowBotHistory);
-        }
-
-        if state.perms.user_can_manage_bots {
-            if Button::new(KeyCode::Char('R'), "restart")
+            if Button::new(KeyCode::Char('f'), follow_caption)
                 .render(ui)
                 .pressed
             {
-                resp = Some(SidePanelResponse::RestartBot);
+                resp = Some(SidePanelResponse::FollowBot);
             }
 
-            if Button::new(KeyCode::Char('D'), "destroy")
+            if Button::new(KeyCode::Char('i'), "history")
                 .render(ui)
                 .pressed
             {
-                resp = Some(SidePanelResponse::DestroyBot);
+                resp = Some(SidePanelResponse::ShowBotHistory);
             }
-        }
 
-        if Button::new(KeyCode::Char('l'), "leave").render(ui).pressed {
-            resp = Some(SidePanelResponse::LeaveBot);
+            if state.perms.user_can_manage_bots {
+                if Button::new(KeyCode::Char('R'), "restart")
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(SidePanelResponse::RestartBot);
+                }
+
+                if Button::new(KeyCode::Char('D'), "destroy")
+                    .render(ui)
+                    .pressed
+                {
+                    resp = Some(SidePanelResponse::DestroyBot);
+                }
+            }
+
+            if Button::new(KeyCode::Char('l'), "leave").render(ui).pressed {
+                resp = Some(SidePanelResponse::LeaveBot);
+            }
         }
 
         resp

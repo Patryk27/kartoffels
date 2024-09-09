@@ -8,15 +8,21 @@ pub mod step07;
 pub mod step08;
 pub mod step09;
 pub mod step10;
+pub mod step11;
+pub mod step12;
+pub mod step13;
 
 mod prelude {
     pub(super) use crate::drivers::tutorial::StepCtxt;
     pub(super) use crate::play::{HelpDialog, HelpDialogResponse};
     pub(super) use anyhow::Result;
+    pub(super) use glam::{ivec2, uvec2};
     pub(super) use kartoffels_ui::{theme, Dialog, DialogButton, DialogLine};
+    pub(super) use kartoffels_world::prelude::{Dir, Map, Tile, TileBase};
     pub(super) use ratatui::style::Stylize;
     pub(super) use ratatui::text::Span;
     pub(super) use std::sync::LazyLock;
+    pub(super) use std::task::Poll;
     pub(super) use std::time::Duration;
     pub(super) use termwiz::input::KeyCode;
     pub(super) use tokio::time;

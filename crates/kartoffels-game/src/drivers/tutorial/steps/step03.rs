@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-const CMD: &str = "git clone -b tutorial github.com/patryk27/kartoffel";
+const CMD: &str = "git clone github.com/patryk27/kartoffel";
 
 #[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
@@ -26,6 +26,9 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     loop {
         match ctxt.run_dialog(&DIALOG).await? {
             "copy" => {
+                // Fake opening a dialog, so that we get access to the UI and
+                // can ask terminal to copy string for us.
+                //
                 // TODO HACK
                 ctxt.game
                     .open_dialog(|ui| {

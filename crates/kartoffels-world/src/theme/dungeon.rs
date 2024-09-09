@@ -46,7 +46,7 @@ impl DungeonTheme {
     }
 
     fn create_empty_map(&self) -> Map {
-        Map::new(Tile::new(TileBase::VOID), self.config.size)
+        Map::new(self.config.size)
     }
 
     fn generate_rooms(&self, rng: &mut impl RngCore, map: &Map) -> Vec<Room> {

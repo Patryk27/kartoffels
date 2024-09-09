@@ -1,9 +1,8 @@
 use crate::{Bots, Event, Map, QueuedBot, World};
 use glam::IVec2;
-use rand::RngCore;
+use rand::{Rng, RngCore};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tracing::trace;
 
 #[derive(Debug)]
 pub struct State {
@@ -33,19 +32,14 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     };
 
-    let pos = match determine_spawn_point(
+    let Some(pos) = determine_spawn_point(
         &mut world.rng,
         &world.map,
         &world.bots,
-        world.spawn_point,
+        world.spawn.0,
         bot,
-    ) {
-        Ok(pos) => pos,
-
-        Err(err) => {
-            trace!("can't dequeue pending bot: {}", err);
-            return;
-        }
+    ) else {
+        return;
     };
 
     // Unwrap-safety: We've just made sure that the queue is not empty
@@ -56,13 +50,9 @@ pub fn run(world: &mut World, state: &mut State) {
         ..
     } = world.bots.queued.pop().unwrap();
 
-    trace!(?id, ?pos, "bot dequeued and spawned");
+    bot.log(if requeued { "respawned" } else { "spawned" });
 
-    bot.log(if requeued {
-        "respawned".into()
-    } else {
-        "spawned".into()
-    });
+    bot.motor.dir = world.spawn.1.unwrap_or_else(|| world.rng.gen());
 
     world.bots.alive.add(id, pos, bot);
 
@@ -75,24 +65,24 @@ fn determine_spawn_point(
     bots: &Bots,
     spawn_point: Option<IVec2>,
     bot: &QueuedBot,
-) -> Result<IVec2, &'static str> {
+) -> Option<IVec2> {
     if let Some(pos) = bot.pos {
         return if is_pos_valid(map, bots, pos) {
-            Ok(pos)
+            Some(pos)
         } else {
-            Err("bot's spawn point is taken")
+            None
         };
     }
 
     if let Some(pos) = spawn_point {
         return if is_pos_valid(map, bots, pos) {
-            Ok(pos)
+            Some(pos)
         } else {
-            Err("world's spawn point is taken")
+            None
         };
     }
 
-    sample_pos(rng, map, bots).ok_or("couldn't find empty tile")
+    sample_pos(rng, map, bots)
 }
 
 fn sample_pos(rng: &mut impl RngCore, map: &Map, bots: &Bots) -> Option<IVec2> {

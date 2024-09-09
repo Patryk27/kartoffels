@@ -22,32 +22,40 @@ impl FromMarkdown for Line<'static> {
         let mut pending_span = String::new();
 
         while let Some(ch) = chars.next() {
-            if ['*', '_', '`'].contains(&ch) {
-                if !pending_span.is_empty() {
-                    spans.push(mem::take(&mut pending_span).into());
+            match ch {
+                '\t' => {
+                    pending_span.push_str("    ");
                 }
 
-                let tag = ch;
-                let mut span = String::new();
-
-                loop {
-                    let ch = chars.next().expect("unterminated tag");
-
-                    if ch == tag {
-                        break;
-                    } else {
-                        span.push(ch);
+                '*' | '_' | '`' => {
+                    if !pending_span.is_empty() {
+                        spans.push(mem::take(&mut pending_span).into());
                     }
+
+                    let tag = ch;
+                    let mut span = String::new();
+
+                    loop {
+                        let ch = chars.next().expect("unterminated tag");
+
+                        if ch == tag {
+                            break;
+                        } else {
+                            span.push(ch);
+                        }
+                    }
+
+                    spans.push(match tag {
+                        '*' => span.bold(),
+                        '_' => span.italic(),
+                        '`' => span.fg(theme::WASHED_PINK),
+                        _ => unreachable!(),
+                    });
                 }
 
-                spans.push(match tag {
-                    '*' => span.bold(),
-                    '_' => span.italic(),
-                    '`' => span.fg(theme::WASHED_PINK),
-                    _ => unreachable!(),
-                });
-            } else {
-                pending_span.push(ch);
+                ch => {
+                    pending_span.push(ch);
+                }
             }
         }
 

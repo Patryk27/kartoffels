@@ -8,7 +8,8 @@ pub async fn run(game: DrivenGame) -> Result<()> {
         user_can_pause_world: true,
         user_can_configure_world: true,
         user_can_manage_bots: true,
-        propagate_pause: true,
+        sync_pause_mode: true,
+        single_bot_mode: false,
     })
     .await?;
 

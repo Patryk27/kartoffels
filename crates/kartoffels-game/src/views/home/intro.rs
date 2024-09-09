@@ -5,11 +5,16 @@ use self::header::*;
 use self::menu::*;
 use super::Background;
 use anyhow::Result;
+use kartoffels_store::Store;
 use kartoffels_ui::{theme, Term};
 use ratatui::layout::{Constraint, Layout};
 use tokio::time;
 
-pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
+pub async fn run(
+    term: &mut Term,
+    store: &Store,
+    bg: &mut Background,
+) -> Result<Response> {
     loop {
         let mut resp = None;
 
@@ -25,7 +30,7 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
                 Constraint::Fill(1),
                 Constraint::Length(Header::height()),
                 Constraint::Fill(1),
-                Constraint::Length(Menu::height(ui)),
+                Constraint::Length(Menu::height(ui, store)),
                 Constraint::Fill(1),
             ])
             .areas(area);
@@ -44,7 +49,7 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
             });
 
             ui.clamp(menu_area, |ui| {
-                resp = Menu::render(ui);
+                resp = Menu::render(ui, store);
             });
         })
         .await?;

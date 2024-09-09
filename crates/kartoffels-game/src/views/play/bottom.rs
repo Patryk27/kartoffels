@@ -16,62 +16,99 @@ impl BottomPanel {
         let mut resp = None;
 
         ui.row(|ui| {
-            if Button::new(KeyCode::Escape, "go back").render(ui).pressed {
-                resp = Some(BottomPanelResponse::GoBack);
-            }
-
             ui.space(2);
 
-            // ---
+            Self::render_go_back_btn(ui, &mut resp);
+            Self::render_pause_btn(ui, state, &mut resp);
+            Self::render_help_btn(ui, state, &mut resp);
+            Self::render_bots_btn(ui, state, &mut resp);
+            Self::render_configure_btn(ui, state, &mut resp);
+        });
 
-            let label = if state.paused { "resume" } else { "pause" };
+        Self::render_status(ui, state);
 
-            if Button::new(KeyCode::Char(' '), label)
-                .enabled(
-                    state.handle.is_some() && state.perms.user_can_pause_world,
-                )
-                .render(ui)
-                .pressed
-            {
-                resp = Some(BottomPanelResponse::Pause);
-            }
+        resp
+    }
 
+    fn render_go_back_btn(ui: &mut Ui, resp: &mut Option<BottomPanelResponse>) {
+        if Button::new(KeyCode::Escape, "go back").render(ui).pressed {
+            *resp = Some(BottomPanelResponse::GoBack)
+        }
+    }
+
+    fn render_pause_btn(
+        ui: &mut Ui,
+        state: &State,
+        resp: &mut Option<BottomPanelResponse>,
+    ) {
+        ui.space(2);
+
+        let label = if state.paused { "resume" } else { "pause" };
+
+        let enabled =
+            state.handle.is_some() && state.perms.user_can_pause_world;
+
+        if Button::new(KeyCode::Char(' '), label)
+            .enabled(enabled)
+            .render(ui)
+            .pressed
+        {
+            *resp = Some(BottomPanelResponse::Pause);
+        }
+    }
+
+    fn render_help_btn(
+        ui: &mut Ui,
+        state: &State,
+        resp: &mut Option<BottomPanelResponse>,
+    ) {
+        ui.space(2);
+
+        if Button::new(KeyCode::Char('h'), "help")
+            .enabled(state.help.is_some())
+            .render(ui)
+            .pressed
+        {
+            *resp = Some(BottomPanelResponse::Help);
+        }
+    }
+
+    fn render_bots_btn(
+        ui: &mut Ui,
+        state: &State,
+        resp: &mut Option<BottomPanelResponse>,
+    ) {
+        if !state.perms.single_bot_mode {
             ui.space(2);
-
-            // ---
-
-            if state.help.is_some() {
-                if Button::new(KeyCode::Char('h'), "help").render(ui).pressed {
-                    resp = Some(BottomPanelResponse::Help);
-                }
-
-                ui.space(2);
-            }
-
-            // ---
 
             if Button::new(KeyCode::Char('b'), "bots")
                 .enabled(state.handle.is_some())
                 .render(ui)
                 .pressed
             {
-                resp = Some(BottomPanelResponse::ListBots);
+                *resp = Some(BottomPanelResponse::ListBots);
             }
+        }
+    }
 
-            // ---
+    fn render_configure_btn(
+        ui: &mut Ui,
+        state: &State,
+        resp: &mut Option<BottomPanelResponse>,
+    ) {
+        if state.perms.user_can_configure_world {
+            ui.space(2);
 
-            if state.perms.user_can_configure_world {
-                ui.space(2);
-
-                if Button::new(KeyCode::Char('C'), "configure world")
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(BottomPanelResponse::ConfigureWorld);
-                }
+            if Button::new(KeyCode::Char('C'), "configure world")
+                .render(ui)
+                .pressed
+            {
+                *resp = Some(BottomPanelResponse::ConfigureWorld);
             }
-        });
+        }
+    }
 
+    fn render_status(ui: &mut Ui, state: &State) {
         if state.paused {
             let area = Rect {
                 x: ui.area().width - 6,
@@ -99,8 +136,6 @@ impl BottomPanel {
                 .bg(theme::YELLOW)
                 .render(area, ui.buf());
         }
-
-        resp
     }
 }
 

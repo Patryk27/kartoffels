@@ -18,7 +18,7 @@ impl IdleSidePanel {
         ])
         .areas(ui.area());
 
-        ui.enable(!state.snapshot.bots().is_empty(), |ui| {
+        if !state.perms.single_bot_mode {
             ui.clamp(join_area, |ui| {
                 if Button::new(KeyCode::Char('j'), "join bot")
                     .render(ui)
@@ -27,7 +27,7 @@ impl IdleSidePanel {
                     resp = Some(SidePanelResponse::JoinBot);
                 }
             });
-        });
+        }
 
         ui.clamp(upload_area, |ui| {
             if Button::new(KeyCode::Char('u'), "upload bot")

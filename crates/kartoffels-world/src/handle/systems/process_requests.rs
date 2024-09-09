@@ -1,10 +1,12 @@
-use crate::{AliveBot, BotId, KillBot, QueuedBot, Request, Shutdown, World};
+use crate::{
+    AliveBot, BotId, Event, KillBot, QueuedBot, Request, Shutdown, World,
+};
 use anyhow::{anyhow, Result};
 use glam::IVec2;
 use kartoffels_vm as vm;
 use std::ops::ControlFlow;
+use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
-use tracing::trace;
 
 pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     loop {
@@ -17,13 +19,8 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 break ControlFlow::Break(Shutdown { tx: Some(tx) });
             }
 
-            Ok(Request::CreateBot {
-                src,
-                pos,
-                ephemeral,
-                tx,
-            }) => {
-                _ = tx.send(create_bot(world, src, pos, ephemeral));
+            Ok(Request::CreateBot { src, pos, tx }) => {
+                _ = tx.send(create_bot(world, src, pos));
             }
 
             Ok(Request::RestartBot { id }) => {
@@ -39,10 +36,16 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
 
             Ok(Request::DestroyBot { id }) => {
                 world.bots.remove(id);
+
+                _ = world.events.send(Arc::new(Event::BotKilled { id }));
             }
 
-            Ok(Request::SetSpawnPoint { at }) => {
-                world.spawn_point = Some(at);
+            Ok(Request::SetSpawn { point, dir }) => {
+                world.spawn = (point, dir);
+            }
+
+            Ok(Request::SetMap { map }) => {
+                world.map = map;
             }
 
             Err(TryRecvError::Empty) => {
@@ -60,13 +63,12 @@ fn create_bot(
     world: &mut World,
     src: Vec<u8>,
     pos: Option<IVec2>,
-    ephemeral: bool,
 ) -> Result<BotId> {
     let fw = vm::Firmware::new(&src)?;
     let vm = vm::Runtime::new(fw);
-    let mut bot = AliveBot::new(&mut world.rng, vm, ephemeral);
+    let mut bot = AliveBot::new(&mut world.rng, vm);
 
-    bot.log("uploaded and queued".into());
+    bot.log("uploaded and queued");
 
     let id = loop {
         let id = BotId::new(&mut world.rng);
@@ -84,12 +86,8 @@ fn create_bot(
             requeued: false,
         });
 
-        trace!(?id, ?pos, "bot queued");
-
         Ok(id)
     } else {
-        trace!(?id, ?pos, "bot discarded (queue full)");
-
         Err(anyhow!("too many robots queued, try again in a moment"))
     }
 }

@@ -24,7 +24,8 @@ impl StepCtxt {
             user_can_pause_world: false,
             user_can_configure_world: false,
             user_can_manage_bots: false,
-            propagate_pause: true,
+            sync_pause_mode: true,
+            single_bot_mode: true,
         })
         .await?;
 
@@ -35,12 +36,13 @@ impl StepCtxt {
             }),
             theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
             policy: Policy {
+                auto_respawn: false,
                 max_alive_bots: 16,
                 max_queued_bots: 16,
             },
         });
 
-        world.set_spawn_point(ivec2(12, 12)).await?;
+        world.set_spawn(Some(ivec2(12, 12)), None).await?;
         game.join(world.clone()).await?;
 
         Ok(Self { game, world })

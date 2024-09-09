@@ -37,7 +37,6 @@ pub struct AliveBot {
     pub arm: BotArm,
     pub radar: BotRadar,
     pub events: BotEvents,
-    pub ephemeral: bool,
 }
 
 impl AliveBot {
@@ -48,26 +47,21 @@ impl AliveBot {
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
 
-    pub fn new(
-        rng: &mut impl RngCore,
-        vm: vm::Runtime,
-        ephemeral: bool,
-    ) -> Self {
+    pub fn new(rng: &mut impl RngCore, vm: vm::Runtime) -> Self {
         Self {
             vm,
             timer: BotTimer::new(rng),
             battery: BotBattery::default(),
             serial: BotSerial::default(),
-            motor: BotMotor::new(rng),
+            motor: BotMotor::default(),
             arm: BotArm::default(),
             radar: BotRadar::default(),
             events: BotEvents::default(),
-            ephemeral,
         }
     }
 
-    pub fn log(&mut self, msg: String) {
-        self.events.add(msg);
+    pub fn log(&mut self, msg: impl Into<String>) {
+        self.events.add(msg.into());
     }
 
     pub fn tick(
@@ -114,18 +108,12 @@ impl AliveBot {
         Ok(AliveBotTick { stab_dir, move_dir })
     }
 
-    #[allow(clippy::result_large_err)]
-    pub fn reset(self, rng: &mut impl RngCore) -> Result<Self, Self> {
-        if self.ephemeral {
-            return Err(self);
-        }
-
-        let mut this = AliveBot::new(rng, self.vm, false);
+    pub fn reset(self, rng: &mut impl RngCore) -> Self {
+        let mut this = AliveBot::new(rng, self.vm);
 
         this.vm = this.vm.reset();
         this.events = self.events;
-
-        Ok(this)
+        this
     }
 }
 

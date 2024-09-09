@@ -23,6 +23,9 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     step08::run(&mut ctxt).await?;
     step09::run(&mut ctxt).await?;
     step10::run(&mut ctxt).await?;
+    step11::run(&mut ctxt).await?;
+    step12::run(&mut ctxt).await?;
+    step13::run(&mut ctxt).await?;
 
     Ok(())
 }

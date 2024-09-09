@@ -1,8 +1,8 @@
-use glam::{uvec2, IVec2, UVec2};
+use glam::{ivec2, uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
 use std::fmt::Write;
+use std::{cmp, fmt};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Map {
@@ -11,10 +11,11 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn new(tile: Tile, size: UVec2) -> Self {
+    pub fn new(size: UVec2) -> Self {
         Self {
             size,
-            tiles: vec![tile; (size.x * size.y) as usize].into_boxed_slice(),
+            tiles: vec![Tile::new(TileBase::VOID); (size.x * size.y) as usize]
+                .into_boxed_slice(),
         }
     }
 
@@ -43,6 +44,49 @@ impl Map {
     pub fn set_if_void(&mut self, point: IVec2, tile: Tile) {
         if self.get(point).is_void() {
             self.set(point, tile);
+        }
+    }
+
+    pub fn line(&mut self, p1: IVec2, p2: IVec2, tile: Tile) {
+        if p1.x == p2.x {
+            let [y1, y2] = cmp::minmax(p1.y, p2.y);
+
+            for y in y1..=y2 {
+                self.set(ivec2(p1.x, y), tile);
+            }
+        } else if p1.y == p2.y {
+            let [x1, x2] = cmp::minmax(p1.x, p2.x);
+
+            for x in x1..=x2 {
+                self.set(ivec2(x, p1.y), tile);
+            }
+        } else {
+            unimplemented!();
+        }
+    }
+
+    pub fn poly(
+        &mut self,
+        points: impl IntoIterator<Item = IVec2>,
+        tile: Tile,
+    ) {
+        let mut prev = None;
+
+        for p2 in points {
+            if let Some(p1) = prev.replace(p2) {
+                self.line(p1, p2, tile);
+            }
+        }
+    }
+
+    pub fn rect(&mut self, p1: IVec2, p2: IVec2, tile: Tile) {
+        let min = p1.min(p2);
+        let max = p1.max(p2);
+
+        for y in min.y..=max.y {
+            for x in min.x..=max.x {
+                self.set(ivec2(x, y), tile);
+            }
         }
     }
 

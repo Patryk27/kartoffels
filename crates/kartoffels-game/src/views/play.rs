@@ -263,7 +263,7 @@ impl State {
     async fn pause(&mut self, paused: bool) -> Result<()> {
         self.paused = paused;
 
-        if self.perms.propagate_pause {
+        if self.perms.sync_pause_mode {
             if let Some(handle) = &self.handle {
                 handle.pause(self.paused).await?;
             }
@@ -295,13 +295,9 @@ impl State {
             }
         };
 
-        let id = match self
-            .handle
-            .as_ref()
-            .unwrap()
-            .create_bot(src, None, false)
-            .await
-        {
+        let id = self.handle.as_ref().unwrap().create_bot(src, None).await;
+
+        let id = match id {
             Ok(id) => id,
 
             Err(err) => {

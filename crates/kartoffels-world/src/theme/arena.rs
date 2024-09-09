@@ -13,10 +13,8 @@ impl ArenaTheme {
     }
 
     pub fn create_map(&self) -> Map {
-        let mut map = Map::new(
-            Tile::new(TileBase::VOID),
-            uvec2(self.config.radius, self.config.radius) * 2 + 1,
-        );
+        let mut map =
+            Map::new(uvec2(self.config.radius, self.config.radius) * 2 + 1);
 
         let center = map.size() / 2;
         let radius = self.config.radius as f32;

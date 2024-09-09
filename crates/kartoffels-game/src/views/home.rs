@@ -12,7 +12,7 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
     let mut bg = Background::new(term);
 
     loop {
-        match intro::run(term, &mut bg).await? {
+        match intro::run(term, store, &mut bg).await? {
             intro::Response::OnlinePlay => {
                 match world_selection::run(term, store, &mut bg).await? {
                     world_selection::Response::OnlinePlay(world) => {

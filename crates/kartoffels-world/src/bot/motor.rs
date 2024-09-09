@@ -1,5 +1,4 @@
 use crate::{AliveBot, BotMmioContext, Dir};
-use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -10,14 +9,6 @@ pub struct BotMotor {
 }
 
 impl BotMotor {
-    pub fn new(rng: &mut impl RngCore) -> Self {
-        Self {
-            dir: rng.gen(),
-            vel: 0,
-            cooldown: 0,
-        }
-    }
-
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
     }
@@ -70,7 +61,6 @@ impl BotMotor {
     }
 }
 
-#[cfg(test)]
 impl Default for BotMotor {
     fn default() -> Self {
         Self {
