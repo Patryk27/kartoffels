@@ -137,7 +137,7 @@ impl Map {
                     .map(|bot| bot.id)
                     .unwrap();
 
-                if ui.mouse_over(ui.area()) {
+                if ui.mouse_over(ui.area()) && !state.perms.single_bot_mode {
                     fg = theme::BG;
                     bg = theme::GREEN;
 

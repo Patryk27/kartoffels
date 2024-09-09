@@ -77,7 +77,7 @@ static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::new("hmm, the bot seems to have died"),
+        DialogLine::new("hmm, your robot seems to have died"),
     ],
 
     buttons: vec![
@@ -89,43 +89,30 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     ctxt.run_dialog(&DIALOG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
-    ctxt.world
-        .set_spawn(Some(ivec2(10, 10)), Some(Dir::Right))
-        .await?;
-
-    ctxt.world.set_map(map()).await?;
-
     ctxt.game
         .update_perms(|perms| {
             perms.user_can_manage_bots = true;
         })
         .await?;
 
+    setup_map(ctxt).await?;
+
     loop {
-        ctxt.wait_until_bot_is_uploaded().await?;
+        ctxt.wait_until_bot_is_created().await?;
         ctxt.game.set_status(Some("WATCHING".into())).await?;
 
-        let completed = ctxt
-            .game
-            .poll(|ctxt| {
-                let Some(bot) = ctxt.world.bots().alive().iter().next() else {
-                    return Poll::Ready(false);
-                };
-
-                if bot.pos == ivec2(10, 12) {
-                    return Poll::Ready(true);
-                }
-
-                Poll::Pending
-            })
-            .await?;
+        let outcome = wait(ctxt).await?;
 
         ctxt.game.set_status(None).await?;
 
-        if completed {
-            break;
-        } else {
-            ctxt.run_dialog(&DIALOG_RETRY).await?;
+        match outcome {
+            Ok(()) => {
+                break;
+            }
+
+            Err(()) => {
+                ctxt.run_dialog(&DIALOG_RETRY).await?;
+            }
         }
     }
 
@@ -134,27 +121,53 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-fn map() -> Map {
-    let mut map = Map::new(uvec2(32, 32));
+async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
+    ctxt.world
+        .set_spawn(Some(ivec2(10, 10)), Some(Dir::Right))
+        .await?;
 
-    map.poly(
-        [
-            ivec2(10, 10),
-            ivec2(18, 10),
-            ivec2(18, 9),
-            ivec2(20, 9),
-            ivec2(20, 10),
-            ivec2(28, 10),
-            ivec2(28, 13),
-            ivec2(20, 13),
-            ivec2(20, 14),
-            ivec2(18, 14),
-            ivec2(18, 13),
-            ivec2(10, 13),
-            ivec2(10, 12),
-        ],
-        Tile::new(TileBase::FLOOR),
-    );
+    ctxt.world
+        .set_map({
+            let mut map = Map::new(uvec2(32, 32));
 
-    map
+            map.poly(
+                [
+                    ivec2(10, 10),
+                    ivec2(18, 10),
+                    ivec2(18, 9),
+                    ivec2(20, 9),
+                    ivec2(20, 10),
+                    ivec2(28, 10),
+                    ivec2(28, 13),
+                    ivec2(20, 13),
+                    ivec2(20, 14),
+                    ivec2(18, 14),
+                    ivec2(18, 13),
+                    ivec2(10, 13),
+                    ivec2(10, 12),
+                ],
+                Tile::new(TileBase::FLOOR),
+            );
+
+            map
+        })
+        .await?;
+
+    Ok(())
+}
+
+async fn wait(ctxt: &mut StepCtxt) -> Result<Result<(), ()>> {
+    ctxt.game
+        .poll(|ctxt| {
+            let Some(bot) = ctxt.world.bots().alive().iter().next() else {
+                return Poll::Ready(Ok(()));
+            };
+
+            if bot.pos == ivec2(10, 12) {
+                return Poll::Ready(Err(()));
+            }
+
+            Poll::Pending
+        })
+        .await
 }

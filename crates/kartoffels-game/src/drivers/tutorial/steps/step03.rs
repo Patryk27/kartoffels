@@ -21,25 +21,18 @@ static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
     ],
 });
 
-#[allow(clippy::while_let_loop)]
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     loop {
         match ctxt.run_dialog(&DIALOG).await? {
             "copy" => {
-                // Fake opening a dialog, so that we get access to the UI and
-                // can ask terminal to copy string for us.
-                //
-                // TODO HACK
-                ctxt.game
-                    .open_dialog(|ui| {
-                        ui.copy(CMD);
-                    })
-                    .await?;
+                ctxt.game.copy_to_clipboard(CMD).await?;
             }
 
-            _ => {
+            "ready" => {
                 break;
             }
+
+            _ => unreachable!(),
         }
     }
 

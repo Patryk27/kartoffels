@@ -4,6 +4,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use glam::IVec2;
 use kartoffels_vm as vm;
+use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -59,9 +60,10 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     }
 }
 
+// TODO move to `bots` system
 fn create_bot(
     world: &mut World,
-    src: Vec<u8>,
+    src: Cow<'static, [u8]>,
     pos: Option<IVec2>,
 ) -> Result<BotId> {
     let fw = vm::Firmware::new(&src)?;
@@ -85,6 +87,8 @@ fn create_bot(
             bot,
             requeued: false,
         });
+
+        _ = world.events.send(Arc::new(Event::BotCreated { id }));
 
         Ok(id)
     } else {

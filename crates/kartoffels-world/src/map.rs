@@ -138,23 +138,27 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub const fn new(base: u8) -> Self {
+    pub fn new(base: u8) -> Self {
         Self {
             base,
             meta: [0, 0, 0],
         }
     }
 
-    pub const fn is_void(&self) -> bool {
+    pub fn is_void(&self) -> bool {
         self.base == TileBase::VOID
     }
 
-    pub const fn is_floor(&self) -> bool {
+    pub fn is_floor(&self) -> bool {
         self.base == TileBase::FLOOR
     }
 
-    pub const fn is_wall(&self) -> bool {
+    pub fn is_wall(&self) -> bool {
         self.base == TileBase::WALL_H || self.base == TileBase::WALL_V
+    }
+
+    pub fn is_bot(&self) -> bool {
+        self.base == TileBase::BOT
     }
 }
 

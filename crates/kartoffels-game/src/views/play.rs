@@ -14,13 +14,12 @@ use crate::{DriverEvent, DriverEventRx};
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
-use futures_util::{stream, Stream};
+use futures_util::{stream, FutureExt, Stream};
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{theme, Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
-    SnapshotStreamExt,
+    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
@@ -30,10 +29,7 @@ use tokio::{select, time};
 
 pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     let mut state = State::default();
-
-    let mut snapshots: Box<
-        dyn Stream<Item = Arc<WorldSnapshot>> + Send + Unpin,
-    > = Box::new(stream::pending());
+    let mut snapshots: BoxedSnapshotStream = Box::new(stream::pending());
 
     loop {
         let mut resp = None;
@@ -77,16 +73,25 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
             Some(Either::Left(snapshot)) => {
                 state.handle_snapshot(snapshot);
             }
-
             Some(Either::Right(event)) => {
-                if let Some(new_snapshots) = state.handle_event(event).await? {
-                    snapshots = Box::new(new_snapshots);
-                }
+                state
+                    .handle_driver_event(event, term, &mut snapshots)
+                    .await?;
             }
-
             None => {
                 //
             }
+        }
+
+        // Opportunistically handle all pending driver events, to avoid
+        // redrawing UI in-between them.
+        //
+        // This exists not as an optimization, but rather to prevent unnecessary
+        // UI flashes e.g. when the driver closes and opens dialogs.
+        while let Some(event) = driver.recv().now_or_never().flatten() {
+            state
+                .handle_driver_event(event, term, &mut snapshots)
+                .await?;
         }
 
         state.poll();
@@ -193,19 +198,19 @@ impl State {
         }
     }
 
-    async fn handle_event(
+    async fn handle_driver_event(
         &mut self,
         event: DriverEvent,
-    ) -> Result<Option<SnapshotStream>> {
+        term: &mut Term,
+        snapshots: &mut BoxedSnapshotStream,
+    ) -> Result<()> {
         match event {
             DriverEvent::Join(handle) => {
-                let mut snapshots = handle.snapshots();
+                *snapshots = Box::new(handle.snapshots());
 
                 self.snapshot = snapshots.next_or_err().await?;
                 self.camera = self.snapshot.map().center();
                 self.handle = Some(handle);
-
-                return Ok(Some(snapshots));
             }
 
             DriverEvent::Pause => {
@@ -243,9 +248,13 @@ impl State {
             DriverEvent::Poll(f) => {
                 self.poll = Some(f);
             }
+
+            DriverEvent::CopyToClipboard(payload) => {
+                term.copy_to_clipboard(payload).await?;
+            }
         }
 
-        Ok(None)
+        Ok(())
     }
 
     fn poll(&mut self) {
@@ -329,6 +338,9 @@ enum Response {
     Map(MapResponse),
     SidePanel(SidePanelResponse),
 }
+
+type BoxedSnapshotStream =
+    Box<dyn Stream<Item = Arc<WorldSnapshot>> + Send + Unpin>;
 
 #[derive(Debug)]
 pub struct PollCtxt<'a> {

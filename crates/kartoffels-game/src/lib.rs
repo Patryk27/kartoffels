@@ -1,3 +1,4 @@
+mod bots;
 mod driver;
 mod drivers;
 mod utils;

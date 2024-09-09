@@ -28,7 +28,7 @@ static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::new("hmm, the bot seems to be still alive"),
+        DialogLine::new("hmm, your robot seems to be still alive"),
         DialogLine::new(""),
         DialogLine::new(
             "this wasn't a triumph, i'm making a note here, NOT a huge \
@@ -85,7 +85,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             Err(_) => {
                 ctxt.run_dialog(&DIALOG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.wait_until_bot_is_uploaded().await?;
+                ctxt.wait_until_bot_is_created().await?;
                 ctxt.game.set_help(None).await?;
             }
         }

@@ -12,8 +12,7 @@ toolbox *args:
         {{ args }}
 
 bot name:
-    cd backend \
-    && cargo build \
+    cargo build \
         -p bot-{{ name }} \
         --release \
         --target misc/riscv64-kartoffel-bot.json \
@@ -23,3 +22,7 @@ bot name:
 bots:
     just bot dummy
     just bot roberto
+
+web:
+    cd web \
+    && npm run dev

@@ -1,4 +1,4 @@
-use crate::{Abort, Clear, Ui};
+use crate::{Abort, Clear, Ui, UiLayout};
 use anyhow::{anyhow, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
@@ -163,28 +163,26 @@ impl Term {
                 .render(area, buf);
             })?;
         } else {
-            let mut to_copy = Vec::new();
+            let mut clipboard = Vec::new();
 
             self.term.draw(|frame| {
-                render(&mut Ui::new(
-                    self.ty,
-                    &self.waker,
+                let area = frame.area();
+
+                render(&mut Ui {
+                    ty: self.ty,
+                    waker: &self.waker,
                     frame,
-                    self.mouse.report().as_ref(),
-                    self.event.take().as_ref(),
-                    &mut to_copy,
-                ));
+                    area,
+                    mouse: self.mouse.report().as_ref(),
+                    event: self.event.take().as_ref(),
+                    clipboard: &mut clipboard,
+                    layout: UiLayout::Col,
+                    enabled: true,
+                });
             })?;
 
-            for payload in to_copy {
-                let cmd = OperatingSystemCommand::SetSelection(
-                    Selection::CLIPBOARD,
-                    payload,
-                )
-                .to_string()
-                .into_bytes();
-
-                self.stdout.send(cmd).await?;
+            for payload in clipboard {
+                self.copy_to_clipboard(payload).await?;
             }
         }
 
@@ -242,6 +240,15 @@ impl Term {
                 }
             }
         }
+
+        Ok(())
+    }
+
+    pub async fn copy_to_clipboard(&mut self, payload: String) -> Result<()> {
+        let cmd =
+            OperatingSystemCommand::SetSelection(Selection::CLIPBOARD, payload);
+
+        self.send(cmd.to_string().into_bytes()).await?;
 
         Ok(())
     }

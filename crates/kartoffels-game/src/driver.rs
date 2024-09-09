@@ -14,7 +14,7 @@ impl DrivenGame {
     const ERR: &'static str = "lost connection to the game";
 
     pub fn new() -> (Self, DriverEventRx) {
-        let (tx, rx) = mpsc::channel(1);
+        let (tx, rx) = mpsc::channel(4);
         let this = Self { tx };
 
         (this, rx)
@@ -106,6 +106,16 @@ impl DrivenGame {
         Ok(rx.await?)
     }
 
+    pub async fn copy_to_clipboard(
+        &self,
+        payload: impl Into<String>,
+    ) -> Result<()> {
+        self.send(DriverEvent::CopyToClipboard(payload.into()))
+            .await?;
+
+        Ok(())
+    }
+
     async fn send(&self, event: DriverEvent) -> Result<()> {
         self.tx
             .send(event)
@@ -130,4 +140,5 @@ pub enum DriverEvent {
     SetHelp(Option<HelpDialogRef>),
     SetStatus(Option<String>),
     Poll(PollFn),
+    CopyToClipboard(String),
 }

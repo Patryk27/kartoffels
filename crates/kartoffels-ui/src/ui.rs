@@ -14,41 +14,18 @@ use tokio::time::Interval;
 
 #[derive(Debug)]
 pub struct Ui<'a, 'b> {
-    ty: TermType,
-    waker: &'a Waker,
-    frame: &'a mut Frame<'b>,
-    area: Rect,
-    mouse: Option<&'a (UVec2, bool)>,
-    event: Option<&'a InputEvent>,
-    to_copy: &'a mut Vec<String>,
-    layout: UiLayout,
-    enabled: bool,
+    pub(super) ty: TermType,
+    pub(super) waker: &'a Waker,
+    pub(super) frame: &'a mut Frame<'b>,
+    pub(super) area: Rect,
+    pub(super) mouse: Option<&'a (UVec2, bool)>,
+    pub(super) event: Option<&'a InputEvent>,
+    pub(super) clipboard: &'a mut Vec<String>,
+    pub(super) layout: UiLayout,
+    pub(super) enabled: bool,
 }
 
 impl<'a, 'b> Ui<'a, 'b> {
-    pub fn new(
-        ty: TermType,
-        waker: &'a Waker,
-        frame: &'a mut Frame<'b>,
-        mouse: Option<&'a (UVec2, bool)>,
-        event: Option<&'a InputEvent>,
-        to_copy: &'a mut Vec<String>,
-    ) -> Self {
-        let area = frame.area();
-
-        Self {
-            ty,
-            waker,
-            frame,
-            area,
-            mouse,
-            event,
-            to_copy,
-            layout: UiLayout::Col,
-            enabled: true,
-        }
-    }
-
     pub fn ty(&self) -> TermType {
         self.ty
     }
@@ -81,7 +58,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             area: self.area,
             mouse: self.mouse,
             event: self.event,
-            to_copy: self.to_copy,
+            clipboard: self.clipboard,
             layout: self.layout,
             enabled: self.enabled,
         })
@@ -266,7 +243,7 @@ impl<'a, 'b> Ui<'a, 'b> {
     }
 
     pub fn copy(&mut self, payload: &str) {
-        self.to_copy.push(payload.to_owned());
+        self.clipboard.push(payload.to_owned());
     }
 }
 

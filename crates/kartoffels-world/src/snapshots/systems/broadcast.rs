@@ -1,5 +1,3 @@
-//! TODO avoid allocating new buffers every frame
-
 use crate::{
     Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
     SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileBase, World,
@@ -42,21 +40,23 @@ fn prepare_map(world: &World) -> Map {
         let pos = entry.pos;
         let dir = entry.bot.motor.dir;
 
-        map.set(
-            pos,
-            Tile {
-                base: TileBase::BOT,
-                meta: [idx as u8, 0, 0],
-            },
-        );
+        let tile = Tile {
+            base: TileBase::BOT,
+            meta: [idx as u8, 0, 0],
+        };
 
-        map.set(
-            pos + dir.as_vec(),
-            Tile {
-                base: TileBase::BOT_CHEVRON,
-                meta: [idx as u8, u8::from(dir), 0],
-            },
-        );
+        let chevron_pos = pos + dir.as_vec();
+
+        let chevron_tile = Tile {
+            base: TileBase::BOT_CHEVRON,
+            meta: [idx as u8, u8::from(dir), 0],
+        };
+
+        map.set(pos, tile);
+
+        if !map.get(chevron_pos).is_bot() {
+            map.set(chevron_pos, chevron_tile);
+        }
     }
 
     map

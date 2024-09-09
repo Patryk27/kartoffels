@@ -5,8 +5,8 @@ use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Dialog};
 use kartoffels_world::prelude::{
-    ArenaThemeConfig, Config, DeathmatchModeConfig, Event, EventStreamExt,
-    Handle, ModeConfig, Policy, SnapshotStreamExt, ThemeConfig,
+    ArenaThemeConfig, BotId, Config, DeathmatchModeConfig, Event,
+    EventStreamExt, Handle, ModeConfig, Policy, SnapshotStreamExt, ThemeConfig,
 };
 use std::task::Poll;
 use tokio::sync::oneshot;
@@ -74,18 +74,30 @@ impl StepCtxt {
         Ok(response)
     }
 
-    pub async fn wait_until_bot_is_uploaded(&self) -> Result<()> {
+    pub async fn wait_until_bot_is_created(&self) -> Result<BotId> {
+        let id = {
+            let mut events = self.world.events();
+
+            loop {
+                let event = events.next_or_err().await?;
+
+                if let Event::BotCreated { id } = &*event {
+                    break *id;
+                }
+            }
+        };
+
         self.game
-            .poll(|ctxt| {
-                if ctxt.world.bots().alive().is_empty() {
-                    Poll::Pending
-                } else {
+            .poll(move |ctxt| {
+                if ctxt.world.bots().alive().by_id(id).is_some() {
                     Poll::Ready(())
+                } else {
+                    Poll::Pending
                 }
             })
             .await?;
 
-        Ok(())
+        Ok(id)
     }
 
     pub async fn wait_until_bot_is_killed(&self) -> Result<()> {

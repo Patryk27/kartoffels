@@ -16,7 +16,7 @@ static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
         Line::raw("   oo████████oo ").fg(theme::YELLOW),
         Line::raw("   oo        oo ").fg(theme::YELLOW),
         Line::raw(""),
-        Line::raw("... and your job is to implement a firmware for it"),
+        Line::raw("... and your job is to implement a firmware for it!"),
         Line::raw(""),
         Line::md("you've got *64 khz cpu* & *128 kb ram* at hand and you can"),
         Line::raw("either compete against other players in the online play"),

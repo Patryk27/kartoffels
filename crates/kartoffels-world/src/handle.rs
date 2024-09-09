@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 use futures_util::Stream;
 use glam::IVec2;
 use kartoffels_utils::Id;
+use std::borrow::Cow;
 use std::future::Future;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
@@ -53,12 +54,17 @@ impl Handle {
 
     pub async fn create_bot(
         &self,
-        src: Vec<u8>,
+        src: impl Into<Cow<'static, [u8]>>,
         pos: Option<IVec2>,
     ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::CreateBot { src, pos, tx }).await?;
+        self.send(Request::CreateBot {
+            src: src.into(),
+            pos,
+            tx,
+        })
+        .await?;
 
         rx.await.context(Self::ERR)?
     }
@@ -124,7 +130,7 @@ pub enum Request {
     },
 
     CreateBot {
-        src: Vec<u8>,
+        src: Cow<'static, [u8]>,
         pos: Option<IVec2>,
         tx: oneshot::Sender<Result<BotId>>,
     },
