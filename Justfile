@@ -33,3 +33,7 @@ web:
 test:
     cd backend \
     && cargo test
+
+fmt:
+    cd backend \
+    && cargo fmt
