@@ -21,11 +21,10 @@ pub struct StepCtxt {
 impl StepCtxt {
     pub async fn new(store: &Store, game: DrivenGame) -> Result<Self> {
         game.set_perms(Permissions {
-            user_can_pause_world: false,
-            user_can_configure_world: false,
-            user_can_manage_bots: false,
-            sync_pause_mode: true,
             single_bot_mode: true,
+            sync_pause: true,
+            user_can_manage_bots: false,
+            user_can_pause_world: false,
         })
         .await?;
 

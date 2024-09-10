@@ -1,12 +1,10 @@
 mod bots;
-mod configure_world;
 mod error;
 mod help;
 mod join_bot;
 mod upload_bot;
 
 pub use self::bots::*;
-pub use self::configure_world::*;
 pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
@@ -20,12 +18,12 @@ use termwiz::input::{KeyCode, Modifiers};
 
 pub enum Dialog {
     Bots(BotsDialog),
-    ConfigureWorld(ConfigureWorldDialog),
-    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
     Error(ErrorDialog),
     Help(HelpDialogRef),
     JoinBot(JoinBotDialog),
     UploadBot(UploadBotDialog),
+
+    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
 }
 
 impl Dialog {
@@ -38,7 +36,6 @@ impl Dialog {
 
         match self {
             Dialog::Bots(this) => this.render(ui, world),
-            Dialog::ConfigureWorld(this) => this.render(ui),
             Dialog::Error(this) => this.render(ui),
             Dialog::JoinBot(this) => this.render(ui, world),
             Dialog::UploadBot(this) => this.render(ui),

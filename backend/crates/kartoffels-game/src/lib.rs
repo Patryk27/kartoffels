@@ -68,7 +68,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
                 let (tx, rx) = DrivenGame::new();
 
                 game = play::run(term, rx);
-                driver = Box::pin(drivers::sandbox::run(tx));
+                driver = Box::pin(drivers::sandbox::run(store, tx));
             }
 
             home::Response::Challenges => {

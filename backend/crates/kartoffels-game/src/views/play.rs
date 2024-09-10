@@ -279,7 +279,7 @@ impl State {
     async fn pause(&mut self, paused: bool) -> Result<()> {
         self.paused = paused;
 
-        if self.perms.sync_pause_mode {
+        if self.perms.sync_pause {
             if let Some(handle) = &self.handle {
                 handle.pause(self.paused).await?;
             }

@@ -22,7 +22,6 @@ impl BottomPanel {
             Self::render_pause_btn(ui, state, &mut resp);
             Self::render_help_btn(ui, state, &mut resp);
             Self::render_bots_btn(ui, state, &mut resp);
-            Self::render_configure_btn(ui, state, &mut resp);
         });
 
         Self::render_status(ui, state);
@@ -91,23 +90,6 @@ impl BottomPanel {
         }
     }
 
-    fn render_configure_btn(
-        ui: &mut Ui,
-        state: &State,
-        resp: &mut Option<BottomPanelResponse>,
-    ) {
-        if state.perms.user_can_configure_world {
-            ui.space(2);
-
-            if Button::new(KeyCode::Char('C'), "configure world")
-                .render(ui)
-                .pressed
-            {
-                *resp = Some(BottomPanelResponse::ConfigureWorld);
-            }
-        }
-    }
-
     fn render_status(ui: &mut Ui, state: &State) {
         if state.paused {
             let area = Rect {
@@ -145,7 +127,6 @@ pub enum BottomPanelResponse {
     Help,
     Pause,
     ListBots,
-    ConfigureWorld,
 }
 
 impl BottomPanelResponse {
@@ -170,10 +151,6 @@ impl BottomPanelResponse {
 
             BottomPanelResponse::ListBots => {
                 state.dialog = Some(Dialog::Bots(Default::default()));
-            }
-
-            BottomPanelResponse::ConfigureWorld => {
-                state.dialog = Some(Dialog::ConfigureWorld(Default::default()));
             }
         }
 
