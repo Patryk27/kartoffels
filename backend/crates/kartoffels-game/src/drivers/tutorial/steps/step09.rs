@@ -41,7 +41,7 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     ctxt.run_dialog(&DIALOG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
-    ctxt.wait_until_bot_is_created().await?;
+    ctxt.wait_until_bot_is_spawned().await?;
     ctxt.game.set_help(None).await?;
     ctxt.game.pause().await?;
 

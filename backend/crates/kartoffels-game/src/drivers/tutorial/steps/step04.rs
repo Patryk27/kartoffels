@@ -8,25 +8,26 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::new("faboulous!").fg(theme::PINK).bold(),
         DialogLine::new(""),
         DialogLine::new(
-            "launch vscode, vim, emacs or whatever makes your life colorful \
+            "now launch vscode, vim, emacs or whatever gives your life colors \
              and open `main.rs` from the cloned repository"
         ),
         DialogLine::new(""),
         DialogLine::new(
             "for, you see, writing a bot is similar to writing a regular rust \
-             program - but it's also different, mucho different",
+             program - but it's also different, _mucho_ different",
         ),
         DialogLine::new(""),
         DialogLine::new(
-            "like, _you-dont-have-access-to-standard-library_ different"
+            "like, you-dont-have-access-to-standard-library different"
         ),
         DialogLine::new(""),
         DialogLine::new(
-            "there's no `println!()`, no `std::fs` etc., everything a bot has \
-             access to is a bit of memory, motor, radar and serial port",
+            "this means there's no `println!()`, no `std::fs`, everything the \
+             robot has access to is a bit of memory, motor, radar and serial \
+             port",
         ),
         DialogLine::new(""),
-        DialogLine::new("you know, like the people in ancient rome did"),
+        DialogLine::new("you know, like people in ancient rome did"),
     ],
 
     buttons: vec![

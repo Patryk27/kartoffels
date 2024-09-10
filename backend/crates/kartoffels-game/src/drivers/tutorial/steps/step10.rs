@@ -10,7 +10,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::new(
             "by telling the robot to always move forward instead of driving in \
              squares, we should see the robot, well, moving forward and \
-             falling out of the map",
+             unknowingly falling out of the map",
         ),
         DialogLine::new(""),
         DialogLine::new(
@@ -75,6 +75,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
         )
         .await;
 
+        ctxt.destroy_bots().await?;
         ctxt.game.set_status(None).await?;
 
         match result {
@@ -85,7 +86,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             Err(_) => {
                 ctxt.run_dialog(&DIALOG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.wait_until_bot_is_created().await?;
+                ctxt.wait_until_bot_is_spawned().await?;
                 ctxt.game.set_help(None).await?;
             }
         }

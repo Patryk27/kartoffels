@@ -1,5 +1,5 @@
 use super::DialogResponse;
-use kartoffels_ui::{theme, Button, Spinner, Ui};
+use kartoffels_ui::{theme, Button, FromMarkdown, Spinner, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget, WidgetRef, Wrap};
@@ -12,18 +12,21 @@ use tokio::time;
 
 static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
     Paragraph::new(vec![
-        Line::raw("if you're following the standard template, run:"),
-        Line::raw(""),
-        Line::raw("    ./build --copy").fg(theme::WASHED_PINK),
-        Line::raw("  or").fg(theme::GRAY),
-        Line::raw("    ./build.bat --copy").fg(theme::WASHED_PINK),
-        Line::raw(""),
-        Line::raw("... and then paste your clipboard here (Ctrl+Shift+V, Cmd+V etc.) to upload the bot"),
-        Line::raw(""),
-        Line::raw("if you're not following the template, you have to build the *.elf file, base64-encode it and then paste it here, like:"),
-        Line::raw(""),
-        Line::raw("    cargo build --release").fg(theme::WASHED_PINK),
-        Line::raw("    base64 target/foo/bar | wl-copy").fg(theme::WASHED_PINK),
+        Line::md("if you're following the standard template, run:"),
+        Line::md(""),
+        Line::md("    ./build --copy"),
+        Line::md("  or").fg(theme::GRAY),
+        Line::md("    ./build.bat --copy"),
+        Line::md(""),
+        Line::md(
+            "... and then paste your clipboard here ([`Ctrl+Shift+V`], \
+             [`Cmd+V`] etc.) to upload the bot",
+        ),
+        Line::md(""),
+        Line::md(
+            "if you're not following the standard template, you better consult \
+             kartoffels wiki on github, you hacker",
+        ),
     ])
     .wrap(Wrap::default())
 });

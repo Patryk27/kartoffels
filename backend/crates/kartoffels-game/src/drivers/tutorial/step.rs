@@ -73,7 +73,7 @@ impl StepCtxt {
         Ok(response)
     }
 
-    pub async fn wait_until_bot_is_created(&self) -> Result<BotId> {
+    pub async fn wait_until_bot_is_spawned(&self) -> Result<BotId> {
         let id = {
             let mut events = self.world.events();
 

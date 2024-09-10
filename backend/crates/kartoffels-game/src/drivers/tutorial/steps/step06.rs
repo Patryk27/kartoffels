@@ -9,7 +9,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::new(""),
         DialogLine::new(
             "you, _[subject name here]_ must be the pride of _[subject \
-             hometown here]_.",
+             hometown here]_",
         )
     ],
 

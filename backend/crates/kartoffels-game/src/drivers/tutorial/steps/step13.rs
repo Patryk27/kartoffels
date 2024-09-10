@@ -98,7 +98,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     setup_map(ctxt).await?;
 
     loop {
-        ctxt.wait_until_bot_is_created().await?;
+        ctxt.wait_until_bot_is_spawned().await?;
         ctxt.game.set_status(Some("WATCHING".into())).await?;
 
         let outcome = wait(ctxt).await?;
@@ -160,11 +160,11 @@ async fn wait(ctxt: &mut StepCtxt) -> Result<Result<(), ()>> {
     ctxt.game
         .poll(|ctxt| {
             let Some(bot) = ctxt.world.bots().alive().iter().next() else {
-                return Poll::Ready(Ok(()));
+                return Poll::Ready(Err(()));
             };
 
             if bot.pos == ivec2(10, 12) {
-                return Poll::Ready(Err(()));
+                return Poll::Ready(Ok(()));
             }
 
             Poll::Pending

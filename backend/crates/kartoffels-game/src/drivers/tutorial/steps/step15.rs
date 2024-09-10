@@ -88,7 +88,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
         setup_map(ctxt).await?;
         setup_dummies(ctxt).await?;
 
-        let user_bot_id = ctxt.wait_until_bot_is_created().await?;
+        let user_bot_id = ctxt.wait_until_bot_is_spawned().await?;
 
         ctxt.game.set_status(Some("WATCHING".into())).await?;
 
