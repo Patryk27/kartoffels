@@ -30,7 +30,7 @@ impl StepCtxt {
         .await?;
 
         let world = store.create_world(Config {
-            name: "sandbox".into(),
+            name: "tutorial".into(),
             mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
                 round_duration: None,
             }),
