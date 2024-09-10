@@ -19,13 +19,15 @@ impl IdleSidePanel {
         .areas(ui.area());
 
         if !state.perms.single_bot_mode {
-            ui.clamp(join_area, |ui| {
-                if Button::new(KeyCode::Char('j'), "join bot")
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(SidePanelResponse::JoinBot);
-                }
+            ui.enable(!state.snapshot.bots().is_empty(), |ui| {
+                ui.clamp(join_area, |ui| {
+                    if Button::new(KeyCode::Char('j'), "join bot")
+                        .render(ui)
+                        .pressed
+                    {
+                        resp = Some(SidePanelResponse::JoinBot);
+                    }
+                });
             });
         }
 
