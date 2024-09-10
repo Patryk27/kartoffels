@@ -185,6 +185,12 @@ impl State {
             return;
         }
 
+        // If map size's changed, re-center the camera; this comes handy during
+        // tutorial where the driver changes maps.
+        if snapshot.map().size() != self.snapshot.map().size() {
+            self.camera = snapshot.map().center();
+        }
+
         self.snapshot = snapshot;
 
         if let Some(bot) = &mut self.bot {
@@ -211,6 +217,7 @@ impl State {
                 self.snapshot = snapshots.next_or_err().await?;
                 self.camera = self.snapshot.map().center();
                 self.handle = Some(handle);
+                self.bot = None;
             }
 
             DriverEvent::Pause => {

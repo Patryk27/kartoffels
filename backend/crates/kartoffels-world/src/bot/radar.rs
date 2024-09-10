@@ -164,9 +164,9 @@ mod tests {
         let map = {
             let mut map = Map::new(uvec2(7, 7));
 
+            map.rect(ivec2(0, 0), ivec2(6, 6), Tile::new(TileBase::FLOOR));
             map.set(ivec2(3, 1), Tile::new(TileBase::FLAG));
             map.set(ivec2(3, 2), Tile::new(TileBase::BOT));
-            map.rect(ivec2(0, 0), ivec2(6, 6), Tile::new(TileBase::FLOOR));
             map
         };
 

@@ -2217,6 +2217,7 @@ dependencies = [
 [[package]]
 name = "ratatui"
 version = "0.28.1"
+source = "git+https://github.com/ratatui/ratatui#5635b930c7196ef8f12824341a7bd8b7323aabcd"
 dependencies = [
  "bitflags 2.6.0",
  "cassowary",
@@ -2227,7 +2228,6 @@ dependencies = [
  "lru",
  "paste",
  "strum",
- "strum_macros",
  "unicode-segmentation",
  "unicode-truncate",
  "unicode-width",

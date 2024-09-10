@@ -2,9 +2,7 @@
 
 **[Kartoffels](https://kartoffels.pwy.io) is an MMO robot combat arena!**
 
-Implement your own bot, submit it and see it fight other bots in real-time:
-
-![](./readme/intro-v2.gif)
+TODO
 
 [Play it online!](https://kartoffels.pwy.io)
 

@@ -17,24 +17,19 @@ in
           default = self.packages.${pkgs.system}.backend;
         };
 
-        listen = mkOption {
-          type = types.str;
-          default = "127.0.0.1:8080";
-        };
-
         data = mkOption {
           type = types.str;
           default = "/var/lib/kartoffels";
         };
 
-        secret = mkOption {
+        http = mkOption {
           type = types.nullOr types.str;
-          default = null;
+          default = "0.0.0.0:81";
         };
 
-        debug = mkOption {
-          type = types.bool;
-          default = false;
+        ssh = mkOption {
+          type = types.nullOr types.str;
+          default = "0.0.0.0:22";
         };
       };
 
@@ -46,11 +41,23 @@ in
       };
 
       nginx = {
-        enable = mkEnableOption "nginx proxy for backend and frontend";
+        enable = mkEnableOption "nginx proxy";
 
         package = mkOption {
           type = types.package;
           default = pkgs.nginx;
+        };
+
+        listen = {
+          addr = mkOption {
+            type = types.str;
+            default = "0.0.0.0";
+          };
+
+          port = mkOption {
+            type = types.int;
+            default = 80;
+          };
         };
       };
     };
@@ -69,8 +76,10 @@ in
           default = true;
 
           listen = [
-            # TODO make configurable
-            { addr = "0.0.0.0"; port = 80; }
+            {
+              addr = cfg.nginx.listen.addr;
+              port = cfg.nginx.listen.port;
+            }
           ];
 
           locations = {
@@ -78,8 +87,8 @@ in
               root = "${cfg.frontend.package}";
             };
 
-            "/api/" = {
-              proxyPass = "http://${cfg.backend.listen}/";
+            "/api" = {
+              proxyPass = "http://${cfg.backend.http}/";
               proxyWebsockets = true;
             };
           };
@@ -92,10 +101,9 @@ in
         mkdir -p "${cfg.backend.data}"
 
         ${cfg.backend.package}/bin/kartoffels serve \
-            --listen ${cfg.backend.listen} \
-            --data ${cfg.backend.data} \
-            ${optionalString (cfg.backend.secret != null) "--secret '${cfg.backend.secret}'"} \
-            ${optionalString cfg.backend.debug "--debug"}
+            '${cfg.backend.data}' \
+            ${optionalString (cfg.backend.http != null) "--http ${cfg.backend.http}"} \
+            ${optionalString (cfg.backend.ssh != null) "--ssh ${cfg.backend.ssh}"}
       '';
 
       wantedBy = [ "multi-user.target" ];

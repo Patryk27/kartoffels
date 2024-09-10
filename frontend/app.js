@@ -31,7 +31,7 @@ document.fonts.ready.then(() => {
     }
   });
 
-  const socket = new WebSocket("ws://localhost:1313");
+  const socket = new WebSocket(`${import.meta.env.VITE_API_URL}`);
 
   socket.onopen = () => {
     term.loadAddon(

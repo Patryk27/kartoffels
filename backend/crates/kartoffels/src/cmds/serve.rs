@@ -35,9 +35,6 @@ pub struct ServeCmd {
 
     #[clap(long)]
     debug: bool,
-
-    #[clap(long)]
-    quiet: bool,
 }
 
 impl ServeCmd {
@@ -52,14 +49,10 @@ impl ServeCmd {
             filter.to_owned()
         });
 
-        if self.quiet {
-            println!("starting");
-        } else {
-            tracing_subscriber::fmt()
-                .event_format(fmt::format::Format::default().without_time())
-                .with_env_filter(filter)
-                .init();
-        }
+        tracing_subscriber::fmt()
+            .event_format(fmt::format::Format::default().without_time())
+            .with_env_filter(filter)
+            .init();
 
         for line in LOGO.lines() {
             info!("{}", line);
@@ -71,56 +64,54 @@ impl ServeCmd {
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?
-            .block_on(async move {
-                let store =
-                    Store::open(&self.data).await.with_context(|| {
-                        format!(
-                            "couldn't load store from `{}`",
-                            self.data.display()
-                        )
-                    })?;
+            .block_on(self.start())
+    }
 
-                let store = Arc::new(store);
-                let shutdown = CancellationToken::new();
+    async fn start(self) -> Result<()> {
+        let store = Store::open(&self.data).await.with_context(|| {
+            format!("couldn't load store from `{}`", self.data.display())
+        })?;
 
-                let http = {
-                    let store = store.clone();
-                    let shutdown = shutdown.clone();
+        let store = Arc::new(store);
+        let shutdown = CancellationToken::new();
 
-                    async {
-                        if let Some(addr) = &self.http {
-                            http::start(addr, store, shutdown).await
-                        } else {
-                            Ok(())
-                        }
-                    }
-                };
+        let http = {
+            let store = store.clone();
+            let shutdown = shutdown.clone();
 
-                let ssh = {
-                    let store = store.clone();
-                    let shutdown = shutdown.clone();
-
-                    async {
-                        if let Some(addr) = &self.ssh {
-                            ssh::start(addr, store, shutdown).await
-                        } else {
-                            Ok(())
-                        }
-                    }
-                };
-
-                let shutdown = async {
-                    wait_for_shutdown().await;
-                    shutdown.cancel();
-                    store.close().await?;
-
+            async {
+                if let Some(addr) = &self.http {
+                    http::start(addr, store, shutdown).await
+                } else {
                     Ok(())
-                };
+                }
+            }
+        };
 
-                try_join!(http, ssh, shutdown)?;
+        let ssh = {
+            let store = store.clone();
+            let shutdown = shutdown.clone();
 
-                Ok(())
-            })
+            async {
+                if let Some(addr) = &self.ssh {
+                    ssh::start(addr, store, shutdown).await
+                } else {
+                    Ok(())
+                }
+            }
+        };
+
+        let shutdown = async {
+            wait_for_shutdown().await;
+            shutdown.cancel();
+            store.close().await?;
+
+            Ok(())
+        };
+
+        try_join!(http, ssh, shutdown)?;
+
+        Ok(())
     }
 }
 
