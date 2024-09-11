@@ -14,26 +14,35 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
     body: vec![
-        DialogLine::new("welcome to kartoffels 🫡"),
+        DialogLine::new("hey there and welcome to kartoffels 🫡"),
         DialogLine::new(""),
-        // TODO
-        // DialogLine::raw("you're in the online-play mode, which means [...]"),
         DialogLine::new(
-            "if you're into tutorials, just go back to the main menu and \
-             press [`t`] - otherwise, here's a couple of tips:",
+            "you're in the *online mode*, which means that you're playing \
+             against bots programmed by other people, deathmatch-style",
         ),
+        DialogLine::new(""),
+        DialogLine::new(
+            "if you want to learn how to create your own bot, go back to the \
+             main menu and press [`t`] - but here's the spirit:"
+        ),
+        DialogLine::new(""),
+        DialogLine::new("# rules"),
+        DialogLine::new(""),
+        DialogLine::new("- your bot gets a point for each bot killed"),
+        DialogLine::new("- unless the upload queue is full, each killed bot gets"),
+        DialogLine::new("  auto-respawned upon death, to keep the party going"),
         DialogLine::new(""),
         DialogLine::new("# controls"),
         DialogLine::new(""),
-        DialogLine::new("- use mouse or keyboard"),
-        DialogLine::new("- press [`w`/`a`/`s`/`d`] (or arrows) to navigate the map"),
+        DialogLine::new("- use mouse and/or keyboard"),
         DialogLine::new("- press [`u`] to upload a bot"),
-        DialogLine::new("- click on any bot to join it"),
+        DialogLine::new("- press [`w`/`a`/`s`/`d`] or arrow keys to move the camera"),
+        DialogLine::new("- click on any bot visible on map to join it"),
         DialogLine::new(""),
         DialogLine::new("# uploading a bot"),
         DialogLine::new(""),
         DialogLine::new(format!(
-            "run `{}` and consult README.md for further instructions",
+            "run `{}` and consult `README.md` for further instructions",
             CMD,
         )),
     ],
