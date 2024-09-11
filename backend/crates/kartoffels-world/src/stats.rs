@@ -23,26 +23,19 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     }
 
-    let msgs = [
-        format!(
-            "alive-bots = {} / {}",
-            world.bots.alive.len(),
-            world.policy.max_alive_bots
-        ),
-        format!(
-            "queued-bots = {} / {}",
-            world.bots.queued.len(),
-            world.policy.max_queued_bots
-        ),
-        format!("connections = {}", world.snapshots.receiver_count()),
-        format!("vcpu = {} khz", state.ticks / 1_000),
-    ];
+    let alive =
+        format!("{}/{}", world.bots.alive.len(), world.policy.max_alive_bots);
 
-    debug!(target: "kartoffels", "status:");
+    let queued = format!(
+        "{}/{}",
+        world.bots.queued.len(),
+        world.policy.max_queued_bots
+    );
 
-    for msg in msgs {
-        debug!(target: "kartoffels", "> {}", msg);
-    }
+    let conns = world.snapshots.receiver_count();
+    let vcpu = format!("{} khz", state.ticks / 1_000);
+
+    debug!(?alive, ?queued, ?conns, ?vcpu, "status");
 
     state.ticks = 0;
     state.next_run_at = next_run_at();
