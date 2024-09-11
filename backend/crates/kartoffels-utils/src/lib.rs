@@ -1,5 +1,4 @@
 #![feature(array_chunks)]
-#![feature(const_option)]
 
 mod asserter;
 mod cbor_transcoding;

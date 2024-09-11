@@ -1,14 +1,9 @@
-#![feature(map_try_insert)]
-
-mod cmds;
-
-use self::cmds::*;
 use anyhow::Result;
 use clap::Parser;
 
 #[derive(Debug, Parser)]
 pub enum Cmd {
-    Serve(ServeCmd),
+    Serve(kartoffels_server::Cmd),
 }
 
 fn main() -> Result<()> {

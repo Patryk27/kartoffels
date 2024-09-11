@@ -35,7 +35,7 @@ pub fn run(world: &mut World, state: &mut State) {
     let conns = world.snapshots.receiver_count();
     let vcpu = format!("{} khz", state.ticks / 1_000);
 
-    debug!(?alive, ?queued, ?conns, ?vcpu, "status");
+    debug!(?alive, ?queued, ?conns, ?vcpu);
 
     state.ticks = 0;
     state.next_run_at = next_run_at();

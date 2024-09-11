@@ -1,3 +1,5 @@
+#![feature(map_try_insert)]
+
 mod http;
 mod ssh;
 
@@ -24,7 +26,7 @@ const LOGO: &str = indoc! {r#"
 "#};
 
 #[derive(Debug, Parser)]
-pub struct ServeCmd {
+pub struct Cmd {
     data: PathBuf,
 
     #[clap(long)]
@@ -34,10 +36,13 @@ pub struct ServeCmd {
     ssh: Option<SocketAddr>,
 
     #[clap(long)]
+    debug: bool,
+
+    #[clap(long)]
     log_time: bool,
 }
 
-impl ServeCmd {
+impl Cmd {
     pub fn run(self) -> Result<()> {
         self.init_tracing();
         self.print_logo();
@@ -49,8 +54,13 @@ impl ServeCmd {
     }
 
     fn init_tracing(&self) {
-        let filter =
-            env::var("RUST_LOG").unwrap_or_else(|_| "kartoffels=info".into());
+        let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
+            if self.debug {
+                "kartoffels=debug".into()
+            } else {
+                "kartoffels=info".into()
+            }
+        });
 
         if self.log_time {
             tracing_subscriber::fmt()

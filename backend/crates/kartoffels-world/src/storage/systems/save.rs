@@ -5,7 +5,7 @@ use maybe_owned::MaybeOwned;
 use std::future::Future;
 use std::time::{Duration, Instant};
 use tokio::{runtime, task};
-use tracing::{debug, Instrument, Span};
+use tracing::{debug, Instrument};
 
 pub struct State {
     task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
@@ -70,7 +70,7 @@ pub fn run_now(world: &mut World, state: &mut State, wait: bool) {
 
             Ok(())
         }
-        .instrument(Span::current()),
+        .in_current_span(),
     )
     .map(|result| result.context("task crashed")?);
 

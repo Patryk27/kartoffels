@@ -12,10 +12,16 @@ use tokio::{select, task};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::StreamExt;
 use tokio_util::sync::CancellationToken;
-use tracing::info;
+use tracing::{info, info_span, Instrument, Span};
 
 #[derive(Debug)]
-pub enum AppChannel {
+pub struct AppChannel {
+    state: AppChannelState,
+    span: Span,
+}
+
+#[derive(Debug)]
+enum AppChannelState {
     AwaitingPty {
         store: Arc<Store>,
         shutdown: CancellationToken,
@@ -27,12 +33,22 @@ pub enum AppChannel {
 }
 
 impl AppChannel {
-    pub fn new(store: Arc<Store>, shutdown: CancellationToken) -> Self {
-        AppChannel::AwaitingPty { store, shutdown }
+    pub fn new(
+        id: ChannelId,
+        store: Arc<Store>,
+        shutdown: CancellationToken,
+        span: &Span,
+    ) -> Self {
+        let state = AppChannelState::AwaitingPty { store, shutdown };
+        let span = info_span!(parent: span, "chan", %id);
+
+        info!(parent: &span, "channel opened");
+
+        Self { state, span }
     }
 
     pub async fn data(&mut self, data: &[u8]) -> Result<()> {
-        let AppChannel::Ready { stdin_tx } = self else {
+        let AppChannelState::Ready { stdin_tx } = &mut self.state else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
@@ -51,7 +67,8 @@ impl AppChannel {
         height: u32,
         session: &mut Session,
     ) -> Result<()> {
-        let AppChannel::AwaitingPty { store, shutdown } = self else {
+        let AppChannelState::AwaitingPty { store, shutdown } = &mut self.state
+        else {
             return Err(anyhow!("pty has been already allocated"));
         };
 
@@ -62,42 +79,48 @@ impl AppChannel {
         let (mut term, stdin_tx) =
             Self::create_term(handle.clone(), id, width, height).await?;
 
-        let result = task::spawn(async move {
-            kartoffels_game::main(&mut term, &store).await
-        });
+        let result = task::spawn(
+            async move { kartoffels_game::main(&mut term, &store).await }
+                .instrument(self.span.clone()),
+        );
 
-        task::spawn(async move {
-            let result = select! {
-                result = result => Some(result),
-                _ = shutdown.cancelled() => None,
-            };
+        task::spawn(
+            async move {
+                let result = select! {
+                    result = result => Some(result),
+                    _ = shutdown.cancelled() => None,
+                };
 
-            _ = handle
-                .data(id, Term::leave_cmds().into_bytes().into())
-                .await;
+                _ = handle
+                    .data(id, Term::leave_cmds().into_bytes().into())
+                    .await;
 
-            match result {
-                Some(Ok(result)) => {
-                    info!("ui task finished: {:?}", result);
+                match result {
+                    Some(Ok(result)) => {
+                        info!("ui task finished: {:?}", result);
+                    }
+
+                    Some(Err(err)) => {
+                        info!("ui task crashed: {}", err);
+
+                        _ = handle.data(id, Term::crashed_msg().into()).await;
+                    }
+
+                    None => {
+                        info!("ui task aborted: shutting down");
+
+                        _ = handle
+                            .data(id, Term::shutting_down_msg().into())
+                            .await;
+                    }
                 }
 
-                Some(Err(err)) => {
-                    info!("ui task crashed: {}", err);
-
-                    _ = handle.data(id, Term::crashed_msg().into()).await;
-                }
-
-                None => {
-                    info!("ui task aborted: shutting down");
-
-                    _ = handle.data(id, Term::shutting_down_msg().into()).await;
-                }
+                _ = handle.close(id).await;
             }
+            .instrument(self.span.clone()),
+        );
 
-            _ = handle.close(id).await;
-        });
-
-        *self = AppChannel::Ready { stdin_tx };
+        self.state = AppChannelState::Ready { stdin_tx };
 
         Ok(())
     }
@@ -107,7 +130,7 @@ impl AppChannel {
         width: u32,
         height: u32,
     ) -> Result<()> {
-        let AppChannel::Ready { stdin_tx, .. } = self else {
+        let AppChannelState::Ready { stdin_tx } = &mut self.state else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
@@ -151,5 +174,11 @@ impl AppChannel {
                 .await?;
 
         Ok((term, stdin_tx))
+    }
+}
+
+impl Drop for AppChannel {
+    fn drop(&mut self) {
+        info!(parent: &self.span, "channel closed");
     }
 }

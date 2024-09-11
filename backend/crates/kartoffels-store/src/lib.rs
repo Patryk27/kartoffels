@@ -1,4 +1,3 @@
-#![feature(map_try_insert)]
 #![feature(try_blocks)]
 
 use anyhow::{Context, Result};

@@ -9,6 +9,7 @@ members = [
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
     "crates/kartoffels-game",
+    "crates/kartoffels-server",
     "crates/kartoffels-store",
     "crates/kartoffels-ui",
     "crates/kartoffels-utils",

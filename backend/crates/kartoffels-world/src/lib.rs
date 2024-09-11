@@ -70,7 +70,7 @@ use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
-use tracing::{debug, info, span, Level};
+use tracing::{debug, info, info_span};
 
 pub fn create(config: Config, path: Option<&Path>) -> Handle {
     let mut rng = SmallRng::from_entropy();
@@ -174,7 +174,7 @@ struct World {
 impl World {
     fn spawn(mut self, id: Id) {
         let rt = TokioHandle::current();
-        let span = span!(Level::INFO, "world", %id);
+        let span = info_span!("world", %id);
 
         thread::spawn(move || {
             let _rt = rt.enter();

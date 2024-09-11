@@ -41,7 +41,6 @@ pub async fn start(
 
     let mut server = AppServer::new(store, shutdown.clone());
     let server = server.run_on_address(config, addr);
-
     let shutdown = shutdown.cancelled();
 
     let result = {

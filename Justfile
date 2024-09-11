@@ -13,6 +13,26 @@ toolbox *args:
            toolbox \
            {{ args }}
 
+web:
+    cd frontend \
+    && npm run dev
+
+# ------------------------------------------------------------------------------
+
+check:
+    cd backend \
+    && cargo check
+
+fmt:
+    cd backend \
+    && cargo fmt
+
+test:
+    cd backend \
+    && cargo test
+
+# ------------------------------------------------------------------------------
+
 bot name:
     cd backend \
     && cargo build \
@@ -25,15 +45,3 @@ bot name:
 bots:
     just bot dummy
     just bot roberto
-
-web:
-    cd frontend \
-    && npm run dev
-
-test:
-    cd backend \
-    && cargo test
-
-fmt:
-    cd backend \
-    && cargo fmt

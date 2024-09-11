@@ -1361,29 +1361,9 @@ dependencies = [
 name = "kartoffels"
 version = "0.3.0"
 dependencies = [
- "ahash",
  "anyhow",
- "axum",
  "clap",
- "ed25519-dalek",
- "futures-util",
- "glam",
- "indoc",
- "itertools 0.12.1",
- "kartoffels-game",
- "kartoffels-store",
- "kartoffels-ui",
- "kartoffels-world",
- "rand",
- "russh",
- "russh-keys",
- "termwiz",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tower-http",
- "tracing",
- "tracing-subscriber",
+ "kartoffels-server",
 ]
 
 [[package]]
@@ -1425,6 +1405,34 @@ dependencies = [
  "termwiz",
  "tokio",
  "tokio-stream",
+]
+
+[[package]]
+name = "kartoffels-server"
+version = "0.3.0"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "axum",
+ "clap",
+ "ed25519-dalek",
+ "futures-util",
+ "glam",
+ "indoc",
+ "itertools 0.12.1",
+ "kartoffels-game",
+ "kartoffels-store",
+ "kartoffels-ui",
+ "kartoffels-world",
+ "rand",
+ "russh",
+ "russh-keys",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

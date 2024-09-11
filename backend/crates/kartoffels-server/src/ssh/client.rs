@@ -8,27 +8,28 @@ use russh::{Channel, ChannelId, Pty};
 use russh_keys::key::PublicKey;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
-use tracing::{info, instrument};
+use tracing::{info, info_span, Span};
 
 #[derive(Debug)]
 pub struct AppClient {
-    addr: String,
     store: Arc<Store>,
     shutdown: CancellationToken,
     channels: AHashMap<ChannelId, AppChannel>,
+    span: Span,
 }
 
 impl AppClient {
-    #[instrument(skip(store, shutdown))]
     pub fn new(
         addr: String,
         store: Arc<Store>,
         shutdown: CancellationToken,
     ) -> Self {
-        info!("connection opened");
+        let span = info_span!("ssh", %addr);
+
+        info!(parent: &span, "connection opened");
 
         Self {
-            addr,
+            span,
             store,
             shutdown,
             channels: Default::default(),
@@ -46,22 +47,20 @@ impl AppClient {
 impl server::Handler for AppClient {
     type Error = Error;
 
-    #[instrument(
-        skip(self, channel),
-        fields(addr = ?self.addr, channel = channel.id().to_string())
-    )]
     async fn channel_open_session(
         &mut self,
         channel: Channel<Msg>,
         _: &mut Session,
     ) -> Result<bool> {
-        let app_channel =
-            AppChannel::new(self.store.clone(), self.shutdown.clone());
+        let app_channel = AppChannel::new(
+            channel.id(),
+            self.store.clone(),
+            self.shutdown.clone(),
+            &self.span,
+        );
 
         let created =
             self.channels.try_insert(channel.id(), app_channel).is_ok();
-
-        info!("channel opened");
 
         if created {
             Ok(true)
@@ -73,15 +72,12 @@ impl server::Handler for AppClient {
         }
     }
 
-    #[instrument(skip(self), fields(addr = ?self.addr))]
     async fn channel_close(
         &mut self,
         channel: ChannelId,
         _: &mut Session,
     ) -> Result<()> {
         if self.channels.remove(&channel).is_some() {
-            info!("channel closed");
-
             Ok(())
         } else {
             Err(anyhow!("channel `{}` has been already closed", channel))
