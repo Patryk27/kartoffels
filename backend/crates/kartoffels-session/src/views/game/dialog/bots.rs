@@ -1,4 +1,4 @@
-use crate::views::play::Event;
+use crate::views::game::Event;
 use crate::BotIdExt;
 use kartoffels_ui::{Button, RectExt, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};

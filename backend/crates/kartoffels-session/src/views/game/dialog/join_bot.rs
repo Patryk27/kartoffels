@@ -1,4 +1,4 @@
-use crate::views::play::Event;
+use crate::views::game::Event;
 use kartoffels_ui::{Button, Caret, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::text::{Line, Span};

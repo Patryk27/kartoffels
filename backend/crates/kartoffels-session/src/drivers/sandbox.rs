@@ -1,4 +1,4 @@
-use crate::views::play::{HelpDialog, HelpDialogResponse, Permissions};
+use crate::views::game::{HelpDialog, HelpDialogResponse, Permissions};
 use crate::DrivenGame;
 use anyhow::Result;
 use glam::uvec2;

@@ -1,4 +1,4 @@
-use crate::views::play::Event;
+use crate::views::game::Event;
 use kartoffels_ui::{theme, Button, Ui};
 use termwiz::input::KeyCode;
 

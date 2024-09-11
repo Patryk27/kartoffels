@@ -1,4 +1,4 @@
-use crate::views::play::{HelpDialog, HelpDialogResponse};
+use crate::views::game::{HelpDialog, HelpDialogResponse};
 use crate::DrivenGame;
 use anyhow::Result;
 use kartoffels_ui::{Dialog, DialogButton, DialogLine};

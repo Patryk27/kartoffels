@@ -1,4 +1,4 @@
-use crate::views::play::Event;
+use crate::views::game::Event;
 use kartoffels_ui::{theme, Button, FromMarkdown, Spinner, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};

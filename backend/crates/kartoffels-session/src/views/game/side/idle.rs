@@ -1,4 +1,4 @@
-use crate::views::play::{Event, State};
+use crate::views::game::{Event, State};
 use kartoffels_ui::{Button, Ui};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;

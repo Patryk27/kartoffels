@@ -1,4 +1,4 @@
-use crate::views::play::{Event, JoinedBot, State};
+use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
 use itertools::Either;
 use kartoffels_ui::{theme, Button, RectExt, Ui};

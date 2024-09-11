@@ -1,53 +1,66 @@
-mod intro;
-mod world_selection;
+mod header;
+mod menu;
 
+use self::header::*;
+use self::menu::*;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::Store;
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::Handle as WorldHandle;
+use ratatui::layout::{Constraint, Layout};
 
-pub async fn run(
-    term: &mut Term,
-    store: &Store,
-    bg: &mut Background,
-) -> Result<Response> {
+pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
     loop {
-        match intro::run(term, store, bg).await? {
-            intro::Response::Online => {
-                if let world_selection::Response::Some(world) =
-                    world_selection::run(term, store, bg).await?
-                {
-                    return Ok(Response::Online(world));
-                } else {
-                    continue;
-                }
-            }
+        let resp = term
+            .draw(|ui| {
+                let [_, area, _] = Layout::horizontal([
+                    Constraint::Fill(1),
+                    Constraint::Length(Header::width()),
+                    Constraint::Fill(1),
+                ])
+                .areas(ui.area());
 
-            intro::Response::Sandbox => {
-                return Ok(Response::Sandbox);
-            }
+                let [_, header_area, _, menu_area, _] = Layout::vertical([
+                    Constraint::Fill(1),
+                    Constraint::Length(Header::height()),
+                    Constraint::Fill(1),
+                    Constraint::Length(Menu::height(ui)),
+                    Constraint::Fill(1),
+                ])
+                .areas(area);
 
-            intro::Response::Tutorial => {
-                return Ok(Response::Tutorial);
-            }
+                let [_, menu_area, _] = Layout::horizontal([
+                    Constraint::Fill(1),
+                    Constraint::Length(Menu::width()),
+                    Constraint::Fill(1),
+                ])
+                .areas(menu_area);
 
-            intro::Response::Challenges => {
-                return Ok(Response::Challenges);
-            }
+                bg.render(ui);
 
-            intro::Response::Quit => {
-                return Ok(Response::Quit);
-            }
+                ui.clamp(header_area, |ui| {
+                    Header::render(ui);
+                });
+
+                ui.clamp(menu_area, |ui| {
+                    Menu::render(ui);
+                });
+
+                ui.catch()
+            })
+            .await?
+            .flatten();
+
+        term.poll().await?;
+
+        if let Some(resp) = resp {
+            return Ok(resp);
         }
     }
 }
 
 #[derive(Debug)]
 pub enum Response {
-    Online(WorldHandle),
-    Sandbox,
+    Play,
     Tutorial,
-    Challenges,
     Quit,
 }

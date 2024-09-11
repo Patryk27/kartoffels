@@ -1,4 +1,4 @@
-use crate::views::play::Permissions;
+use crate::views::game::Permissions;
 use crate::DrivenGame;
 use anyhow::Result;
 use glam::ivec2;
