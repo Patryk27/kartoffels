@@ -1,4 +1,4 @@
-use super::DialogResponse;
+use crate::views::play::Event;
 use crate::BotIdExt;
 use kartoffels_ui::{Button, RectExt, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
@@ -20,13 +20,7 @@ impl BotsDialog {
         7,                    // score
     ];
 
-    pub fn render(
-        &mut self,
-        ui: &mut Ui,
-        world: &Snapshot,
-    ) -> Option<DialogResponse> {
-        let mut resp = None;
-
+    pub fn render(&mut self, ui: &mut Ui, world: &Snapshot) {
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
         let height = ui.area().height - 2;
 
@@ -68,6 +62,8 @@ impl BotsDialog {
                     {
                         *self.table.offset_mut() =
                             self.table.offset().saturating_sub(8);
+
+                        ui.repaint();
                     }
 
                     ui.space(2);
@@ -78,18 +74,17 @@ impl BotsDialog {
                     {
                         *self.table.offset_mut() =
                             self.table.offset().saturating_add(8);
+
+                        ui.repaint();
                     }
 
                     ui.space(2);
 
-                    if Button::new(KeyCode::Escape, "close").render(ui).pressed
-                    {
-                        resp = Some(DialogResponse::Close);
-                    }
+                    Button::new(KeyCode::Escape, "close")
+                        .throwing(Event::CloseDialog)
+                        .render(ui);
                 });
             });
         });
-
-        resp
     }
 }

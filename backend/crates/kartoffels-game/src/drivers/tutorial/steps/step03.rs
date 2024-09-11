@@ -10,7 +10,7 @@ static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
         DialogLine::new("look at you, learning so fast - *NEXT LESSON!*"),
         DialogLine::new(""),
         DialogLine::new("run this:"),
-        DialogLine::new(format!("    {}", CMD)),
+        DialogLine::new(format!("    {CMD}")),
         DialogLine::new(""),
         DialogLine::new("... and press [`enter`] once you're ready"),
     ],

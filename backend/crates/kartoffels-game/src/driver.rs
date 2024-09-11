@@ -1,4 +1,4 @@
-use crate::play::{HelpDialogRef, Permissions, PollCtxt, PollFn};
+use crate::views::play::{HelpDialogRef, Permissions, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::Ui;
 use kartoffels_world::prelude::Handle as WorldHandle;

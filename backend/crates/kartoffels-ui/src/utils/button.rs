@@ -7,9 +7,10 @@ use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
-pub struct Button<'a> {
+pub struct Button<'a, E = ()> {
     pub key: KeyCode,
     pub label: Cow<'a, str>,
+    pub throwing: Option<E>,
     pub alignment: Alignment,
     pub enabled: bool,
 }
@@ -19,11 +20,27 @@ impl<'a> Button<'a> {
         Self {
             key,
             label: label.into(),
+            throwing: None,
             alignment: Alignment::Left,
             enabled: true,
         }
     }
 
+    pub fn throwing<E>(self, event: E) -> Button<'a, E> {
+        Button {
+            key: self.key,
+            label: self.label,
+            throwing: Some(event),
+            alignment: self.alignment,
+            enabled: self.enabled,
+        }
+    }
+}
+
+impl<'a, E> Button<'a, E>
+where
+    E: 'static,
+{
     pub fn centered(mut self) -> Self {
         self.alignment = Alignment::Center;
         self
@@ -43,12 +60,12 @@ impl<'a> Button<'a> {
         (Self::key_name(self.key).len() + self.label.len() + 3) as u16
     }
 
-    pub fn render(&self, ui: &mut Ui) -> ButtonResponse {
+    pub fn render(self, ui: &mut Ui) -> ButtonResponse {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
 
-        let key = Button::key_name(self.key);
+        let key = Self::key_name(self.key);
         let label = &*self.label;
 
         Line::from_iter([
@@ -63,6 +80,12 @@ impl<'a> Button<'a> {
             ui.space(area.width);
         } else {
             ui.space(area.height);
+        }
+
+        if resp.pressed {
+            if let Some(event) = self.throwing {
+                ui.throw(event);
+            }
         }
 
         resp

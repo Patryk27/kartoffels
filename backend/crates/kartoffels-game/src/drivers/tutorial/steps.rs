@@ -18,7 +18,7 @@ pub mod step16;
 mod prelude {
     pub(super) use crate::bots;
     pub(super) use crate::drivers::tutorial::StepCtxt;
-    pub(super) use crate::play::{HelpDialog, HelpDialogResponse};
+    pub(super) use crate::views::play::{HelpDialog, HelpDialogResponse};
     pub(super) use anyhow::Result;
     pub(super) use glam::{ivec2, uvec2};
     pub(super) use kartoffels_ui::{theme, Dialog, DialogButton, DialogLine};

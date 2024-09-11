@@ -15,11 +15,9 @@ pub struct Dialog<T> {
 
 impl<T> Dialog<T>
 where
-    T: Clone,
+    T: Clone + 'static,
 {
-    pub fn render(&self, ui: &mut Ui) -> Option<T> {
-        let mut resp = None;
-
+    pub fn render(&self, ui: &mut Ui) {
         let body = {
             let text: Text = self
                 .body
@@ -40,14 +38,12 @@ where
 
             ui.row(|ui| {
                 for button in &self.buttons {
-                    if button.btn.render(ui).pressed {
-                        resp = Some(button.resp.clone());
+                    if button.btn.clone().render(ui).pressed {
+                        ui.throw(button.resp.clone());
                     }
                 }
             });
         });
-
-        resp
     }
 }
 

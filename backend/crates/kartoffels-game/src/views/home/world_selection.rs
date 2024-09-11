@@ -13,42 +13,41 @@ pub async fn run(
     bg: &mut Background,
 ) -> Result<Response> {
     loop {
-        let mut resp = None;
+        let resp = term
+            .draw(|ui| {
+                let width = 40;
+                let height = (store.worlds.len() + 4) as u16;
 
-        term.draw(|ui| {
-            let width = 40;
-            let height = (store.worlds.len() + 4) as u16;
+                bg.render(ui);
 
-            bg.render(ui);
+                ui.info_window(width, height, Some(" online play "), |ui| {
+                    ui.line(Line::raw("choose world:").centered());
+                    ui.space(1);
 
-            ui.info_window(width, height, Some(" online play "), |ui| {
-                ui.line(Line::raw("choose world:").centered());
-                ui.space(1);
+                    for (idx, world) in store.worlds.iter().enumerate() {
+                        let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-                for (idx, world) in store.worlds.iter().enumerate() {
-                    let key = KeyCode::Char((b'1' + (idx as u8)) as char);
-
-                    if Button::new(key, world.name())
-                        .centered()
-                        .render(ui)
-                        .pressed
-                    {
-                        resp = Some(Response::OnlinePlay(world.to_owned()));
+                        if Button::new(key, world.name())
+                            .centered()
+                            .render(ui)
+                            .pressed
+                        {
+                            ui.throw(Response::Some(world.to_owned()));
+                        }
                     }
-                }
 
-                ui.space(1);
+                    ui.space(1);
 
-                if Button::new(KeyCode::Escape, "go back")
-                    .centered()
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(Response::GoBack);
-                }
-            });
-        })
-        .await?;
+                    Button::new(KeyCode::Escape, "go back")
+                        .throwing(Response::None)
+                        .centered()
+                        .render(ui);
+                });
+
+                ui.catch()
+            })
+            .await?
+            .flatten();
 
         if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
@@ -62,6 +61,6 @@ pub async fn run(
 
 #[derive(Debug)]
 pub enum Response {
-    OnlinePlay(WorldHandle),
-    GoBack,
+    Some(WorldHandle),
+    None,
 }

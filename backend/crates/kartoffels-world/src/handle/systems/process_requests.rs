@@ -12,8 +12,12 @@ use tokio::sync::mpsc::error::TryRecvError;
 pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     loop {
         match world.rx.try_recv() {
-            Ok(Request::Pause { paused }) => {
-                world.paused = paused;
+            Ok(Request::Pause) => {
+                world.paused = true;
+            }
+
+            Ok(Request::Resume) => {
+                world.paused = false;
             }
 
             Ok(Request::Shutdown { tx }) => {

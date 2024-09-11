@@ -1,6 +1,4 @@
-use super::SidePanelResponse;
-use crate::play::State;
-use crate::views::play::JoinedBot;
+use crate::views::play::{Event, JoinedBot, State};
 use crate::BotIdExt;
 use itertools::Either;
 use kartoffels_ui::{theme, Button, RectExt, Ui};
@@ -16,11 +14,7 @@ use termwiz::input::KeyCode;
 pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
-    pub fn render(
-        ui: &mut Ui,
-        state: &State,
-        bot: &JoinedBot,
-    ) -> Option<SidePanelResponse> {
+    pub fn render(ui: &mut Ui, state: &State, bot: &JoinedBot) {
         ui.line("id".underlined());
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
@@ -45,7 +39,7 @@ impl JoinedSidePanel {
 
         ui.clamp(ui.area().footer(footer_height), |ui| {
             Self::render_footer(ui, state, bot)
-        })
+        });
     }
 
     fn render_alive_bot(
@@ -97,22 +91,12 @@ impl JoinedSidePanel {
         });
     }
 
-    fn render_footer(
-        ui: &mut Ui,
-        state: &State,
-        bot: &JoinedBot,
-    ) -> Option<SidePanelResponse> {
-        let mut resp = None;
-
+    fn render_footer(ui: &mut Ui, state: &State, bot: &JoinedBot) {
         if state.perms.single_bot_mode {
-            #[allow(clippy::collapsible_if)]
             if state.perms.user_can_manage_bots {
-                if Button::new(KeyCode::Char('D'), "destroy")
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(SidePanelResponse::DestroyBot);
-                }
+                Button::new(KeyCode::Char('D'), "destroy")
+                    .throwing(Event::DestroyBot)
+                    .render(ui);
             }
         } else {
             let follow_caption = if bot.is_followed {
@@ -121,42 +105,31 @@ impl JoinedSidePanel {
                 "follow"
             };
 
-            if Button::new(KeyCode::Char('f'), follow_caption)
-                .render(ui)
-                .pressed
-            {
-                resp = Some(SidePanelResponse::FollowBot);
-            }
+            Button::new(KeyCode::Char('f'), follow_caption)
+                .throwing(Event::FollowBot)
+                .render(ui);
 
-            if Button::new(KeyCode::Char('i'), "history")
-                .render(ui)
-                .pressed
-            {
-                resp = Some(SidePanelResponse::ShowBotHistory);
+            // TODO
+            if false {
+                Button::new(KeyCode::Char('i'), "history")
+                    .throwing(Event::ShowBotHistoryDialog)
+                    .render(ui);
             }
 
             if state.perms.user_can_manage_bots {
-                if Button::new(KeyCode::Char('R'), "restart")
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(SidePanelResponse::RestartBot);
-                }
+                Button::new(KeyCode::Char('R'), "restart")
+                    .throwing(Event::RestartBot)
+                    .render(ui);
 
-                if Button::new(KeyCode::Char('D'), "destroy")
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(SidePanelResponse::DestroyBot);
-                }
+                Button::new(KeyCode::Char('D'), "destroy")
+                    .throwing(Event::DestroyBot)
+                    .render(ui);
             }
 
-            if Button::new(KeyCode::Char('l'), "leave").render(ui).pressed {
-                resp = Some(SidePanelResponse::LeaveBot);
-            }
+            Button::new(KeyCode::Char('l'), "leave")
+                .throwing(Event::LeaveBot)
+                .render(ui);
         }
-
-        resp
     }
 }
 

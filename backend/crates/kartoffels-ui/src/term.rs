@@ -19,12 +19,13 @@ use std::mem;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Waker;
+use std::time::Instant;
 use termwiz::escape::osc::Selection;
 use termwiz::escape::OperatingSystemCommand;
 use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
 use tokio::select;
 use tokio::sync::Notify;
-use tracing::warn;
+use tracing::{trace, warn};
 
 pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send>>;
@@ -145,10 +146,12 @@ impl Term {
         self.size
     }
 
-    pub async fn draw<F>(&mut self, render: F) -> Result<()>
+    pub async fn draw<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
-        F: FnOnce(&mut Ui),
+        F: FnOnce(&mut Ui) -> T,
     {
+        let mut resp = None;
+
         self.fps.tick();
 
         if self.size.x < 50 || self.size.y < 30 {
@@ -172,7 +175,7 @@ impl Term {
             self.term.draw(|frame| {
                 let area = frame.area();
 
-                render(&mut Ui {
+                resp = Some(render(&mut Ui {
                     ty: self.ty,
                     waker: &self.waker,
                     frame,
@@ -182,7 +185,8 @@ impl Term {
                     clipboard: &mut clipboard,
                     layout: UiLayout::Col,
                     enabled: true,
-                });
+                    thrown: &mut None,
+                }));
             })?;
 
             for payload in clipboard {
@@ -192,7 +196,7 @@ impl Term {
 
         self.flush().await?;
 
-        Ok(())
+        Ok(resp)
     }
 
     pub async fn poll(&mut self) -> Result<()> {
@@ -250,9 +254,11 @@ impl Term {
 
     pub async fn copy_to_clipboard(&mut self, payload: String) -> Result<()> {
         let cmd =
-            OperatingSystemCommand::SetSelection(Selection::CLIPBOARD, payload);
+            OperatingSystemCommand::SetSelection(Selection::CLIPBOARD, payload)
+                .to_string()
+                .into_bytes();
 
-        self.send(cmd.to_string().into_bytes()).await?;
+        self.send(cmd).await?;
 
         Ok(())
     }
@@ -269,7 +275,6 @@ impl Term {
         if writer.flushed {
             writer.flushed = false;
 
-            // TODO could be more efficient using async mutex
             self.stdout.send(mem::take(&mut writer.buffer)).await?;
         }
 

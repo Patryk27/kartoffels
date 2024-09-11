@@ -38,8 +38,14 @@ impl Handle {
         WatchStream::new(self.inner.snapshots.subscribe())
     }
 
-    pub async fn pause(&self, paused: bool) -> Result<()> {
-        self.send(Request::Pause { paused }).await?;
+    pub async fn pause(&self) -> Result<()> {
+        self.send(Request::Pause).await?;
+
+        Ok(())
+    }
+
+    pub async fn resume(&self) -> Result<()> {
+        self.send(Request::Resume).await?;
 
         Ok(())
     }
@@ -121,9 +127,8 @@ pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
 pub enum Request {
-    Pause {
-        paused: bool,
-    },
+    Pause,
+    Resume,
 
     Shutdown {
         tx: oneshot::Sender<()>,
@@ -155,7 +160,7 @@ pub enum Request {
 
 // ---
 
-pub type EventStream = impl Stream<Item = Arc<Event>> + Send + Sync + Unpin;
+pub type EventStream = impl Stream<Item = Arc<Event>> + Send + Unpin;
 
 pub trait EventStreamExt {
     fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Event>>>;
@@ -172,8 +177,10 @@ where
 
 // ---
 
-pub type SnapshotStream =
-    impl Stream<Item = Arc<Snapshot>> + Send + Sync + Unpin;
+pub type SnapshotStream = impl Stream<Item = Arc<Snapshot>> + Send + Unpin;
+
+pub type BoxedSnapshotStream =
+    Box<dyn Stream<Item = Arc<Snapshot>> + Send + Unpin>;
 
 pub trait SnapshotStreamExt {
     fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Snapshot>>>;

@@ -1,4 +1,4 @@
-use super::DialogResponse;
+use crate::views::play::Event;
 use kartoffels_ui::{theme, Button, FromMarkdown, Spinner, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
@@ -38,9 +38,7 @@ pub struct UploadBotDialog {
 }
 
 impl UploadBotDialog {
-    pub fn render(&mut self, ui: &mut Ui) -> Option<DialogResponse> {
-        let mut resp = None;
-
+    pub fn render(&mut self, ui: &mut Ui) {
         if ui.ty().is_ssh() {
             let width = cmp::min(ui.area().width - 10, 60);
             let text_height = TEXT.line_count(width) as u16;
@@ -88,9 +86,9 @@ impl UploadBotDialog {
                     }
                 }
 
-                if Button::new(KeyCode::Escape, "cancel").render(ui).pressed {
-                    resp = Some(DialogResponse::Close);
-                }
+                Button::new(KeyCode::Escape, "cancel")
+                    .throwing(Event::CloseDialog)
+                    .render(ui);
             });
         }
 
@@ -98,12 +96,10 @@ impl UploadBotDialog {
             if src.is_empty() {
                 // A bit hacky, but that's the most sane way for the http
                 // frontend to inform us that user has cancelled the uploading
-                resp = Some(DialogResponse::Close);
+                ui.throw(Event::CloseDialog);
             } else {
-                resp = Some(DialogResponse::UploadBot(src.to_owned()));
+                ui.throw(Event::UploadBot(src.to_owned()));
             }
         }
-
-        resp
     }
 }

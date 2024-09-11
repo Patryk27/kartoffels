@@ -6,11 +6,13 @@ use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
 use ratatui::Frame;
+use std::any::Any;
 use std::future::Future;
 use std::pin::pin;
 use std::task::{Context, Poll, Waker};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::time::Interval;
+use tokio::task;
+use tokio::time::{self, Interval};
 
 #[derive(Debug)]
 pub struct Ui<'a, 'b> {
@@ -23,6 +25,7 @@ pub struct Ui<'a, 'b> {
     pub(super) clipboard: &'a mut Vec<String>,
     pub(super) layout: UiLayout,
     pub(super) enabled: bool,
+    pub(super) thrown: &'a mut Option<Box<dyn Any>>,
 }
 
 impl<'a, 'b> Ui<'a, 'b> {
@@ -61,6 +64,7 @@ impl<'a, 'b> Ui<'a, 'b> {
             clipboard: self.clipboard,
             layout: self.layout,
             enabled: self.enabled,
+            thrown: self.thrown,
         })
     }
 
@@ -223,6 +227,15 @@ impl<'a, 'b> Ui<'a, 'b> {
         }
     }
 
+    pub fn repaint(&self) {
+        let waker = self.waker.clone();
+
+        task::spawn(async move {
+            time::sleep(theme::INTERACTION_TIME).await;
+            waker.wake();
+        });
+    }
+
     pub fn poll<F>(&mut self, mut f: F) -> Poll<F::Output>
     where
         F: Future,
@@ -244,6 +257,23 @@ impl<'a, 'b> Ui<'a, 'b> {
 
     pub fn copy(&mut self, payload: &str) {
         self.clipboard.push(payload.to_owned());
+    }
+
+    pub fn throw(&mut self, event: impl Any + 'static) {
+        *self.thrown = Some(Box::new(event));
+    }
+
+    pub fn catch<T>(&mut self) -> Option<T>
+    where
+        T: 'static,
+    {
+        match self.thrown.take()?.downcast() {
+            Ok(event) => Some(*event),
+            Err(event) => {
+                *self.thrown = Some(event);
+                None
+            }
+        }
     }
 }
 

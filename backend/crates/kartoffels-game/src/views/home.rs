@@ -1,36 +1,35 @@
-mod background;
 mod intro;
 mod world_selection;
 
-use self::background::*;
+use crate::Background;
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::Handle as WorldHandle;
 
-pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
-    let mut bg = Background::new(term);
-
+pub async fn run(
+    term: &mut Term,
+    store: &Store,
+    bg: &mut Background,
+) -> Result<Response> {
     loop {
-        match intro::run(term, store, &mut bg).await? {
-            intro::Response::OnlinePlay => {
-                match world_selection::run(term, store, &mut bg).await? {
-                    world_selection::Response::OnlinePlay(world) => {
-                        return Ok(Response::Play(world));
-                    }
-
-                    world_selection::Response::GoBack => {
-                        continue;
-                    }
+        match intro::run(term, store, bg).await? {
+            intro::Response::Online => {
+                if let world_selection::Response::Some(world) =
+                    world_selection::run(term, store, bg).await?
+                {
+                    return Ok(Response::Online(world));
+                } else {
+                    continue;
                 }
-            }
-
-            intro::Response::Tutorial => {
-                return Ok(Response::Tutorial);
             }
 
             intro::Response::Sandbox => {
                 return Ok(Response::Sandbox);
+            }
+
+            intro::Response::Tutorial => {
+                return Ok(Response::Tutorial);
             }
 
             intro::Response::Challenges => {
@@ -46,9 +45,9 @@ pub async fn run(term: &mut Term, store: &Store) -> Result<Response> {
 
 #[derive(Debug)]
 pub enum Response {
-    Play(WorldHandle),
-    Tutorial,
+    Online(WorldHandle),
     Sandbox,
+    Tutorial,
     Challenges,
     Quit,
 }

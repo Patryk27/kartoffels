@@ -16,43 +16,45 @@ pub async fn run(
     bg: &mut Background,
 ) -> Result<Response> {
     loop {
-        let mut resp = None;
+        let resp = term
+            .draw(|ui| {
+                let [_, area, _] = Layout::horizontal([
+                    Constraint::Fill(1),
+                    Constraint::Length(Header::width()),
+                    Constraint::Fill(1),
+                ])
+                .areas(ui.area());
 
-        term.draw(|ui| {
-            let [_, area, _] = Layout::horizontal([
-                Constraint::Fill(1),
-                Constraint::Length(Header::width()),
-                Constraint::Fill(1),
-            ])
-            .areas(ui.area());
+                let [_, header_area, _, menu_area, _] = Layout::vertical([
+                    Constraint::Fill(1),
+                    Constraint::Length(Header::height()),
+                    Constraint::Fill(1),
+                    Constraint::Length(Menu::height(ui, store)),
+                    Constraint::Fill(1),
+                ])
+                .areas(area);
 
-            let [_, header_area, _, menu_area, _] = Layout::vertical([
-                Constraint::Fill(1),
-                Constraint::Length(Header::height()),
-                Constraint::Fill(1),
-                Constraint::Length(Menu::height(ui, store)),
-                Constraint::Fill(1),
-            ])
-            .areas(area);
+                let [_, menu_area, _] = Layout::horizontal([
+                    Constraint::Fill(1),
+                    Constraint::Length(Menu::width()),
+                    Constraint::Fill(1),
+                ])
+                .areas(menu_area);
 
-            let [_, menu_area, _] = Layout::horizontal([
-                Constraint::Fill(1),
-                Constraint::Length(Menu::width()),
-                Constraint::Fill(1),
-            ])
-            .areas(menu_area);
+                bg.render(ui);
 
-            bg.render(ui);
+                ui.clamp(header_area, |ui| {
+                    Header::render(ui);
+                });
 
-            ui.clamp(header_area, |ui| {
-                Header::render(ui);
-            });
+                ui.clamp(menu_area, |ui| {
+                    Menu::render(ui, store);
+                });
 
-            ui.clamp(menu_area, |ui| {
-                resp = Menu::render(ui, store);
-            });
-        })
-        .await?;
+                ui.catch()
+            })
+            .await?
+            .flatten();
 
         if let Some(resp) = resp {
             time::sleep(theme::INTERACTION_TIME).await;
@@ -66,9 +68,9 @@ pub async fn run(
 
 #[derive(Debug)]
 pub enum Response {
-    OnlinePlay,
-    Tutorial,
+    Online,
     Sandbox,
+    Tutorial,
     Challenges,
     Quit,
 }

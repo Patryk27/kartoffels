@@ -1,4 +1,4 @@
-use crate::play::Permissions;
+use crate::views::play::Permissions;
 use crate::DrivenGame;
 use anyhow::Result;
 use glam::ivec2;
@@ -20,13 +20,7 @@ pub struct StepCtxt {
 
 impl StepCtxt {
     pub async fn new(store: &Store, game: DrivenGame) -> Result<Self> {
-        game.set_perms(Permissions {
-            single_bot_mode: true,
-            sync_pause: true,
-            user_can_manage_bots: false,
-            user_can_pause_world: false,
-        })
-        .await?;
+        game.set_perms(Permissions::TUTORIAL).await?;
 
         let world = store.create_world(Config {
             name: "tutorial".into(),
@@ -56,7 +50,9 @@ impl StepCtxt {
 
         self.game
             .open_dialog(move |ui| {
-                if let Some(resp) = dialog.render(ui) {
+                dialog.render(ui);
+
+                if let Some(resp) = ui.catch() {
                     if let Some(tx) = tx.take() {
                         _ = tx.send(resp);
                     }
@@ -64,13 +60,13 @@ impl StepCtxt {
             })
             .await?;
 
-        let response = rx.await?;
+        let resp = rx.await?;
 
         time::sleep(theme::INTERACTION_TIME).await;
 
         self.game.close_dialog().await?;
 
-        Ok(response)
+        Ok(resp)
     }
 
     pub async fn wait_until_bot_is_spawned(&self) -> Result<BotId> {

@@ -23,63 +23,44 @@ impl Menu {
         height
     }
 
-    pub fn render(ui: &mut Ui, store: &Store) -> Option<Response> {
-        let mut resp = None;
-
+    pub fn render(ui: &mut Ui, store: &Store) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
             if !store.worlds.is_empty() {
-                if Button::new(KeyCode::Char('o'), "online play")
+                Button::new(KeyCode::Char('o'), "online play")
+                    .throwing(Response::Online)
                     .centered()
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(Response::OnlinePlay);
-                }
+                    .render(ui);
 
                 ui.space(1);
             }
 
-            if Button::new(KeyCode::Char('s'), "sandbox")
+            Button::new(KeyCode::Char('s'), "sandbox")
+                .throwing(Response::Sandbox)
                 .centered()
-                .render(ui)
-                .pressed
-            {
-                resp = Some(Response::Sandbox);
-            }
+                .render(ui);
 
-            if Button::new(KeyCode::Char('t'), "tutorial")
+            Button::new(KeyCode::Char('t'), "tutorial")
+                .throwing(Response::Tutorial)
                 .centered()
-                .render(ui)
-                .pressed
-            {
-                resp = Some(Response::Tutorial);
-            }
+                .render(ui);
 
-            if Button::new(KeyCode::Char('c'), "challenges")
+            Button::new(KeyCode::Char('c'), "challenges")
+                .throwing(Response::Challenges)
                 .centered()
-                .render(ui)
-                .pressed
-            {
-                resp = Some(Response::Challenges);
-            }
+                .render(ui);
 
             if ui.ty().is_ssh() {
                 ui.space(1);
 
-                if Button::new(KeyCode::Escape, "quit")
+                Button::new(KeyCode::Escape, "quit")
+                    .throwing(Response::Quit)
                     .centered()
-                    .render(ui)
-                    .pressed
-                {
-                    resp = Some(Response::Quit);
-                }
+                    .render(ui);
             }
         });
-
-        resp
     }
 }

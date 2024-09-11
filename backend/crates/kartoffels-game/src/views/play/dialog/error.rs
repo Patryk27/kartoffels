@@ -1,4 +1,4 @@
-use super::DialogResponse;
+use crate::views::play::Event;
 use kartoffels_ui::{Button, RectExt, Ui};
 use ratatui::widgets::{Paragraph, Widget};
 use termwiz::input::KeyCode;
@@ -13,7 +13,7 @@ impl ErrorDialog {
         Self { error }
     }
 
-    pub fn render(&self, ui: &mut Ui) -> Option<DialogResponse> {
+    pub fn render(&self, ui: &mut Ui) {
         let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
         let width = 50;
         let height = text.line_count(width) as u16 + 2;
@@ -22,16 +22,11 @@ impl ErrorDialog {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(1), |ui| {
-                if Button::new(KeyCode::Enter, "close")
+                Button::new(KeyCode::Enter, "close")
+                    .throwing(Event::CloseDialog)
                     .right_aligned()
-                    .render(ui)
-                    .pressed
-                {
-                    Some(DialogResponse::Close)
-                } else {
-                    None
-                }
-            })
-        })
+                    .render(ui);
+            });
+        });
     }
 }

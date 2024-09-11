@@ -1,32 +1,26 @@
-use super::State;
+use super::{Event, State};
 use crate::BotIdExt;
-use anyhow::Result;
-use glam::{ivec2, IVec2};
+use glam::ivec2;
 use kartoffels_ui::{theme, Ui};
-use kartoffels_world::prelude::{BotId, Dir, Tile, TileBase};
+use kartoffels_world::prelude::{Dir, Tile, TileBase};
 use ratatui::layout::Rect;
-use std::ops::ControlFlow;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 use termwiz::input::{KeyCode, Modifiers};
+use tokio::time::{self, Interval};
 
 #[derive(Debug)]
-pub struct Map;
+pub struct Map {
+    pub blink_active: bool,
+    pub blink_interval: Interval,
+}
 
 impl Map {
-    pub fn render(ui: &mut Ui, state: &State) -> Option<MapResponse> {
-        let mut resp = None;
-
-        Self::render_tiles(ui, state, &mut resp);
-        Self::process_keys(ui, &mut resp);
-
-        resp
+    pub fn render(ui: &mut Ui, state: &mut State) {
+        Self::render_tiles(ui, state);
+        Self::process_keys(ui);
     }
 
-    fn render_tiles(
-        ui: &mut Ui,
-        state: &State,
-        resp: &mut Option<MapResponse>,
-    ) {
+    fn render_tiles(ui: &mut Ui, state: &mut State) {
         let area = ui.area();
 
         let offset =
@@ -47,18 +41,13 @@ impl Map {
                         .map()
                         .get(offset + ivec2(dx as i32, dy as i32));
 
-                    Self::render_tile(ui, state, tile, resp);
+                    Self::render_tile(ui, state, tile);
                 });
             }
         }
     }
 
-    fn render_tile(
-        ui: &mut Ui,
-        state: &State,
-        tile: Tile,
-        resp: &mut Option<MapResponse>,
-    ) {
+    fn render_tile(ui: &mut Ui, state: &mut State, tile: Tile) {
         let ch;
         let mut fg;
         let mut bg;
@@ -123,7 +112,7 @@ impl Map {
         };
 
         if ui.enabled() {
-            if state.paused && tile.base != TileBase::BOT {
+            if state.is_paused() && tile.base != TileBase::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
@@ -142,23 +131,24 @@ impl Map {
                     bg = theme::GREEN;
 
                     if ui.mouse_pressed() {
-                        *resp = Some(MapResponse::JoinBot(id));
+                        ui.throw(Event::JoinBot(id));
                     }
-                } else if let Some(bot) = &state.bot {
-                    if bot.id == id {
-                        let blink = SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_millis()
-                            % 1000
-                            >= 500;
-
-                        if blink {
-                            fg = theme::BG;
-                            bg = theme::GREEN;
-                        }
+                } else {
+                    #[allow(clippy::collapsible_else_if)]
+                    if let Some(bot) = &state.bot
+                        && bot.id == id
+                        && state.map.blink_active
+                    {
+                        fg = theme::BG;
+                        bg = theme::GREEN;
                     }
                 }
+            }
+
+            if state.bot.is_some()
+                && ui.poll_interval(&mut state.map.blink_interval)
+            {
+                state.map.blink_active = !state.map.blink_active;
             }
         }
 
@@ -167,7 +157,7 @@ impl Map {
         ui.buf()[pos].set_symbol(ch).set_fg(fg).set_bg(bg);
     }
 
-    fn process_keys(ui: &Ui, resp: &mut Option<MapResponse>) {
+    fn process_keys(ui: &mut Ui) {
         if !ui.enabled() {
             return;
         }
@@ -177,51 +167,34 @@ impl Map {
         if ui.key(KeyCode::Char('w'), Modifiers::NONE)
             || ui.key(KeyCode::UpArrow, Modifiers::NONE)
         {
-            *resp = Some(MapResponse::MoveCamera(ivec2(0, -offset.y)));
+            ui.throw(Event::MoveCamera(ivec2(0, -offset.y)));
         }
 
         if ui.key(KeyCode::Char('a'), Modifiers::NONE)
             || ui.key(KeyCode::LeftArrow, Modifiers::NONE)
         {
-            *resp = Some(MapResponse::MoveCamera(ivec2(-offset.x, 0)));
+            ui.throw(Event::MoveCamera(ivec2(-offset.x, 0)));
         }
 
         if ui.key(KeyCode::Char('s'), Modifiers::NONE)
             || ui.key(KeyCode::DownArrow, Modifiers::NONE)
         {
-            *resp = Some(MapResponse::MoveCamera(ivec2(0, offset.y)));
+            ui.throw(Event::MoveCamera(ivec2(0, offset.y)));
         }
 
         if ui.key(KeyCode::Char('d'), Modifiers::NONE)
             || ui.key(KeyCode::RightArrow, Modifiers::NONE)
         {
-            *resp = Some(MapResponse::MoveCamera(ivec2(offset.x, 0)));
+            ui.throw(Event::MoveCamera(ivec2(offset.x, 0)));
         }
     }
 }
 
-#[derive(Debug)]
-pub enum MapResponse {
-    MoveCamera(IVec2),
-    JoinBot(BotId),
-}
-
-impl MapResponse {
-    pub fn handle(self, state: &mut State) -> Result<ControlFlow<(), ()>> {
-        match self {
-            MapResponse::MoveCamera(delta) => {
-                state.camera += delta;
-
-                if let Some(bot) = &mut state.bot {
-                    bot.is_followed = false;
-                }
-            }
-
-            MapResponse::JoinBot(id) => {
-                state.join_bot(id);
-            }
+impl Default for Map {
+    fn default() -> Self {
+        Self {
+            blink_active: true,
+            blink_interval: time::interval(Duration::from_millis(500)),
         }
-
-        Ok(ControlFlow::Continue(()))
     }
 }

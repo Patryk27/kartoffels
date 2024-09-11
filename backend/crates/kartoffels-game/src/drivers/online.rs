@@ -1,4 +1,4 @@
-use crate::play::{HelpDialog, HelpDialogResponse};
+use crate::views::play::{HelpDialog, HelpDialogResponse};
 use crate::DrivenGame;
 use anyhow::Result;
 use kartoffels_ui::{Dialog, DialogButton, DialogLine};
@@ -42,8 +42,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("# uploading a bot"),
         DialogLine::new(""),
         DialogLine::new(format!(
-            "run `{}` and consult `README.md` for further instructions",
-            CMD,
+            "run `{CMD}` and consult `README.md` for further instructions",
         )),
     ],
 

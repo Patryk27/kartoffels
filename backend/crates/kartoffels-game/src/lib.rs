@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 mod bots;
 mod driver;
 mod drivers;
@@ -6,7 +8,6 @@ mod views;
 
 use self::driver::*;
 use self::utils::*;
-use self::views::*;
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::Store;
@@ -45,23 +46,19 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
 }
 
 async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
+    use self::views::*;
+
     loop {
         let game;
-        let driver: Pin<Box<dyn Future<Output = _> + Send + Sync>>;
+        let driver: Pin<Box<dyn Future<Output = _> + Send>>;
+        let mut bg = Background::new(term);
 
-        match home::run(term, store).await? {
-            home::Response::Play(world) => {
+        match home::run(term, store, &mut bg).await? {
+            home::Response::Online(world) => {
                 let (tx, rx) = DrivenGame::new();
 
                 game = play::run(term, rx);
                 driver = Box::pin(drivers::online::run(world, tx));
-            }
-
-            home::Response::Tutorial => {
-                let (tx, rx) = DrivenGame::new();
-
-                game = play::run(term, rx);
-                driver = Box::pin(drivers::tutorial::run(store, tx));
             }
 
             home::Response::Sandbox => {
@@ -71,8 +68,16 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
                 driver = Box::pin(drivers::sandbox::run(store, tx));
             }
 
+            home::Response::Tutorial => {
+                let (tx, rx) = DrivenGame::new();
+
+                game = play::run(term, rx);
+                driver = Box::pin(drivers::tutorial::run(store, tx));
+            }
+
             home::Response::Challenges => {
-                todo!();
+                challenges::run(term, &mut bg).await?;
+                continue;
             }
 
             home::Response::Quit => {
