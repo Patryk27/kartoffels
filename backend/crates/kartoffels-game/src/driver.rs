@@ -46,7 +46,7 @@ impl DrivenGame {
 
     pub async fn update_perms(
         &self,
-        f: impl FnOnce(&mut Permissions) + Send + Sync + 'static,
+        f: impl FnOnce(&mut Permissions) + Send + 'static,
     ) -> Result<()> {
         self.send(DriverEvent::UpdatePerms(Box::new(f))).await?;
 
@@ -55,7 +55,7 @@ impl DrivenGame {
 
     pub async fn open_dialog(
         &self,
-        dialog: impl FnMut(&mut Ui) + Send + Sync + 'static,
+        dialog: impl FnMut(&mut Ui) + Send + 'static,
     ) -> Result<()> {
         self.send(DriverEvent::OpenDialog(Box::new(dialog))).await?;
 
@@ -82,7 +82,7 @@ impl DrivenGame {
 
     pub async fn poll<T>(
         &self,
-        mut f: impl FnMut(PollCtxt) -> Poll<T> + Send + Sync + 'static,
+        mut f: impl FnMut(PollCtxt) -> Poll<T> + Send + 'static,
     ) -> Result<T>
     where
         T: Send + 'static,
@@ -134,8 +134,8 @@ pub enum DriverEvent {
     Pause,
     Resume,
     SetPerms(Permissions),
-    UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send + Sync>),
-    OpenDialog(Box<dyn FnMut(&mut Ui) + Send + Sync>),
+    UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send>),
+    OpenDialog(Box<dyn FnMut(&mut Ui) + Send>),
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),
     SetStatus(Option<String>),

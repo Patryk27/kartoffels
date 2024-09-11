@@ -26,8 +26,8 @@ use tokio::select;
 use tokio::sync::Notify;
 use tracing::warn;
 
-pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send + Sync>>;
-pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send + Sync>>;
+pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send>>;
+pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send>>;
 
 pub struct Term {
     ty: TermType,

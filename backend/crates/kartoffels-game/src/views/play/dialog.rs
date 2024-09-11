@@ -23,7 +23,7 @@ pub enum Dialog {
     JoinBot(JoinBotDialog),
     UploadBot(UploadBotDialog),
 
-    Custom(Box<dyn FnMut(&mut Ui) + Send + Sync>),
+    Custom(Box<dyn FnMut(&mut Ui) + Send>),
 }
 
 impl Dialog {
