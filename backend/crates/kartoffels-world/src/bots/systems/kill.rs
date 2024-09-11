@@ -21,7 +21,7 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
     {
         world.bots.queued.push(QueuedBot {
             id,
-            bot,
+            bot: bot.reset(&mut world.rng),
             pos: None,
             requeued: true,
         });
