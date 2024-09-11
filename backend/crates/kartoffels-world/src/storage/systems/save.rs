@@ -47,12 +47,12 @@ pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
     }
 
     let world = SerializedWorld {
-        name: MaybeOwned::Borrowed(&world.name),
-        mode: MaybeOwned::Borrowed(&world.mode),
-        theme: MaybeOwned::Borrowed(&world.theme),
-        policy: MaybeOwned::Borrowed(&world.policy),
-        map: MaybeOwned::Borrowed(&world.map),
         bots: MaybeOwned::Borrowed(&world.bots),
+        map: MaybeOwned::Borrowed(&world.map),
+        mode: MaybeOwned::Borrowed(&world.mode),
+        name: MaybeOwned::Borrowed(&world.name),
+        policy: MaybeOwned::Borrowed(&world.policy),
+        theme: MaybeOwned::Borrowed(&world.theme),
     };
 
     let task = world.store(path).expect("couldn't save the world");

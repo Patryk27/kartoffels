@@ -1,4 +1,4 @@
-use super::migrations::VERSION;
+use super::VERSION;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
@@ -42,8 +42,7 @@ impl Header {
 
         if self.version > Self::default().version {
             return Err(anyhow!(
-                "unsupported version: world is v{}, but we support only up to \
-                 v{}",
+                "unsupported version: got {}, expected <= {}",
                 self.version,
                 VERSION,
             ));

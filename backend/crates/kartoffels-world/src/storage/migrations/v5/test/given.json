@@ -1,0 +1,6 @@
+{
+  "policy": {
+    "max_alive_bots": 16,
+    "max_queued_bots": 32
+  }
+}

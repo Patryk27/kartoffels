@@ -3,7 +3,6 @@ mod migrations;
 mod systems;
 
 use self::header::*;
-use self::migrations::VERSION;
 pub use self::systems::*;
 use crate::{Bots, Map, Mode, Policy, Theme};
 use anyhow::{Context, Result};
@@ -17,14 +16,16 @@ use std::path::Path;
 use std::time::Duration;
 use tokio::task;
 
+const VERSION: u32 = 5;
+
 #[derive(Serialize, Deserialize)]
 pub struct SerializedWorld<'a> {
-    pub name: MaybeOwned<'a, String>,
-    pub mode: MaybeOwned<'a, Mode>,
-    pub theme: MaybeOwned<'a, Theme>,
-    pub policy: MaybeOwned<'a, Policy>,
-    pub map: MaybeOwned<'a, Map>,
     pub bots: MaybeOwned<'a, Bots>,
+    pub map: MaybeOwned<'a, Map>,
+    pub mode: MaybeOwned<'a, Mode>,
+    pub name: MaybeOwned<'a, String>,
+    pub policy: MaybeOwned<'a, Policy>,
+    pub theme: MaybeOwned<'a, Theme>,
 }
 
 impl SerializedWorld<'_> {

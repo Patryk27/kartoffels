@@ -1,21 +1,28 @@
-use anyhow::{Context, Result};
 use ciborium::Value;
 use kartoffels_utils::CborValueExt;
 
-pub fn run(mut world: Value) -> Result<Value> {
+pub fn run(world: &mut Value) {
     world
         .query_mut("/bots/dead")
         .next()
-        .context("missing object: /bots/dead")?
+        .unwrap()
         .as_array_mut()
-        .context("expected an array")?
+        .unwrap()
         .clear();
 
     for obj in world.query_mut("/bots/{alive,queued}/*") {
         obj.as_map_mut()
-            .context("expected an object")?
+            .unwrap()
             .push((Value::Text("events".into()), Value::Array(vec![])));
     }
+}
 
-    Ok(world)
+#[cfg(test)]
+mod tests {
+    use crate::storage::migrations;
+
+    #[test]
+    fn test() {
+        migrations::tests::run(3);
+    }
 }

@@ -15,7 +15,7 @@ mod mode;
 mod policy;
 mod snapshots;
 mod stats;
-mod store;
+mod storage;
 mod theme;
 mod utils;
 
@@ -56,7 +56,7 @@ pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::snapshots::*;
-pub(crate) use self::store::*;
+pub(crate) use self::storage::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
 use anyhow::Result;
@@ -211,7 +211,7 @@ impl World {
         }
 
         snapshots::broadcast::run(self, systems.get_mut());
-        store::save::run(self, systems.get_mut());
+        storage::save::run(self, systems.get_mut());
         stats::run(self, systems.get_mut());
 
         ControlFlow::Continue(())
@@ -220,7 +220,7 @@ impl World {
     fn shutdown(mut self, systems: &mut Container, shutdown: Shutdown) {
         debug!("shutting down");
 
-        store::save::run_now(&mut self, systems.get_mut(), true);
+        storage::save::run_now(&mut self, systems.get_mut(), true);
 
         if let Some(tx) = shutdown.tx {
             _ = tx.send(());

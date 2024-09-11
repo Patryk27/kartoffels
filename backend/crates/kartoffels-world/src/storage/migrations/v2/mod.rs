@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Result};
 use ciborium::value::Integer;
 use ciborium::Value;
 use kartoffels_utils::CborValueExt;
 
-pub fn run(mut world: Value) -> Result<Value> {
+pub fn run(world: &mut Value) {
     let i0 = Value::Integer(Integer::from(0));
     let i1p = Value::Integer(Integer::from(1));
     let i1n = Value::Integer(Integer::from(-1));
@@ -23,9 +22,17 @@ pub fn run(mut world: Value) -> Result<Value> {
         } else if *obj == right {
             *obj = Value::Text(">".into());
         } else {
-            return Err(anyhow!("invalid direction: {:?}", obj));
+            unreachable!();
         }
     }
+}
 
-    Ok(world)
+#[cfg(test)]
+mod tests {
+    use crate::storage::migrations;
+
+    #[test]
+    fn test() {
+        migrations::tests::run(2);
+    }
 }

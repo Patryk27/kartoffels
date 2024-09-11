@@ -3,7 +3,6 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-// TODO rename to north/east/west/south
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dir {
     #[serde(rename = "^")]
