@@ -40,6 +40,7 @@ pub struct Term {
     event: Option<InputEvent>,
     notify: Arc<Notify>,
     waker: Waker,
+    fps: TermFps,
 }
 
 impl Term {
@@ -93,6 +94,7 @@ impl Term {
             event: Default::default(),
             notify,
             waker,
+            fps: Default::default(),
         })
     }
 
@@ -147,6 +149,8 @@ impl Term {
     where
         F: FnOnce(&mut Ui),
     {
+        self.fps.tick();
+
         if self.size.x < 50 || self.size.y < 30 {
             self.term.draw(|frame| {
                 let area = frame.area();
@@ -360,4 +364,27 @@ enum TermMouseClick {
     NotClicked,
     ClickedButNotReported,
     ClickedAndReported,
+}
+
+#[derive(Debug, Default)]
+struct TermFps {
+    frames: u8,
+    tt: Option<Instant>,
+}
+
+impl TermFps {
+    fn tick(&mut self) {
+        let tt = self.tt.get_or_insert_with(Instant::now).elapsed();
+
+        if tt.as_secs() >= 1 {
+            let fps = mem::take(&mut self.frames) as f32 / tt.as_secs_f32();
+            let fps = fps as u32;
+
+            trace!("fps = {}", fps);
+
+            self.tt = Some(Instant::now());
+        }
+
+        self.frames += 1;
+    }
 }
