@@ -22,9 +22,9 @@ impl JoinedSidePanel {
         let footer_height = if state.perms.single_bot_mode {
             1
         } else if state.perms.user_can_manage_bots {
-            5
+            4
         } else {
-            3
+            2
         };
 
         match state.snapshot.bots().by_id(bot.id) {
@@ -117,13 +117,17 @@ impl JoinedSidePanel {
             }
 
             if state.perms.user_can_manage_bots {
-                Button::new(KeyCode::Char('R'), "restart")
-                    .throwing(Event::RestartBot)
-                    .render(ui);
+                ui.enable(!state.paused, |ui| {
+                    Button::new(KeyCode::Char('R'), "restart")
+                        .throwing(Event::RestartBot)
+                        .render(ui);
 
-                Button::new(KeyCode::Char('D'), "destroy")
-                    .throwing(Event::DestroyBot)
-                    .render(ui);
+                    Button::new(KeyCode::Char('D'), "destroy")
+                        .throwing(Event::DestroyBot)
+                        .render(ui);
+                });
+
+                ui.space(2);
             }
 
             Button::new(KeyCode::Char('l'), "leave")

@@ -1,5 +1,6 @@
 #![feature(map_try_insert)]
 
+mod common;
 mod http;
 mod ssh;
 

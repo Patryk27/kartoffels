@@ -1,6 +1,5 @@
+use crate::common;
 use anyhow::{anyhow, Result};
-use futures_util::sink::drain;
-use futures_util::SinkExt;
 use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Term, TermType};
@@ -8,9 +7,7 @@ use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tokio::{select, task};
-use tokio_stream::wrappers::ReceiverStream;
-use tokio_stream::StreamExt;
+use tokio::task;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, info_span, Instrument, Span};
 
@@ -28,7 +25,7 @@ enum AppChannelState {
     },
 
     Ready {
-        stdin_tx: mpsc::Sender<Vec<u8>>,
+        stdin: mpsc::Sender<Vec<u8>>,
     },
 }
 
@@ -48,14 +45,14 @@ impl AppChannel {
     }
 
     pub async fn data(&mut self, data: &[u8]) -> Result<()> {
-        let AppChannelState::Ready { stdin_tx } = &mut self.state else {
+        let AppChannelState::Ready { stdin: stdin_tx } = &mut self.state else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
         stdin_tx
             .send(data.to_vec())
             .await
-            .map_err(|_| anyhow!("ui thread has died"))?;
+            .map_err(|_| anyhow!("lost ui"))?;
 
         Ok(())
     }
@@ -76,51 +73,22 @@ impl AppChannel {
         let shutdown = shutdown.clone();
         let handle = session.handle();
 
-        let (mut term, stdin_tx) =
-            Self::create_term(handle.clone(), id, width, height).await?;
-
-        let result = task::spawn(
-            async move { kartoffels_game::main(&mut term, &store).await }
-                .instrument(self.span.clone()),
-        );
+        let (term, stdin) = Self::create_term(
+            handle.clone(),
+            id,
+            width,
+            height,
+            self.span.clone(),
+        )?;
 
         task::spawn(
             async move {
-                let result = select! {
-                    result = result => Some(result),
-                    _ = shutdown.cancelled() => None,
-                };
-
-                _ = handle
-                    .data(id, Term::leave_cmds().into_bytes().into())
-                    .await;
-
-                match result {
-                    Some(Ok(result)) => {
-                        info!("ui task finished: {:?}", result);
-                    }
-
-                    Some(Err(err)) => {
-                        info!("ui task crashed: {}", err);
-
-                        _ = handle.data(id, Term::crashed_msg().into()).await;
-                    }
-
-                    None => {
-                        info!("ui task aborted: shutting down");
-
-                        _ = handle
-                            .data(id, Term::shutting_down_msg().into())
-                            .await;
-                    }
-                }
-
-                _ = handle.close(id).await;
+                common::start_session(term, store, shutdown).await;
             }
             .instrument(self.span.clone()),
         );
 
-        self.state = AppChannelState::Ready { stdin_tx };
+        self.state = AppChannelState::Ready { stdin };
 
         Ok(())
     }
@@ -130,48 +98,54 @@ impl AppChannel {
         width: u32,
         height: u32,
     ) -> Result<()> {
-        let AppChannelState::Ready { stdin_tx } = &mut self.state else {
+        let AppChannelState::Ready { stdin } = &mut self.state else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
         let width = width.min(255);
         let height = height.min(255);
 
-        stdin_tx
+        stdin
             .send(vec![Term::CMD_RESIZE, width as u8, height as u8])
             .await
-            .map_err(|_| anyhow!("ui thread has died"))?;
+            .map_err(|_| anyhow!("lost ui"))?;
 
         Ok(())
     }
 
-    async fn create_term(
+    fn create_term(
         handle: SessionHandle,
         id: ChannelId,
         width: u32,
         height: u32,
+        span: Span,
     ) -> Result<(Term, mpsc::Sender<Vec<u8>>)> {
-        let (stdin_tx, stdin_rx) = mpsc::channel(32);
-        let stdin = Box::pin(ReceiverStream::new(stdin_rx).map(Ok));
+        let (stdin_tx, stdin_rx) = mpsc::channel(1);
 
-        let stdout = Box::pin({
-            let handle = handle.clone();
+        let stdout = {
+            let (tx, mut rx) = mpsc::channel::<Vec<u8>>(1);
 
-            drain().with(move |stdout: Vec<u8>| {
-                let handle = handle.clone();
-
+            task::spawn(
                 async move {
-                    match handle.data(id, stdout.into()).await {
-                        Ok(_) => Ok(()),
-                        Err(_) => Err(anyhow!("ssh channel died")),
+                    while let Some(msg) = rx.recv().await {
+                        if handle.data(id, msg.into()).await.is_err() {
+                            info!(
+                                "couldn't push data into socket, killing \
+                                 stdout",
+                            );
+                        }
                     }
-                }
-            })
-        });
 
-        let term =
-            Term::new(TermType::Ssh, stdin, stdout, uvec2(width, height))
-                .await?;
+                    _ = handle.close(id).await;
+                }
+                .instrument(span),
+            );
+
+            tx
+        };
+
+        let size = uvec2(width, height);
+        let term = Term::new(TermType::Ssh, stdin_rx, stdout, size)?;
 
         Ok((term, stdin_tx))
     }

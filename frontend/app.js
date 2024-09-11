@@ -35,9 +35,22 @@ document.fonts.ready.then(() => {
     }
   });
 
+  const resizeObserver = new ResizeObserver(() => {
+    termFit.fit();
+  });
+
+  resizeObserver.observe($app);
+
+  // ---
+
   const socket = new WebSocket(`${import.meta.env.VITE_API_URL}`);
 
   socket.onopen = () => {
+    socket.send(JSON.stringify({
+      cols: term.cols,
+      rows: term.rows,
+    }));
+
     term.loadAddon(
       new AttachAddon(socket, {
         bidirectional: true,
@@ -54,16 +67,7 @@ document.fonts.ready.then(() => {
       socket.send(packet);
     });
 
-    const resizeObserver = new ResizeObserver(() => {
-      termFit.fit();
-    });
-
-    resizeObserver.observe($app);
-
-    setTimeout(() => {
-      term.focus();
-      termFit.fit();
-    }, 100);
+    term.focus();
   };
 
   socket.onmessage = (event) => {
@@ -74,15 +78,20 @@ document.fonts.ready.then(() => {
     }
   };
 
+  socket.onerror = () => {
+    term.reset();
+    term.write("couldn't connect to the server");
+  };
+
   socket.onclose = () => {
-    setTimeout(() => {
-      term.write("\n\rconnection to server closed");
-    }, 150);
+    term.write("\n\rconnection to server closed");
   };
 
   window.onbeforeunload = () => {
     socket.onclose = null;
   };
+
+  // ---
 
   function handleBotCreate() {
     const input = document.createElement("input");

@@ -1,5 +1,6 @@
-use anyhow::Result;
-use axum::extract::ws::Message;
+use crate::common;
+use anyhow::{Context, Result};
+use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{
     ConnectInfo, DefaultBodyLimit, State as AxumState, WebSocketUpgrade,
 };
@@ -10,12 +11,13 @@ use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Term, TermType};
+use serde::Deserialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc;
-use tokio::{select, task};
-use tokio_util::sync::{CancellationToken, PollSender};
+use tokio::task;
+use tokio_util::sync::CancellationToken;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{info, info_span, Instrument};
@@ -78,76 +80,115 @@ async fn handle_connect(
         async move {
             info!("connection opened");
 
-            let (mut stdout, stdin) = socket.split();
-
-            let stdin = stdin.filter_map(|msg| async move {
-                match msg {
-                    Ok(Message::Text(msg)) => Some(Ok(msg.into_bytes())),
-                    Ok(Message::Binary(msg)) => Some(Ok(msg)),
-                    Ok(_) => None,
-                    Err(err) => Some(Err(err.into())),
-                }
-            });
-
-            let (stdout_tx, mut stdout_rx) = mpsc::channel(1);
-
-            task::spawn(
-                async move {
-                    while let Some(msg) = stdout_rx.recv().await {
-                        if let Err(err) =
-                            stdout.send(Message::Binary(msg)).await
-                        {
-                            info!("connection lost: {:?}", err);
-                            break;
-                        }
-                    }
-                }
-                .in_current_span(),
-            );
-
-            let stdout = PollSender::new(stdout_tx.clone())
-                .with(|stdout| async move { Ok(stdout) });
-
-            let mut term = {
-                let stdin = Box::pin(stdin);
-                let stdout = Box::pin(stdout);
-                let size = uvec2(0, 0);
-
-                Term::new(TermType::Web, stdin, stdout, size).await.unwrap()
-            };
-
-            let result = task::spawn(
-                async move { kartoffels_game::main(&mut term, &store).await }
-                    .in_current_span(),
-            );
-
-            let result = select! {
-                result = result => Some(result),
-                _ = shutdown.cancelled() => None,
-            };
-
-            match result {
-                Some(Ok(result)) => {
-                    info!("ui task finished: {:?}", result);
+            match handle_connection(store, shutdown, socket).await {
+                Ok(()) => {
+                    info!("connection closed");
                 }
 
-                Some(Err(err)) => {
-                    info!("ui task crashed: {}", err);
-
-                    _ = stdout_tx.send(Term::reset_cmds()).await;
-                    _ = stdout_tx.send(Term::crashed_msg()).await;
-                }
-
-                None => {
-                    info!("ui task aborted: shutting down");
-
-                    _ = stdout_tx.send(Term::reset_cmds()).await;
-                    _ = stdout_tx.send(Term::shutting_down_msg()).await;
+                Err(err) => {
+                    info!("connection closed: {:?}", err);
                 }
             }
-
-            info!("connection closed");
         }
         .instrument(span)
     })
+}
+
+async fn handle_connection(
+    store: Arc<Store>,
+    shutdown: CancellationToken,
+    mut socket: WebSocket,
+) -> Result<()> {
+    let hello = recv_hello_msg(&mut socket)
+        .await
+        .context("couldn't retrieve hello message")?;
+
+    let term =
+        create_term(socket, hello).context("couldn't create terminal")?;
+
+    common::start_session(term, store, shutdown).await;
+
+    Ok(())
+}
+
+async fn recv_hello_msg(socket: &mut WebSocket) -> Result<HelloMsg> {
+    let msg = socket
+        .recv()
+        .await
+        .context("client disconnected")??
+        .into_text()?;
+
+    serde_json::from_str(&msg).context("couldn't deserialize message")
+}
+
+fn create_term(socket: WebSocket, hello: HelloMsg) -> Result<Term> {
+    let (mut stdout, mut stdin) = socket.split();
+
+    let stdin = {
+        let (tx, rx) = mpsc::channel(1);
+
+        task::spawn(
+            async move {
+                while let Some(msg) = stdin.next().await {
+                    match msg {
+                        Ok(Message::Text(msg)) => {
+                            if tx.send(msg.into_bytes()).await.is_err() {
+                                break;
+                            }
+                        }
+
+                        Ok(Message::Binary(msg)) => {
+                            if tx.send(msg).await.is_err() {
+                                break;
+                            }
+                        }
+
+                        Ok(_) => {
+                            //
+                        }
+
+                        Err(_) => {
+                            info!(
+                                "couldn't pull data from socket, killing stdin"
+                            );
+
+                            return;
+                        }
+                    }
+                }
+            }
+            .in_current_span(),
+        );
+
+        rx
+    };
+
+    let stdout = {
+        let (tx, mut rx) = mpsc::channel::<Vec<u8>>(1);
+
+        task::spawn(
+            async move {
+                while let Some(msg) = rx.recv().await {
+                    if stdout.send(Message::Binary(msg)).await.is_err() {
+                        info!("couldn't push data into socket, killing stdout");
+                        return;
+                    }
+                }
+            }
+            .in_current_span(),
+        );
+
+        tx
+    };
+
+    let size = uvec2(hello.cols, hello.rows);
+    let term = Term::new(TermType::Web, stdin, stdout, size)?;
+
+    Ok(term)
+}
+
+#[derive(Clone, Debug, Deserialize)]
+struct HelloMsg {
+    cols: u32,
+    rows: u32,
 }

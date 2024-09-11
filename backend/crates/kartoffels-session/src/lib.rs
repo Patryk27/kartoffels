@@ -9,22 +9,15 @@ mod views;
 use self::driver::*;
 use self::utils::*;
 use anyhow::Result;
-use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Abort, Term};
 use std::future::Future;
 use std::pin::Pin;
 use tokio::select;
+use tracing::info;
 
 pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
-    // Wait for terminal size to settle.
-    //
-    // This matters mostly (only?) for the web, where we initially report (0,0)
-    // and then wait for xterm's FitAddon() to kick in and report the actual
-    // size.
-    while term.size() == uvec2(0, 0) {
-        term.poll().await?;
-    }
+    info!("session started");
 
     loop {
         match main_ex(term, store).await {
@@ -49,7 +42,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
     use self::views::*;
 
     loop {
-        let game;
+        let view;
         let driver: Pin<Box<dyn Future<Output = _> + Send>>;
         let mut bg = Background::new(term);
 
@@ -57,21 +50,21 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
             home::Response::Online(world) => {
                 let (tx, rx) = DrivenGame::new();
 
-                game = play::run(term, rx);
+                view = play::run(term, rx);
                 driver = Box::pin(drivers::online::run(world, tx));
             }
 
             home::Response::Sandbox => {
                 let (tx, rx) = DrivenGame::new();
 
-                game = play::run(term, rx);
+                view = play::run(term, rx);
                 driver = Box::pin(drivers::sandbox::run(store, tx));
             }
 
             home::Response::Tutorial => {
                 let (tx, rx) = DrivenGame::new();
 
-                game = play::run(term, rx);
+                view = play::run(term, rx);
                 driver = Box::pin(drivers::tutorial::run(store, tx));
             }
 
@@ -86,7 +79,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
         };
 
         select! {
-            result = game => result?,
+            result = view => result?,
             result = driver => result?,
         }
     }

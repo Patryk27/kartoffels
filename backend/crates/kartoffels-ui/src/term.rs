@@ -1,6 +1,5 @@
 use crate::{theme, Abort, Clear, Ui, UiLayout};
 use anyhow::{Context, Error, Result};
-use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
 use ratatui::crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
@@ -16,16 +15,17 @@ use ratatui::widgets::{Paragraph, Widget};
 use ratatui::{Terminal, TerminalOptions, Viewport};
 use std::io::{self, Write};
 use std::mem;
-use std::pin::Pin;
 use termwiz::escape::osc::Selection;
 use termwiz::escape::OperatingSystemCommand;
 use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
+use tokio::sync::mpsc;
 use tokio::{select, time};
 use tracing::warn;
 
-pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send>>;
-pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send>>;
+pub type Stdin = mpsc::Receiver<Vec<u8>>;
+pub type Stdout = mpsc::Sender<Vec<u8>>;
 
+#[derive(Debug)]
 pub struct Term {
     ty: TermType,
     stdin: Stdin,
@@ -41,15 +41,12 @@ pub struct Term {
 impl Term {
     pub const CMD_RESIZE: u8 = 0x04;
 
-    pub async fn new(
+    pub fn new(
         ty: TermType,
         stdin: Stdin,
         stdout: Stdout,
         size: UVec2,
     ) -> Result<Self> {
-        let stdin = Box::pin(stdin);
-        let mut stdout = Box::pin(stdout);
-
         let mut term = {
             let writer = WriterProxy::default();
             let backend = CrosstermBackend::new(writer);
@@ -62,7 +59,6 @@ impl Term {
         };
 
         term.clear()?;
-        stdout.send(Self::enter_cmds().into_bytes()).await?;
 
         Ok(Self {
             ty,
@@ -77,7 +73,15 @@ impl Term {
         })
     }
 
-    pub fn enter_cmds() -> String {
+    pub fn ty(&self) -> TermType {
+        self.ty
+    }
+
+    pub fn size(&self) -> UVec2 {
+        self.size
+    }
+
+    pub async fn init(&mut self) -> Result<()> {
         let mut cmds = String::new();
 
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
@@ -85,43 +89,33 @@ impl Term {
         _ = EnableMouseCapture.write_ansi(&mut cmds);
         _ = SetTitle("kartoffels").write_ansi(&mut cmds);
 
-        cmds
+        self.send(cmds.into()).await?;
+
+        Ok(())
     }
 
-    pub fn leave_cmds() -> String {
+    pub async fn finalize(&mut self) -> Result<()> {
         let mut cmds = String::new();
 
-        _ = DisableMouseCapture.write_ansi(&mut cmds);
-        _ = DisableBracketedPaste.write_ansi(&mut cmds);
-        _ = LeaveAlternateScreen.write_ansi(&mut cmds);
-        _ = cursor::Show.write_ansi(&mut cmds);
+        match self.ty {
+            TermType::Ssh => {
+                _ = DisableMouseCapture.write_ansi(&mut cmds);
+                _ = DisableBracketedPaste.write_ansi(&mut cmds);
+                _ = LeaveAlternateScreen.write_ansi(&mut cmds);
+                _ = cursor::Show.write_ansi(&mut cmds);
+            }
 
-        cmds
-    }
+            TermType::Web => {
+                _ = terminal::Clear(terminal::ClearType::All)
+                    .write_ansi(&mut cmds);
 
-    pub fn reset_cmds() -> Vec<u8> {
-        let mut cmd = String::new();
+                _ = cursor::MoveTo(0, 0).write_ansi(&mut cmds);
+            }
+        }
 
-        _ = terminal::Clear(terminal::ClearType::All).write_ansi(&mut cmd);
-        _ = cursor::MoveTo(0, 0).write_ansi(&mut cmd);
+        self.send(cmds.into()).await?;
 
-        cmd.into()
-    }
-
-    pub fn crashed_msg() -> Vec<u8> {
-        "whoopsie, the game has crashed\r\n".into()
-    }
-
-    pub fn shutting_down_msg() -> Vec<u8> {
-        "whoopsie, the server is shutting down\r\n".into()
-    }
-
-    pub fn ty(&self) -> TermType {
-        self.ty
-    }
-
-    pub fn size(&self) -> UVec2 {
-        self.size
+        Ok(())
     }
 
     pub async fn draw<F, T>(&mut self, render: F) -> Result<Option<T>>
@@ -175,7 +169,7 @@ impl Term {
 
     pub async fn poll(&mut self) -> Result<()> {
         select! {
-            stdin = self.stdin.next() => {
+            stdin = self.stdin.recv() => {
                 // After retrieving an input event, reset the "when next frame"
                 // interval, so that we don't refresh the interface needlessly.
                 //
@@ -183,7 +177,7 @@ impl Term {
                 // brand new frame after pressing a keystroke, we're covered for
                 // the next `FRAME_TIME` milliseconds anyway.
                 self.frames.reset();
-                self.recv(stdin.context("lost stdin")??)?;
+                self.recv(stdin.context("lost stdin")?)?;
             },
 
             _ = self.frames.tick() => {
@@ -293,7 +287,7 @@ impl TermType {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct WriterProxy {
     buffer: Vec<u8>,
     flushed: bool,
