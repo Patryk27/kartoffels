@@ -32,7 +32,7 @@ impl Menu {
 
         ui.block(block, |ui| {
             if !store.worlds.is_empty() {
-                if Button::new(KeyCode::Char('p'), "online play")
+                if Button::new(KeyCode::Char('o'), "online play")
                     .centered()
                     .render(ui)
                     .pressed
@@ -43,20 +43,20 @@ impl Menu {
                 ui.space(1);
             }
 
-            if Button::new(KeyCode::Char('t'), "tutorial")
-                .centered()
-                .render(ui)
-                .pressed
-            {
-                resp = Some(Response::Tutorial);
-            }
-
             if Button::new(KeyCode::Char('s'), "sandbox")
                 .centered()
                 .render(ui)
                 .pressed
             {
                 resp = Some(Response::Sandbox);
+            }
+
+            if Button::new(KeyCode::Char('t'), "tutorial")
+                .centered()
+                .render(ui)
+                .pressed
+            {
+                resp = Some(Response::Tutorial);
             }
 
             if Button::new(KeyCode::Char('c'), "challenges")
