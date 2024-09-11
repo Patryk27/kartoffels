@@ -34,32 +34,13 @@ pub struct ServeCmd {
     ssh: Option<SocketAddr>,
 
     #[clap(long)]
-    debug: bool,
+    log_time: bool,
 }
 
 impl ServeCmd {
     pub fn run(self) -> Result<()> {
-        let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
-            let filter = if self.debug {
-                "tower_http=debug,kartoffels=debug"
-            } else {
-                "kartoffels=info"
-            };
-
-            filter.to_owned()
-        });
-
-        tracing_subscriber::fmt()
-            .event_format(fmt::format::Format::default().without_time())
-            .with_env_filter(filter)
-            .init();
-
-        for line in LOGO.lines() {
-            info!("{}", line);
-        }
-
-        info!("");
-        info!(?self, "starting");
+        self.init_tracing();
+        self.print_logo();
 
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
@@ -67,7 +48,34 @@ impl ServeCmd {
             .block_on(self.start())
     }
 
+    fn init_tracing(&self) {
+        let filter =
+            env::var("RUST_LOG").unwrap_or_else(|_| "kartoffels=info".into());
+
+        if self.log_time {
+            tracing_subscriber::fmt()
+                .event_format(fmt::format::Format::default())
+                .with_env_filter(filter)
+                .init();
+        } else {
+            tracing_subscriber::fmt()
+                .event_format(fmt::format::Format::default().without_time())
+                .with_env_filter(filter)
+                .init();
+        }
+    }
+
+    fn print_logo(&self) {
+        for line in LOGO.lines() {
+            info!("{}", line);
+        }
+
+        info!("");
+    }
+
     async fn start(self) -> Result<()> {
+        info!(?self, "starting");
+
         let store = Store::open(&self.data).await.with_context(|| {
             format!("couldn't load store from `{}`", self.data.display())
         })?;
