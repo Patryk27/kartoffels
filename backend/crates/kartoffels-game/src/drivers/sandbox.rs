@@ -39,6 +39,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("  destroy bots, restart them etc."),
         DialogLine::new("- you can also spawn *roberto*, the built-in moderately"),
         DialogLine::new("  challenging bot"),
+        DialogLine::new("- a new world is generated every time you open the sandbox"),
     ],
 
     buttons: vec![
