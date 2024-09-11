@@ -31,7 +31,7 @@ pub fn run(world: &mut World, state: &mut State) {
     run_now(world, state, false);
 }
 
-pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
+pub fn run_now(world: &mut World, state: &mut State, wait: bool) {
     let Some(path) = &world.path else {
         return;
     };
@@ -39,11 +39,16 @@ pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
     debug!("saving world");
 
     if let Some(task) = state.task.take() {
-        task.now_or_never()
-            .expect(
-                "the previous save is still in progress - has the I/O stalled?",
-            )
-            .unwrap();
+        if wait {
+            runtime::Handle::current().block_on(task).unwrap();
+        } else {
+            task.now_or_never()
+                .expect(
+                    "the previous save is still in progress - has the I/O \
+                     stalled?",
+                )
+                .unwrap();
+        }
     }
 
     let world = SerializedWorld {
@@ -69,7 +74,7 @@ pub fn run_now(world: &mut World, state: &mut State, blocking: bool) {
     )
     .map(|result| result.context("task crashed")?);
 
-    if blocking {
+    if wait {
         runtime::Handle::current().block_on(task).unwrap();
     } else {
         state.task = Some(Box::new(task));
