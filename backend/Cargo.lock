@@ -1387,6 +1387,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "kartoffels-cpu"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "elf",
+ "itertools 0.12.1",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "kartoffels-cpu-tests"
+version = "0.3.0"
+dependencies = [
+ "kartoffel",
+ "num-traits",
+ "spin",
+ "talc",
+]
+
+[[package]]
 name = "kartoffels-game"
 version = "0.3.0"
 dependencies = [
@@ -1453,27 +1474,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kartoffels-vm"
-version = "0.3.0"
-dependencies = [
- "anyhow",
- "elf",
- "itertools 0.12.1",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "kartoffels-vm-tests"
-version = "0.3.0"
-dependencies = [
- "kartoffel",
- "num-traits",
- "spin",
- "talc",
-]
-
-[[package]]
 name = "kartoffels-world"
 version = "0.3.0"
 dependencies = [
@@ -1486,8 +1486,8 @@ dependencies = [
  "glam",
  "indoc",
  "itertools 0.12.1",
+ "kartoffels-cpu",
  "kartoffels-utils",
- "kartoffels-vm",
  "lru",
  "maybe-owned",
  "pretty_assertions",

@@ -9,6 +9,14 @@ pub struct BotMotor {
 }
 
 impl BotMotor {
+    pub fn new(dir: Dir) -> Self {
+        Self {
+            dir,
+            vel: 0,
+            cooldown: 0,
+        }
+    }
+
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
     }
@@ -61,6 +69,7 @@ impl BotMotor {
     }
 }
 
+#[cfg(test)]
 impl Default for BotMotor {
     fn default() -> Self {
         Self {

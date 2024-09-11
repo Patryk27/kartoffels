@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+kartoffels-cpu = { path = "../kartoffels-cpu" }
 kartoffels-utils = { path = "../kartoffels-utils" }
-kartoffels-vm = { path = "../kartoffels-vm" }
 
 ahash.workspace = true
 anyhow.workspace = true

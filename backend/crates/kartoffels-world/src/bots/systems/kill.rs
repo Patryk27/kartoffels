@@ -21,9 +21,11 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
     {
         world.bots.queued.push(QueuedBot {
             id,
-            bot: bot.reset(&mut world.rng),
             pos: None,
             requeued: true,
+            events: bot.events,
+            serial: bot.serial,
+            cpu: bot.cpu.reset(),
         });
     } else {
         bot.log("discarded");

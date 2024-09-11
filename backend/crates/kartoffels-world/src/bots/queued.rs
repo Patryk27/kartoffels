@@ -124,7 +124,9 @@ mod tests {
             id: id.into(),
             pos: None,
             requeued: false,
-            bot: Default::default(),
+            events: Default::default(),
+            serial: Default::default(),
+            cpu: Default::default(),
         }
     }
 

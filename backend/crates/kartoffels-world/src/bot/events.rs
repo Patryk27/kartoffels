@@ -12,14 +12,14 @@ pub struct BotEvents {
 impl BotEvents {
     const LENGTH: usize = 128;
 
-    pub fn add(&mut self, msg: String) {
+    pub fn add(&mut self, msg: impl Into<String>) {
         while self.entries.len() >= Self::LENGTH {
             self.entries.pop_front();
         }
 
         self.entries.push_back(Arc::new(BotEvent {
             at: Utc::now(),
-            msg,
+            msg: msg.into(),
         }));
     }
 

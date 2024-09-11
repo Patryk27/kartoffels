@@ -1,4 +1,4 @@
-use crate::{Bots, Dir, Event, Map, QueuedBot, World};
+use crate::{AliveBot, Bots, Dir, Event, Map, QueuedBot, World};
 use glam::IVec2;
 use rand::{Rng, RngCore};
 use std::sync::Arc;
@@ -43,15 +43,8 @@ pub fn run(world: &mut World, state: &mut State) {
     };
 
     // Unwrap-safety: We've just made sure that the queue is not empty
-    let QueuedBot {
-        id,
-        requeued,
-        mut bot,
-        ..
-    } = world.bots.queued.pop().unwrap();
-
-    bot.log(if requeued { "respawned" } else { "spawned" });
-    bot.motor.dir = dir;
+    let bot = world.bots.queued.pop().unwrap();
+    let (bot, id) = AliveBot::spawn(&mut world.rng, bot, dir);
 
     world.bots.alive.add(id, pos, bot);
 

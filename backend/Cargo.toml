@@ -6,12 +6,12 @@ members = [
     "crates/bot-roberto",
     "crates/kartoffel",
     "crates/kartoffels",
+    "crates/kartoffels-cpu",
+    "crates/kartoffels-cpu-tests",
     "crates/kartoffels-game",
     "crates/kartoffels-store",
     "crates/kartoffels-ui",
     "crates/kartoffels-utils",
-    "crates/kartoffels-vm",
-    "crates/kartoffels-vm-tests",
     "crates/kartoffels-world",
 ]
 

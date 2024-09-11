@@ -1,7 +1,8 @@
-mod v2;
-mod v3;
-mod v4;
-mod v5;
+mod v02;
+mod v03;
+mod v04;
+mod v05;
+mod v06;
 
 use crate::storage::VERSION;
 use anyhow::Result;
@@ -9,7 +10,7 @@ use ciborium::Value;
 use tracing::info;
 
 const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] =
-    [v2::run, v3::run, v4::run, v5::run];
+    [v02::run, v03::run, v04::run, v05::run, v06::run];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
     for nth in old..new {
@@ -31,7 +32,7 @@ mod tests {
         let dir = Path::new("src")
             .join("storage")
             .join("migrations")
-            .join(format!("v{}", nth))
+            .join(format!("v{:02}", nth))
             .join("test");
 
         let given_path = dir.join("given.json");

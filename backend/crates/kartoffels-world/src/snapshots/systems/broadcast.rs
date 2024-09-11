@@ -129,8 +129,8 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .iter()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
-                serial: Arc::new(entry.bot.bot.serial.buffer.clone()),
-                events: entry.bot.bot.events.iter().cloned().collect(),
+                serial: Arc::new(entry.bot.serial.buffer.clone()),
+                events: entry.bot.events.iter().cloned().collect(),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
             };

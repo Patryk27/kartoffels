@@ -1,9 +1,9 @@
 use crate::{
-    AliveBot, BotId, Event, KillBot, QueuedBot, Request, Shutdown, World,
+    BotEvents, BotId, Event, KillBot, QueuedBot, Request, Shutdown, World,
 };
 use anyhow::{anyhow, Result};
 use glam::IVec2;
-use kartoffels_vm as vm;
+use kartoffels_cpu::Cpu;
 use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::sync::Arc;
@@ -70,11 +70,7 @@ fn create_bot(
     src: Cow<'static, [u8]>,
     pos: Option<IVec2>,
 ) -> Result<BotId> {
-    let fw = vm::Firmware::new(&src)?;
-    let vm = vm::Runtime::new(fw);
-    let mut bot = AliveBot::new(&mut world.rng, vm);
-
-    bot.log("uploaded and queued");
+    let cpu = Cpu::new(&src)?;
 
     let id = loop {
         let id = BotId::new(&mut world.rng);
@@ -85,10 +81,19 @@ fn create_bot(
     };
 
     if world.bots.queued.len() < world.policy.max_queued_bots {
+        let events = {
+            let mut events = BotEvents::default();
+
+            events.add("uploaded and queued");
+            events
+        };
+
         world.bots.queued.push(QueuedBot {
             id,
             pos,
-            bot,
+            cpu,
+            events,
+            serial: Default::default(),
             requeued: false,
         });
 
