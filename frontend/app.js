@@ -24,9 +24,13 @@ document.fonts.ready.then(() => {
   term.loadAddon(new ClipboardAddon());
 
   term.attachCustomKeyEventHandler((event) => {
-    // Prevent xterm from catching C-v, so that it invokes the usual paste
-    // event - better for the UX
-    if (event.type === "keydown" && event.key === "v" && event.ctrlKey) {
+    // Prevent xterm from catching C-c & C-v, so that they invoke the usual copy
+    // and paste actions
+    if (
+      event.type === "keydown" &&
+      event.ctrlKey &&
+      (event.key === "c" || event.key === "v")
+    ) {
       return false;
     }
   });
