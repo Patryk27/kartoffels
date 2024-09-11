@@ -12,10 +12,6 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
              squares, we should see the robot, well, moving forward and \
              unknowingly falling out of the map",
         ),
-        DialogLine::new(""),
-        DialogLine::new(
-            "close this message and let the hunger games begin",
-        ),
     ],
 
     buttons: vec![
