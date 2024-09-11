@@ -1,12 +1,11 @@
-use super::{Dialog, ErrorDialog, PauseState, State};
+use super::{Dialog, ErrorDialog, State};
 use crate::bots;
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
-use kartoffels_ui::{theme, Term};
+use kartoffels_ui::Term;
 use kartoffels_world::prelude::BotId;
 use std::ops::ControlFlow;
-use tokio::time;
 
 #[derive(Debug)]
 pub enum Event {
@@ -36,8 +35,6 @@ impl Event {
         state: &mut State,
         term: &mut Term,
     ) -> Result<ControlFlow<(), ()>> {
-        time::sleep(theme::INTERACTION_TIME).await;
-
         match self {
             Event::CloseDialog => {
                 state.dialog = None;
@@ -64,14 +61,13 @@ impl Event {
                 }
             }
 
-            Event::TogglePause => match state.pause {
-                PauseState::Resumed => {
+            Event::TogglePause => {
+                if state.paused {
+                    state.resume().await?;
+                } else {
                     state.pause().await?;
                 }
-                PauseState::Paused(_) => {
-                    state.resume().await?;
-                }
-            },
+            }
 
             Event::ShowBotsDialog => {
                 state.dialog = Some(Dialog::Bots(Default::default()));

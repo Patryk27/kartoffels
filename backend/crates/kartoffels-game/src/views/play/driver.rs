@@ -12,8 +12,10 @@ impl DriverEvent {
     ) -> Result<()> {
         match self {
             DriverEvent::Join(handle) => {
-                state.snapshots = Box::new(handle.snapshots());
-                state.snapshot = state.snapshots.next_or_err().await?;
+                let mut snapshots = handle.snapshots();
+
+                state.snapshot = snapshots.next_or_err().await?;
+                state.snapshots = Some(snapshots);
                 state.camera = state.snapshot.map().center();
                 state.handle = Some(handle);
                 state.bot = None;

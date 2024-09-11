@@ -19,4 +19,3 @@ ratatui.workspace = true
 termwiz.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
-waker-fn.workspace = true

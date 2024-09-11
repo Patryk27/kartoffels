@@ -1,5 +1,5 @@
-use crate::{Abort, Clear, Ui, UiLayout};
-use anyhow::{anyhow, Error, Result};
+use crate::{theme, Abort, Clear, Ui, UiLayout};
+use anyhow::{Context, Error, Result};
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use glam::{uvec2, UVec2};
 use ratatui::crossterm::event::{
@@ -17,15 +17,11 @@ use ratatui::{Terminal, TerminalOptions, Viewport};
 use std::io::{self, Write};
 use std::mem;
 use std::pin::Pin;
-use std::sync::Arc;
-use std::task::Waker;
-use std::time::Instant;
 use termwiz::escape::osc::Selection;
 use termwiz::escape::OperatingSystemCommand;
 use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
-use tokio::select;
-use tokio::sync::Notify;
-use tracing::{trace, warn};
+use tokio::{select, time};
+use tracing::warn;
 
 pub type Stdin = Pin<Box<dyn Stream<Item = Result<Vec<u8>>> + Send>>;
 pub type Stdout = Pin<Box<dyn Sink<Vec<u8>, Error = Error> + Send>>;
@@ -39,9 +35,7 @@ pub struct Term {
     size: UVec2,
     mouse: TermMouse,
     event: Option<InputEvent>,
-    notify: Arc<Notify>,
-    waker: Waker,
-    fps: TermFps,
+    frames: time::Interval,
 }
 
 impl Term {
@@ -67,22 +61,8 @@ impl Term {
             Terminal::with_options(backend, opts)?
         };
 
-        // ---
-
         term.clear()?;
         stdout.send(Self::enter_cmds().into_bytes()).await?;
-
-        // ---
-
-        let notify = Arc::new(Notify::new());
-
-        let waker = waker_fn::waker_fn({
-            let notify = notify.clone();
-
-            move || {
-                notify.notify_waiters();
-            }
-        });
 
         Ok(Self {
             ty,
@@ -93,9 +73,7 @@ impl Term {
             size,
             mouse: Default::default(),
             event: Default::default(),
-            notify,
-            waker,
-            fps: Default::default(),
+            frames: time::interval(theme::FRAME_TIME),
         })
     }
 
@@ -131,11 +109,11 @@ impl Term {
     }
 
     pub fn crashed_msg() -> Vec<u8> {
-        "whoopsie, the game has crashed!\r\n".into()
+        "whoopsie, the game has crashed\r\n".into()
     }
 
     pub fn shutting_down_msg() -> Vec<u8> {
-        "whoopsie, the server is shutting down!\r\n".into()
+        "whoopsie, the server is shutting down\r\n".into()
     }
 
     pub fn ty(&self) -> TermType {
@@ -151,8 +129,7 @@ impl Term {
         F: FnOnce(&mut Ui) -> T,
     {
         let mut resp = None;
-
-        self.fps.tick();
+        let mut clipboard = Vec::new();
 
         if self.size.x < 50 || self.size.y < 30 {
             self.term.draw(|frame| {
@@ -170,14 +147,11 @@ impl Term {
                 .render(area, buf);
             })?;
         } else {
-            let mut clipboard = Vec::new();
-
             self.term.draw(|frame| {
                 let area = frame.area();
 
                 resp = Some(render(&mut Ui {
                     ty: self.ty,
-                    waker: &self.waker,
                     frame,
                     area,
                     mouse: self.mouse.report().as_ref(),
@@ -188,65 +162,33 @@ impl Term {
                     thrown: &mut None,
                 }));
             })?;
-
-            for payload in clipboard {
-                self.copy_to_clipboard(payload).await?;
-            }
         }
 
         self.flush().await?;
+
+        for payload in clipboard {
+            self.copy_to_clipboard(payload).await?;
+        }
 
         Ok(resp)
     }
 
     pub async fn poll(&mut self) -> Result<()> {
-        let bytes = select! {
-            bytes = self.stdin.next() => Some(bytes),
-            _ = self.notify.notified() => None,
-        };
+        select! {
+            stdin = self.stdin.next() => {
+                // After retrieving an input event, reset the "when next frame"
+                // interval, so that we don't refresh the interface needlessly.
+                //
+                // The reasoning here goes: since the user will already get a
+                // brand new frame after pressing a keystroke, we're covered for
+                // the next `FRAME_TIME` milliseconds anyway.
+                self.frames.reset();
+                self.recv(stdin.context("lost stdin")??)?;
+            },
 
-        if let Some(bytes) = bytes {
-            let bytes = bytes.ok_or_else(|| anyhow!("lost stdin"))??;
-
-            if let Some(size) = bytes.strip_prefix(&[Self::CMD_RESIZE]) {
-                let cols = size.first().copied().unwrap_or(0);
-                let rows = size.last().copied().unwrap_or(0);
-
-                self.size = uvec2(cols as u32, rows as u32);
-                self.term.resize(Self::viewport_rect(self.size))?;
-            } else {
-                let events = self.stdin_parser.parse_as_vec(&bytes, false);
-
-                for event in events {
-                    if let InputEvent::Key(event) = &event {
-                        match (event.key, event.modifiers) {
-                            Abort::SOFT_BINDING => {
-                                return Err(Error::new(Abort { soft: true }));
-                            }
-
-                            Abort::HARD_BINDING if self.ty.is_ssh() => {
-                                return Err(Error::new(Abort { soft: false }));
-                            }
-
-                            _ => (),
-                        }
-                    }
-
-                    match event {
-                        InputEvent::Mouse(event) => {
-                            self.mouse.update(event);
-                        }
-
-                        event => {
-                            if self.event.is_some() {
-                                warn!("missed event: {:?}", self.event);
-                            }
-
-                            self.event = Some(event);
-                        }
-                    }
-                }
-            }
+            _ = self.frames.tick() => {
+                // Just a wake-up, so that we can refresh the interface
+            },
         }
 
         Ok(())
@@ -263,8 +205,52 @@ impl Term {
         Ok(())
     }
 
-    pub async fn send(&mut self, data: Vec<u8>) -> Result<()> {
-        self.stdout.send(data).await?;
+    fn recv(&mut self, stdin: Vec<u8>) -> Result<()> {
+        if let Some(size) = stdin.strip_prefix(&[Self::CMD_RESIZE]) {
+            let cols = size.first().copied().unwrap_or(0);
+            let rows = size.last().copied().unwrap_or(0);
+
+            self.size = uvec2(cols as u32, rows as u32);
+            self.term.resize(Self::viewport_rect(self.size))?;
+        } else {
+            let events = self.stdin_parser.parse_as_vec(&stdin, false);
+
+            for event in events {
+                if let InputEvent::Key(event) = &event {
+                    match (event.key, event.modifiers) {
+                        Abort::SOFT_BINDING => {
+                            return Err(Error::new(Abort { soft: true }));
+                        }
+
+                        Abort::HARD_BINDING if self.ty.is_ssh() => {
+                            return Err(Error::new(Abort { soft: false }));
+                        }
+
+                        _ => (),
+                    }
+                }
+
+                match event {
+                    InputEvent::Mouse(event) => {
+                        self.mouse.update(event);
+                    }
+
+                    event => {
+                        if self.event.is_some() {
+                            warn!("missed event: {:?}", self.event);
+                        }
+
+                        self.event = Some(event);
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn send(&mut self, stdout: Vec<u8>) -> Result<()> {
+        self.stdout.send(stdout).await?;
 
         Ok(())
     }
@@ -369,27 +355,4 @@ enum TermMouseClick {
     NotClicked,
     ClickedButNotReported,
     ClickedAndReported,
-}
-
-#[derive(Debug, Default)]
-struct TermFps {
-    frames: u8,
-    tt: Option<Instant>,
-}
-
-impl TermFps {
-    fn tick(&mut self) {
-        let tt = self.tt.get_or_insert_with(Instant::now).elapsed();
-
-        if tt.as_secs() >= 1 {
-            let fps = mem::take(&mut self.frames) as f32 / tt.as_secs_f32();
-            let fps = fps as u32;
-
-            trace!("fps = {}", fps);
-
-            self.tt = Some(Instant::now());
-        }
-
-        self.frames += 1;
-    }
 }

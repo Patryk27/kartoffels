@@ -1,30 +1,25 @@
-use crate::{theme, Ui};
+use crate::theme;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
-use std::time::Duration;
-use tokio::time::{self, Interval};
+use std::time::Instant;
 
 #[derive(Debug)]
 pub struct Caret {
-    visible: bool,
-    interval: Interval,
+    instant: Instant,
 }
 
 impl Caret {
-    pub fn as_span(&mut self, ui: &mut Ui) -> Span {
-        if ui.poll_interval(&mut self.interval) {
-            self.visible = !self.visible;
-        }
+    pub fn as_span(&mut self) -> Span {
+        let visible = self.instant.elapsed().as_millis() % 1000 <= 500;
 
-        Span::raw(if self.visible { "_" } else { "" }).fg(theme::GREEN)
+        Span::raw(if visible { "_" } else { "" }).fg(theme::GREEN)
     }
 }
 
 impl Default for Caret {
     fn default() -> Self {
         Self {
-            visible: false,
-            interval: time::interval(Duration::from_millis(500)),
+            instant: Instant::now(),
         }
     }
 }

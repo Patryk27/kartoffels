@@ -4,11 +4,9 @@ use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget, WidgetRef, Wrap};
 use std::cmp;
-use std::pin::Pin;
 use std::sync::LazyLock;
-use std::time::Duration;
+use std::time::Instant;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::time;
 
 static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
     Paragraph::new(vec![
@@ -34,7 +32,7 @@ static TEXT: LazyLock<Paragraph<'static>> = LazyLock::new(|| {
 #[derive(Debug, Default)]
 pub struct UploadBotDialog {
     spinner: Spinner,
-    ctrlv_alert: Option<Pin<Box<time::Sleep>>>,
+    ctrlv_alert: Option<Instant>,
 }
 
 impl UploadBotDialog {
@@ -43,11 +41,10 @@ impl UploadBotDialog {
             let width = cmp::min(ui.area().width - 10, 60);
             let text_height = TEXT.line_count(width) as u16;
 
-            let spinner = self.spinner.as_span(ui);
+            let spinner = self.spinner.as_span();
 
             if ui.key(KeyCode::Char('v'), Modifiers::CTRL) {
-                self.ctrlv_alert =
-                    Some(Box::pin(time::sleep(Duration::from_secs(3))));
+                self.ctrlv_alert = Some(Instant::now());
             }
 
             let height = if self.ctrlv_alert.is_some() {
@@ -81,7 +78,7 @@ impl UploadBotDialog {
 
                     ui.space(1);
 
-                    if ui.poll(alert).is_ready() {
+                    if alert.elapsed().as_secs() >= 3 {
                         self.ctrlv_alert = None;
                     }
                 }

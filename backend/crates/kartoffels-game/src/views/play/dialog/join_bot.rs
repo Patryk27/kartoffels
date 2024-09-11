@@ -13,14 +13,12 @@ pub struct JoinBotDialog {
 impl JoinBotDialog {
     pub fn render(&mut self, ui: &mut Ui, world: &Snapshot) {
         ui.info_window(26, 4, Some(" joining bot "), |ui| {
-            let caret = self.caret.as_span(ui);
-
             ui.line("enter bot id:");
 
             ui.line(Line::from_iter([
                 Span::raw("> "),
                 Span::raw(&self.id),
-                caret,
+                self.caret.as_span(),
             ]));
 
             ui.space(1);

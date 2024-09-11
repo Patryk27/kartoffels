@@ -2,7 +2,6 @@ use crate::Background;
 use anyhow::Result;
 use kartoffels_ui::{theme, Button, Term};
 use termwiz::input::KeyCode;
-use tokio::time;
 
 pub async fn run(term: &mut Term, bg: &mut Background) -> Result<()> {
     loop {
@@ -26,12 +25,10 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<()> {
             .flatten()
             .is_some();
 
-        if go_back {
-            time::sleep(theme::INTERACTION_TIME).await;
+        term.poll().await?;
 
+        if go_back {
             return Ok(());
         }
-
-        term.poll().await?;
     }
 }

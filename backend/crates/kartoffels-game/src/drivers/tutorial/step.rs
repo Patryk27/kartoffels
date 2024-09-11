@@ -62,7 +62,7 @@ impl StepCtxt {
 
         let resp = rx.await?;
 
-        time::sleep(theme::INTERACTION_TIME).await;
+        time::sleep(theme::FRAME_TIME).await;
 
         self.game.close_dialog().await?;
 

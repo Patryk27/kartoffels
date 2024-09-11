@@ -62,8 +62,6 @@ impl BotsDialog {
                     {
                         *self.table.offset_mut() =
                             self.table.offset().saturating_sub(8);
-
-                        ui.repaint();
                     }
 
                     ui.space(2);
@@ -74,8 +72,6 @@ impl BotsDialog {
                     {
                         *self.table.offset_mut() =
                             self.table.offset().saturating_add(8);
-
-                        ui.repaint();
                     }
 
                     ui.space(2);

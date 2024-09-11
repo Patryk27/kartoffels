@@ -7,7 +7,6 @@ edition.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 ciborium.workspace = true
-glam.workspace = true
 itertools.workspace = true
 pretty_assertions.workspace = true
 rand.workspace = true

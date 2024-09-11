@@ -31,8 +31,8 @@ pub mod prelude {
     pub use crate::config::Config;
     pub use crate::events::Event;
     pub use crate::handle::{
-        BoxedSnapshotStream, EventStream, EventStreamExt, Handle, Request,
-        SnapshotStream, SnapshotStreamExt,
+        EventStream, EventStreamExt, Handle, Request, SnapshotStream,
+        SnapshotStreamExt,
     };
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};

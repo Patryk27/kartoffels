@@ -7,17 +7,11 @@ use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
 use ratatui::Frame;
 use std::any::Any;
-use std::future::Future;
-use std::pin::pin;
-use std::task::{Context, Poll, Waker};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
-use tokio::task;
-use tokio::time::{self, Interval};
 
 #[derive(Debug)]
 pub struct Ui<'a, 'b> {
     pub(super) ty: TermType,
-    pub(super) waker: &'a Waker,
     pub(super) frame: &'a mut Frame<'b>,
     pub(super) area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
@@ -56,7 +50,6 @@ impl<'a, 'b> Ui<'a, 'b> {
     fn with<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
         f(&mut Ui {
             ty: self.ty,
-            waker: self.waker,
             frame: self.frame,
             area: self.area,
             mouse: self.mouse,
@@ -222,34 +215,6 @@ impl<'a, 'b> Ui<'a, 'b> {
     pub fn mouse_pressed(&self) -> bool {
         if let Some((_, pressed)) = &self.mouse {
             *pressed
-        } else {
-            false
-        }
-    }
-
-    pub fn repaint(&self) {
-        let waker = self.waker.clone();
-
-        task::spawn(async move {
-            time::sleep(theme::INTERACTION_TIME).await;
-            waker.wake();
-        });
-    }
-
-    pub fn poll<F>(&mut self, mut f: F) -> Poll<F::Output>
-    where
-        F: Future,
-    {
-        pin!(f).poll(&mut Context::from_waker(self.waker))
-    }
-
-    pub fn poll_interval(&mut self, int: &mut Interval) -> bool {
-        if self.poll(int.tick()).is_ready() {
-            // Tokio's intervals don't reschedule themselves upon a completed
-            // tick - we have to do it by hand:
-            _ = self.poll(int.tick());
-
-            true
         } else {
             false
         }

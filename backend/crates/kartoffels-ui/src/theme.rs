@@ -12,4 +12,4 @@ pub const RED: Color = Color::Rgb(255, 0, 0);
 pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
 pub const YELLOW: Color = Color::Rgb(255, 212, 80);
 
-pub const INTERACTION_TIME: Duration = Duration::from_millis(1000 / 60);
+pub const FRAME_TIME: Duration = Duration::from_millis(1000 / 30);

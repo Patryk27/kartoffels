@@ -17,20 +17,19 @@ use crate::DriverEventRx;
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
-use futures_util::{stream, FutureExt};
+use futures_util::FutureExt;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, BoxedSnapshotStream, Handle as WorldHandle,
-    Snapshot as WorldSnapshot, SnapshotStreamExt,
+    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
+    SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
-use std::mem;
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::task::Poll;
-use tokio::select;
+use std::time::Instant;
 
 pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     let mut state = State::default();
@@ -44,14 +43,13 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
             .await?
             .flatten();
 
+        term.poll().await?;
+
         if let Some(event) = event {
-            match event.handle(&mut state, term).await? {
-                ControlFlow::Continue(_) => {
-                    continue;
-                }
-                ControlFlow::Break(_) => {
-                    return Ok(());
-                }
+            if let ControlFlow::Break(_) =
+                event.handle(&mut state, term).await?
+            {
+                return Ok(());
             }
         }
 
@@ -59,6 +57,7 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     }
 }
 
+#[derive(Default)]
 struct State {
     bot: Option<JoinedBot>,
     camera: IVec2,
@@ -66,11 +65,11 @@ struct State {
     handle: Option<WorldHandle>,
     help: Option<HelpDialogRef>,
     map: Map,
-    pause: PauseState,
+    paused: bool,
     perms: Permissions,
     poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
-    snapshots: BoxedSnapshotStream,
+    snapshots: Option<SnapshotStream>,
     status: Option<String>,
 }
 
@@ -123,44 +122,14 @@ impl State {
         term: &mut Term,
         driver: &mut DriverEventRx,
     ) -> Result<()> {
-        let event = select! {
-            snapshot = self.snapshots.next_or_err() => {
-                Some(Either::Left(snapshot?))
-            },
-
-            Some(event) = driver.recv() => {
-                Some(Either::Right(event))
-            }
-
-            result = term.poll() => {
-                #[allow(clippy::question_mark)]
-                if let Err(err) = result {
-                    return Err(err);
-                }
-
-                None
-            }
-        };
-
-        match event {
-            Some(Either::Left(snapshot)) => {
-                self.set_snapshot(snapshot);
-            }
-            Some(Either::Right(event)) => {
-                event.handle(self, term).await?;
-            }
-            None => {
-                //
-            }
-        }
-
-        // Opportunistically handle all pending driver events, to avoid
-        // redrawing UI in-between them.
-        //
-        // This exists not as an optimization, but rather to prevent unnecessary
-        // UI flashes e.g. when the driver closes and opens dialogs.
         while let Some(event) = driver.recv().now_or_never().flatten() {
             event.handle(self, term).await?;
+        }
+
+        if let Some(snapshots) = &mut self.snapshots {
+            if let Some(snapshot) = snapshots.next_or_err().now_or_never() {
+                self.update_snapshot(snapshot?);
+            }
         }
 
         if let Some(poll) = &mut self.poll {
@@ -176,7 +145,7 @@ impl State {
         Ok(())
     }
 
-    fn set_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
+    fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
         // If map size's changed, re-center the camera; this comes handy during
         // tutorial where the driver changes maps.
         if snapshot.map().size() != self.snapshot.map().size() {
@@ -197,22 +166,14 @@ impl State {
     }
 
     async fn pause(&mut self) -> Result<()> {
-        match self.pause {
-            PauseState::Resumed => {
-                self.pause = PauseState::Paused(mem::replace(
-                    &mut self.snapshots,
-                    Box::new(stream::pending()),
-                ));
+        if !self.paused {
+            self.paused = true;
+            self.snapshots = None;
 
-                if self.perms.sync_pause
-                    && let Some(handle) = &self.handle
-                {
-                    handle.pause().await?;
-                }
-            }
-
-            PauseState::Paused(_) => {
-                //
+            if self.perms.sync_pause
+                && let Some(handle) = &self.handle
+            {
+                handle.pause().await?;
             }
         }
 
@@ -220,19 +181,16 @@ impl State {
     }
 
     async fn resume(&mut self) -> Result<()> {
-        match mem::take(&mut self.pause) {
-            PauseState::Resumed => {
-                //
-            }
+        if self.paused {
+            self.paused = false;
 
-            PauseState::Paused(snapshots) => {
-                self.snapshots = snapshots;
+            self.snapshots =
+                self.handle.as_ref().map(|handle| handle.snapshots());
 
-                if self.perms.sync_pause
-                    && let Some(handle) = &self.handle
-                {
-                    handle.resume().await?;
-                }
+            if self.perms.sync_pause
+                && let Some(handle) = &self.handle
+            {
+                handle.resume().await?;
             }
         }
 
@@ -246,8 +204,7 @@ impl State {
             is_known_to_exist: false,
         });
 
-        self.map.blink_active = true;
-        self.map.blink_interval.reset();
+        self.map.blink = Instant::now();
     }
 
     async fn upload_bot(&mut self, src: Either<String, Vec<u8>>) -> Result<()> {
@@ -290,36 +247,6 @@ impl State {
 
         Ok(())
     }
-
-    fn is_paused(&self) -> bool {
-        matches!(self.pause, PauseState::Paused(_))
-    }
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            bot: Default::default(),
-            camera: Default::default(),
-            dialog: Default::default(),
-            handle: Default::default(),
-            help: Default::default(),
-            map: Default::default(),
-            pause: Default::default(),
-            perms: Default::default(),
-            poll: Default::default(),
-            snapshot: Default::default(),
-            snapshots: Box::new(stream::pending()),
-            status: Default::default(),
-        }
-    }
-}
-
-#[derive(Default)]
-enum PauseState {
-    #[default]
-    Resumed,
-    Paused(BoxedSnapshotStream),
 }
 
 #[derive(Debug)]

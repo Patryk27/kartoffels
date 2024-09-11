@@ -32,7 +32,7 @@ impl BottomPanel {
     fn render_pause_btn(ui: &mut Ui, state: &State) {
         ui.space(2);
 
-        let label = if state.is_paused() { "resume" } else { "pause" };
+        let label = if state.paused { "resume" } else { "pause" };
 
         let enabled =
             state.handle.is_some() && state.perms.user_can_pause_world;
@@ -64,7 +64,7 @@ impl BottomPanel {
     }
 
     fn render_status(ui: &mut Ui, state: &State) {
-        if state.is_paused() {
+        if state.paused {
             let area = Rect {
                 x: ui.area().width - 6,
                 y: ui.area().y,

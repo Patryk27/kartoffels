@@ -6,17 +6,13 @@ use kartoffels_world::prelude::{
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
-use std::task::Poll;
 use std::thread;
 use std::time::Duration;
 use tokio::sync::watch;
-use tokio_stream::wrappers::WatchStream;
-use tokio_stream::StreamExt;
 
 pub struct Background {
-    map: Arc<Map>,
+    stream: watch::Receiver<Arc<Map>>,
     camera: IVec2,
-    stream: WatchStream<Arc<Map>>,
 }
 
 impl Background {
@@ -24,7 +20,6 @@ impl Background {
 
     pub fn new(term: &Term) -> Self {
         let stream = STREAM.subscribe();
-        let map = stream.borrow().clone();
 
         // Sample the camera position, so that every time the user opens the
         // menu, we show them a different piece of map.
@@ -41,19 +36,11 @@ impl Background {
                 .as_ivec2()
         };
 
-        Self {
-            map,
-            camera,
-            stream: WatchStream::new(stream),
-        }
+        Self { stream, camera }
     }
 
     pub fn render(&mut self, ui: &mut Ui) {
-        if let Poll::Ready(Some(map)) = ui.poll(self.stream.next()) {
-            self.map = map;
-
-            _ = ui.poll(self.stream.next());
-        }
+        let map = self.stream.borrow().clone();
 
         for x in 0..ui.area().width {
             for y in 0..ui.area().height {
@@ -64,7 +51,7 @@ impl Background {
                 ui.buf()[(x, y)]
                     .set_bg(theme::BG)
                     .set_fg(theme::DARK_GRAY)
-                    .set_char(self.map.get(pos).base as char);
+                    .set_char(map.get(pos).base as char);
             }
         }
     }

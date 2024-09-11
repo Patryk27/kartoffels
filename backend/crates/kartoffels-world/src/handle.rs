@@ -179,9 +179,6 @@ where
 
 pub type SnapshotStream = impl Stream<Item = Arc<Snapshot>> + Send + Unpin;
 
-pub type BoxedSnapshotStream =
-    Box<dyn Stream<Item = Arc<Snapshot>> + Send + Unpin>;
-
 pub trait SnapshotStreamExt {
     fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Snapshot>>>;
 }

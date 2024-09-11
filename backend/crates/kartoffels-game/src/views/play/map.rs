@@ -4,14 +4,12 @@ use glam::ivec2;
 use kartoffels_ui::{theme, Ui};
 use kartoffels_world::prelude::{Dir, Tile, TileBase};
 use ratatui::layout::Rect;
-use std::time::Duration;
+use std::time::Instant;
 use termwiz::input::{KeyCode, Modifiers};
-use tokio::time::{self, Interval};
 
 #[derive(Debug)]
 pub struct Map {
-    pub blink_active: bool,
-    pub blink_interval: Interval,
+    pub blink: Instant,
 }
 
 impl Map {
@@ -112,7 +110,7 @@ impl Map {
         };
 
         if ui.enabled() {
-            if state.is_paused() && tile.base != TileBase::BOT {
+            if state.paused && tile.base != TileBase::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
@@ -137,18 +135,12 @@ impl Map {
                     #[allow(clippy::collapsible_else_if)]
                     if let Some(bot) = &state.bot
                         && bot.id == id
-                        && state.map.blink_active
+                        && state.map.blink.elapsed().as_millis() % 1000 <= 500
                     {
                         fg = theme::BG;
                         bg = theme::GREEN;
                     }
                 }
-            }
-
-            if state.bot.is_some()
-                && ui.poll_interval(&mut state.map.blink_interval)
-            {
-                state.map.blink_active = !state.map.blink_active;
             }
         }
 
@@ -193,8 +185,7 @@ impl Map {
 impl Default for Map {
     fn default() -> Self {
         Self {
-            blink_active: true,
-            blink_interval: time::interval(Duration::from_millis(500)),
+            blink: Instant::now(),
         }
     }
 }

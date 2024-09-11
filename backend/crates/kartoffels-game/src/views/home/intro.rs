@@ -6,9 +6,8 @@ use self::menu::*;
 use super::Background;
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Term};
+use kartoffels_ui::Term;
 use ratatui::layout::{Constraint, Layout};
-use tokio::time;
 
 pub async fn run(
     term: &mut Term,
@@ -56,13 +55,11 @@ pub async fn run(
             .await?
             .flatten();
 
-        if let Some(resp) = resp {
-            time::sleep(theme::INTERACTION_TIME).await;
+        term.poll().await?;
 
+        if let Some(resp) = resp {
             return Ok(resp);
         }
-
-        term.poll().await?;
     }
 }
 
