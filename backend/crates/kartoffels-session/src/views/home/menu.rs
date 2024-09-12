@@ -12,7 +12,7 @@ impl Menu {
         20
     }
 
-    pub fn height(ui: &Ui) -> u16 {
+    pub fn height<T>(ui: &Ui<T>) -> u16 {
         if ui.ty().is_ssh() {
             5
         } else {
@@ -20,7 +20,7 @@ impl Menu {
         }
     }
 
-    pub fn render(ui: &mut Ui) {
+    pub fn render(ui: &mut Ui<Response>) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));

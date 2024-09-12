@@ -6,7 +6,7 @@ use ratatui::layout::Rect;
 pub struct Clear;
 
 impl Clear {
-    pub fn render(ui: &mut Ui) {
+    pub fn render<T>(ui: &mut Ui<T>) {
         Self::render_ex(ui.area(), ui.buf())
     }
 

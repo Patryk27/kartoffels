@@ -11,7 +11,7 @@ pub struct JoinBotDialog {
 }
 
 impl JoinBotDialog {
-    pub fn render(&mut self, ui: &mut Ui, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         ui.info_window(26, 4, Some(" joining bot "), |ui| {
             ui.line("enter bot id:");
 
@@ -44,7 +44,12 @@ impl JoinBotDialog {
         });
     }
 
-    fn handle(&mut self, ui: &mut Ui, world: &Snapshot, event: &InputEvent) {
+    fn handle(
+        &mut self,
+        ui: &mut Ui<Event>,
+        world: &Snapshot,
+        event: &InputEvent,
+    ) {
         match event {
             InputEvent::Key(event) => match (event.key, event.modifiers) {
                 (KeyCode::Char(ch), Modifiers::NONE) => {
@@ -82,7 +87,7 @@ impl JoinBotDialog {
         }
     }
 
-    fn handle_confirm(&self, ui: &mut Ui, world: &Snapshot) {
+    fn handle_confirm(&self, ui: &mut Ui<Event>, world: &Snapshot) {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {

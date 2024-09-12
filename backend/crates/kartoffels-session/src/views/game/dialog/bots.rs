@@ -20,7 +20,7 @@ impl BotsDialog {
         7,                    // score
     ];
 
-    pub fn render(&mut self, ui: &mut Ui, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
         let height = ui.area().height - 2;
 

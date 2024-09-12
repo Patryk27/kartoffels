@@ -16,6 +16,7 @@ use kartoffels_ui::{Backdrop, Ui};
 use kartoffels_world::prelude::Snapshot;
 use termwiz::input::{KeyCode, Modifiers};
 
+#[allow(clippy::type_complexity)]
 pub enum Dialog {
     Bots(BotsDialog),
     Error(ErrorDialog),
@@ -24,11 +25,11 @@ pub enum Dialog {
     Leaving(LeavingDialog),
     UploadBot(UploadBotDialog),
 
-    Custom(Box<dyn FnMut(&mut Ui) + Send>),
+    Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
 }
 
 impl Dialog {
-    pub fn render(&mut self, ui: &mut Ui, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         Backdrop::render(ui);
 
         match self {
@@ -49,9 +50,11 @@ impl Dialog {
             }
 
             Dialog::Help(this) => {
-                this.render(ui);
+                let event = ui.catch(|ui| {
+                    this.render(ui);
+                });
 
-                if let Some(event) = ui.catch::<HelpDialogResponse>() {
+                if let Some(event) = event {
                     match event {
                         HelpDialogResponse::Copy(payload) => {
                             ui.throw(Event::CopyToClipboard(
@@ -70,7 +73,7 @@ impl Dialog {
             }
 
             Dialog::Custom(this) => {
-                (this)(ui);
+                ui.catch(this);
             }
         }
     }

@@ -36,7 +36,7 @@ pub struct UploadBotDialog {
 }
 
 impl UploadBotDialog {
-    pub fn render(&mut self, ui: &mut Ui) {
+    pub fn render(&mut self, ui: &mut Ui<Event>) {
         if ui.ty().is_ssh() {
             let width = cmp::min(ui.area().width - 10, 60);
             let text_height = TEXT.line_count(width) as u16;

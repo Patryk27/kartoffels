@@ -39,7 +39,7 @@ impl Background {
         Self { stream, camera }
     }
 
-    pub fn render(&mut self, ui: &mut Ui) {
+    pub fn render<T>(&mut self, ui: &mut Ui<T>) {
         let map = self.stream.borrow().clone();
 
         for x in 0..ui.area().width {

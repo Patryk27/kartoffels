@@ -10,7 +10,7 @@ use termwiz::input::KeyCode;
 pub struct BottomPanel;
 
 impl BottomPanel {
-    pub fn render(ui: &mut Ui, state: &State) {
+    pub fn render(ui: &mut Ui<Event>, state: &State) {
         ui.row(|ui| {
             ui.space(2);
 
@@ -23,13 +23,13 @@ impl BottomPanel {
         Self::render_status(ui, state);
     }
 
-    fn render_go_back_btn(ui: &mut Ui) {
+    fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go back")
             .throwing(Event::GoBack)
             .render(ui);
     }
 
-    fn render_pause_btn(ui: &mut Ui, state: &State) {
+    fn render_pause_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
@@ -43,7 +43,7 @@ impl BottomPanel {
             .render(ui);
     }
 
-    fn render_help_btn(ui: &mut Ui, state: &State) {
+    fn render_help_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
         Button::new(KeyCode::Char('h'), "help")
@@ -52,7 +52,7 @@ impl BottomPanel {
             .render(ui);
     }
 
-    fn render_bots_btn(ui: &mut Ui, state: &State) {
+    fn render_bots_btn(ui: &mut Ui<Event>, state: &State) {
         if !state.perms.single_bot_mode {
             ui.space(2);
 
@@ -63,7 +63,7 @@ impl BottomPanel {
         }
     }
 
-    fn render_status(ui: &mut Ui, state: &State) {
+    fn render_status(ui: &mut Ui<Event>, state: &State) {
         if state.paused {
             let area = Rect {
                 x: ui.area().width - 6,

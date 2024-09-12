@@ -6,7 +6,7 @@ use termwiz::input::KeyCode;
 pub struct LeavingDialog;
 
 impl LeavingDialog {
-    pub fn render(&mut self, ui: &mut Ui) {
+    pub fn render(&mut self, ui: &mut Ui<Event>) {
         ui.window(50, 3, Some(" leaving "), theme::YELLOW, |ui| {
             ui.line("do you want to leave the game and go back to menu?");
             ui.space(1);

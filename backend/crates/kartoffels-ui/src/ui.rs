@@ -6,11 +6,10 @@ use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
 use ratatui::Frame;
-use std::any::Any;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct Ui<'a, 'b> {
+pub struct Ui<'a, 'b, T> {
     pub(super) ty: TermType,
     pub(super) frame: &'a mut Frame<'b>,
     pub(super) area: Rect,
@@ -19,10 +18,10 @@ pub struct Ui<'a, 'b> {
     pub(super) clipboard: &'a mut Vec<String>,
     pub(super) layout: UiLayout,
     pub(super) enabled: bool,
-    pub(super) thrown: &'a mut Option<Box<dyn Any>>,
+    pub(super) thrown: &'a mut Option<T>,
 }
 
-impl<'a, 'b> Ui<'a, 'b> {
+impl<'a, 'b, T> Ui<'a, 'b, T> {
     pub fn ty(&self) -> TermType {
         self.ty
     }
@@ -47,7 +46,7 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.enabled
     }
 
-    fn with<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
+    fn with(&mut self, f: impl FnOnce(&mut Ui<T>)) {
         f(&mut Ui {
             ty: self.ty,
             frame: self.frame,
@@ -58,35 +57,31 @@ impl<'a, 'b> Ui<'a, 'b> {
             layout: self.layout,
             enabled: self.enabled,
             thrown: self.thrown,
-        })
+        });
     }
 
-    pub fn clamp<T>(&mut self, area: Rect, f: impl FnOnce(&mut Ui) -> T) -> T {
+    pub fn clamp(&mut self, area: Rect, f: impl FnOnce(&mut Ui<T>)) {
         self.with(|ui| {
             ui.area = ui.area.clamp(area);
 
-            f(ui)
-        })
+            f(ui);
+        });
     }
 
-    pub fn row<T>(&mut self, f: impl FnOnce(&mut Ui) -> T) -> T {
+    pub fn row(&mut self, f: impl FnOnce(&mut Ui<T>)) {
         self.with(|ui| {
             ui.layout = UiLayout::Row;
 
-            f(ui)
-        })
+            f(ui);
+        });
     }
 
-    pub fn enable<T>(
-        &mut self,
-        enabled: bool,
-        f: impl FnOnce(&mut Ui) -> T,
-    ) -> T {
+    pub fn enable(&mut self, enabled: bool, f: impl FnOnce(&mut Ui<T>)) {
         self.with(|ui| {
             ui.enabled = ui.enabled && enabled;
 
-            f(ui)
-        })
+            f(ui);
+        });
     }
 
     pub fn space(&mut self, len: u16) {
@@ -121,25 +116,21 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.space(width);
     }
 
-    pub fn block<T>(
-        &mut self,
-        block: Block,
-        f: impl FnOnce(&mut Ui) -> T,
-    ) -> T {
+    pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         Clear::render(self);
         block.render_ref(self.area(), self.buf());
 
-        self.clamp(block.inner(self.area()), f)
+        self.clamp(block.inner(self.area()), f);
     }
 
-    pub fn window<T>(
+    pub fn window(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
         border_fg: Color,
-        f: impl FnOnce(&mut Ui) -> T,
-    ) -> T {
+        f: impl FnOnce(&mut Ui<T>),
+    ) {
         let area = {
             let [_, area, _] = Layout::horizontal([
                 Constraint::Fill(1),
@@ -167,28 +158,28 @@ impl<'a, 'b> Ui<'a, 'b> {
                 block = block.title(title).title_alignment(Alignment::Center);
             }
 
-            ui.block(block, f)
-        })
+            ui.block(block, f);
+        });
     }
 
-    pub fn info_window<T>(
+    pub fn info_window(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
-        f: impl FnOnce(&mut Ui) -> T,
-    ) -> T {
-        self.window(width, height, title, theme::GREEN, f)
+        f: impl FnOnce(&mut Ui<T>),
+    ) {
+        self.window(width, height, title, theme::GREEN, f);
     }
 
-    pub fn error_window<T>(
+    pub fn error_window(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
-        f: impl FnOnce(&mut Ui) -> T,
-    ) -> T {
-        self.window(width, height, title, theme::RED, f)
+        f: impl FnOnce(&mut Ui<T>),
+    ) {
+        self.window(width, height, title, theme::RED, f);
     }
 
     pub fn key(&self, key: KeyCode, mods: Modifiers) -> bool {
@@ -224,21 +215,26 @@ impl<'a, 'b> Ui<'a, 'b> {
         self.clipboard.push(payload.to_owned());
     }
 
-    pub fn throw(&mut self, event: impl Any + 'static) {
-        *self.thrown = Some(Box::new(event));
+    pub fn throw(&mut self, event: T) {
+        *self.thrown = Some(event);
     }
 
-    pub fn catch<T>(&mut self) -> Option<T>
-    where
-        T: 'static,
-    {
-        match self.thrown.take()?.downcast() {
-            Ok(event) => Some(*event),
-            Err(event) => {
-                *self.thrown = Some(event);
-                None
-            }
-        }
+    pub fn catch<U>(&mut self, f: impl FnOnce(&mut Ui<U>)) -> Option<U> {
+        let mut thrown = None;
+
+        f(&mut Ui {
+            ty: self.ty,
+            frame: self.frame,
+            area: self.area,
+            mouse: self.mouse,
+            event: self.event,
+            clipboard: self.clipboard,
+            layout: self.layout,
+            enabled: self.enabled,
+            thrown: &mut thrown,
+        });
+
+        thrown
     }
 }
 

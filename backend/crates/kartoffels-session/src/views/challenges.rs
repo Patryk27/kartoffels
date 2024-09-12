@@ -18,11 +18,8 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<()> {
                         .right_aligned()
                         .render(ui);
                 });
-
-                ui.catch::<()>()
             })
             .await?
-            .flatten()
             .is_some();
 
         term.poll().await?;

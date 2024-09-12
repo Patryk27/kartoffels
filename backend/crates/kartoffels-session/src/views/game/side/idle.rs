@@ -7,7 +7,7 @@ use termwiz::input::KeyCode;
 pub struct IdleSidePanel;
 
 impl IdleSidePanel {
-    pub fn render(ui: &mut Ui, state: &State) {
+    pub fn render(ui: &mut Ui<Event>, state: &State) {
         let actions = Self::layout(state);
 
         let [_, area] = Layout::vertical([
@@ -48,7 +48,7 @@ enum Action {
 }
 
 impl Action {
-    fn render(self, ui: &mut Ui, state: &State) {
+    fn render(self, ui: &mut Ui<Event>, state: &State) {
         match self {
             Action::JoinBot => {
                 Button::new(KeyCode::Char('j'), "join bot")

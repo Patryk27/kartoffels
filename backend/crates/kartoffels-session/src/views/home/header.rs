@@ -40,7 +40,7 @@ impl Header {
         TEXT.lines.len() as u16 + 2
     }
 
-    pub fn render(ui: &mut Ui) {
+    pub fn render<T>(ui: &mut Ui<T>) {
         Clear::render(ui);
 
         let block = Block::bordered()

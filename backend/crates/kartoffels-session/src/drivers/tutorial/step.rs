@@ -50,9 +50,11 @@ impl StepCtxt {
 
         self.game
             .open_dialog(move |ui| {
-                dialog.render(ui);
+                let resp = ui.catch(|ui| {
+                    dialog.render(ui);
+                });
 
-                if let Some(resp) = ui.catch() {
+                if let Some(resp) = resp {
                     if let Some(tx) = tx.take() {
                         _ = tx.send(resp);
                     }

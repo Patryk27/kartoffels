@@ -3,7 +3,7 @@ mod joined;
 
 use self::idle::*;
 use self::joined::*;
-use super::State;
+use super::{Event, State};
 use kartoffels_ui::{Clear, Ui};
 use ratatui::layout::Rect;
 
@@ -13,7 +13,7 @@ pub struct SidePanel;
 impl SidePanel {
     pub const WIDTH: u16 = 25;
 
-    pub fn render(ui: &mut Ui, state: &State) {
+    pub fn render(ui: &mut Ui<Event>, state: &State) {
         let area = {
             let area = ui.area();
 

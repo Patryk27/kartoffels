@@ -14,7 +14,7 @@ use termwiz::input::KeyCode;
 pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
-    pub fn render(ui: &mut Ui, state: &State, bot: &JoinedBot) {
+    pub fn render(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         ui.line("id".underlined());
         ui.line(bot.id.to_string().fg(bot.id.color()));
         ui.space(1);
@@ -43,7 +43,7 @@ impl JoinedSidePanel {
     }
 
     fn render_alive_bot(
-        ui: &mut Ui,
+        ui: &mut Ui<Event>,
         bot: &SnapshotAliveBot,
         footer_height: u16,
     ) {
@@ -76,7 +76,7 @@ impl JoinedSidePanel {
         });
     }
 
-    fn render_queued_bot(ui: &mut Ui, bot: &SnapshotQueuedBot) {
+    fn render_queued_bot(ui: &mut Ui<Event>, bot: &SnapshotQueuedBot) {
         ui.line("status".underlined());
 
         ui.row(|ui| {
@@ -91,7 +91,7 @@ impl JoinedSidePanel {
         });
     }
 
-    fn render_footer(ui: &mut Ui, state: &State, bot: &JoinedBot) {
+    fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         if state.perms.single_bot_mode {
             if state.perms.user_can_manage_bots {
                 Button::new(KeyCode::Char('D'), "destroy")

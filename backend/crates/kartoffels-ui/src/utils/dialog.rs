@@ -15,9 +15,9 @@ pub struct Dialog<T> {
 
 impl<T> Dialog<T>
 where
-    T: Clone + 'static,
+    T: Clone,
 {
-    pub fn render(&self, ui: &mut Ui) {
+    pub fn render(&self, ui: &mut Ui<T>) {
         let body = {
             let text: Text = self
                 .body
@@ -38,9 +38,7 @@ where
 
             ui.row(|ui| {
                 for button in &self.buttons {
-                    if button.btn.clone().render(ui).pressed {
-                        ui.throw(button.resp.clone());
-                    }
+                    button.btn.clone().render(ui);
                 }
             });
         });
@@ -85,7 +83,7 @@ impl DialogLine {
         self
     }
 
-    fn matches(&self, ui: &Ui) -> bool {
+    fn matches<E>(&self, ui: &Ui<E>) -> bool {
         match self.cond {
             Some(DialogLineCondition::ShowOnlyOnSsh) => ui.ty().is_ssh(),
             Some(DialogLineCondition::ShowOnlyOnWeb) => ui.ty().is_web(),
@@ -138,15 +136,13 @@ enum DialogLineCondition {
 
 #[derive(Clone, Debug)]
 pub struct DialogButton<T> {
-    btn: Button<'static>,
-    resp: T,
+    btn: Button<'static, T>,
 }
 
 impl<T> DialogButton<T> {
     pub fn new(key: KeyCode, label: impl AsRef<str>, resp: T) -> Self {
         Self {
-            btn: Button::new(key, label.as_ref().to_owned()),
-            resp,
+            btn: Button::new(key, label.as_ref().to_owned()).throwing(resp),
         }
     }
 

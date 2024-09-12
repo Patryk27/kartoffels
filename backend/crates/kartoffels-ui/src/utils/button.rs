@@ -7,15 +7,15 @@ use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
-pub struct Button<'a, E = ()> {
+pub struct Button<'a, T> {
     pub key: KeyCode,
     pub label: Cow<'a, str>,
-    pub throwing: Option<E>,
+    pub throwing: Option<T>,
     pub alignment: Alignment,
     pub enabled: bool,
 }
 
-impl<'a> Button<'a> {
+impl<'a, T> Button<'a, T> {
     pub fn new(key: KeyCode, label: impl Into<Cow<'a, str>>) -> Self {
         Self {
             key,
@@ -26,21 +26,11 @@ impl<'a> Button<'a> {
         }
     }
 
-    pub fn throwing<E>(self, event: E) -> Button<'a, E> {
-        Button {
-            key: self.key,
-            label: self.label,
-            throwing: Some(event),
-            alignment: self.alignment,
-            enabled: self.enabled,
-        }
+    pub fn throwing(mut self, event: T) -> Self {
+        self.throwing = Some(event);
+        self
     }
-}
 
-impl<'a, E> Button<'a, E>
-where
-    E: 'static,
-{
     pub fn centered(mut self) -> Self {
         self.alignment = Alignment::Center;
         self
@@ -60,7 +50,7 @@ where
         (Self::key_name(self.key).len() + self.label.len() + 3) as u16
     }
 
-    pub fn render(self, ui: &mut Ui) -> ButtonResponse {
+    pub fn render(self, ui: &mut Ui<T>) -> ButtonResponse {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
@@ -91,7 +81,7 @@ where
         resp
     }
 
-    fn layout(&self, ui: &Ui) -> Rect {
+    fn layout(&self, ui: &Ui<T>) -> Rect {
         let area = ui.area();
         let width = self.width();
 
@@ -109,7 +99,7 @@ where
         }
     }
 
-    fn response(&self, ui: &Ui, area: Rect) -> ButtonResponse {
+    fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
         let hovered = ui.enabled() && self.enabled && ui.mouse_over(area);
 
         let pressed = {
@@ -125,7 +115,7 @@ where
         ButtonResponse { hovered, pressed }
     }
 
-    fn style(&self, ui: &Ui, response: &ButtonResponse) -> (Style, Style) {
+    fn style(&self, ui: &Ui<T>, response: &ButtonResponse) -> (Style, Style) {
         let key = if ui.enabled() && self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)

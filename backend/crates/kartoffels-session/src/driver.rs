@@ -55,7 +55,7 @@ impl DrivenGame {
 
     pub async fn open_dialog(
         &self,
-        dialog: impl FnMut(&mut Ui) + Send + 'static,
+        dialog: impl FnMut(&mut Ui<()>) + Send + 'static,
     ) -> Result<()> {
         self.send(DriverEvent::OpenDialog(Box::new(dialog))).await?;
 
@@ -129,13 +129,14 @@ impl DrivenGame {
 pub type DriverEventTx = mpsc::Sender<DriverEvent>;
 pub type DriverEventRx = mpsc::Receiver<DriverEvent>;
 
+#[allow(clippy::type_complexity)]
 pub enum DriverEvent {
     Join(WorldHandle),
     Pause,
     Resume,
     SetPerms(Permissions),
     UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send>),
-    OpenDialog(Box<dyn FnMut(&mut Ui) + Send>),
+    OpenDialog(Box<dyn FnMut(&mut Ui<()>) + Send>),
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),
     SetStatus(Option<String>),

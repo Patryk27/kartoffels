@@ -38,10 +38,8 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
         let event = term
             .draw(|ui| {
                 state.render(ui);
-                ui.catch::<Event>()
             })
-            .await?
-            .flatten();
+            .await?;
 
         term.poll().await?;
 
@@ -74,7 +72,7 @@ struct State {
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui) {
+    fn render(&mut self, ui: &mut Ui<Event>) {
         // TODO doesn't belong here
         if let Some(bot) = &self.bot {
             if bot.is_followed {

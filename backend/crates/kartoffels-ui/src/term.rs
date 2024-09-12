@@ -120,7 +120,7 @@ impl Term {
 
     pub async fn draw<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
-        F: FnOnce(&mut Ui) -> T,
+        F: FnOnce(&mut Ui<T>),
     {
         let mut resp = None;
         let mut clipboard = Vec::new();
@@ -144,7 +144,7 @@ impl Term {
             self.term.draw(|frame| {
                 let area = frame.area();
 
-                resp = Some(render(&mut Ui {
+                render(&mut Ui {
                     ty: self.ty,
                     frame,
                     area,
@@ -153,8 +153,8 @@ impl Term {
                     clipboard: &mut clipboard,
                     layout: UiLayout::Col,
                     enabled: true,
-                    thrown: &mut None,
-                }));
+                    thrown: &mut resp,
+                });
             })?;
         }
 

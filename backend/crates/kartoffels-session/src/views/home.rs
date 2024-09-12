@@ -44,11 +44,8 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
                 ui.clamp(menu_area, |ui| {
                     Menu::render(ui);
                 });
-
-                ui.catch()
             })
-            .await?
-            .flatten();
+            .await?;
 
         term.poll().await?;
 

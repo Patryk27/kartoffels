@@ -13,7 +13,7 @@ impl ErrorDialog {
         Self { error }
     }
 
-    pub fn render(&self, ui: &mut Ui) {
+    pub fn render(&self, ui: &mut Ui<Event>) {
         let text = Paragraph::new(self.error.as_str()).wrap(Default::default());
         let width = 50;
         let height = text.line_count(width) as u16 + 2;

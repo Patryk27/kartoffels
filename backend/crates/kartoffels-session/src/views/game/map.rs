@@ -13,12 +13,12 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn render(ui: &mut Ui, state: &mut State) {
+    pub fn render(ui: &mut Ui<Event>, state: &mut State) {
         Self::render_tiles(ui, state);
         Self::process_keys(ui);
     }
 
-    fn render_tiles(ui: &mut Ui, state: &mut State) {
+    fn render_tiles(ui: &mut Ui<Event>, state: &mut State) {
         let area = ui.area();
 
         let offset =
@@ -45,7 +45,7 @@ impl Map {
         }
     }
 
-    fn render_tile(ui: &mut Ui, state: &mut State, tile: Tile) {
+    fn render_tile(ui: &mut Ui<Event>, state: &mut State, tile: Tile) {
         let ch;
         let mut fg;
         let mut bg;
@@ -149,7 +149,7 @@ impl Map {
         ui.buf()[pos].set_symbol(ch).set_fg(fg).set_bg(bg);
     }
 
-    fn process_keys(ui: &mut Ui) {
+    fn process_keys(ui: &mut Ui<Event>) {
         if !ui.enabled() {
             return;
         }

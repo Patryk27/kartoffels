@@ -57,11 +57,8 @@ pub async fn run(
                         .centered()
                         .render(ui);
                 });
-
-                ui.catch()
             })
-            .await?
-            .flatten();
+            .await?;
 
         term.poll().await?;
 

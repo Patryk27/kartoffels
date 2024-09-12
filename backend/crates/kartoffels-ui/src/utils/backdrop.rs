@@ -4,7 +4,7 @@ use crate::{theme, Ui};
 pub struct Backdrop;
 
 impl Backdrop {
-    pub fn render(ui: &mut Ui) {
+    pub fn render<T>(ui: &mut Ui<T>) {
         let area = ui.area();
         let buf = ui.buf();
 
