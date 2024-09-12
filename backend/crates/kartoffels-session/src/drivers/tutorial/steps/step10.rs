@@ -51,6 +51,8 @@ static HELP_RETRY: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
             "make sure you've removed the call to `motor_turn_right()` and \
              upload the bot again",
         ),
+        DialogLine::web(""),
+        DialogLine::web("!! don't forget to re-run `./build` !!"),
     ],
 
     buttons: vec![
