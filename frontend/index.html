@@ -3,32 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="src/assets/favicon.png" />
-    <title>Kartoffels: MMO Robot Combat Arena</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.png" />
 
-    <!-- We keep a couple of basic styles inline to prevent FOUC -->
+    <title>Kartoffels: Robot Combat Arena</title>
+
     <style>
-      * {
-        box-sizing: border-box;
+      @font-face {
+        font-family: "Fira Code";
+        font-style: normal;
+        font-weight: 300;
+        src: url("fira-code-regular.woff2") format("woff2");
       }
 
-      html {
-        height: 100%;
-        margin: 0;
-        padding: 0;
+      @font-face {
+        font-family: "Fira Code";
+        font-style: normal;
+        font-weight: 700;
+        src: url("fira-code-bold.woff2") format("woff2");
       }
 
+      html,
       body {
-        background: #050505;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+
+        font-family: "Fira Code";
+        font-variant-ligatures: none;
+      }
+
+      html,
+      body,
+      .xterm-viewport {
+        background: rgb(9, 9, 9) !important;
       }
 
       #app {
-        display: none;
+        width: 100vw;
+        height: 100vh;
       }
     </style>
   </head>
+
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/app.js"></script>
   </body>
 </html>

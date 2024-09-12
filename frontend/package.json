@@ -1,20 +1,21 @@
 {
   "name": "kartoffels",
-  "version": "0.0.0",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "kartoffels-sandbox": "file:../backend/crates/kartoffels-sandbox/pkg",
-    "vue": "^3.4.21"
-  },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.8",
-    "vue-tsc": "^2.0.26"
+    "vite": "^5.4.1"
+  },
+  "dependencies": {
+    "@xterm/addon-attach": "^0.11.0",
+    "@xterm/addon-clipboard": "^0.1.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0"
   }
 }

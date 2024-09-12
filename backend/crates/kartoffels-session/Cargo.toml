@@ -1,0 +1,22 @@
+[package]
+name = "kartoffels-session"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+kartoffels-store = { path = "../kartoffels-store" }
+kartoffels-ui = { path = "../kartoffels-ui" }
+kartoffels-world = { path = "../kartoffels-world" }
+
+anyhow.workspace = true
+base64.workspace = true
+futures-util.workspace = true
+glam.workspace = true
+itertools.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+ratatui.workspace = true
+termwiz.workspace = true
+tokio-stream.workspace = true
+tokio.workspace = true
+tracing.workspace = true

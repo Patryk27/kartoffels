@@ -1,6 +1,4 @@
 *.new
 .tmp
-/backend/target
 /data
-/frontend/node_modules
 /result

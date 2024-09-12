@@ -1,21 +1,19 @@
-#![feature(let_chains)]
-#![feature(try_blocks)]
+#![feature(map_try_insert)]
 
-mod boot;
-mod endpoints;
-mod error;
-mod state;
+mod common;
+mod http;
+mod ssh;
 
-use crate::state::*;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use indoc::indoc;
+use kartoffels_store::Store;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use tokio::net::TcpListener;
-use tower_http::cors::{self, CorsLayer};
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use std::sync::Arc;
+use tokio::{select, signal, try_join};
+use tokio_util::sync::CancellationToken;
 use tracing::info;
 use tracing_subscriber::fmt;
 
@@ -30,78 +28,136 @@ const LOGO: &str = indoc! {r#"
 
 #[derive(Debug, Parser)]
 pub struct Cmd {
-    #[clap(long, default_value = "127.0.0.1:1313")]
-    listen: SocketAddr,
+    data: PathBuf,
 
     #[clap(long)]
-    data: Option<PathBuf>,
+    http: Option<SocketAddr>,
 
     #[clap(long)]
-    secret: Option<String>,
+    ssh: Option<SocketAddr>,
 
     #[clap(long)]
     debug: bool,
+
+    #[clap(long)]
+    log_time: bool,
 }
 
 impl Cmd {
     pub fn run(self) -> Result<()> {
-        let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
-            let filter = if self.debug {
-                "tower_http=debug,kartoffels=debug"
-            } else {
-                "kartoffels=info"
-            };
+        self.init_tracing();
+        self.print_logo();
 
-            filter.to_owned()
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()?
+            .block_on(self.start())
+    }
+
+    fn init_tracing(&self) {
+        let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
+            if self.debug {
+                "kartoffels=debug".into()
+            } else {
+                "kartoffels=info".into()
+            }
         });
 
-        tracing_subscriber::fmt()
-            .with_env_filter(filter)
-            .event_format(fmt::format::Format::default().without_time())
-            .init();
+        if self.log_time {
+            tracing_subscriber::fmt()
+                .event_format(fmt::format::Format::default())
+                .with_env_filter(filter)
+                .init();
+        } else {
+            tracing_subscriber::fmt()
+                .event_format(fmt::format::Format::default().without_time())
+                .with_env_filter(filter)
+                .init();
+        }
+    }
 
-        // ---
-
+    fn print_logo(&self) {
         for line in LOGO.lines() {
             info!("{}", line);
         }
 
         info!("");
-        info!(?self, "initializing");
-
-        // ---
-
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()?
-            .block_on(self.run_async())
     }
 
-    async fn run_async(self) -> Result<()> {
-        let state = boot::init(self.data).await?;
-        let signal = boot::setup_shutdown_signal(state.clone());
-        let listener = TcpListener::bind(&self.listen).await?;
+    async fn start(self) -> Result<()> {
+        info!(?self, "starting");
 
-        let app = {
-            let cors = CorsLayer::new()
-                .allow_methods(cors::Any)
-                .allow_headers(cors::Any)
-                .allow_origin(cors::Any);
+        let store = Store::open(&self.data).await.with_context(|| {
+            format!("couldn't load store from `{}`", self.data.display())
+        })?;
 
-            let trace = TraceLayer::new_for_http()
-                .make_span_with(DefaultMakeSpan::default());
+        let store = Arc::new(store);
+        let shutdown = CancellationToken::new();
 
-            endpoints::router(state, self.secret)
-                .layer(cors)
-                .layer(trace)
+        let http = {
+            let store = store.clone();
+            let shutdown = shutdown.clone();
+
+            async {
+                if let Some(addr) = &self.http {
+                    http::start(addr, store, shutdown).await
+                } else {
+                    Ok(())
+                }
+            }
         };
 
-        info!("ready");
+        let ssh = {
+            let store = store.clone();
+            let shutdown = shutdown.clone();
 
-        axum::serve(listener, app.into_make_service())
-            .with_graceful_shutdown(signal)
-            .await?;
+            async {
+                if let Some(addr) = &self.ssh {
+                    ssh::start(addr, store, shutdown).await
+                } else {
+                    Ok(())
+                }
+            }
+        };
+
+        let shutdown = async {
+            wait_for_shutdown().await;
+            shutdown.cancel();
+            store.close().await?;
+
+            Ok(())
+        };
+
+        try_join!(http, ssh, shutdown)?;
 
         Ok(())
+    }
+}
+
+async fn wait_for_shutdown() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+
+        info!("got the C-c signal, shutting down");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+
+        info!("got the termination signal, shutting down");
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
     }
 }

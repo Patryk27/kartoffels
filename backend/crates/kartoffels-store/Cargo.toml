@@ -1,0 +1,12 @@
+[package]
+name = "kartoffels-store"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+kartoffels-world = { path = "../kartoffels-world" }
+kartoffels-utils = { path = "../kartoffels-utils" }
+
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true

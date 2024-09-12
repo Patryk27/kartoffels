@@ -3,8 +3,8 @@ use std::env;
 fn main() {
     println!(
         "cargo:rustc-link-search={}",
-        env::current_dir().unwrap().join("misc").display()
+        env::current_dir().unwrap().display(),
     );
 
-    println!("cargo:rerun-if-changed=misc/kartoffel.ld");
+    println!("cargo:rerun-if-changed=kartoffel.ld");
 }

@@ -1,8 +1,8 @@
 [package]
 name = "kartoffel"
-version = { workspace = true }
-edition = { workspace = true }
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-spin = { workspace = true }
-talc = { workspace = true }
+spin.workspace = true
+talc.workspace = true

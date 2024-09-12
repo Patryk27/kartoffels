@@ -1,31 +1,33 @@
-# 🥔 Kartoffels 🥔
+# 🥔 kartoffels 🥔
 
-**[Kartoffels](https://kartoffels.pwy.io) is an MMO robot combat arena!**
+[kartoffels](https://kartoffels.pwy.io) is a game where you're given a potato
+and your job is to implement [a firmware](https://github.com/patryk27/kartoffel)
+for it:
 
-Implement your own bot, submit it and see it fight other bots in real-time:
+![](./readme/intro-v5.png)
+![](./readme/intro-v6.png)
 
-![](./readme/intro-v2.gif)
+[play it in your browser](https://kartoffels.pwy.io) or join via
+`ssh kartoffels.pwy.io`!
 
-[Play it online!](https://kartoffels.pwy.io)
-
-## Name
+## name
 
 kartoffel (🇩🇪)    
 = potato    
 = slang for "slow machine"    
-= exactly what kartoffel bots are - slow machines indeed!
+= exactly what kartoffels are, slow machines indeed!
 
-## License
+## license
 
-Copyright (c) 2024, Patryk Wychowaniec (`pwychowaniec @at@ pm.me`).
+copyright (c) 2024, patryk wychowaniec (`pwychowaniec @at@ pm.me`).
 
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, version 3.
+this program is free software: you can redistribute it and/or modify it under
+the terms of the gnu general public license as published by the free software
+foundation, version 3.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+this program is distributed in the hope that it will be useful, but without any
+warranty; without even the implied warranty of merchantability or fitness for a
+particular purpose. see the gnu general public license for more details.
 
-You should have received a copy of the GNU General Public License along with
-this program. If not, see <https://www.gnu.org/licenses/>. 
+you should have received a copy of the gnu general public license along with
+this program. if not, see <https://www.gnu.org/licenses/>. 

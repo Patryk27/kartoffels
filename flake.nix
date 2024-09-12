@@ -2,12 +2,6 @@
   inputs = {
     crane = {
       url = "github:ipetkov/crane";
-
-      inputs = {
-        nixpkgs = {
-          follows = "nixpkgs";
-        };
-      };
     };
 
     napalm = {
@@ -57,38 +51,23 @@
 
           frontend = import ./frontend {
             inherit napalm pkgs;
-
-            rev = builtins.substring 0 7 (self.rev or "dirty");
-            kartoffels-sandbox = backend.kartoffels-sandbox;
           };
 
         in
         {
           packages = {
-            inherit frontend;
-
-            backend = backend.kartoffels-server;
+            inherit backend frontend;
 
             default = pkgs.linkFarm "kartoffels" [
               {
-                name = "kartoffels-server";
-                path = backend.kartoffels-server;
+                name = "kartoffels";
+                path = backend;
               }
               {
-                name = "kartoffels-frontend";
+                name = "kartoffels-web";
                 path = frontend;
               }
             ];
-          };
-
-          devShells = {
-            default = pkgs.mkShell {
-              buildInputs = with pkgs; [
-                just
-                nodejs
-                wasm-pack
-              ];
-            };
           };
         }
       );

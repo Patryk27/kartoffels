@@ -4,7 +4,6 @@ let
   toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
   crane' = (crane.mkLib pkgs).overrideToolchain toolchain;
 
-  # TODO use lib.cleanSourceWith
   src = ./.;
 
   cargoVendorDir = crane'.vendorMultipleCargoDeps {
@@ -23,7 +22,7 @@ let
 
         # N.B. this is already defined in `.cargo/config.toml`, but Crane's
         #      mkDummySrc accidentally gets rid of it
-        RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/misc/kartoffel.ld}";
+        RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/kartoffel.ld}";
 
         cargoCheckCommand = ":";
         cargoTestCommand = ":";
@@ -32,7 +31,7 @@ let
           "-p bot-${name}"
           "-Z build-std"
           "-Z build-std-features=compiler-builtins-mem"
-          "--target ${./misc/riscv64-kartoffel-bot.json}"
+          "--target ${./riscv64-kartoffel-bot.json}"
         ];
 
         postInstall = ''
@@ -46,50 +45,10 @@ let
     "${pkg}/bin/bot-${name}";
 
 in
-rec
-{
-  bots = {
-    dummy = mkBot "dummy";
-    roberto = mkBot "roberto";
-  };
+crane'.buildPackage {
+  inherit src cargoVendorDir;
 
-  kartoffels-server = crane'.buildPackage {
-    inherit src cargoVendorDir;
-
-    cargoBuildCommand = "cargo build -p kartoffels-server --release";
-    cargoExtraArgs = "--workspace --exclude kartoffels-sandbox";
-  };
-
-  kartoffels-sandbox = crane'.buildPackage {
-    inherit src cargoVendorDir;
-
-    buildInputs = with pkgs; [
-      binaryen
-      wasm-bindgen-cli
-      wasm-pack
-    ];
-
-    CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
-    KARTOFFELS_BOT_DUMMY = bots.dummy;
-    KARTOFFELS_BOT_ROBERTO = bots.roberto;
-
-    cargoCheckCommand = ":";
-    cargoTestCommand = ":";
-
-    cargoBuildCommand = ''
-      HOME=$(mktemp -d fake-homeXXXX) \
-          wasm-pack build \
-              ./crates/kartoffels-sandbox \
-              --target web \
-    '';
-
-    installPhase = ''
-      mkdir $out
-      cp -avr ./crates/kartoffels-sandbox/pkg/* $out
-
-      ${pkgs.removeReferencesTo}/bin/remove-references-to \
-        -t ${cargoVendorDir} \
-        $out/kartoffels_sandbox_bg.wasm
-    '';
-  };
+  cargoBuildCommand = "cargo build -p kartoffels --release";
+  KARTOFFELS_BOT_DUMMY = mkBot "dummy";
+  KARTOFFELS_BOT_ROBERTO = mkBot "roberto";
 }
