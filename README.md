@@ -1,10 +1,14 @@
 # 🥔 kartoffels 🥔
 
-kartoffels is a game where you're given a potato-robot and your job is to
-implement a firmware for it!
+[kartoffels](https://kartoffels.pwy.io) is a game where you're given a potato
+and your job is to implement [a firmware](https://github.com/patryk27/kartoffel)
+for it:
 
-[play it in browser](https://kartoffels.pwy.io) or join via
-`ssh kartoffels.pwy.io`
+![](./readme/intro-v5.png)
+![](./readme/intro-v6.png)
+
+[play it in your browser](https://kartoffels.pwy.io) or join via
+`ssh kartoffels.pwy.io`!
 
 ## name
 
