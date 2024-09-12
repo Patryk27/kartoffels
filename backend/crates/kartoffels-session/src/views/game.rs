@@ -208,6 +208,7 @@ impl State {
     async fn upload_bot(&mut self, src: Either<String, Vec<u8>>) -> Result<()> {
         let src = match src {
             Either::Left(src) => {
+                let src = src.trim().replace('\r', "");
                 let src = src.trim().replace('\n', "");
 
                 match BASE64_STANDARD.decode(src) {
