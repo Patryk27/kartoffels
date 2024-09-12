@@ -2,6 +2,7 @@ use crate::{
     Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
     SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileBase, World,
 };
+use ahash::AHashMap;
 use std::cmp::Reverse;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -23,43 +24,14 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     }
 
-    let snap = Arc::new(Snapshot {
-        map: prepare_map(world),
-        bots: prepare_bots(world),
-    });
+    let bots = prepare_bots(world);
+    let map = prepare_map(&bots, world);
 
-    world.snapshots.send_replace(snap);
+    world
+        .snapshots
+        .send_replace(Arc::new(Snapshot { map, bots }));
 
     state.next_run_at = Instant::now() + Duration::from_millis(50);
-}
-
-fn prepare_map(world: &World) -> Map {
-    let mut map = world.map.clone();
-
-    for (idx, entry) in world.bots.alive.iter().enumerate() {
-        let pos = entry.pos;
-        let dir = entry.bot.motor.dir;
-
-        let tile = Tile {
-            base: TileBase::BOT,
-            meta: [idx as u8, 0, 0],
-        };
-
-        let chevron_pos = pos + dir.as_vec();
-
-        let chevron_tile = Tile {
-            base: TileBase::BOT_CHEVRON,
-            meta: [idx as u8, u8::from(dir), 0],
-        };
-
-        map.set(pos, tile);
-
-        if !map.get(chevron_pos).is_bot() {
-            map.set(chevron_pos, chevron_tile);
-        }
-    }
-
-    map
 }
 
 fn prepare_bots(world: &World) -> SnapshotBots {
@@ -77,15 +49,14 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         .map(|entry| SnapshotAliveBot {
             id: entry.id,
             pos: entry.pos,
+            dir: entry.bot.motor.dir,
             serial: Arc::new(entry.bot.serial.buffer.clone()),
-            events: entry.bot.events.iter().cloned().collect(),
+            events: Default::default(), // TODO
             age: entry.bot.timer.age(),
         })
         .collect();
 
-    let idx_lookup = world
-        .bots
-        .alive
+    let id_to_idx: AHashMap<_, _> = entries
         .iter()
         .enumerate()
         .map(|(idx, bot)| (bot.id, idx as u8))
@@ -94,15 +65,12 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
     let idx_by_scores = {
         let scores = world.mode.scores();
 
-        let mut idx: Vec<_> = world
-            .bots
-            .alive
+        let mut idx: Vec<_> = id_to_idx
             .iter()
-            .enumerate()
-            .map(|(idx, entry)| {
-                let score = scores.get(&entry.id).copied().unwrap_or_default();
+            .map(|(id, &idx)| {
+                let score = scores.get(id).copied().unwrap_or_default();
 
-                (score, idx as u8)
+                (score, idx)
             })
             .collect();
 
@@ -117,7 +85,7 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
 
     SnapshotAliveBots {
         entries,
-        idx_lookup,
+        id_to_idx,
         idx_by_scores,
     }
 }
@@ -130,7 +98,7 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .map(|entry| {
             let bot = SnapshotQueuedBot {
                 serial: Arc::new(entry.bot.serial.buffer.clone()),
-                events: entry.bot.events.iter().cloned().collect(),
+                events: Default::default(), // TODO
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
             };
@@ -140,4 +108,30 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .collect();
 
     SnapshotQueuedBots { entries }
+}
+
+fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
+    let mut map = world.map.clone();
+
+    for (idx, bot) in bots.alive().iter().enumerate() {
+        let tile = Tile {
+            base: TileBase::BOT,
+            meta: [idx as u8, 0, 0],
+        };
+
+        let chevron_pos = bot.pos + bot.dir.as_vec();
+
+        let chevron_tile = Tile {
+            base: TileBase::BOT_CHEVRON,
+            meta: [idx as u8, u8::from(bot.dir), 0],
+        };
+
+        map.set(bot.pos, tile);
+
+        if !map.get(chevron_pos).is_bot() {
+            map.set(chevron_pos, chevron_tile);
+        }
+    }
+
+    map
 }

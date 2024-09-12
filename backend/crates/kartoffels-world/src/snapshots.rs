@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotEvent, BotId, Map};
+use crate::{BotEvent, BotId, Dir, Map};
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Either;
@@ -62,13 +62,13 @@ impl SnapshotBots {
 #[derive(Debug, Default)]
 pub struct SnapshotAliveBots {
     entries: Vec<SnapshotAliveBot>,
-    idx_lookup: AHashMap<BotId, u8>,
+    id_to_idx: AHashMap<BotId, u8>,
     idx_by_scores: Vec<(u32, u8)>,
 }
 
 impl SnapshotAliveBots {
     pub fn by_id(&self, id: BotId) -> Option<&SnapshotAliveBot> {
-        self.by_idx(*self.idx_lookup.get(&id)?)
+        self.by_idx(*self.id_to_idx.get(&id)?)
     }
 
     pub fn by_idx(&self, idx: u8) -> Option<&SnapshotAliveBot> {
@@ -102,6 +102,7 @@ impl SnapshotAliveBots {
 pub struct SnapshotAliveBot {
     pub id: BotId,
     pub pos: IVec2,
+    pub dir: Dir,
     pub serial: Arc<VecDeque<u32>>,
     pub events: Vec<Arc<BotEvent>>,
     pub age: u32,

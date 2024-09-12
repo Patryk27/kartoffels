@@ -6,12 +6,11 @@ use maybe_owned::MaybeOwned;
 use rand::prelude::SliceRandom;
 use rand::RngCore;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::BTreeMap;
 use std::mem;
 
 #[derive(Clone, Debug, Default)]
 pub struct AliveBots {
-    entries: BTreeMap<BotId, AliveBot>,
+    entries: AHashMap<BotId, AliveBot>,
     pos_to_id: AHashMap<IVec2, BotId>,
     id_to_pos: AHashMap<BotId, IVec2>,
 }
