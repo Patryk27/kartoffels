@@ -31,6 +31,11 @@ in
           type = types.nullOr types.str;
           default = "0.0.0.0:22";
         };
+
+        debug = mkOption {
+          type = types.bool;
+          default = false;
+        };
       };
 
       frontend = {
@@ -103,7 +108,8 @@ in
         ${cfg.backend.package}/bin/kartoffels serve \
             '${cfg.backend.data}' \
             ${optionalString (cfg.backend.http != null) "--http ${cfg.backend.http}"} \
-            ${optionalString (cfg.backend.ssh != null) "--ssh ${cfg.backend.ssh}"}
+            ${optionalString (cfg.backend.ssh != null) "--ssh ${cfg.backend.ssh}"} \
+            ${optionalString cfg.backend.debug "--debug"}
       '';
 
       wantedBy = [ "multi-user.target" ];
