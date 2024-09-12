@@ -63,7 +63,7 @@ impl SnapshotBots {
 pub struct SnapshotAliveBots {
     entries: Vec<SnapshotAliveBot>,
     id_to_idx: AHashMap<BotId, u8>,
-    idx_by_scores: Vec<(u32, u8)>,
+    idx_by_scores: Vec<u8>,
 }
 
 impl SnapshotAliveBots {
@@ -81,12 +81,10 @@ impl SnapshotAliveBots {
 
     pub fn iter_sorted_by_scores(
         &self,
-    ) -> impl Iterator<Item = (&SnapshotAliveBot, u32)> + '_ {
-        self.idx_by_scores.iter().filter_map(|(score, idx)| {
-            let bot = self.by_idx(*idx)?;
-
-            Some((bot, *score))
-        })
+    ) -> impl Iterator<Item = &SnapshotAliveBot> + '_ {
+        self.idx_by_scores
+            .iter()
+            .filter_map(|idx| self.by_idx(*idx))
     }
 
     pub fn len(&self) -> usize {
@@ -103,9 +101,10 @@ pub struct SnapshotAliveBot {
     pub id: BotId,
     pub pos: IVec2,
     pub dir: Dir,
+    pub age: u32,
+    pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
     pub events: Vec<Arc<BotEvent>>,
-    pub age: u32,
 }
 
 #[derive(Debug, Default)]

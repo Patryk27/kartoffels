@@ -42,6 +42,8 @@ fn prepare_bots(world: &World) -> SnapshotBots {
 }
 
 fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
+    let scores = world.mode.scores();
+
     let entries: Vec<_> = world
         .bots
         .alive
@@ -50,9 +52,10 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
             id: entry.id,
             pos: entry.pos,
             dir: entry.bot.motor.dir,
+            age: entry.bot.timer.age(),
+            score: scores.get(&entry.id).copied().unwrap_or_default(),
             serial: Arc::new(entry.bot.serial.buffer.clone()),
             events: Default::default(), // TODO
-            age: entry.bot.timer.age(),
         })
         .collect();
 
@@ -63,21 +66,12 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         .collect();
 
     let idx_by_scores = {
-        let scores = world.mode.scores();
+        let mut idx: Vec<_> = (0..(entries.len() as u8)).collect();
 
-        let mut idx: Vec<_> = id_to_idx
-            .iter()
-            .map(|(id, &idx)| {
-                let score = scores.get(id).copied().unwrap_or_default();
-
-                (score, idx)
-            })
-            .collect();
-
-        idx.sort_unstable_by_key(|(score, idx)| {
+        idx.sort_unstable_by_key(|idx| {
             let bot = &entries[*idx as usize];
 
-            (Reverse(*score), Reverse(bot.age))
+            (Reverse(bot.score), Reverse(bot.age))
         });
 
         idx

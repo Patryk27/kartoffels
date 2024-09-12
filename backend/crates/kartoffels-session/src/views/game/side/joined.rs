@@ -52,6 +52,7 @@ impl JoinedSidePanel {
             "alive ".fg(theme::GREEN),
             format!("({}s)", bot.age).into(),
         ]));
+        ui.line(format!("> score: {}", bot.score).fg(theme::GRAY));
         ui.space(1);
 
         // ---
