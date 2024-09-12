@@ -6,7 +6,6 @@ use kartoffels_world::prelude::{SnapshotAliveBot, SnapshotQueuedBot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Line;
-use ratatui::widgets::{Paragraph, Widget};
 use std::collections::VecDeque;
 use termwiz::input::KeyCode;
 
@@ -71,9 +70,12 @@ impl JoinedSidePanel {
         ui.clamp(area, |ui| {
             ui.line("serial port".underlined());
 
-            Paragraph::new(render_serial(&bot.serial))
-                .wrap(Default::default())
-                .render(ui.area(), ui.buf());
+            let serial = render_serial(&bot.serial);
+            let serial = reflow_serial(&serial, ui.area());
+
+            for line in serial {
+                ui.line(line);
+            }
         });
     }
 
@@ -138,7 +140,7 @@ impl JoinedSidePanel {
     }
 }
 
-// TODO consider memoization, idk
+// TODO this should be done by BotSerial and memoized
 fn render_serial(serial: &VecDeque<u32>) -> String {
     let mut out = String::with_capacity(256);
     let mut buf = None;
@@ -166,4 +168,42 @@ fn render_serial(serial: &VecDeque<u32>) -> String {
     }
 
     out
+}
+
+fn reflow_serial(serial: &str, area: Rect) -> VecDeque<&str> {
+    let mut lines = VecDeque::with_capacity(area.height as usize);
+
+    let mut line_start = 0;
+    let mut line_chars = 0;
+
+    // TODO we should iterate through graphemes here
+    for (ch_idx, ch) in serial.char_indices() {
+        if ch == '\n' || line_chars == area.width {
+            if lines.len() == lines.capacity() {
+                lines.pop_front();
+            }
+
+            lines.push_back(&serial[line_start..ch_idx]);
+
+            line_start = ch_idx;
+            line_chars = 0;
+
+            if ch == '\n' {
+                line_start += 1;
+                continue;
+            }
+        }
+
+        line_chars += 1;
+    }
+
+    if line_chars > 0 {
+        if lines.len() == lines.capacity() {
+            lines.pop_front();
+        }
+
+        lines.push_back(&serial[line_start..]);
+    }
+
+    lines
 }

@@ -14,7 +14,7 @@ pub async fn run(
         let resp = term
             .draw(|ui| {
                 let width = 40;
-                let mut height = 4;
+                let mut height = 3;
 
                 if !store.worlds.is_empty() {
                     height += store.worlds.len() as u16 + 1;
@@ -49,8 +49,6 @@ pub async fn run(
                         .throwing(Response::Challenges)
                         .centered()
                         .render(ui);
-
-                    ui.space(1);
 
                     Button::new(KeyCode::Escape, "go back")
                         .throwing(Response::GoBack)
