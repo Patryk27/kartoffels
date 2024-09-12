@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-const CMD: &str = "git clone github.com/patryk27/kartoffel";
+const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
 #[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
