@@ -7,7 +7,7 @@ for it:
 ![](./readme/intro-v5.png)
 ![](./readme/intro-v6.png)
 
-[play it in your browser](https://kartoffels.pwy.io) or join via
+[play it in your browser](https://kartoffels.pwy.io) or in your terminal, at
 `ssh kartoffels.pwy.io`!
 
 ## name
