@@ -48,7 +48,8 @@ in
 crane'.buildPackage {
   inherit src cargoVendorDir;
 
-  cargoBuildCommand = "cargo build -p kartoffels --release";
+  cargoExtraArgs = "-p kartoffels";
+  CARGO_PROFILE = "dist";
   KARTOFFELS_BOT_DUMMY = mkBot "dummy";
   KARTOFFELS_BOT_ROBERTO = mkBot "roberto";
 }
