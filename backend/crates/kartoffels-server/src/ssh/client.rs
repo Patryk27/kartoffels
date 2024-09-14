@@ -47,6 +47,18 @@ impl AppClient {
 impl server::Handler for AppClient {
     type Error = Error;
 
+    async fn auth_none(&mut self, _: &str) -> Result<Auth> {
+        Ok(Auth::Accept)
+    }
+
+    async fn auth_password(&mut self, _: &str, _: &str) -> Result<Auth> {
+        Ok(Auth::Accept)
+    }
+
+    async fn auth_publickey(&mut self, _: &str, _: &PublicKey) -> Result<Auth> {
+        Ok(Auth::Accept)
+    }
+
     async fn channel_open_session(
         &mut self,
         channel: Channel<Msg>,
@@ -82,10 +94,6 @@ impl server::Handler for AppClient {
         } else {
             Err(anyhow!("channel `{}` has been already closed", channel))
         }
-    }
-
-    async fn auth_publickey(&mut self, _: &str, _: &PublicKey) -> Result<Auth> {
-        Ok(Auth::Accept)
     }
 
     async fn data(
