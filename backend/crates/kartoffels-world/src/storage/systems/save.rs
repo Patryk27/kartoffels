@@ -53,6 +53,7 @@ pub fn run_now(world: &mut World, state: &mut State, wait: bool) {
 
     let world = SerializedWorld {
         bots: MaybeOwned::Borrowed(&world.bots),
+        clock: MaybeOwned::Borrowed(&world.clock),
         map: MaybeOwned::Borrowed(&world.map),
         mode: MaybeOwned::Borrowed(&world.mode),
         name: MaybeOwned::Borrowed(&world.name),

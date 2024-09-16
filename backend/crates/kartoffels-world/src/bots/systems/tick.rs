@@ -1,9 +1,14 @@
-use crate::{cfg, AliveBotEntryMut, BotId, KillBot, World};
+use crate::{AliveBotEntryMut, BotId, Clock, KillBot, World};
 
 pub fn run(world: &mut World) {
     let ids = world.bots.alive.pick_ids(&mut world.rng);
 
-    for _ in 0..cfg::SIM_TICKS {
+    let steps = match world.clock {
+        Clock::Auto { steps, .. } => steps,
+        Clock::Manual { steps } => steps,
+    };
+
+    for _ in 0..steps {
         tick(world, &ids);
     }
 

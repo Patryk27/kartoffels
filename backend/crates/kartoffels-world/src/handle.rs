@@ -38,16 +38,28 @@ impl Handle {
         WatchStream::new(self.inner.snapshots.subscribe())
     }
 
-    pub async fn pause(&self) -> Result<()> {
-        self.send(Request::Pause).await?;
+    pub async fn tick(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::Tick { tx }).await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn pause(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Pause { tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn resume(&self) -> Result<()> {
-        self.send(Request::Resume).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::Resume { tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn shutdown(&self) -> Result<()> {
@@ -76,15 +88,19 @@ impl Handle {
     }
 
     pub async fn restart_bot(&self, id: BotId) -> Result<()> {
-        self.send(Request::RestartBot { id }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::RestartBot { id, tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn destroy_bot(&self, id: BotId) -> Result<()> {
-        self.send(Request::DestroyBot { id }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::DestroyBot { id, tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn set_spawn(
@@ -92,15 +108,19 @@ impl Handle {
         point: Option<IVec2>,
         dir: Option<Dir>,
     ) -> Result<()> {
-        self.send(Request::SetSpawn { point, dir }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::SetSpawn { point, dir, tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn set_map(&self, map: Map) -> Result<()> {
-        self.send(Request::SetMap { map }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::SetMap { map, tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     async fn send(&self, request: Request) -> Result<()> {
@@ -126,9 +146,19 @@ pub struct HandleInner {
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
+#[derive(Debug)]
 pub enum Request {
-    Pause,
-    Resume,
+    Tick {
+        tx: oneshot::Sender<()>,
+    },
+
+    Pause {
+        tx: oneshot::Sender<()>,
+    },
+
+    Resume {
+        tx: oneshot::Sender<()>,
+    },
 
     Shutdown {
         tx: oneshot::Sender<()>,
@@ -142,19 +172,23 @@ pub enum Request {
 
     RestartBot {
         id: BotId,
+        tx: oneshot::Sender<()>,
     },
 
     DestroyBot {
         id: BotId,
+        tx: oneshot::Sender<()>,
     },
 
     SetSpawn {
         point: Option<IVec2>,
         dir: Option<Dir>,
+        tx: oneshot::Sender<()>,
     },
 
     SetMap {
         map: Map,
+        tx: oneshot::Sender<()>,
     },
 }
 

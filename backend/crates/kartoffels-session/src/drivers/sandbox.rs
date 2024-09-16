@@ -56,18 +56,21 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     game.set_perms(Permissions::SANDBOX).await?;
 
     let world = store.create_world(Config {
-        name: "sandbox".into(),
+        clock: Default::default(),
         mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
             round_duration: None,
         }),
-        theme: ThemeConfig::Dungeon(DungeonThemeConfig {
-            size: uvec2(64, 32),
-        }),
+        name: "sandbox".into(),
+        path: Default::default(),
         policy: Policy {
             auto_respawn: true,
             max_alive_bots: MAX_BOTS,
             max_queued_bots: MAX_BOTS,
         },
+        rng: None,
+        theme: ThemeConfig::Dungeon(DungeonThemeConfig {
+            size: uvec2(64, 32),
+        }),
     });
 
     game.join(world).await?;

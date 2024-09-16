@@ -23,16 +23,19 @@ impl StepCtxt {
         game.set_perms(Permissions::TUTORIAL).await?;
 
         let world = store.create_world(Config {
-            name: "tutorial".into(),
+            clock: Default::default(),
             mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
                 round_duration: None,
             }),
-            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
+            name: "tutorial".into(),
+            path: Default::default(),
             policy: Policy {
                 auto_respawn: false,
                 max_alive_bots: 16,
                 max_queued_bots: 16,
             },
+            rng: None,
+            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
         });
 
         world.set_spawn(Some(ivec2(12, 12)), None).await?;

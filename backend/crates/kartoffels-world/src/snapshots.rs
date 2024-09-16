@@ -6,6 +6,7 @@ use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Either;
 use std::collections::VecDeque;
+use std::fmt;
 use std::sync::Arc;
 
 #[derive(Debug, Default)]
@@ -21,6 +22,31 @@ impl Snapshot {
 
     pub fn bots(&self) -> &SnapshotBots {
         &self.bots
+    }
+}
+
+impl fmt::Display for Snapshot {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let map = self
+            .map
+            .to_string()
+            .trim_matches(|ch| ch == '\n')
+            .to_string();
+
+        writeln!(f, "# map")?;
+        writeln!(f)?;
+        writeln!(f, "```")?;
+        writeln!(f, "{map}")?;
+        writeln!(f, "```")?;
+
+        if !self.bots.is_empty() {
+            writeln!(f)?;
+            writeln!(f, "# bots")?;
+            writeln!(f)?;
+            writeln!(f, "{}", self.bots)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -56,6 +82,18 @@ impl SnapshotBots {
 
     pub fn is_empty(&self) -> bool {
         self.alive.is_empty() && self.queued.is_empty()
+    }
+}
+
+impl fmt::Display for SnapshotBots {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if !self.alive.is_empty() {
+            writeln!(f, "## alive")?;
+            writeln!(f)?;
+            writeln!(f, "{}", self.alive)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -96,6 +134,18 @@ impl SnapshotAliveBots {
     }
 }
 
+impl fmt::Display for SnapshotAliveBots {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for bot in self.iter() {
+            writeln!(f, "### {}", bot.id)?;
+            writeln!(f)?;
+            writeln!(f, "{}", bot)?;
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 pub struct SnapshotAliveBot {
     pub id: BotId,
@@ -105,6 +155,15 @@ pub struct SnapshotAliveBot {
     pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
     pub events: Vec<Arc<BotEvent>>,
+}
+
+impl fmt::Display for SnapshotAliveBot {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "age: {}", self.age)?;
+        writeln!(f, "score: {}", self.score)?;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Default)]

@@ -245,6 +245,8 @@ mod tests {
             .unwrap()
             .to_string();
 
-        Asserter::new(dir).assert(format!("{}.txt", case), actual);
+        Asserter::new(dir)
+            .assert(format!("{}.txt", case), actual)
+            .finish();
     }
 }

@@ -90,10 +90,9 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!(?self, "starting");
 
-        let store =
-            Store::open(&self.data, self.bench).await.with_context(|| {
-                format!("couldn't load store from `{}`", self.data.display())
-            })?;
+        let store = Store::open(&self.data).await.with_context(|| {
+            format!("couldn't load store from `{}`", self.data.display())
+        })?;
 
         let store = Arc::new(store);
         let shutdown = CancellationToken::new();

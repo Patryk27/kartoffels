@@ -1,10 +1,15 @@
-use crate::{ModeConfig, Policy, ThemeConfig};
-use serde::Deserialize;
+use crate::{Clock, ModeConfig, Policy, ThemeConfig};
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
+use std::path::PathBuf;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug)]
 pub struct Config {
-    pub name: String,
+    pub clock: Clock,
     pub mode: ModeConfig,
-    pub theme: ThemeConfig,
+    pub name: String,
+    pub path: Option<PathBuf>,
     pub policy: Policy,
+    pub rng: Option<<SmallRng as SeedableRng>::Seed>,
+    pub theme: ThemeConfig,
 }

@@ -5,21 +5,19 @@ use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
 pub struct Metronome {
-    enabled: bool,
     interval: Duration,
     backlog: TimeDelta,
     now: Instant,
 }
 
 impl Metronome {
-    pub fn new(enabled: bool, hz: u32, ticks: u32) -> Self {
+    pub fn new(hz: u32, steps: u32) -> Self {
         let interval = Duration::from_nanos(
             Duration::from_secs(1).as_nanos() as u64 / (hz as u64)
-                * (ticks as u64),
+                * (steps as u64),
         );
 
         Self {
-            enabled,
             interval,
             backlog: Default::default(),
             now: Instant::now(),
@@ -39,10 +37,6 @@ impl Metronome {
     }
 
     pub fn wait(&mut self) {
-        if !self.enabled {
-            return;
-        }
-
         if self.backlog.num_milliseconds() >= 2 {
             let (_, tt) = Self::measure(|| {
                 thread::sleep(self.backlog.to_std().unwrap());
