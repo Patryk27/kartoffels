@@ -1,4 +1,7 @@
 #![allow(clippy::result_unit_err)]
+#![feature(test)]
+
+extern crate test;
 
 mod fw;
 mod mem;
@@ -66,6 +69,7 @@ mod tests {
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::{Command, Stdio};
+    use test::Bencher;
 
     #[test]
     fn test() {
@@ -90,6 +94,32 @@ mod tests {
                 elf_dir.join(&test),
             );
         }
+    }
+
+    #[bench]
+    fn bench(b: &mut Bencher) {
+        build_tests();
+
+        let elf_path = Path::new("..")
+            .join("..")
+            .join("target")
+            .join("riscv64-kartoffel-bot")
+            .join("release")
+            .join("xx-ints");
+
+        let elf = fs::read(&elf_path).unwrap();
+        let mut cpu = Some(Cpu::new(&elf).unwrap());
+        let mut mmio = TestMmio::default();
+
+        b.iter(|| {
+            let cpu_ref = cpu.as_mut().unwrap();
+
+            while cpu_ref.tick(&mut mmio).unwrap() {
+                //
+            }
+
+            cpu = Some(cpu.take().unwrap().reset());
+        });
     }
 
     fn build_tests() {
