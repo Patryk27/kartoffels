@@ -45,6 +45,11 @@ pub mod prelude {
         ArenaThemeConfig, DungeonTheme, DungeonThemeConfig, ThemeConfig,
     };
     pub use crate::utils::Dir;
+
+    pub static BOT_DUMMY: &[u8] = include_bytes!(env!("KARTOFFELS_BOT_DUMMY"));
+
+    pub static BOT_ROBERTO: &[u8] =
+        include_bytes!(env!("KARTOFFELS_BOT_ROBERTO"));
 }
 
 pub(crate) use self::bot::*;
@@ -72,7 +77,7 @@ use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
 use tracing::{debug, info, info_span};
 
-pub fn create(config: Config, path: Option<&Path>) -> Handle {
+pub fn create(config: Config, path: Option<&Path>, bench: bool) -> Handle {
     let mut rng = SmallRng::from_entropy();
 
     let name = Arc::new(config.name);
@@ -101,12 +106,12 @@ pub fn create(config: Config, path: Option<&Path>) -> Handle {
         spawn: (None, None),
         theme,
     }
-    .spawn(id);
+    .spawn(id, bench);
 
     handle
 }
 
-pub fn resume(id: Id, path: &Path) -> Result<Handle> {
+pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     let path = path.to_owned();
 
     let world = SerializedWorld::load(&path)?;
@@ -134,7 +139,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         spawn: (None, None),
         theme,
     }
-    .spawn(id);
+    .spawn(id, bench);
 
     Ok(handle)
 }
@@ -172,7 +177,7 @@ struct World {
 }
 
 impl World {
-    fn spawn(mut self, id: Id) {
+    fn spawn(mut self, id: Id, bench: bool) {
         let rt = TokioHandle::current();
         let span = info_span!("world", %id);
 
@@ -182,7 +187,9 @@ impl World {
 
             info!("ready");
 
-            let mut metronome = Metronome::new(cfg::SIM_HZ, cfg::SIM_TICKS);
+            let mut metronome =
+                Metronome::new(!bench, cfg::SIM_HZ, cfg::SIM_TICKS);
+
             let mut systems = Container::default();
 
             let shutdown = loop {

@@ -16,7 +16,7 @@ impl AliveBotTick {
     ) -> Option<KillBot> {
         if let Some(dir) = self.stab_dir {
             if let Some(killed_id) =
-                world.bots.alive.lookup_by_pos(pos + dir.as_vec())
+                world.bots.alive.get_by_pos(pos + dir.as_vec())
             {
                 return Some(KillBot {
                     id: killed_id,
@@ -38,8 +38,7 @@ impl AliveBotTick {
                 });
             }
 
-            if tile.is_floor() && world.bots.alive.lookup_by_pos(pos).is_none()
-            {
+            if tile.is_floor() && world.bots.alive.get_by_pos(pos).is_none() {
                 world.bots.alive.relocate(id, pos);
             }
         }

@@ -1,6 +1,5 @@
 #![feature(let_chains)]
 
-mod bots;
 mod driver;
 mod drivers;
 mod utils;

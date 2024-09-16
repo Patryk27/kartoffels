@@ -20,7 +20,6 @@ pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
 use crate::{AliveBotsLocator, Dir, Map};
-use anyhow::{Context, Result};
 use glam::IVec2;
 use kartoffels_cpu::Cpu;
 use rand::RngCore;
@@ -88,7 +87,7 @@ impl AliveBot {
         map: &Map,
         bots: &AliveBotsLocator,
         pos: IVec2,
-    ) -> Result<AliveBotTick> {
+    ) -> Result<AliveBotTick, String> {
         self.timer.tick();
         self.serial.tick();
         self.arm.tick();
@@ -97,17 +96,15 @@ impl AliveBot {
 
         // ---
 
-        self.cpu
-            .tick(&mut BotMmio {
-                timer: &mut self.timer,
-                battery: &mut self.battery,
-                serial: &mut self.serial,
-                motor: &mut self.motor,
-                arm: &mut self.arm,
-                radar: &mut self.radar,
-                ctxt: BotMmioContext { rng: &mut *rng },
-            })
-            .context("firmware crashed")?;
+        self.cpu.tick(&mut BotMmio {
+            timer: &mut self.timer,
+            battery: &mut self.battery,
+            serial: &mut self.serial,
+            motor: &mut self.motor,
+            arm: &mut self.arm,
+            radar: &mut self.radar,
+            ctxt: BotMmioContext { rng: &mut *rng },
+        })?;
 
         // ---
 

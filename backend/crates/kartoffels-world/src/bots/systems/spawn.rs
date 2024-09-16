@@ -102,5 +102,5 @@ fn sample_map(
 }
 
 fn is_pos_legal(map: &Map, bots: &Bots, pos: IVec2) -> bool {
-    map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none()
+    map.get(pos).is_floor() && bots.alive.get_by_pos(pos).is_none()
 }

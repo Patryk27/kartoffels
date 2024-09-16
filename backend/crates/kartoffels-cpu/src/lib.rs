@@ -53,8 +53,16 @@ impl Cpu {
         Self { fw, pc, ram, regs }
     }
 
-    pub fn tick(&mut self, mmio: &mut dyn Mmio) -> Result<bool> {
+    pub fn tick(&mut self, mmio: &mut dyn Mmio) -> Result<(), Box<str>> {
         self.do_tick(mmio)
+    }
+
+    pub fn try_tick(&mut self, mmio: &mut dyn Mmio) -> Result<bool, Box<str>> {
+        match self.tick(mmio) {
+            Ok(()) => Ok(true),
+            Err(err) if err.contains("got `ebreak`") => Ok(false),
+            Err(err) => Err(err),
+        }
     }
 
     pub fn reset(self) -> Self {
@@ -114,7 +122,7 @@ mod tests {
         b.iter(|| {
             let cpu_ref = cpu.as_mut().unwrap();
 
-            while cpu_ref.tick(&mut mmio).unwrap() {
+            while cpu_ref.try_tick(&mut mmio).unwrap() {
                 //
             }
 
@@ -170,7 +178,7 @@ mod tests {
         let mut cpu = Cpu::new(&elf).unwrap();
         let mut mmio = TestMmio::default();
 
-        while cpu.tick(&mut mmio).unwrap() {
+        while cpu.try_tick(&mut mmio).unwrap() {
             //
         }
 

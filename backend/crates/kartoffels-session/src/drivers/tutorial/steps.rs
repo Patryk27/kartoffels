@@ -16,15 +16,12 @@ pub mod step15;
 pub mod step16;
 
 mod prelude {
-    pub(super) use crate::bots;
     pub(super) use crate::drivers::tutorial::StepCtxt;
     pub(super) use crate::views::game::{HelpDialog, HelpDialogResponse};
     pub(super) use anyhow::Result;
     pub(super) use glam::{ivec2, uvec2};
     pub(super) use kartoffels_ui::{theme, Dialog, DialogButton, DialogLine};
-    pub(super) use kartoffels_world::prelude::{
-        BotId, Dir, Map, Tile, TileBase,
-    };
+    pub(super) use kartoffels_world::prelude::*;
     pub(super) use ratatui::style::Stylize;
     pub(super) use ratatui::text::Span;
     pub(super) use std::sync::LazyLock;

@@ -1,14 +1,13 @@
 //! TODO prepare a special message for possible stack overflows
 
 use super::{Cpu, Mmio};
-use anyhow::{anyhow, Error, Result};
 
 impl Cpu {
     pub(super) fn mem_load<const BYTES: usize>(
         &self,
         mmio: &mut dyn Mmio,
         addr: u64,
-    ) -> Result<i64> {
+    ) -> Result<i64, Box<str>> {
         let addr = translate(addr, BYTES)?;
 
         if addr >= Self::MMIO_BASE {
@@ -26,7 +25,7 @@ impl Cpu {
         &self,
         mmio: &mut dyn Mmio,
         addr: u32,
-    ) -> Result<i64> {
+    ) -> Result<i64, Box<str>> {
         if BYTES == 4 {
             let rel_addr = addr - Self::MMIO_BASE;
 
@@ -40,7 +39,10 @@ impl Cpu {
         }
     }
 
-    fn mem_load_ram<const BYTES: usize>(&self, addr: u32) -> Result<i64> {
+    fn mem_load_ram<const BYTES: usize>(
+        &self,
+        addr: u32,
+    ) -> Result<i64, Box<str>> {
         let rel_addr = (addr - Self::RAM_BASE) as usize;
 
         if rel_addr + BYTES > self.ram.len() {
@@ -61,7 +63,7 @@ impl Cpu {
         mmio: &mut dyn Mmio,
         addr: u64,
         val: i64,
-    ) -> Result<()> {
+    ) -> Result<(), Box<str>> {
         let addr = translate(addr, BYTES)?;
         let val = val as u64;
 
@@ -81,7 +83,7 @@ impl Cpu {
         mmio: &mut dyn Mmio,
         addr: u32,
         val: u64,
-    ) -> Result<()> {
+    ) -> Result<(), Box<str>> {
         if BYTES == 4 {
             let rel_addr = addr - Self::MMIO_BASE;
             let val = val as u32;
@@ -97,7 +99,7 @@ impl Cpu {
         &mut self,
         addr: u32,
         val: u64,
-    ) -> Result<()> {
+    ) -> Result<(), Box<str>> {
         let rel_addr = (addr - Self::RAM_BASE) as usize;
 
         if rel_addr + BYTES > self.ram.len() {
@@ -112,16 +114,16 @@ impl Cpu {
     }
 }
 
-fn translate(addr: u64, bytes: usize) -> Result<u32> {
+fn translate(addr: u64, bytes: usize) -> Result<u32, Box<str>> {
     u32::try_from(addr).map_err(|_| {
-        anyhow!(
+        format!(
             "cannot translate 0x{:16x}+{} to a 32-bit address",
-            addr,
-            bytes
+            addr, bytes
         )
+        .into()
     })
 }
 
-fn fault(msg: &str, addr: u32, bytes: usize) -> Error {
-    anyhow!("{} at address 0x{:08x}+{}", msg, addr, bytes)
+fn fault(msg: &str, addr: u32, bytes: usize) -> Box<str> {
+    format!("{} at address 0x{:08x}+{}", msg, addr, bytes).into()
 }

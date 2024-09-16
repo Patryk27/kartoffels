@@ -1,10 +1,9 @@
 use super::{Dialog, ErrorDialog, State};
-use crate::bots;
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::BotId;
+use kartoffels_world::prelude::{BotId, BOT_ROBERTO};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
@@ -99,7 +98,7 @@ impl Event {
 
             Event::SpawnRoberto => {
                 state
-                    .upload_bot(Either::Right(bots::ROBERTO.to_vec()))
+                    .upload_bot(Either::Right(BOT_ROBERTO.to_vec()))
                     .await?;
             }
 

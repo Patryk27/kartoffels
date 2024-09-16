@@ -2,17 +2,19 @@ use crate::{AliveBot, BotId};
 use ahash::AHashMap;
 use anyhow::Result;
 use glam::IVec2;
+use kartoffels_utils::DummyHasher;
 use maybe_owned::MaybeOwned;
 use rand::prelude::SliceRandom;
 use rand::RngCore;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::collections::HashMap;
 use std::mem;
 
 #[derive(Clone, Debug, Default)]
 pub struct AliveBots {
-    entries: AHashMap<BotId, AliveBot>,
+    entries: HashMap<BotId, AliveBot, DummyHasher>,
     pos_to_id: AHashMap<IVec2, BotId>,
-    id_to_pos: AHashMap<BotId, IVec2>,
+    id_to_pos: HashMap<BotId, IVec2, DummyHasher>,
 }
 
 impl AliveBots {
@@ -45,30 +47,22 @@ impl AliveBots {
         bot
     }
 
-    pub fn get(&self, id: BotId) -> Option<AliveBotEntry> {
-        Some(AliveBotEntry {
-            id,
-            pos: *self.id_to_pos.get(&id)?,
-            bot: self.entries.get(&id)?,
-        })
-    }
-
     pub fn get_mut(&mut self, id: BotId) -> Option<AliveBotEntryMut> {
         Some(AliveBotEntryMut {
-            pos: *self.id_to_pos.get(&id)?,
             bot: self.entries.get_mut(&id)?,
+            pos: self.id_to_pos[&id],
             locator: AliveBotsLocator {
                 pos_to_id: &self.pos_to_id,
             },
         })
     }
 
-    pub fn contains(&self, id: BotId) -> bool {
-        self.entries.contains_key(&id)
+    pub fn get_by_pos(&self, pos: IVec2) -> Option<BotId> {
+        self.pos_to_id.get(&pos).copied()
     }
 
-    pub fn lookup_by_pos(&self, pos: IVec2) -> Option<BotId> {
-        self.pos_to_id.get(&pos).copied()
+    pub fn contains(&self, id: BotId) -> bool {
+        self.entries.contains_key(&id)
     }
 
     pub fn iter(&self) -> impl Iterator<Item = AliveBotEntry> + '_ {

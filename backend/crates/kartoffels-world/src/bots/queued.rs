@@ -43,12 +43,6 @@ impl QueuedBots {
         Some(QueuedBotEntry { id, bot, place })
     }
 
-    pub fn get_mut(&mut self, id: BotId) -> Option<&mut QueuedBot> {
-        let place = *self.id_to_place.get(&id)?;
-
-        Some(&mut self.entries[place as usize])
-    }
-
     pub fn contains(&self, id: BotId) -> bool {
         self.id_to_place.contains_key(&id)
     }
