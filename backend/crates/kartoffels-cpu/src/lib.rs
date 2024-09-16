@@ -53,7 +53,7 @@ impl Cpu {
         Self { fw, pc, ram, regs }
     }
 
-    pub fn tick(&mut self, mmio: &mut impl Mmio) -> Result<bool> {
+    pub fn tick(&mut self, mmio: &mut dyn Mmio) -> Result<bool> {
         self.do_tick(mmio)
     }
 

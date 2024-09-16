@@ -6,7 +6,7 @@ use anyhow::{anyhow, Error, Result};
 impl Cpu {
     pub(super) fn mem_load<const BYTES: usize>(
         &self,
-        mmio: &mut impl Mmio,
+        mmio: &mut dyn Mmio,
         addr: u64,
     ) -> Result<i64> {
         let addr = translate(addr, BYTES)?;
@@ -24,7 +24,7 @@ impl Cpu {
 
     fn mem_load_mmio<const BYTES: usize>(
         &self,
-        mmio: &mut impl Mmio,
+        mmio: &mut dyn Mmio,
         addr: u32,
     ) -> Result<i64> {
         if BYTES == 4 {
@@ -58,7 +58,7 @@ impl Cpu {
 
     pub(super) fn mem_store<const BYTES: usize>(
         &mut self,
-        mmio: &mut impl Mmio,
+        mmio: &mut dyn Mmio,
         addr: u64,
         val: i64,
     ) -> Result<()> {
@@ -78,7 +78,7 @@ impl Cpu {
 
     fn mem_store_mmio<const BYTES: usize>(
         &mut self,
-        mmio: &mut impl Mmio,
+        mmio: &mut dyn Mmio,
         addr: u32,
         val: u64,
     ) -> Result<()> {
