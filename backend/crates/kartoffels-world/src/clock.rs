@@ -14,9 +14,15 @@ pub enum Clock {
 }
 
 impl Clock {
-    pub(crate) fn metronome(&self) -> Option<Metronome> {
+    pub(crate) fn metronome(&self, bench: bool) -> Option<Metronome> {
         match self {
-            Clock::Auto { hz, steps } => Some(Metronome::new(*hz, *steps)),
+            Clock::Auto { hz, steps } => {
+                if bench {
+                    None
+                } else {
+                    Some(Metronome::new(*hz, *steps))
+                }
+            }
             Clock::Manual { .. } => None,
         }
     }

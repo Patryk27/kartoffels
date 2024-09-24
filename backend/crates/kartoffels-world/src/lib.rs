@@ -118,12 +118,12 @@ pub fn create(config: Config) -> Handle {
         theme,
         tick: None,
     }
-    .spawn(id);
+    .spawn(id, false);
 
     handle
 }
 
-pub fn resume(id: Id, path: &Path) -> Result<Handle> {
+pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     let path = path.to_owned();
     let world = SerializedWorld::load(&path)?;
 
@@ -154,7 +154,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         theme,
         tick: None,
     }
-    .spawn(id);
+    .spawn(id, bench);
 
     Ok(handle)
 }
@@ -194,7 +194,7 @@ struct World {
 }
 
 impl World {
-    fn spawn(mut self, id: Id) {
+    fn spawn(mut self, id: Id, bench: bool) {
         let rt = TokioHandle::current();
         let span = info_span!("world", %id);
 
@@ -204,7 +204,7 @@ impl World {
 
             info!("ready");
 
-            let mut metronome = self.clock.metronome();
+            let mut metronome = self.clock.metronome(bench);
             let mut systems = Container::default();
 
             let shutdown = loop {

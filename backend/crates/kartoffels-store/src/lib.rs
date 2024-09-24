@@ -13,7 +13,7 @@ pub struct Store {
 }
 
 impl Store {
-    pub async fn open(dir: &Path) -> Result<Self> {
+    pub async fn open(dir: &Path, bench: bool) -> Result<Self> {
         info!(?dir, "opening");
 
         let mut worlds = Vec::new();
@@ -40,7 +40,7 @@ impl Store {
                     .parse()
                     .context("couldn't extract world id from path")?;
 
-                let world = kartoffels_world::resume(id, &path)?;
+                let world = kartoffels_world::resume(id, &path, bench)?;
 
                 worlds.push(world);
             };
