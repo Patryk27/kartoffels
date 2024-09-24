@@ -1,16 +1,9 @@
 use ciborium::Value;
-use kartoffels_utils::CborValueExt;
+use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
-    for obj in world.query_mut("/bots/{alive,queued}/*") {
-        let obj = obj.as_map_mut().unwrap();
-
-        let (_, vm) = obj
-            .extract_if(|(key, _)| key.as_text().unwrap() == "vm")
-            .next()
-            .unwrap();
-
-        obj.push((Value::Text("cpu".into()), vm));
+    for bot in world.query_mut("/bots/{alive,queued}/*") {
+        bot.as_map_mut().unwrap().rename_entry("vm", "cpu");
     }
 }
 

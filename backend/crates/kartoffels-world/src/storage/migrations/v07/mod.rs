@@ -1,5 +1,5 @@
 use ciborium::Value;
-use kartoffels_utils::CborValueExt;
+use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     let theme = world
@@ -9,13 +9,7 @@ pub fn run(world: &mut Value) {
         .as_map_mut()
         .unwrap();
 
-    let config = theme
-        .extract_if(|(key, _)| key.as_text().unwrap() == "config")
-        .map(|(_, val)| val)
-        .next()
-        .unwrap()
-        .into_map()
-        .unwrap();
+    let config = theme.remove_entry("config").unwrap().into_map().unwrap();
 
     theme.extend(config);
 }

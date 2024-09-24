@@ -1,5 +1,5 @@
 use ciborium::Value;
-use kartoffels_utils::CborValueExt;
+use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     world
@@ -8,7 +8,7 @@ pub fn run(world: &mut Value) {
         .unwrap()
         .as_map_mut()
         .unwrap()
-        .push((Value::Text("auto_respawn".into()), Value::Bool(true)));
+        .add_entry("auto_respawn", Value::Bool(true));
 }
 
 #[cfg(test)]

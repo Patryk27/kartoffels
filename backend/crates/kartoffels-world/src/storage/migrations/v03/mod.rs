@@ -1,5 +1,5 @@
 use ciborium::Value;
-use kartoffels_utils::CborValueExt;
+use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     world
@@ -10,10 +10,10 @@ pub fn run(world: &mut Value) {
         .unwrap()
         .clear();
 
-    for obj in world.query_mut("/bots/{alive,queued}/*") {
-        obj.as_map_mut()
+    for bot in world.query_mut("/bots/{alive,queued}/*") {
+        bot.as_map_mut()
             .unwrap()
-            .push((Value::Text("events".into()), Value::Array(vec![])));
+            .add_entry("events", Value::Array(vec![]));
     }
 }
 

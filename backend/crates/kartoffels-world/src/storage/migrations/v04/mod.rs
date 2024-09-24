@@ -1,18 +1,18 @@
 use ciborium::Value;
-use kartoffels_utils::CborValueExt;
+use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
-    for obj in world.query_mut("/bots/alive/*") {
-        obj.as_map_mut()
+    for bot in world.query_mut("/bots/alive/*") {
+        bot.as_map_mut()
             .unwrap()
-            .push((Value::Text("ephemeral".into()), Value::Bool(false)));
+            .add_entry("ephemeral", Value::Bool(false));
     }
 
-    for obj in world.query_mut("/bots/queued/*") {
-        let obj = obj.as_map_mut().unwrap();
-
-        obj.push((Value::Text("pos".into()), Value::Null));
-        obj.push((Value::Text("ephemeral".into()), Value::Bool(false)));
+    for bot in world.query_mut("/bots/queued/*") {
+        bot.as_map_mut()
+            .unwrap()
+            .add_entry("pos", Value::Null)
+            .add_entry("ephemeral", Value::Bool(false));
     }
 }
 
