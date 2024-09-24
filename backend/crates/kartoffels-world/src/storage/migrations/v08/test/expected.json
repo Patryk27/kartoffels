@@ -1,0 +1,9 @@
+{
+  "bots": "something something foo",
+  "clock": {
+    "hz": 64000,
+    "steps": 1000,
+    "type": "auto"
+  },
+  "theme": "something something bar"
+}

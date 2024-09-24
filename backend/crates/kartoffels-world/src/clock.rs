@@ -6,7 +6,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Clock {
+    #[serde(rename = "auto")]
     Auto { hz: u32, steps: u32 },
+
+    #[serde(rename = "manual")]
     Manual { steps: u32 },
 }
 

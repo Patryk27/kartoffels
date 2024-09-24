@@ -3,14 +3,23 @@ mod v03;
 mod v04;
 mod v05;
 mod v06;
+mod v07;
+mod v08;
 
 use crate::storage::VERSION;
 use anyhow::Result;
 use ciborium::Value;
 use tracing::info;
 
-const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] =
-    [v02::run, v03::run, v04::run, v05::run, v06::run];
+const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] = [
+    v02::run,
+    v03::run,
+    v04::run,
+    v05::run,
+    v06::run,
+    v07::run,
+    v08::run,
+];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
     for nth in old..new {
@@ -42,7 +51,7 @@ mod tests {
         let given = json_to_cbor(given);
 
         let actual = super::run(nth - 1, nth, given).unwrap();
-        let actual = cbor_to_json(actual);
+        let actual = cbor_to_json(actual, false);
         let actual = serde_json::to_string_pretty(&actual).unwrap();
 
         Asserter::new(dir).assert("expected.json", actual);

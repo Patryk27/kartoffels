@@ -1,0 +1,11 @@
+{
+  "theme": {
+    "config": {
+      "size": [
+        80,
+        80
+      ]
+    },
+    "type": "dungeon"
+  }
+}
