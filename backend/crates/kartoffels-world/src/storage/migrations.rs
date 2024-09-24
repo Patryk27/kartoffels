@@ -45,6 +45,6 @@ mod tests {
         let actual = cbor_to_json(actual);
         let actual = serde_json::to_string_pretty(&actual).unwrap();
 
-        Asserter::new(dir).assert("expected.json", actual).finish();
+        Asserter::new(dir).assert("expected.json", actual);
     }
 }

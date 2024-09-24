@@ -73,7 +73,7 @@ impl BotMotor {
 impl Default for BotMotor {
     fn default() -> Self {
         Self {
-            dir: Dir::Up,
+            dir: Dir::N,
             vel: Default::default(),
             cooldown: Default::default(),
         }

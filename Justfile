@@ -31,6 +31,9 @@ test:
     cd backend \
     && cargo test
 
+bless:
+    fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
+
 # ------------------------------------------------------------------------------
 
 bot name:

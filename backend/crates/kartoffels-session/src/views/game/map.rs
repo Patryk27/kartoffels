@@ -85,10 +85,10 @@ impl Map {
 
             TileBase::BOT_CHEVRON => {
                 ch = match Dir::from(tile.meta[1]) {
-                    Dir::Up => "↑",
-                    Dir::Right => "→",
-                    Dir::Down => "↓",
-                    Dir::Left => "←",
+                    Dir::N => "↑",
+                    Dir::E => "→",
+                    Dir::S => "↓",
+                    Dir::W => "←",
                 };
 
                 fg = state

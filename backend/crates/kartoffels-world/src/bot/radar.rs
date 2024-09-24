@@ -180,7 +180,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 3).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::N);
 
         radar.assert::<3>(indoc! {"
             . @ .
@@ -192,7 +192,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::N);
 
         radar.assert::<5>(indoc! {"
             . . = . .
@@ -206,7 +206,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Right);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::E);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -220,7 +220,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Left);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::W);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -234,7 +234,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Down);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::S);
 
         radar.assert::<5>(indoc! {"
             . . . . .

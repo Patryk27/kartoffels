@@ -35,15 +35,13 @@ pub mod prelude {
         SnapshotStreamExt,
     };
     pub use crate::map::{Map, Tile, TileBase};
-    pub use crate::mode::{DeathmatchMode, DeathmatchModeConfig, ModeConfig};
+    pub use crate::mode::{DeathmatchMode, Mode};
     pub use crate::policy::Policy;
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
         SnapshotQueuedBot, SnapshotQueuedBots,
     };
-    pub use crate::theme::{
-        ArenaThemeConfig, DungeonTheme, DungeonThemeConfig, ThemeConfig,
-    };
+    pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
 
     pub static BOT_DUMMY: &[u8] = include_bytes!(env!("KARTOFFELS_BOT_DUMMY"));
@@ -92,11 +90,11 @@ pub fn create(config: Config) -> Handle {
         .unwrap_or_else(SmallRng::from_entropy);
 
     let clock = config.clock;
-    let mode = config.mode.create();
+    let mode = config.mode;
     let name = Arc::new(config.name);
     let path = config.path;
     let policy = config.policy;
-    let theme = config.theme.create();
+    let theme = config.theme;
 
     let id = Id::new(&mut rng);
     let map = theme.create_map(&mut rng);
@@ -232,7 +230,7 @@ impl World {
         handle::process_requests::run(self)?;
 
         if !self.paused {
-            bots::spawn::run(self, systems.get_mut());
+            bots::spawn::run(self);
             bots::tick::run(self);
         }
 

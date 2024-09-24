@@ -1,5 +1,5 @@
 use crate::{BotEvents, BotId, Event, QueuedBot, World};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use kartoffels_cpu::Cpu;
 use std::borrow::Cow;
@@ -10,7 +10,7 @@ pub fn run(
     src: Cow<'static, [u8]>,
     pos: Option<IVec2>,
 ) -> Result<BotId> {
-    let cpu = Cpu::new(&src)?;
+    let cpu = Cpu::new(&src).context("couldn't parse firmware")?;
 
     let id = loop {
         let id = BotId::new(&mut world.rng);

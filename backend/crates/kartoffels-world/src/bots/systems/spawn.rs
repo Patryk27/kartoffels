@@ -2,28 +2,8 @@ use crate::{AliveBot, Bots, Dir, Event, Map, QueuedBot, World};
 use glam::IVec2;
 use rand::{Rng, RngCore};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-#[derive(Debug)]
-pub struct State {
-    next_run_at: Instant,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            next_run_at: Instant::now(),
-        }
-    }
-}
-
-pub fn run(world: &mut World, state: &mut State) {
-    if Instant::now() < state.next_run_at {
-        return;
-    }
-
-    state.next_run_at = Instant::now() + Duration::from_millis(16);
-
+pub fn run(world: &mut World) {
     if world.bots.alive.len() >= world.policy.max_alive_bots {
         return;
     }

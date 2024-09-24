@@ -1,6 +1,6 @@
 use pretty_assertions::private::CreateComparison;
-use std::fs;
 use std::path::{Path, PathBuf};
+use std::{fs, thread};
 
 #[derive(Clone, Debug)]
 pub struct Asserter {
@@ -49,8 +49,14 @@ impl Asserter {
 
         self
     }
+}
 
-    pub fn finish(&mut self) {
+impl Drop for Asserter {
+    fn drop(&mut self) {
+        if thread::panicking() {
+            return;
+        }
+
         if self.failed {
             panic!("some assertions failed");
         }

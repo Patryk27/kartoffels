@@ -12,19 +12,19 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DungeonTheme {
-    config: DungeonThemeConfig,
+    size: UVec2,
 }
 
 impl DungeonTheme {
-    pub fn new(config: DungeonThemeConfig) -> Self {
-        Self { config }
+    pub fn new(size: UVec2) -> Self {
+        Self { size }
     }
 
     pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
-        let min_occupied_tiles = self.config.size.element_product() / 4;
+        let min_occupied_tiles = self.size.element_product() / 4;
 
         for _ in 0..128 {
-            let mut map = self.create_empty_map();
+            let mut map = Map::new(self.size);
             let rooms = self.generate_rooms(rng, &map);
             let corrs = self.generate_corridors(&rooms);
 
@@ -43,10 +43,6 @@ impl DungeonTheme {
         Err(anyhow!(
             "couldn't generate a valid dungeon within the time limit"
         ))
-    }
-
-    fn create_empty_map(&self) -> Map {
-        Map::new(self.config.size)
     }
 
     fn generate_rooms(&self, rng: &mut impl RngCore, map: &Map) -> Vec<Room> {
@@ -215,11 +211,6 @@ impl DungeonTheme {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DungeonThemeConfig {
-    pub size: UVec2,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -240,13 +231,11 @@ mod tests {
 
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-        let actual = DungeonTheme::new(DungeonThemeConfig { size })
+        let actual = DungeonTheme::new(size)
             .create_map(&mut rng)
             .unwrap()
             .to_string();
 
-        Asserter::new(dir)
-            .assert(format!("{}.txt", case), actual)
-            .finish();
+        Asserter::new(dir).assert(format!("{}.txt", case), actual);
     }
 }

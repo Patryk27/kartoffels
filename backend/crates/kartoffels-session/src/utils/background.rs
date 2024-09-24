@@ -1,8 +1,6 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_ui::{theme, Term, Ui};
-use kartoffels_world::prelude::{
-    Dir, DungeonTheme, DungeonThemeConfig, Map, Tile, TileBase,
-};
+use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileBase};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
@@ -74,11 +72,9 @@ static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
 fn refresh(tx: watch::Sender<Arc<Map>>) {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let mut map = DungeonTheme::new(DungeonThemeConfig {
-        size: Background::MAP_SIZE,
-    })
-    .create_map(&mut rng)
-    .unwrap();
+    let mut map = DungeonTheme::new(Background::MAP_SIZE)
+        .create_map(&mut rng)
+        .unwrap();
 
     for y in 0..map.size().y {
         for x in 0..map.size().x {

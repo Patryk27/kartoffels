@@ -11,10 +11,6 @@ pub fn run(world: &mut World) {
     for _ in 0..steps {
         tick(world, &ids);
     }
-
-    world
-        .mode
-        .on_after_tick(&mut world.rng, &mut world.theme, &mut world.map);
 }
 
 fn tick(world: &mut World, ids: &[BotId]) {

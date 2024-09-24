@@ -122,9 +122,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
 }
 
 async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.world
-        .set_spawn(Some(ivec2(10, 10)), Some(Dir::Right))
-        .await?;
+    ctxt.world.set_spawn(ivec2(10, 10), Dir::E).await?;
 
     ctxt.world
         .set_map({

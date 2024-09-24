@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;
 use std::{cmp, fmt};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
     tiles: Box<[Tile]>,
@@ -115,6 +115,10 @@ impl fmt::Display for Map {
         let mut line = String::new();
 
         for y in 0..self.size.y {
+            if y > 0 {
+                writeln!(f)?;
+            }
+
             line.clear();
 
             for x in 0..self.size.x {
@@ -123,7 +127,7 @@ impl fmt::Display for Map {
                 _ = write!(line, "{}", self.tiles[idx].base as char);
             }
 
-            writeln!(f, "{}", line.trim_end())?;
+            write!(f, "{}", line.trim_end())?;
         }
 
         Ok(())

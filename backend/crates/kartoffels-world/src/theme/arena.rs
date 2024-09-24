@@ -4,20 +4,19 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ArenaTheme {
-    config: ArenaThemeConfig,
+    radius: u32,
 }
 
 impl ArenaTheme {
-    pub fn new(config: ArenaThemeConfig) -> Self {
-        Self { config }
+    pub fn new(radius: u32) -> Self {
+        Self { radius }
     }
 
-    pub fn create_map(&self) -> Map {
-        let mut map =
-            Map::new(uvec2(self.config.radius, self.config.radius) * 2 + 1);
+    pub(crate) fn create_map(&self) -> Map {
+        let mut map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
 
         let center = map.size() / 2;
-        let radius = self.config.radius as f32;
+        let radius = self.radius as f32;
 
         for y in 0..map.size().y {
             for x in 0..map.size().x {
@@ -31,9 +30,4 @@ impl ArenaTheme {
 
         map
     }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ArenaThemeConfig {
-    pub radius: u32,
 }

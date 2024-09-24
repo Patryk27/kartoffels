@@ -17,6 +17,7 @@ glam.workspace = true
 itertools.workspace = true
 lru.workspace = true
 maybe-owned.workspace = true
+prettytable-rs.workspace = true
 rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true

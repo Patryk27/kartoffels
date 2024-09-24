@@ -5,8 +5,8 @@ use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Dialog};
 use kartoffels_world::prelude::{
-    ArenaThemeConfig, BotId, Config, DeathmatchModeConfig, Event,
-    EventStreamExt, Handle, ModeConfig, Policy, SnapshotStreamExt, ThemeConfig,
+    ArenaTheme, BotId, Config, DeathmatchMode, Event, EventStreamExt, Handle,
+    Mode, Policy, SnapshotStreamExt, Theme,
 };
 use std::task::Poll;
 use tokio::sync::oneshot;
@@ -24,9 +24,7 @@ impl StepCtxt {
 
         let world = store.create_world(Config {
             clock: Default::default(),
-            mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-                round_duration: None,
-            }),
+            mode: Mode::Deathmatch(DeathmatchMode::default()),
             name: "tutorial".into(),
             path: Default::default(),
             policy: Policy {
@@ -35,10 +33,10 @@ impl StepCtxt {
                 max_queued_bots: 16,
             },
             rng: None,
-            theme: ThemeConfig::Arena(ArenaThemeConfig { radius: 12 }),
+            theme: Theme::Arena(ArenaTheme::new(12)),
         });
 
-        world.set_spawn(Some(ivec2(12, 12)), None).await?;
+        world.set_spawn(ivec2(12, 12), None).await?;
         game.join(world.clone()).await?;
 
         Ok(Self { game, world })

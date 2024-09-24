@@ -5,8 +5,7 @@ use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Dialog, DialogButton, DialogLine};
 use kartoffels_world::prelude::{
-    Config, DeathmatchModeConfig, DungeonThemeConfig, ModeConfig, Policy,
-    ThemeConfig,
+    Config, DeathmatchMode, DungeonTheme, Mode, Policy, Theme,
 };
 use std::future;
 use std::sync::LazyLock;
@@ -57,9 +56,7 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
 
     let world = store.create_world(Config {
         clock: Default::default(),
-        mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-            round_duration: None,
-        }),
+        mode: Mode::Deathmatch(DeathmatchMode::default()),
         name: "sandbox".into(),
         path: Default::default(),
         policy: Policy {
@@ -68,9 +65,7 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
             max_queued_bots: MAX_BOTS,
         },
         rng: None,
-        theme: ThemeConfig::Dungeon(DungeonThemeConfig {
-            size: uvec2(64, 32),
-        }),
+        theme: Theme::Dungeon(DungeonTheme::new(uvec2(64, 32))),
     });
 
     game.join(world).await?;

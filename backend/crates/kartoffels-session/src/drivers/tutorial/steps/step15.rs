@@ -124,9 +124,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
         })
         .await?;
 
-    ctxt.world
-        .set_spawn(Some(ivec2(10, 9)), Some(Dir::Up))
-        .await?;
+    ctxt.world.set_spawn(ivec2(10, 9), Dir::N).await?;
 
     Ok(())
 }
@@ -146,7 +144,7 @@ async fn setup_dummies(ctxt: &mut StepCtxt) -> Result<()> {
     ];
 
     for pos in dummies {
-        ctxt.world.create_bot(BOT_DUMMY, Some(pos)).await?;
+        ctxt.world.create_bot(BOT_DUMMY, pos).await?;
     }
 
     Ok(())

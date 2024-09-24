@@ -73,13 +73,13 @@ impl Handle {
     pub async fn create_bot(
         &self,
         src: impl Into<Cow<'static, [u8]>>,
-        pos: Option<IVec2>,
+        pos: impl Into<Option<IVec2>>,
     ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::CreateBot {
             src: src.into(),
-            pos,
+            pos: pos.into(),
             tx,
         })
         .await?;
@@ -105,12 +105,17 @@ impl Handle {
 
     pub async fn set_spawn(
         &self,
-        point: Option<IVec2>,
-        dir: Option<Dir>,
+        point: impl Into<Option<IVec2>>,
+        dir: impl Into<Option<Dir>>,
     ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::SetSpawn { point, dir, tx }).await?;
+        self.send(Request::SetSpawn {
+            point: point.into(),
+            dir: dir.into(),
+            tx,
+        })
+        .await?;
 
         rx.await.context(Self::ERR)
     }

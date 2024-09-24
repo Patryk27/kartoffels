@@ -73,7 +73,7 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         idx.sort_unstable_by_key(|idx| {
             let bot = &entries[*idx as usize];
 
-            (Reverse(bot.score), Reverse(bot.age))
+            (Reverse(bot.score), Reverse(bot.age), bot.id)
         });
 
         idx
