@@ -1,0 +1,12 @@
+[package]
+name = "kartoffels-toolbox"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+kartoffels-utils = { path = "../kartoffels-utils" }
+
+anyhow.workspace = true
+ciborium.workspace = true
+clap.workspace = true
+serde_json.workspace = true

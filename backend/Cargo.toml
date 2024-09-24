@@ -11,6 +11,7 @@ members = [
     "crates/kartoffels-server",
     "crates/kartoffels-session",
     "crates/kartoffels-store",
+    "crates/kartoffels-toolbox",
     "crates/kartoffels-ui",
     "crates/kartoffels-utils",
     "crates/kartoffels-world",

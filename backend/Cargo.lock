@@ -1429,6 +1429,7 @@ dependencies = [
  "anyhow",
  "clap",
  "kartoffels-server",
+ "kartoffels-toolbox",
 ]
 
 [[package]]
@@ -1512,6 +1513,17 @@ dependencies = [
  "kartoffels-world",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "kartoffels-toolbox"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "ciborium",
+ "clap",
+ "kartoffels-utils",
+ "serde_json",
 ]
 
 [[package]]
