@@ -37,9 +37,6 @@ pub struct Cmd {
     ssh: Option<SocketAddr>,
 
     #[clap(long)]
-    bench: bool,
-
-    #[clap(long)]
     debug: bool,
 
     #[clap(long)]
