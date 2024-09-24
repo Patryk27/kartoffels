@@ -174,7 +174,11 @@ mod tests {
         let bots = bots.locator();
         let mut radar = BotRadar::default();
         let mut rng = ChaCha8Rng::from_seed(Default::default());
-        let mut ctxt = BotMmioContext { rng: &mut rng };
+
+        let mut ctxt = BotMmioContext {
+            dir: &mut Dir::N,
+            rng: &mut rng,
+        };
 
         // ---
 

@@ -52,8 +52,8 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         .iter()
         .map(|entry| SnapshotAliveBot {
             id: entry.id,
-            pos: entry.pos,
-            dir: entry.bot.motor.dir,
+            pos: entry.bot.pos,
+            dir: entry.bot.dir,
             age: entry.bot.timer.age(&world.clock),
             score: scores.get(&entry.id).copied().unwrap_or_default(),
             serial: Arc::new(entry.bot.serial.buffer.clone()),

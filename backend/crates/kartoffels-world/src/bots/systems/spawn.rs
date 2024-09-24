@@ -24,9 +24,10 @@ pub fn run(world: &mut World) {
 
     // Unwrap-safety: We've just made sure that the queue is not empty
     let bot = world.bots.queued.pop().unwrap();
-    let (bot, id) = AliveBot::spawn(&mut world.rng, bot, dir);
+    let id = bot.id;
+    let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
 
-    world.bots.alive.add(id, pos, bot);
+    world.bots.alive.add(id, bot);
 
     _ = world.events.send(Arc::new(Event::BotSpawned { id }));
 }

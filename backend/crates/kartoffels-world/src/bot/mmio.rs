@@ -1,4 +1,5 @@
 use super::{BotArm, BotBattery, BotMotor, BotRadar, BotSerial, BotTimer};
+use crate::Dir;
 use kartoffels_cpu::Mmio;
 use rand::{Rng, RngCore};
 
@@ -35,6 +36,7 @@ impl<'a> Mmio for BotMmio<'a> {
 }
 
 pub struct BotMmioContext<'a> {
+    pub dir: &'a mut Dir,
     pub rng: &'a mut dyn RngCore,
 }
 

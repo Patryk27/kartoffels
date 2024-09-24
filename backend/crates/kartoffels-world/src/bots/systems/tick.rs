@@ -15,15 +15,15 @@ pub fn run(world: &mut World) {
 
 fn tick(world: &mut World, ids: &[BotId]) {
     for &id in ids {
-        let Some(AliveBotEntryMut { pos, bot, locator }) =
+        let Some(AliveBotEntryMut { bot, locator }) =
             world.bots.alive.get_mut(id)
         else {
             // Our bot got killed in the meantime, happens
             continue;
         };
 
-        let kill = match bot.tick(&mut world.rng, &world.map, &locator, pos) {
-            Ok(state) => state.apply(world, id, pos),
+        let kill = match bot.tick(&mut world.rng, &world.map, &locator) {
+            Ok(state) => state.apply(world, id),
 
             Err(err) => Some(KillBot {
                 id,

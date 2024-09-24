@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Default))]
 pub enum Dir {
     #[serde(rename = "^")]
+    #[cfg_attr(test, default)]
     N,
 
     #[serde(rename = ">")]

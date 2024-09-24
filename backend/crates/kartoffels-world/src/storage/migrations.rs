@@ -5,6 +5,7 @@ mod v05;
 mod v06;
 mod v07;
 mod v08;
+mod v09;
 
 use crate::storage::VERSION;
 use anyhow::Result;
@@ -19,6 +20,7 @@ const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] = [
     v06::run,
     v07::run,
     v08::run,
+    v09::run,
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
