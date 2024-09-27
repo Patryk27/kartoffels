@@ -27,14 +27,21 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
             }
 
             Err(err) => {
-                if let Some(abort) = err.downcast_ref::<Abort>() {
-                    if abort.soft {
-                        // Let soft-aborts make a new background, just for fun
-                        bg = Background::new(term);
-                        continue;
+                match err.downcast::<Abort>() {
+                    Ok(abort) => {
+                        if abort.soft {
+                            // Let soft-aborts generate a new background, just
+                            // for fun
+                            bg = Background::new(term);
+                            continue;
+                        } else {
+                            return Err(abort.into());
+                        }
                     }
-                } else {
-                    error::run(term, &bg, err).await?;
+
+                    Err(err) => {
+                        error::run(term, &bg, err).await?;
+                    }
                 }
             }
         }
