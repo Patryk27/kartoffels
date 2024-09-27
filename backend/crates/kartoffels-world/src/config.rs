@@ -11,5 +11,5 @@ pub struct Config {
     pub path: Option<PathBuf>,
     pub policy: Policy,
     pub rng: Option<<SmallRng as SeedableRng>::Seed>,
-    pub theme: Theme,
+    pub theme: Option<Theme>,
 }

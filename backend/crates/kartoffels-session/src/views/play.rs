@@ -4,12 +4,15 @@ use kartoffels_store::Store;
 use kartoffels_ui::{Button, Term};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use termwiz::input::KeyCode;
+use tracing::debug;
 
 pub async fn run(
     term: &mut Term,
     store: &Store,
-    bg: &mut Background,
+    bg: &Background,
 ) -> Result<Response> {
+    debug!("run()");
+
     loop {
         let resp = term
             .draw(|ui| {

@@ -30,8 +30,11 @@ use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::task::Poll;
 use std::time::Instant;
+use tracing::debug;
 
 pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
+    debug!("run()");
+
     let mut state = State::default();
 
     loop {

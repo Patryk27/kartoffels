@@ -61,7 +61,18 @@ async fn main_ex(
                     }
 
                     play::Response::Challenges => {
-                        challenges::run(term, &mut bg).await?;
+                        match challenges::run(term, bg).await? {
+                            challenges::Response::Play(challenge) => {
+                                drive(term, |game| {
+                                    (challenge.run)(store, game)
+                                })
+                                .await?;
+                            }
+
+                            challenges::Response::GoBack => {
+                                continue;
+                            }
+                        }
                     }
 
                     play::Response::GoBack => {

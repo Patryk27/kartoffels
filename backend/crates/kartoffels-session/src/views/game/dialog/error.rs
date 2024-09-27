@@ -22,7 +22,7 @@ impl ErrorDialog {
             text.render(ui.area(), ui.buf());
 
             ui.clamp(ui.area().footer(1), |ui| {
-                Button::new(KeyCode::Enter, "close")
+                Button::new(KeyCode::Enter, "got it")
                     .throwing(Event::CloseDialog)
                     .right_aligned()
                     .render(ui);

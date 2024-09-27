@@ -96,7 +96,11 @@ pub fn create(config: Config) -> Handle {
     let theme = config.theme;
 
     let id = Id::new(&mut rng);
-    let map = theme.create_map(&mut rng);
+
+    let map = theme
+        .as_ref()
+        .map(|theme| theme.create_map(&mut rng))
+        .unwrap_or_default();
 
     let (handle, rx) = handle(id, name.clone());
 
@@ -132,7 +136,7 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     let mode = world.mode.into_owned();
     let name = Arc::new(world.name.into_owned());
     let policy = world.policy.into_owned();
-    let theme = world.theme.into_owned();
+    let theme = world.theme.map(|theme| theme.into_owned());
 
     let (handle, rx) = handle(id, name.clone());
 
@@ -169,6 +173,7 @@ fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
             events: broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG),
             snapshots: watch::Sender::new(Default::default()),
         }),
+        permit: None,
     };
 
     (handle, rx)
@@ -188,7 +193,7 @@ struct World {
     rx: RequestRx,
     snapshots: watch::Sender<Arc<Snapshot>>,
     spawn: (Option<IVec2>, Option<Dir>),
-    theme: Theme,
+    theme: Option<Theme>,
     tick: Option<oneshot::Sender<()>>,
 }
 

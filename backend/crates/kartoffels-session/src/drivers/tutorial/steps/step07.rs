@@ -22,7 +22,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
     ctxt.game.resume().await?;
 
     time::sleep(Duration::from_secs(6)).await;

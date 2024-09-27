@@ -81,7 +81,7 @@ static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     loop {
@@ -102,7 +102,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             }
 
             Err(()) => {
-                ctxt.run_dialog(&DIALOG_RETRY).await?;
+                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
             }
         }
     }

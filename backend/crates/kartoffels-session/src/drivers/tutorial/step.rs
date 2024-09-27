@@ -3,14 +3,11 @@ use crate::DrivenGame;
 use anyhow::Result;
 use glam::ivec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Dialog};
 use kartoffels_world::prelude::{
     ArenaTheme, BotId, Config, DeathmatchMode, Event, EventStreamExt, Handle,
     Mode, Policy, SnapshotStreamExt, Theme,
 };
 use std::task::Poll;
-use tokio::sync::oneshot;
-use tokio::time;
 
 #[derive(Debug)]
 pub struct StepCtxt {
@@ -33,43 +30,13 @@ impl StepCtxt {
                 max_queued_bots: 16,
             },
             rng: None,
-            theme: Theme::Arena(ArenaTheme::new(12)),
-        });
+            theme: Some(Theme::Arena(ArenaTheme::new(12))),
+        })?;
 
         world.set_spawn(ivec2(12, 12), None).await?;
         game.join(world.clone()).await?;
 
         Ok(Self { game, world })
-    }
-
-    pub async fn run_dialog<T>(&self, dialog: &'static Dialog<T>) -> Result<T>
-    where
-        T: Clone + Send + Sync + 'static,
-    {
-        let (tx, rx) = oneshot::channel();
-        let mut tx = Some(tx);
-
-        self.game
-            .open_dialog(move |ui| {
-                let resp = ui.catch(|ui| {
-                    dialog.render(ui);
-                });
-
-                if let Some(resp) = resp {
-                    if let Some(tx) = tx.take() {
-                        _ = tx.send(resp);
-                    }
-                }
-            })
-            .await?;
-
-        let resp = rx.await?;
-
-        time::sleep(theme::FRAME_TIME).await;
-
-        self.game.close_dialog().await?;
-
-        Ok(resp)
     }
 
     pub async fn wait_until_bot_is_spawned(&self) -> Result<BotId> {

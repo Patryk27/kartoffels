@@ -25,7 +25,7 @@ pub struct SerializedWorld<'a> {
     pub mode: MaybeOwned<'a, Mode>,
     pub name: MaybeOwned<'a, String>,
     pub policy: MaybeOwned<'a, Policy>,
-    pub theme: MaybeOwned<'a, Theme>,
+    pub theme: Option<MaybeOwned<'a, Theme>>,
 }
 
 impl SerializedWorld<'_> {

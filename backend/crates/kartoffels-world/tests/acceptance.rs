@@ -276,7 +276,7 @@ fn config() -> Config {
             max_queued_bots: 16,
         },
         rng: Some(Default::default()),
-        theme: Theme::Arena(ArenaTheme::new(12)),
+        theme: Some(Theme::Arena(ArenaTheme::new(12))),
     }
 }
 

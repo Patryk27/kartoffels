@@ -7,8 +7,11 @@ use crate::Background;
 use anyhow::Result;
 use kartoffels_ui::Term;
 use ratatui::layout::{Constraint, Layout};
+use tracing::debug;
 
-pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
+pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
+    debug!("run()");
+
     loop {
         let resp = term
             .draw(|ui| {

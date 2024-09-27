@@ -1,15 +1,18 @@
 #![feature(try_blocks)]
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use kartoffels_world::prelude::{Config as WorldConfig, Handle as WorldHandle};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::fs;
+use tokio::sync::Semaphore;
 use tracing::info;
 
 #[derive(Debug)]
 pub struct Store {
     pub dir: PathBuf,
     pub worlds: Vec<WorldHandle>,
+    pub worlds_sem: Arc<Semaphore>,
 }
 
 impl Store {
@@ -57,12 +60,19 @@ impl Store {
         Ok(Self {
             dir: dir.to_owned(),
             worlds,
+            worlds_sem: Arc::new(Semaphore::new(128)), // TODO make configurable
         })
     }
 
-    pub fn create_world(&self, config: WorldConfig) -> WorldHandle {
-        // TODO add limits
-        kartoffels_world::create(config)
+    pub fn create_world(&self, config: WorldConfig) -> Result<WorldHandle> {
+        let permit =
+            self.worlds_sem.clone().try_acquire_owned().map_err(|_| {
+                anyhow!("sorry, the server is currently overloaded")
+            })?;
+
+        let handle = kartoffels_world::create(config).with_permit(permit);
+
+        Ok(handle)
     }
 
     pub async fn close(&self) -> Result<()> {

@@ -9,13 +9,14 @@ use kartoffels_utils::Id;
 use std::borrow::Cow;
 use std::future::Future;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
 use tokio_stream::wrappers::{BroadcastStream, WatchStream};
 use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
 pub struct Handle {
     pub(super) inner: Arc<HandleInner>,
+    pub(super) permit: Option<Arc<OwnedSemaphorePermit>>,
 }
 
 impl Handle {
@@ -36,6 +37,11 @@ impl Handle {
 
     pub fn snapshots(&self) -> SnapshotStream {
         WatchStream::new(self.inner.snapshots.subscribe())
+    }
+
+    pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {
+        self.permit = Some(Arc::new(permit));
+        self
     }
 
     pub async fn tick(&self) -> Result<()> {

@@ -1,9 +1,10 @@
 use crate::views::game::{HelpDialogRef, Permissions, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
-use kartoffels_ui::Ui;
+use kartoffels_ui::{theme, Dialog, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
+use tokio::time;
 
 #[derive(Debug)]
 pub struct DrivenGame {
@@ -66,6 +67,35 @@ impl DrivenGame {
         self.send(DriverEvent::CloseDialog).await?;
 
         Ok(())
+    }
+
+    pub async fn run_dialog<T>(&self, dialog: &'static Dialog<T>) -> Result<T>
+    where
+        T: Clone + Send + Sync + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        let mut tx = Some(tx);
+
+        self.open_dialog(move |ui| {
+            let resp = ui.catch(|ui| {
+                dialog.render(ui);
+            });
+
+            if let Some(resp) = resp {
+                if let Some(tx) = tx.take() {
+                    _ = tx.send(resp);
+                }
+            }
+        })
+        .await?;
+
+        let resp = rx.await?;
+
+        time::sleep(theme::FRAME_TIME).await;
+
+        self.close_dialog().await?;
+
+        Ok(resp)
     }
 
     pub async fn set_help(&self, dialog: Option<HelpDialogRef>) -> Result<()> {

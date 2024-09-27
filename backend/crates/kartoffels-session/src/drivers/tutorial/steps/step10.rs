@@ -61,7 +61,7 @@ static HELP_RETRY: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
     ctxt.game.resume().await?;
 
     loop {
@@ -82,7 +82,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             }
 
             Err(_) => {
-                ctxt.run_dialog(&DIALOG_RETRY).await?;
+                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
                 ctxt.wait_until_bot_is_spawned().await?;
                 ctxt.game.set_help(None).await?;

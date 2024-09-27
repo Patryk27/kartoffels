@@ -65,8 +65,8 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
             max_queued_bots: MAX_BOTS,
         },
         rng: None,
-        theme: Theme::Dungeon(DungeonTheme::new(uvec2(64, 32))),
-    });
+        theme: Some(Theme::Dungeon(DungeonTheme::new(uvec2(64, 32)))),
+    })?;
 
     game.join(world).await?;
 

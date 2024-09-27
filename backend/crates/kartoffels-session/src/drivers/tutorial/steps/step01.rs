@@ -34,5 +34,5 @@ static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<bool> {
-    ctxt.run_dialog(&DIALOG).await
+    ctxt.game.run_dialog(&DIALOG).await
 }
