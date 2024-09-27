@@ -146,7 +146,7 @@ impl Term {
 
                 render(&mut Ui {
                     ty: self.ty,
-                    frame,
+                    buf: frame.buffer_mut(),
                     area,
                     mouse: self.mouse.report().as_ref(),
                     event: self.event.take().as_ref(),

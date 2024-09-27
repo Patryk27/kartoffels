@@ -1,8 +1,7 @@
-use crate::{theme, Ui};
+use crate::{theme, Render, Ui};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Widget;
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
@@ -48,37 +47,6 @@ impl<'a, T> Button<'a, T> {
 
     pub fn width(&self) -> u16 {
         (Self::key_name(self.key).len() + self.label.len() + 3) as u16
-    }
-
-    pub fn render(self, ui: &mut Ui<T>) -> ButtonResponse {
-        let area = self.layout(ui);
-        let resp = self.response(ui, area);
-        let (key_style, label_style) = self.style(ui, &resp);
-
-        let key = Self::key_name(self.key);
-        let label = &*self.label;
-
-        Line::from_iter([
-            Span::styled("[", label_style),
-            Span::styled(key, key_style),
-            Span::styled("] ", label_style),
-            Span::styled(label, label_style),
-        ])
-        .render(area, ui.buf());
-
-        if ui.layout().is_row() {
-            ui.space(area.width);
-        } else {
-            ui.space(area.height);
-        }
-
-        if resp.pressed {
-            if let Some(event) = self.throwing {
-                ui.throw(event);
-            }
-        }
-
-        resp
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
@@ -148,6 +116,43 @@ impl<'a, T> Button<'a, T> {
 
             key => unimplemented!("{:?}", key),
         }
+    }
+}
+
+impl<T> Render<T> for Button<'_, T> {
+    type Response = ButtonResponse;
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
+        let area = self.layout(ui);
+        let resp = self.response(ui, area);
+        let (key_style, label_style) = self.style(ui, &resp);
+
+        let key = Self::key_name(self.key);
+        let label = &*self.label;
+
+        ui.clamp(area, |ui| {
+            Line::from_iter([
+                Span::styled("[", label_style),
+                Span::styled(key, key_style),
+                Span::styled("] ", label_style),
+                Span::styled(label, label_style),
+            ])
+            .render(ui);
+        });
+
+        if ui.layout().is_row() {
+            ui.space(area.width);
+        } else {
+            ui.space(area.height);
+        }
+
+        if resp.pressed {
+            if let Some(event) = self.throwing {
+                ui.throw(event);
+            }
+        }
+
+        resp
     }
 }
 

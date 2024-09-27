@@ -1,7 +1,7 @@
 use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
 use itertools::Either;
-use kartoffels_ui::{theme, Button, RectExt, Ui};
+use kartoffels_ui::{theme, Button, RectExt, Render, Ui};
 use kartoffels_world::prelude::{SnapshotAliveBot, SnapshotQueuedBot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;

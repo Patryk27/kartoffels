@@ -1,5 +1,5 @@
 use super::Response;
-use kartoffels_ui::{theme, Button, Ui};
+use kartoffels_ui::{theme, Button, Render, Ui};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
 use termwiz::input::KeyCode;

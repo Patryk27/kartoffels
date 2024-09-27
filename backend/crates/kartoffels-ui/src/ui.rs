@@ -5,13 +5,12 @@ use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
-use ratatui::Frame;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct Ui<'a, 'b, T> {
+pub struct Ui<'a, T> {
     pub(super) ty: TermType,
-    pub(super) frame: &'a mut Frame<'b>,
+    pub(super) buf: &'a mut Buffer,
     pub(super) area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
     pub(super) event: Option<&'a InputEvent>,
@@ -21,13 +20,13 @@ pub struct Ui<'a, 'b, T> {
     pub(super) thrown: &'a mut Option<T>,
 }
 
-impl<'a, 'b, T> Ui<'a, 'b, T> {
+impl<'a, T> Ui<'a, T> {
     pub fn ty(&self) -> TermType {
         self.ty
     }
 
     pub fn buf(&mut self) -> &mut Buffer {
-        self.frame.buffer_mut()
+        self.buf
     }
 
     pub fn area(&self) -> Rect {
@@ -49,7 +48,7 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
     fn with(&mut self, f: impl FnOnce(&mut Ui<T>)) {
         f(&mut Ui {
             ty: self.ty,
-            frame: self.frame,
+            buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,
@@ -224,7 +223,7 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
 
         f(&mut Ui {
             ty: self.ty,
-            frame: self.frame,
+            buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,

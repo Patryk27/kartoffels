@@ -1,6 +1,6 @@
 use crate::views::game::Event;
-use kartoffels_ui::{Button, RectExt, Ui};
-use ratatui::widgets::{Paragraph, Widget};
+use kartoffels_ui::{Button, RectExt, Render, Ui};
+use ratatui::widgets::Paragraph;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -19,7 +19,7 @@ impl ErrorDialog {
         let height = text.line_count(width) as u16 + 2;
 
         ui.error_window(width, height, Some(" whoopsie "), |ui| {
-            text.render(ui.area(), ui.buf());
+            text.render(ui);
 
             ui.clamp(ui.area().footer(1), |ui| {
                 Button::new(KeyCode::Enter, "got it")

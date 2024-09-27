@@ -1,9 +1,8 @@
 use super::{Event, State};
-use kartoffels_ui::{theme, Button, Ui};
+use kartoffels_ui::{theme, Button, Render, Ui};
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
-use ratatui::widgets::Widget;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -72,10 +71,9 @@ impl BottomPanel {
                 height: 1,
             };
 
-            Span::raw("PAUSED")
-                .fg(theme::FG)
-                .bg(theme::RED)
-                .render(area, ui.buf());
+            ui.clamp(area, |ui| {
+                Span::raw("PAUSED").fg(theme::FG).bg(theme::RED).render(ui);
+            });
         } else if let Some(status) = &state.status {
             let width = status.len() as u16;
 
@@ -86,10 +84,9 @@ impl BottomPanel {
                 height: 1,
             };
 
-            Span::raw(status)
-                .fg(theme::BG)
-                .bg(theme::YELLOW)
-                .render(area, ui.buf());
+            ui.clamp(area, |ui| {
+                Span::raw(status).fg(theme::BG).bg(theme::YELLOW).render(ui);
+            });
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::drivers::challenges::{Challenge, CHALLENGES};
 use crate::Background;
 use anyhow::Result;
-use kartoffels_ui::{theme, Button, Term};
+use kartoffels_ui::{theme, Button, Render, Term};
 use termwiz::input::KeyCode;
 use tracing::debug;
 

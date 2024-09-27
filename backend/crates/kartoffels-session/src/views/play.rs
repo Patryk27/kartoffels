@@ -1,7 +1,7 @@
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_ui::{Button, Term};
+use kartoffels_ui::{Button, Render, Term};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use termwiz::input::KeyCode;
 use tracing::debug;
