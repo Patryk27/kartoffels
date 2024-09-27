@@ -18,8 +18,10 @@ use tracing::info;
 pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
     info!("session started");
 
+    let mut bg = Background::new(term);
+
     loop {
-        match main_ex(term, store).await {
+        match main_ex(term, store, &mut bg).await {
             Ok(_) => {
                 return Ok(());
             }
@@ -27,35 +29,35 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
             Err(err) => {
                 if let Some(abort) = err.downcast_ref::<Abort>() {
                     if abort.soft {
+                        // Let soft-aborts make a new background, just for fun
+                        bg = Background::new(term);
                         continue;
                     }
+                } else {
+                    error::run(term, &bg, err).await?;
                 }
-
-                return Err(err);
             }
         }
     }
 }
 
-async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
+async fn main_ex(
+    term: &mut Term,
+    store: &Store,
+    bg: &mut Background,
+) -> Result<()> {
     loop {
-        let mut bg = Background::new(term);
-
-        match home::run(term, &mut bg).await? {
+        match home::run(term, bg).await? {
             home::Response::Play => loop {
-                match play::run(term, store, &mut bg).await? {
+                match play::run(term, store, bg).await? {
                     play::Response::Play(world) => {
-                        run_game(term, |game| {
-                            drivers::online::run(world, game)
-                        })
-                        .await?;
+                        drive(term, |game| drivers::online::run(world, game))
+                            .await?;
                     }
 
                     play::Response::Sandbox => {
-                        run_game(term, |game| {
-                            drivers::sandbox::run(store, game)
-                        })
-                        .await?;
+                        drive(term, |game| drivers::sandbox::run(store, game))
+                            .await?;
                     }
 
                     play::Response::Challenges => {
@@ -69,8 +71,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
             },
 
             home::Response::Tutorial => {
-                run_game(term, |game| drivers::tutorial::run(store, game))
-                    .await?;
+                drive(term, |game| drivers::tutorial::run(store, game)).await?;
             }
 
             home::Response::Quit => {
@@ -80,7 +81,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
     }
 }
 
-async fn run_game<F, Fut>(term: &mut Term, f: F) -> Result<()>
+async fn drive<F, Fut>(term: &mut Term, f: F) -> Result<()>
 where
     F: FnOnce(DrivenGame) -> Fut,
     Fut: Future<Output = Result<()>>,
