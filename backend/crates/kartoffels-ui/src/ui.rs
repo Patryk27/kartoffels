@@ -4,7 +4,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
-use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
+use ratatui::widgets::{Block, Padding, Paragraph, Widget, WidgetRef, Wrap};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -97,13 +97,12 @@ impl<'a, T> Ui<'a, T> {
         }
     }
 
-    pub fn line<'x>(&mut self, text: impl Into<Text<'x>>) {
-        self.text(text);
-        self.space(1);
-    }
+    pub fn line<'x>(&mut self, line: impl Into<Text<'x>>) {
+        let para = Paragraph::new(line).wrap(Wrap::default());
+        let height = para.line_count(self.area.width) as u16;
 
-    pub fn text<'x>(&mut self, text: impl Into<Text<'x>>) {
-        text.into().render(self.area, self.buf());
+        para.render(self.area, self.buf());
+        self.space(height);
     }
 
     pub fn span<'x>(&mut self, span: impl Into<Span<'x>>) {

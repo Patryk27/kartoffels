@@ -7,7 +7,7 @@ pub struct LeavingDialog;
 
 impl LeavingDialog {
     pub fn render(&mut self, ui: &mut Ui<Event>) {
-        ui.window(50, 3, Some(" leaving "), theme::YELLOW, |ui| {
+        ui.window(42, 3, Some(" leaving "), theme::YELLOW, |ui| {
             ui.line("do you want to go back to the main menu?");
             ui.space(1);
 
@@ -16,7 +16,7 @@ impl LeavingDialog {
                     .throwing(Event::CloseDialog)
                     .render(ui);
 
-                Button::new(KeyCode::Char('y'), "yes, go to main menu")
+                Button::new(KeyCode::Char('y'), "yes, leave game")
                     .throwing(Event::GoBack)
                     .right_aligned()
                     .render(ui);

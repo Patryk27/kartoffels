@@ -1,28 +1,10 @@
 use super::prelude::*;
-use super::Challenge;
 
 pub static CHALLENGE: Challenge = Challenge {
-    name: "lost in a labirynth",
-    desc: "your bot got lost in a labirynth and it's very distressed - help it escape",
+    name: "lost in labirynth",
+    desc: "your bot got lost and it's visibly distressed - help it escape!",
     run,
 };
-
-#[rustfmt::skip]
-static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
-    title: Some(" get me out of here "),
-
-    body: vec![
-        DialogLine::new(
-            "your bot got lost in a mythical labirynth and it's very \
-             distressed - implement a firmware to help your bot escape",
-        ),
-    ],
-
-    buttons: vec![
-        DialogButton::abort("go back", false),
-        DialogButton::confirm("let's do it", true),
-    ],
-});
 
 fn run(store: &Store, game: DrivenGame) -> BoxFuture<'_, Result<()>> {
     Box::pin(async move {
@@ -42,9 +24,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<'_, Result<()>> {
             theme: None,
         })?;
 
-        if !game.run_dialog(&*DIALOG).await? {
-            return Ok(());
-        }
+        future::pending::<()>().await;
 
         Ok(())
     })
