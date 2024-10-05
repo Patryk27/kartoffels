@@ -51,26 +51,8 @@ impl Map {
         let mut bg;
 
         match tile.base {
-            TileBase::FLOOR => {
-                ch = ".";
-                fg = theme::GRAY;
-                bg = theme::BG;
-            }
-
-            TileBase::WALL_H => {
-                ch = "-";
-                fg = theme::GRAY;
-                bg = theme::BG;
-            }
-
-            TileBase::WALL_V => {
-                ch = "|";
-                fg = theme::GRAY;
-                bg = theme::BG;
-            }
-
             TileBase::BOT => {
-                ch = "@";
+                ch = '@';
 
                 fg = state
                     .snapshot
@@ -85,10 +67,10 @@ impl Map {
 
             TileBase::BOT_CHEVRON => {
                 ch = match Dir::from(tile.meta[1]) {
-                    Dir::N => "↑",
-                    Dir::E => "→",
-                    Dir::S => "↓",
-                    Dir::W => "←",
+                    Dir::N => '↑',
+                    Dir::E => '→',
+                    Dir::S => '↓',
+                    Dir::W => '←',
                 };
 
                 fg = state
@@ -102,8 +84,26 @@ impl Map {
                 bg = theme::BG;
             }
 
+            TileBase::FLOOR => {
+                ch = '.';
+                fg = theme::DARK_GRAY;
+                bg = theme::BG;
+            }
+
+            TileBase::WALL_H => {
+                ch = '-';
+                fg = theme::GRAY;
+                bg = theme::BG;
+            }
+
+            TileBase::WALL_V => {
+                ch = '|';
+                fg = theme::GRAY;
+                bg = theme::BG;
+            }
+
             _ => {
-                ch = " ";
+                ch = ' ';
                 fg = theme::FG;
                 bg = theme::BG;
             }
@@ -146,7 +146,7 @@ impl Map {
 
         let pos = ui.area().as_position();
 
-        ui.buf()[pos].set_symbol(ch).set_fg(fg).set_bg(bg);
+        ui.buf()[pos].set_char(ch).set_fg(fg).set_bg(bg);
     }
 
     fn process_keys(ui: &mut Ui<Event>) {
