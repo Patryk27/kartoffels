@@ -11,7 +11,7 @@ document.fonts.ready.then(() => {
   const term = new Terminal({
     rows: 0,
     cols: 0,
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Fira Code",
   });
 
