@@ -3,6 +3,7 @@ use crate::DriverEvent;
 use anyhow::Result;
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::SnapshotStreamExt;
+use std::time::Instant;
 
 impl DriverEvent {
     pub(super) async fn handle(
@@ -50,7 +51,7 @@ impl DriverEvent {
             }
 
             DriverEvent::SetStatus(status) => {
-                state.status = status;
+                state.status = status.map(|status| (status, Instant::now()));
             }
 
             DriverEvent::Poll(f) => {

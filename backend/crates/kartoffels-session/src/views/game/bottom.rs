@@ -74,7 +74,7 @@ impl BottomPanel {
             ui.clamp(area, |ui| {
                 Span::raw("PAUSED").fg(theme::FG).bg(theme::RED).render(ui);
             });
-        } else if let Some(status) = &state.status {
+        } else if let Some((status, status_tt)) = &state.status {
             let width = status.len() as u16;
 
             let area = Rect {
@@ -85,7 +85,15 @@ impl BottomPanel {
             };
 
             ui.clamp(area, |ui| {
-                Span::raw(status).fg(theme::BG).bg(theme::YELLOW).render(ui);
+                let span = Span::raw(status);
+
+                let span = if status_tt.elapsed().as_millis() % 1000 <= 500 {
+                    span.fg(theme::BG).bg(theme::YELLOW)
+                } else {
+                    span.fg(theme::YELLOW)
+                };
+
+                span.render(ui);
             });
         }
     }

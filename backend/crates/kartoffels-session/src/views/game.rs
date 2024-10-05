@@ -71,7 +71,7 @@ struct State {
     poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
-    status: Option<String>,
+    status: Option<(String, Instant)>,
 }
 
 impl State {
