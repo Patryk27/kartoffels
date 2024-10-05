@@ -7,7 +7,7 @@ use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
 pub struct Button<'a, T> {
-    pub key: KeyCode,
+    pub key: Option<KeyCode>,
     pub label: Cow<'a, str>,
     pub throwing: Option<T>,
     pub alignment: Alignment,
@@ -15,9 +15,12 @@ pub struct Button<'a, T> {
 }
 
 impl<'a, T> Button<'a, T> {
-    pub fn new(key: KeyCode, label: impl Into<Cow<'a, str>>) -> Self {
+    pub fn new(
+        key: impl Into<Option<KeyCode>>,
+        label: impl Into<Cow<'a, str>>,
+    ) -> Self {
         Self {
-            key,
+            key: key.into(),
             label: label.into(),
             throwing: None,
             alignment: Alignment::Left,
@@ -46,7 +49,11 @@ impl<'a, T> Button<'a, T> {
     }
 
     pub fn width(&self) -> u16 {
-        (Self::key_name(self.key).len() + self.label.len() + 3) as u16
+        if let Some(key) = self.key {
+            (Self::key_name(key).len() + self.label.len() + 3) as u16
+        } else {
+            (self.label.len() + 2) as u16
+        }
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
@@ -75,7 +82,7 @@ impl<'a, T> Button<'a, T> {
 
             let by_keyboard = ui.enabled()
                 && self.enabled
-                && ui.key(self.key, Modifiers::NONE);
+                && self.key.map_or(false, |key| ui.key(key, Modifiers::NONE));
 
             by_mouse || by_keyboard
         };
@@ -88,7 +95,7 @@ impl<'a, T> Button<'a, T> {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
-                Style::new().bold().fg(theme::GREEN)
+                Style::new().fg(theme::GREEN)
             }
         } else {
             Style::new().fg(theme::DARK_GRAY)
@@ -127,15 +134,21 @@ impl<T> Render<T> for Button<'_, T> {
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
 
-        let key = Self::key_name(self.key);
+        let key = self.key.map(Self::key_name);
         let label = &*self.label;
 
         ui.clamp(area, |ui| {
             ui.row(|ui| {
+                if let Some(key) = key {
                     ui.span(Span::styled("[", label_style));
                     ui.span(Span::styled(key, key_style));
                     ui.span(Span::styled("] ", label_style));
                     ui.span(Span::styled(label, label_style));
+                } else {
+                    ui.span(Span::styled("[", label_style));
+                    ui.span(Span::styled(label, key_style));
+                    ui.span(Span::styled("]", label_style));
+                }
             });
         });
 

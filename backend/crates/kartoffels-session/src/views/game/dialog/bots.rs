@@ -96,8 +96,8 @@ impl Render<Event> for BotsDialogRow<'_> {
         let age = Span::raw(format!("{}s", self.bot.age));
         let score = Span::raw(self.bot.score.to_string());
 
-        let join = Button::new(KeyCode::Char('X'), "join")
-            .throwing(Event::JoinBot(self.bot.id));
+        let join =
+            Button::new(None, "join").throwing(Event::JoinBot(self.bot.id));
 
         VirtualRow::new(ui, BotsDialog::WIDTHS)
             .add(nth)
