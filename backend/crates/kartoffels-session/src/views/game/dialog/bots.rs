@@ -20,11 +20,11 @@ impl BotsDialog {
         BotId::LENGTH as u16 + 1, // id
         7,                        // age
         8,                        // score
-        8,                        // join button
+        6,                        // action
     ];
 
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
-        let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
+        let width = Self::WIDTHS.iter().copied().sum();
         let height = ui.area().height - 2;
 
         ui.info_window(width, height, Some(" bots "), |ui| {
@@ -32,7 +32,8 @@ impl BotsDialog {
                 .add(Span::raw("nth"))
                 .add(Span::raw("id"))
                 .add(Span::raw("age"))
-                .add(Span::raw("score"));
+                .add(Span::raw("score"))
+                .add(Span::raw("action"));
 
             ui.space(1);
 
