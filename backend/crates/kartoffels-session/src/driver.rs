@@ -21,8 +21,8 @@ impl DrivenGame {
         (this, rx)
     }
 
-    pub async fn join(&self, handle: WorldHandle) -> Result<()> {
-        self.send(DriverEvent::Join(handle)).await?;
+    pub async fn join(&self, world: WorldHandle) -> Result<()> {
+        self.send(DriverEvent::Join(world)).await?;
 
         Ok(())
     }

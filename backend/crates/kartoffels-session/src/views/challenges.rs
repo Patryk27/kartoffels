@@ -2,7 +2,7 @@ use crate::drivers::challenges::{Challenge, CHALLENGES};
 use crate::Background;
 use anyhow::Result;
 use kartoffels_ui::{Button, Render, Term};
-use ratatui::style::Stylize;
+use ratatui::layout::Rect;
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;
@@ -10,27 +10,28 @@ use tracing::debug;
 pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
     debug!("run()");
 
-    let mut selected: Option<&Challenge> = None;
-
     loop {
-        let event = term
+        let resp = term
             .draw(|ui| {
                 bg.render(ui);
 
                 let width = 48;
 
                 let height = {
-                    let mut h = CHALLENGES.len() as u16 + 2;
+                    let mut height = 0;
 
-                    if let Some(selected) = selected {
-                        let desc_h = Paragraph::new(selected.desc)
+                    for challenge in CHALLENGES {
+                        height += 1;
+
+                        height += Paragraph::new(challenge.desc)
                             .wrap(Wrap::default())
-                            .line_count(width);
+                            .line_count(width - 2)
+                            as u16;
 
-                        h += 2 + (desc_h as u16);
+                        height += 1;
                     }
 
-                    h
+                    height + 1
                 };
 
                 ui.info_window(width, height, Some(" challenges "), |ui| {
@@ -38,61 +39,38 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
                         Button::new(key, challenge.name)
-                            .throwing(Event::Select(challenge))
+                            .throwing(Response::Play(challenge))
                             .render(ui);
-                    }
 
-                    ui.space(1);
+                        let desc_area = Rect {
+                            x: ui.area().x + 2,
+                            ..ui.area()
+                        };
 
-                    if let Some(selected) = selected {
-                        ui.line(format!("{}:", selected.name).bold());
-                        ui.line(selected.desc);
+                        let desc_height =
+                            ui.clamp(desc_area, |ui| ui.line(challenge.desc));
+
+                        ui.space(desc_height);
                         ui.space(1);
                     }
 
-                    ui.row(|ui| {
-                        Button::new(KeyCode::Escape, "go back")
-                            .throwing(Event::GoBack)
-                            .render(ui);
-
-                        if let Some(selected) = selected {
-                            Button::new(KeyCode::Enter, "play")
-                                .throwing(Event::Play(selected))
-                                .right_aligned()
-                                .render(ui);
-                        }
-                    });
+                    Button::new(KeyCode::Escape, "go back")
+                        .throwing(Response::GoBack)
+                        .render(ui);
                 });
             })
             .await?;
 
         term.poll().await?;
 
-        if let Some(event) = event {
-            match event {
-                Event::Select(challenge) => {
-                    selected = Some(challenge);
-                }
-                Event::Play(challenge) => {
-                    return Ok(Response::Play(challenge));
-                }
-                Event::GoBack => {
-                    return Ok(Response::GoBack);
-                }
-            }
+        if let Some(resp) = resp {
+            return Ok(resp);
         }
     }
 }
 
 #[derive(Debug)]
 pub enum Response {
-    Play(&'static Challenge),
-    GoBack,
-}
-
-#[derive(Debug)]
-enum Event {
-    Select(&'static Challenge),
     Play(&'static Challenge),
     GoBack,
 }

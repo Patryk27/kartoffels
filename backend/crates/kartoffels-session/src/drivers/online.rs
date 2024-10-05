@@ -61,9 +61,9 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     ],
 });
 
-pub async fn run(handle: WorldHandle, game: DrivenGame) -> Result<()> {
+pub async fn run(world: WorldHandle, game: DrivenGame) -> Result<()> {
     game.set_help(Some(&HELP)).await?;
-    game.join(handle).await?;
+    game.join(world).await?;
 
     future::pending().await
 }

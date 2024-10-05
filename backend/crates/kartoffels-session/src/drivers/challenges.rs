@@ -1,4 +1,4 @@
-mod lost_in_labirynth;
+mod acyclic_maze;
 
 mod prelude {
     pub(super) use super::Challenge;
@@ -7,6 +7,7 @@ mod prelude {
     pub(super) use crate::DrivenGame;
     pub(super) use futures_util::future::BoxFuture;
     pub(super) use kartoffels_store::Store;
+    pub(super) use rand::RngCore;
     pub(super) use std::future;
 }
 
@@ -22,4 +23,4 @@ pub struct Challenge {
     pub run: fn(&Store, DrivenGame) -> BoxFuture<'_, Result<()>>,
 }
 
-pub static CHALLENGES: &[&Challenge] = &[&lost_in_labirynth::CHALLENGE];
+pub static CHALLENGES: &[&Challenge] = &[&acyclic_maze::CHALLENGE];

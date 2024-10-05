@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-ui = { path = "../kartoffels-ui" }
+kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
 
 anyhow.workspace = true
@@ -20,3 +21,6 @@ termwiz.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+futures.workspace = true

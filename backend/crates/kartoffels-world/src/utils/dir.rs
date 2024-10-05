@@ -22,8 +22,8 @@ pub enum Dir {
 }
 
 impl Dir {
-    pub fn all() -> impl Iterator<Item = Self> {
-        [Dir::N, Dir::E, Dir::S, Dir::W].into_iter()
+    pub fn all() -> [Self; 4] {
+        [Dir::N, Dir::E, Dir::S, Dir::W]
     }
 
     #[must_use]
@@ -43,6 +43,26 @@ impl Dir {
             Dir::E => Dir::S,
             Dir::W => Dir::N,
             Dir::S => Dir::W,
+        }
+    }
+
+    #[must_use]
+    pub fn turned_back(self) -> Self {
+        match self {
+            Dir::N => Dir::S,
+            Dir::E => Dir::W,
+            Dir::W => Dir::E,
+            Dir::S => Dir::N,
+        }
+    }
+
+    #[must_use]
+    pub fn as_bit(self) -> u8 {
+        match self {
+            Dir::N => 1,
+            Dir::E => 2,
+            Dir::W => 4,
+            Dir::S => 8,
         }
     }
 

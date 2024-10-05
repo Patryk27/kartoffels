@@ -1489,11 +1489,13 @@ version = "0.4.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "futures",
  "futures-util",
  "glam",
  "itertools 0.12.1",
  "kartoffels-store",
  "kartoffels-ui",
+ "kartoffels-utils",
  "kartoffels-world",
  "rand",
  "rand_chacha",

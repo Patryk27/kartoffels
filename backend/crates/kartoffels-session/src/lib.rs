@@ -67,7 +67,7 @@ async fn main_ex(
                             .await?;
                     }
 
-                    play::Response::Challenges => {
+                    play::Response::Challenges => loop {
                         match challenges::run(term, bg).await? {
                             challenges::Response::Play(challenge) => {
                                 drive(term, |game| {
@@ -77,10 +77,10 @@ async fn main_ex(
                             }
 
                             challenges::Response::GoBack => {
-                                continue;
+                                break;
                             }
                         }
-                    }
+                    },
 
                     play::Response::GoBack => {
                         break;
