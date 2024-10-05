@@ -2,6 +2,7 @@ use crate::{bots, Clock, Event, KillBot, Request, Shutdown, World};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
+use tracing::debug;
 
 pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     loop {
@@ -16,6 +17,10 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 }
             }
         };
+
+        if let Ok(request) = &request {
+            debug!(?request, "processing");
+        }
 
         match request {
             Ok(Request::Tick { tx }) => {

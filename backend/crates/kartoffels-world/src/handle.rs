@@ -3,6 +3,7 @@ mod systems;
 pub use self::systems::*;
 use crate::{BotId, Dir, Event, Map, Snapshot};
 use anyhow::{anyhow, Context, Result};
+use derivative::Derivative;
 use futures_util::Stream;
 use glam::IVec2;
 use kartoffels_utils::Id;
@@ -157,48 +158,63 @@ pub struct HandleInner {
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub enum Request {
     Tick {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Pause {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Resume {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Shutdown {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateBot {
         src: Cow<'static, [u8]>,
         pos: Option<IVec2>,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
     RestartBot {
         id: BotId,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     DestroyBot {
         id: BotId,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetSpawn {
         point: Option<IVec2>,
         dir: Option<Dir>,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetMap {
         map: Map,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 }
