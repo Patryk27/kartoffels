@@ -11,8 +11,6 @@ pub struct BottomPanel;
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
         ui.row(|ui| {
-            ui.space(2);
-
             Self::render_go_back_btn(ui);
             Self::render_pause_btn(ui, state);
             Self::render_help_btn(ui, state);
