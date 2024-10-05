@@ -210,7 +210,7 @@ impl World {
             let _rt = rt.enter();
             let _span = span.enter();
 
-            info!("ready");
+            info!(name=?self.name, "ready");
 
             let mut metronome = self.clock.metronome(bench);
             let mut systems = Container::default();

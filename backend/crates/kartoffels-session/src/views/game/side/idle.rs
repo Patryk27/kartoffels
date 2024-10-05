@@ -30,7 +30,9 @@ impl IdleSidePanel {
             btns.push(Action::JoinBot);
         }
 
-        btns.push(Action::UploadBot);
+        if state.perms.user_can_upload_bots {
+            btns.push(Action::UploadBot);
+        }
 
         if state.perms.user_can_spawn_prefabs {
             btns.push(Action::SpawnRoberto);

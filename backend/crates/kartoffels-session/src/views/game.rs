@@ -67,7 +67,7 @@ struct State {
     help: Option<HelpDialogRef>,
     map: Map,
     paused: bool,
-    perms: Permissions,
+    perms: Perms,
     poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,

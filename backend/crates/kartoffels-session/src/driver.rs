@@ -1,4 +1,4 @@
-use crate::views::game::{HelpDialogRef, Permissions, PollCtxt, PollFn};
+use crate::views::game::{HelpDialogRef, Perms, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::{theme, Dialog, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
@@ -39,7 +39,7 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn set_perms(&self, perms: Permissions) -> Result<()> {
+    pub async fn set_perms(&self, perms: Perms) -> Result<()> {
         self.send(DriverEvent::SetPerms(perms)).await?;
 
         Ok(())
@@ -47,7 +47,7 @@ impl DrivenGame {
 
     pub async fn update_perms(
         &self,
-        f: impl FnOnce(&mut Permissions) + Send + 'static,
+        f: impl FnOnce(&mut Perms) + Send + 'static,
     ) -> Result<()> {
         self.send(DriverEvent::UpdatePerms(Box::new(f))).await?;
 
@@ -164,8 +164,8 @@ pub enum DriverEvent {
     Join(WorldHandle),
     Pause,
     Resume,
-    SetPerms(Permissions),
-    UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send>),
+    SetPerms(Perms),
+    UpdatePerms(Box<dyn FnOnce(&mut Perms) + Send>),
     OpenDialog(Box<dyn FnMut(&mut Ui<()>) + Send>),
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),

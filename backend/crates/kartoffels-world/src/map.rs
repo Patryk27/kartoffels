@@ -19,14 +19,6 @@ impl Map {
         }
     }
 
-    pub fn size(&self) -> UVec2 {
-        self.size
-    }
-
-    pub fn center(&self) -> IVec2 {
-        self.size.as_ivec2() / 2
-    }
-
     pub fn get(&self, pos: IVec2) -> Tile {
         if let Some(idx) = self.pos_to_idx(pos) {
             self.tiles[idx]
@@ -106,6 +98,36 @@ impl Map {
         self.rect(ivec2(0, 0), self.size().as_ivec2() - 1, tile);
     }
 
+    pub fn for_each(&self, mut f: impl FnMut(IVec2, Tile)) {
+        for y in 0..self.size.y {
+            for x in 0..self.size.x {
+                let pos = ivec2(x as i32, y as i32);
+                let tile = self.get(pos);
+
+                f(pos, tile);
+            }
+        }
+    }
+
+    pub fn for_each_mut(&mut self, mut f: impl FnMut(IVec2, &mut Tile)) {
+        for y in 0..self.size.y {
+            for x in 0..self.size.x {
+                let pos = ivec2(x as i32, y as i32);
+                let tile = self.get_mut(pos);
+
+                f(pos, tile);
+            }
+        }
+    }
+
+    pub fn map(mut self, mut f: impl FnMut(IVec2, Tile) -> Tile) -> Self {
+        self.for_each_mut(|pos, tile| {
+            *tile = f(pos, *tile);
+        });
+
+        self
+    }
+
     pub fn sample_pos(&self, rng: &mut impl RngCore) -> IVec2 {
         uvec2(rng.gen_range(0..self.size.x), rng.gen_range(0..self.size.y))
             .as_ivec2()
@@ -113,6 +135,14 @@ impl Map {
 
     pub fn contains(&self, pos: IVec2) -> bool {
         self.pos_to_idx(pos).is_some()
+    }
+
+    pub fn center(&self) -> IVec2 {
+        self.size.as_ivec2() / 2
+    }
+
+    pub fn size(&self) -> UVec2 {
+        self.size
     }
 
     fn pos_to_idx(&self, pos: IVec2) -> Option<usize> {

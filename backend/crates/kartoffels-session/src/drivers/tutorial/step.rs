@@ -1,4 +1,4 @@
-use crate::views::game::Permissions;
+use crate::views::game::Perms;
 use crate::DrivenGame;
 use anyhow::Result;
 use glam::ivec2;
@@ -17,7 +17,7 @@ pub struct StepCtxt {
 
 impl StepCtxt {
     pub async fn new(store: &Store, game: DrivenGame) -> Result<Self> {
-        game.set_perms(Permissions::TUTORIAL).await?;
+        game.set_perms(Perms::TUTORIAL).await?;
 
         let world = store.create_world(Config {
             clock: Default::default(),

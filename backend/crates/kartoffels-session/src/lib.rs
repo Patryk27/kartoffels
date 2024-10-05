@@ -67,6 +67,7 @@ async fn main_ex(
                             .await?;
                     }
 
+                    #[allow(clippy::while_let_loop)]
                     play::Response::Challenges => loop {
                         match challenges::run(term, bg).await? {
                             challenges::Response::Play(challenge) => {

@@ -160,16 +160,11 @@ impl DungeonTheme {
 
         // ---
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                let pos = ivec2(x as i32, y as i32);
-                let tile = map.get(pos);
-
-                if tile.is_floor() && tile.meta[0] == NOT_VISITED {
-                    map.set(pos, TileBase::VOID);
-                }
+        map.for_each_mut(|_, tile| {
+            if tile.is_floor() && tile.meta[0] == NOT_VISITED {
+                *tile = TileBase::VOID.into();
             }
-        }
+        });
 
         for y in 0..map.size().y {
             for x in 0..map.size().x {
@@ -193,19 +188,21 @@ impl DungeonTheme {
             }
         }
 
+        map.for_each_mut(|_, tile| {
+            tile.meta[0] = 0;
+        });
+
         Ok(())
     }
 
     fn count_occupied_tiles(&self, map: &Map) -> u32 {
         let mut tiles = 0;
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                if !map.get(ivec2(x as i32, y as i32)).is_void() {
-                    tiles += 1;
-                }
+        map.for_each(|_, tile| {
+            if !tile.is_void() {
+                tiles += 1;
             }
-        }
+        });
 
         tiles
     }

@@ -76,15 +76,11 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
         .create_map(&mut rng)
         .unwrap();
 
-    for y in 0..map.size().y {
-        for x in 0..map.size().x {
-            let point = ivec2(x as i32, y as i32);
-
-            if map.get(point).base == TileBase::FLOOR && rng.gen_bool(0.05) {
-                map.set(point, TileBase::BOT);
-            }
+    map.for_each_mut(|_, tile| {
+        if tile.is_floor() && rng.gen_bool(0.05) {
+            *tile = TileBase::BOT.into();
         }
-    }
+    });
 
     let mut frame = 0;
 

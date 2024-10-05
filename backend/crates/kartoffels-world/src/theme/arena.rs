@@ -13,21 +13,16 @@ impl ArenaTheme {
     }
 
     pub(crate) fn create_map(&self) -> Map {
-        let mut map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
-
-        let center = map.size() / 2;
+        let map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
+        let center = map.center();
         let radius = self.radius as f32;
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                let pos = uvec2(x, y).as_ivec2();
-
-                if center.as_vec2().distance(pos.as_vec2()) < radius {
-                    map.set(pos, TileBase::FLOOR);
-                }
+        map.map(|pos, tile| {
+            if center.as_vec2().distance(pos.as_vec2()) < radius {
+                TileBase::FLOOR.into()
+            } else {
+                tile
             }
-        }
-
-        map
+        })
     }
 }
