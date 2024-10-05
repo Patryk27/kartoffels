@@ -1,8 +1,10 @@
 use crate::drivers::challenges::{Challenge, CHALLENGES};
 use crate::Background;
 use anyhow::Result;
-use kartoffels_ui::{Button, Render, Term};
+use kartoffels_ui::{theme, Button, Render, Term};
 use ratatui::layout::Rect;
+use ratatui::style::Stylize;
+use ratatui::text::Text;
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;
@@ -15,7 +17,7 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
             .draw(|ui| {
                 bg.render(ui);
 
-                let width = 48;
+                let width = (ui.area().x - 2).min(60);
 
                 let height = {
                     let mut height = 0;
@@ -25,13 +27,12 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
 
                         height += Paragraph::new(challenge.desc)
                             .wrap(Wrap::default())
-                            .line_count(width - 2)
-                            as u16;
+                            .line_count(width - 4);
 
                         height += 1;
                     }
 
-                    height + 1
+                    (height + 1) as u16
                 };
 
                 ui.info_window(width, height, Some(" challenges "), |ui| {
@@ -43,12 +44,13 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
                             .render(ui);
 
                         let desc_area = Rect {
-                            x: ui.area().x + 2,
+                            x: ui.area().x + 4,
                             ..ui.area()
                         };
 
-                        let desc_height =
-                            ui.clamp(desc_area, |ui| ui.line(challenge.desc));
+                        let desc_height = ui.clamp(desc_area, |ui| {
+                            ui.line(Text::raw(challenge.desc).fg(theme::GRAY))
+                        });
 
                         ui.space(desc_height);
                         ui.space(1);
