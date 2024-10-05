@@ -1,7 +1,7 @@
 use crate::{theme, Render, Ui};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Stylize};
-use ratatui::text::{Line, Span};
+use ratatui::text::Span;
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
@@ -131,13 +131,12 @@ impl<T> Render<T> for Button<'_, T> {
         let label = &*self.label;
 
         ui.clamp(area, |ui| {
-            Line::from_iter([
-                Span::styled("[", label_style),
-                Span::styled(key, key_style),
-                Span::styled("] ", label_style),
-                Span::styled(label, label_style),
-            ])
-            .render(ui);
+            ui.row(|ui| {
+                    ui.span(Span::styled("[", label_style));
+                    ui.span(Span::styled(key, key_style));
+                    ui.span(Span::styled("] ", label_style));
+                    ui.span(Span::styled(label, label_style));
+            });
         });
 
         if ui.layout().is_row() {
