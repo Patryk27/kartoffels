@@ -1,4 +1,4 @@
-use crate::{Map, Tile, TileBase};
+use crate::{Map, TileBase};
 use glam::uvec2;
 use serde::{Deserialize, Serialize};
 
@@ -23,7 +23,7 @@ impl ArenaTheme {
                 let pos = uvec2(x, y).as_ivec2();
 
                 if center.as_vec2().distance(pos.as_vec2()) < radius {
-                    map.set(pos, Tile::new(TileBase::FLOOR));
+                    map.set(pos, TileBase::FLOOR);
                 }
             }
         }

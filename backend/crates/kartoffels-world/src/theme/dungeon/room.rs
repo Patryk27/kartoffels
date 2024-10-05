@@ -1,5 +1,5 @@
 use super::{Corridor, CorridorDir};
-use crate::{Map, Tile, TileBase};
+use crate::{Map, TileBase};
 use glam::{ivec2, IVec2};
 use std::cmp;
 
@@ -21,7 +21,7 @@ impl Room {
                     TileBase::FLOOR
                 };
 
-                map.set(ivec2(x, y), Tile::new(tile));
+                map.set(ivec2(x, y), tile);
             }
         }
     }

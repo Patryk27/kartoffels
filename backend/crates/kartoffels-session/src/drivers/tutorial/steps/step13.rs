@@ -144,7 +144,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
                     ivec2(10, 13),
                     ivec2(10, 12),
                 ],
-                Tile::new(TileBase::FLOOR),
+                TileBase::FLOOR,
             );
 
             map

@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;
 use std::{cmp, fmt};
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
     tiles: Box<[Tile]>,
@@ -35,19 +35,29 @@ impl Map {
         }
     }
 
-    pub fn set(&mut self, pos: IVec2, tile: Tile) {
+    pub fn get_mut(&mut self, pos: IVec2) -> &mut Tile {
+        let idx = self.pos_to_idx(pos).unwrap();
+
+        &mut self.tiles[idx]
+    }
+
+    pub fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
+        let tile = tile.into();
+
         if let Some(idx) = self.pos_to_idx(pos) {
             self.tiles[idx] = tile;
         }
     }
 
-    pub fn set_if_void(&mut self, point: IVec2, tile: Tile) {
+    pub fn set_if_void(&mut self, point: IVec2, tile: impl Into<Tile>) {
         if self.get(point).is_void() {
             self.set(point, tile);
         }
     }
 
-    pub fn line(&mut self, p1: IVec2, p2: IVec2, tile: Tile) {
+    pub fn line(&mut self, p1: IVec2, p2: IVec2, tile: impl Into<Tile>) {
+        let tile = tile.into();
+
         if p1.x == p2.x {
             let [y1, y2] = cmp::minmax(p1.y, p2.y);
 
@@ -68,8 +78,9 @@ impl Map {
     pub fn poly(
         &mut self,
         points: impl IntoIterator<Item = IVec2>,
-        tile: Tile,
+        tile: impl Into<Tile>,
     ) {
+        let tile = tile.into();
         let mut prev = None;
 
         for p2 in points {
@@ -79,15 +90,20 @@ impl Map {
         }
     }
 
-    pub fn rect(&mut self, p1: IVec2, p2: IVec2, tile: Tile) {
+    pub fn rect(&mut self, p1: IVec2, p2: IVec2, tile: impl Into<Tile>) {
         let min = p1.min(p2);
         let max = p1.max(p2);
+        let tile = tile.into();
 
         for y in min.y..=max.y {
             for x in min.x..=max.x {
                 self.set(ivec2(x, y), tile);
             }
         }
+    }
+
+    pub fn fill(&mut self, tile: impl Into<Tile>) {
+        self.rect(ivec2(0, 0), self.size().as_ivec2() - 1, tile);
     }
 
     pub fn sample_pos(&self, rng: &mut impl RngCore) -> IVec2 {
@@ -107,6 +123,12 @@ impl Map {
         } else {
             None
         }
+    }
+}
+
+impl fmt::Debug for Map {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Map").field("size", &self.size).finish()
     }
 }
 
@@ -166,6 +188,12 @@ impl Tile {
     }
 }
 
+impl From<u8> for Tile {
+    fn from(base: u8) -> Self {
+        Tile::new(base)
+    }
+}
+
 impl Serialize for Tile {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -198,12 +226,11 @@ impl<'de> Deserialize<'de> for Tile {
 pub struct TileBase;
 
 impl TileBase {
-    pub const UNKNOWN: u8 = 0;
-    pub const VOID: u8 = b' ';
-    pub const FLOOR: u8 = b'.';
-    pub const WALL_H: u8 = b'-';
-    pub const WALL_V: u8 = b'|';
-    pub const FLAG: u8 = b'=';
     pub const BOT: u8 = b'@';
     pub const BOT_CHEVRON: u8 = b'~';
+    pub const FLAG: u8 = b'=';
+    pub const FLOOR: u8 = b'.';
+    pub const VOID: u8 = b' ';
+    pub const WALL_H: u8 = b'-';
+    pub const WALL_V: u8 = b'|';
 }

@@ -11,8 +11,7 @@ pub struct AliveBotTick {
 impl AliveBotTick {
     pub fn apply(self, world: &mut World, id: BotId) -> Option<KillBot> {
         if let Some(dir) = self.stab_dir {
-            if let Some(killed_id) =
-                world.bots.alive.get_by_pos(self.pos + dir.as_vec())
+            if let Some(killed_id) = world.bots.alive.get_by_pos(self.pos + dir)
             {
                 return Some(KillBot {
                     id: killed_id,
@@ -23,7 +22,7 @@ impl AliveBotTick {
         }
 
         if let Some(dir) = self.move_dir {
-            let pos = self.pos + dir.as_vec();
+            let pos = self.pos + dir;
             let tile = world.map.get(pos);
 
             if tile.is_void() {

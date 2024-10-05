@@ -115,7 +115,7 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
             meta: [idx as u8, 0, 0],
         };
 
-        let chevron_pos = bot.pos + bot.dir.as_vec();
+        let chevron_pos = bot.pos + bot.dir;
 
         let chevron_tile = Tile {
             base: TileBase::BOT_CHEVRON,

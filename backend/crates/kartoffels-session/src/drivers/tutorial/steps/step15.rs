@@ -119,7 +119,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
         .set_map({
             let mut map = Map::new(uvec2(20, 10));
 
-            map.rect(ivec2(0, 0), ivec2(19, 9), Tile::new(TileBase::FLOOR));
+            map.rect(ivec2(0, 0), ivec2(19, 9), TileBase::FLOOR);
             map
         })
         .await?;

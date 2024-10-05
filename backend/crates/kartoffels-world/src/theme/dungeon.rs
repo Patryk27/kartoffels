@@ -141,7 +141,7 @@ impl DungeonTheme {
 
         while let Some(pos) = stack.pop_front() {
             for dir in Dir::all() {
-                let pos = pos + dir.as_vec();
+                let pos = pos + dir;
                 let tile = map.get(pos);
 
                 if tile.is_floor() && tile.meta[0] == NOT_VISITED {
@@ -166,7 +166,7 @@ impl DungeonTheme {
                 let tile = map.get(pos);
 
                 if tile.is_floor() && tile.meta[0] == NOT_VISITED {
-                    map.set(pos, Tile::new(TileBase::VOID));
+                    map.set(pos, TileBase::VOID);
                 }
             }
         }
@@ -187,7 +187,7 @@ impl DungeonTheme {
                     }
 
                     if !has_floor_nearby {
-                        map.set(pos, Tile::new(TileBase::VOID));
+                        map.set(pos, TileBase::VOID);
                     }
                 }
             }

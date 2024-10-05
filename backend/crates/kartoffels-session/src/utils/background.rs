@@ -81,7 +81,7 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
             let point = ivec2(x as i32, y as i32);
 
             if map.get(point).base == TileBase::FLOOR && rng.gen_bool(0.05) {
-                map.set(point, Tile::new(TileBase::BOT));
+                map.set(point, TileBase::BOT);
             }
         }
     }
@@ -100,10 +100,10 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
-                    let dst = src + rng.gen::<Dir>().as_vec();
+                    let dst = src + rng.gen::<Dir>();
 
                     if map.get(dst).base == TileBase::FLOOR {
-                        map.set(src, Tile::new(TileBase::FLOOR));
+                        map.set(src, TileBase::FLOOR);
 
                         map.set(
                             dst,

@@ -2,7 +2,7 @@ use glam::{ivec2, IVec2};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, ops};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -31,8 +31,8 @@ impl Dir {
         match self {
             Dir::N => Dir::W,
             Dir::E => Dir::N,
-            Dir::S => Dir::E,
             Dir::W => Dir::S,
+            Dir::S => Dir::E,
         }
     }
 
@@ -41,8 +41,8 @@ impl Dir {
         match self {
             Dir::N => Dir::E,
             Dir::E => Dir::S,
-            Dir::S => Dir::W,
             Dir::W => Dir::N,
+            Dir::S => Dir::W,
         }
     }
 
@@ -96,5 +96,13 @@ impl From<Dir> for u8 {
             Dir::S => 2,
             Dir::W => 3,
         }
+    }
+}
+
+impl ops::Add<Dir> for IVec2 {
+    type Output = IVec2;
+
+    fn add(self, rhs: Dir) -> Self::Output {
+        self + rhs.as_vec()
     }
 }
