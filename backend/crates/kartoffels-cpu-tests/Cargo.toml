@@ -72,7 +72,6 @@ edition.workspace = true
 
 [dependencies]
 kartoffel = { path = "../kartoffel" }
-
 num-traits.workspace = true
 spin.workspace = true
 talc.workspace = true
