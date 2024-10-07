@@ -15,6 +15,7 @@ impl BottomPanel {
             Self::render_pause_btn(ui, state);
             Self::render_help_btn(ui, state);
             Self::render_bots_btn(ui, state);
+            Self::render_speed_btn(ui, state);
         });
 
         Self::render_status(ui, state);
@@ -55,6 +56,17 @@ impl BottomPanel {
 
             Button::new(KeyCode::Char('b'), "bots")
                 .throwing(Event::ShowBotsDialog)
+                .enabled(state.handle.is_some())
+                .render(ui);
+        }
+    }
+
+    fn render_speed_btn(ui: &mut Ui<Event>, state: &State) {
+        if !state.perms.user_can_alter_speed {
+            ui.space(2);
+
+            Button::new(KeyCode::Char('S'), "speed")
+                .throwing(Event::ShowSpeedDialog)
                 .enabled(state.handle.is_some())
                 .render(ui);
         }

@@ -1,6 +1,7 @@
 use glam::{ivec2, IVec2};
 use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+use rand::seq::SliceRandom;
+use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::{fmt, ops};
 
@@ -24,6 +25,13 @@ pub enum Dir {
 impl Dir {
     pub fn all() -> [Self; 4] {
         [Dir::N, Dir::E, Dir::S, Dir::W]
+    }
+
+    pub fn shuffled(rng: &mut impl RngCore) -> [Self; 4] {
+        let mut dirs = Self::all();
+
+        dirs.shuffle(rng);
+        dirs
     }
 
     #[must_use]

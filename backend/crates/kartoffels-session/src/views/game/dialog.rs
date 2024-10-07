@@ -3,6 +3,7 @@ mod error;
 mod help;
 mod join_bot;
 mod leaving;
+mod speed;
 mod upload_bot;
 
 pub use self::bots::*;
@@ -10,6 +11,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::leaving::*;
+pub use self::speed::*;
 pub use self::upload_bot::*;
 use super::Event;
 use kartoffels_ui::{Backdrop, Ui};
@@ -23,6 +25,7 @@ pub enum Dialog {
     Help(HelpDialogRef),
     JoinBot(JoinBotDialog),
     Leaving(LeavingDialog),
+    Speed(SpeedDialog),
     UploadBot(UploadBotDialog),
 
     Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
@@ -44,6 +47,9 @@ impl Dialog {
             }
             Dialog::Leaving(this) => {
                 this.render(ui);
+            }
+            Dialog::Speed(_this) => {
+                todo!();
             }
             Dialog::UploadBot(this) => {
                 this.render(ui);

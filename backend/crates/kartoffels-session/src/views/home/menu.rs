@@ -14,9 +14,9 @@ impl Menu {
 
     pub fn height<T>(ui: &Ui<T>) -> u16 {
         if ui.ty().is_ssh() {
-            5
+            8
         } else {
-            4
+            6
         }
     }
 
@@ -31,12 +31,24 @@ impl Menu {
                 .centered()
                 .render(ui);
 
+            Button::new(KeyCode::Char('s'), "sandbox")
+                .throwing(Response::Sandbox)
+                .centered()
+                .render(ui);
+
             Button::new(KeyCode::Char('t'), "tutorial")
                 .throwing(Response::Tutorial)
                 .centered()
                 .render(ui);
 
+            Button::new(KeyCode::Char('c'), "challenges")
+                .throwing(Response::Challenges)
+                .centered()
+                .render(ui);
+
             if ui.ty().is_ssh() {
+                ui.space(1);
+
                 Button::new(KeyCode::Escape, "quit")
                     .throwing(Response::Quit)
                     .centered()

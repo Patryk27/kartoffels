@@ -22,6 +22,10 @@ impl DriverEvent {
                 state.bot = None;
             }
 
+            DriverEvent::JoinBot(id) => {
+                state.join_bot(id);
+            }
+
             DriverEvent::Pause => {
                 state.pause().await?;
             }
@@ -50,12 +54,24 @@ impl DriverEvent {
                 state.help = help;
             }
 
+            DriverEvent::OpenHelp => {
+                state.dialog = Some(Dialog::Help(state.help.unwrap()));
+            }
+
             DriverEvent::SetStatus(status) => {
                 state.status = status.map(|status| (status, Instant::now()));
             }
 
             DriverEvent::Poll(f) => {
                 state.poll = Some(f);
+            }
+
+            DriverEvent::Lock => {
+                state.locked = true;
+            }
+
+            DriverEvent::Unlock => {
+                state.locked = false;
             }
 
             DriverEvent::CopyToClipboard(payload) => {

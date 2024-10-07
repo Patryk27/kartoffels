@@ -46,5 +46,6 @@ bot name:
            -Z build-std-features=compiler-builtins-mem
 
 bots:
+    just bot chl-acyclic-maze
     just bot dummy
     just bot roberto

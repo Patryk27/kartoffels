@@ -43,7 +43,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     let world = init(store, &game).await?;
 
-    create_map(&world).await?;
+    create_map(store, &world).await?;
 
     game.set_perms(Perms::SANDBOX).await?;
     game.set_status(None).await?;
@@ -75,8 +75,8 @@ async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     Ok(world)
 }
 
-async fn create_map(world: &Handle) -> Result<()> {
-    utils::create_map(world, |tx| async move {
+async fn create_map(store: &Store, world: &Handle) -> Result<()> {
+    utils::create_map(store, world, |tx| async move {
         let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
         let map = create_map_ex(rng, tx).await?;
 

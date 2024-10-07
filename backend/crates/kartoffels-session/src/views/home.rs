@@ -61,6 +61,8 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play,
+    Sandbox,
     Tutorial,
+    Challenges,
     Quit,
 }

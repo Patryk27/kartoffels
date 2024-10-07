@@ -65,6 +65,7 @@ struct State {
     dialog: Option<Dialog>,
     handle: Option<WorldHandle>,
     help: Option<HelpDialogRef>,
+    locked: bool,
     map: Map,
     paused: bool,
     perms: Perms,
@@ -99,23 +100,25 @@ impl State {
 
         Clear::render(ui);
 
-        ui.enable(self.dialog.is_none(), |ui| {
-            ui.clamp(bottom_area, |ui| {
-                BottomPanel::render(ui, self);
+        ui.enable(!self.locked, |ui| {
+            ui.enable(self.dialog.is_none(), |ui| {
+                ui.clamp(bottom_area, |ui| {
+                    BottomPanel::render(ui, self);
+                });
+
+                ui.clamp(side_area, |ui| {
+                    SidePanel::render(ui, self);
+                });
+
+                ui.clamp(map_area, |ui| {
+                    Map::render(ui, self);
+                });
             });
 
-            ui.clamp(side_area, |ui| {
-                SidePanel::render(ui, self);
-            });
-
-            ui.clamp(map_area, |ui| {
-                Map::render(ui, self);
-            });
+            if let Some(dialog) = &mut self.dialog {
+                dialog.render(ui, &self.snapshot);
+            }
         });
-
-        if let Some(dialog) = &mut self.dialog {
-            dialog.render(ui, &self.snapshot);
-        }
     }
 
     async fn poll(

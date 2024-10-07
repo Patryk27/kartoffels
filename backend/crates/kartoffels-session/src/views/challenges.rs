@@ -17,7 +17,7 @@ pub async fn run(term: &mut Term, bg: &Background) -> Result<Response> {
             .draw(|ui| {
                 bg.render(ui);
 
-                let width = (ui.area().x - 2).min(60);
+                let width = (ui.area().width - 2).min(60);
 
                 let height = {
                     let mut height = 0;

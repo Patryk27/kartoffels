@@ -55,6 +55,7 @@ async fn main_ex(
 ) -> Result<()> {
     loop {
         match home::run(term, bg).await? {
+            #[allow(clippy::while_let_loop)]
             home::Response::Play => loop {
                 match play::run(term, store, bg).await? {
                     play::Response::Play(world) => {
@@ -62,36 +63,33 @@ async fn main_ex(
                             .await?;
                     }
 
-                    play::Response::Sandbox => {
-                        drive(term, |game| drivers::sandbox::run(store, game))
-                            .await?;
-                    }
-
-                    #[allow(clippy::while_let_loop)]
-                    play::Response::Challenges => loop {
-                        match challenges::run(term, bg).await? {
-                            challenges::Response::Play(challenge) => {
-                                drive(term, |game| {
-                                    (challenge.run)(store, game)
-                                })
-                                .await?;
-                            }
-
-                            challenges::Response::GoBack => {
-                                break;
-                            }
-                        }
-                    },
-
                     play::Response::GoBack => {
                         break;
                     }
                 }
             },
 
+            home::Response::Sandbox => {
+                drive(term, |game| drivers::sandbox::run(store, game)).await?;
+            }
+
             home::Response::Tutorial => {
                 drive(term, |game| drivers::tutorial::run(store, game)).await?;
             }
+
+            #[allow(clippy::while_let_loop)]
+            home::Response::Challenges => loop {
+                match challenges::run(term, bg).await? {
+                    challenges::Response::Play(challenge) => {
+                        drive(term, |game| (challenge.run)(store, game))
+                            .await?;
+                    }
+
+                    challenges::Response::GoBack => {
+                        break;
+                    }
+                }
+            },
 
             home::Response::Quit => {
                 return Ok(());

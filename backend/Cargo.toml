@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "crates/bots/chl-acyclic-maze",
     "crates/bots/dummy",
     "crates/bots/roberto",
     "crates/kartoffel",

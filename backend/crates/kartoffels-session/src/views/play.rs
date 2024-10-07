@@ -16,46 +16,33 @@ pub async fn run(
     loop {
         let resp = term
             .draw(|ui| {
-                let width = 40;
-                let mut height = 3;
+                let width = store
+                    .worlds
+                    .iter()
+                    .map(|world| world.name().len() as u16 + 4)
+                    .max()
+                    .unwrap_or(0)
+                    .max(11);
 
-                if !store.worlds.is_empty() {
-                    height += store.worlds.len() as u16 + 1;
-                }
+                let height = store.worlds.len() as u16 + 2;
 
                 bg.render(ui);
 
                 ui.info_window(width, height, Some(" play "), |ui| {
-                    if !store.worlds.is_empty() {
-                        for (idx, world) in store.worlds.iter().enumerate() {
-                            let key =
-                                KeyCode::Char((b'1' + (idx as u8)) as char);
+                    for (idx, world) in store.worlds.iter().enumerate() {
+                        let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-                            if Button::new(key, world.name())
-                                .centered()
-                                .render(ui)
-                                .pressed
-                            {
-                                ui.throw(Response::Play(world.to_owned()));
-                            }
+                        if Button::new(key, world.name()).render(ui).pressed {
+                            ui.throw(Response::Play(world.to_owned()));
                         }
+                    }
 
+                    if !store.worlds.is_empty() {
                         ui.space(1);
                     }
 
-                    Button::new(KeyCode::Char('s'), "sandbox")
-                        .throwing(Response::Sandbox)
-                        .centered()
-                        .render(ui);
-
-                    Button::new(KeyCode::Char('c'), "challenges")
-                        .throwing(Response::Challenges)
-                        .centered()
-                        .render(ui);
-
                     Button::new(KeyCode::Escape, "go back")
                         .throwing(Response::GoBack)
-                        .centered()
                         .render(ui);
                 });
             })
@@ -72,7 +59,5 @@ pub async fn run(
 #[derive(Debug)]
 pub enum Response {
     Play(WorldHandle),
-    Sandbox,
-    Challenges,
     GoBack,
 }

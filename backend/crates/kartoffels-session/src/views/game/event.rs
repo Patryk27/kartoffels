@@ -15,6 +15,7 @@ pub enum Event {
     MoveCamera(IVec2),
     TogglePause,
     ShowBotsDialog,
+    ShowSpeedDialog,
     ShowErrorDialog(String),
     ShowHelpDialog,
     ShowJoinBotDialog,
@@ -70,6 +71,10 @@ impl Event {
 
             Event::ShowBotsDialog => {
                 state.dialog = Some(Dialog::Bots(Default::default()));
+            }
+
+            Event::ShowSpeedDialog => {
+                state.dialog = Some(Dialog::Speed(Default::default()));
             }
 
             Event::ShowHelpDialog => {
