@@ -2,8 +2,8 @@
 resolver = "2"
 
 members = [
-    "crates/bot-dummy",
-    "crates/bot-roberto",
+    "crates/bots/dummy",
+    "crates/bots/roberto",
     "crates/kartoffel",
     "crates/kartoffels",
     "crates/kartoffels-cpu",

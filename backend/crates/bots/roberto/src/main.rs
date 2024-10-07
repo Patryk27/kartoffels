@@ -17,7 +17,7 @@ fn main() {
 
         let scan = {
             radar_wait();
-            radar_scan::<5>()
+            radar_scan_5x5()
         };
 
         if scan[1][2] == '@' {
