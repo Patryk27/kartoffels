@@ -133,9 +133,10 @@ impl Term {
                 Clear::render_ex(area, buf);
 
                 Paragraph::new(
-                    "whoopsie, your terminal is too small to play kartoffels\
+                    "whoopsie, your terminal is too small to play kartoffels :'(\
                      \n\n\
-                     buy something with at least 50x30 characters",
+                     buy something with at least 50x30 characters... or try \
+                     zooming out",
                 )
                 .wrap(Default::default())
                 .render(area, buf);
