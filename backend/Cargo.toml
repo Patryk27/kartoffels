@@ -24,6 +24,7 @@ edition = "2021"
 [workspace.dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
 anyhow = "1.0.82"
+avt = "0.13.0"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
 base64 = "0.22.1"
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -57,10 +58,12 @@ termwiz = "0.22.0"
 test-case = "3.3.1"
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-stream = { version = "0.1.15", features = ["sync"] }
+tokio-tungstenite = "0.24.0"
 tokio-util = "0.7.11"
 tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tungstenite = "0.24.0"
 
 # ---
 
@@ -75,6 +78,16 @@ clap.workspace = true
 kartoffels-server = { path = "./crates/kartoffels-server" }
 kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
 
+[dev-dependencies]
+avt.workspace = true
+futures-util.workspace = true
+kartoffels-store = { path = "./crates/kartoffels-store" }
+termwiz.workspace = true
+tokio-tungstenite.workspace = true
+tokio-util.workspace = true
+tokio.workspace = true
+tracing-subscriber.workspace = true
+tungstenite.workspace = true
 
 # ---
 

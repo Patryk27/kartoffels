@@ -13,6 +13,7 @@ pub struct Store {
     pub dir: PathBuf,
     pub worlds: Vec<WorldHandle>,
     pub worlds_sem: Arc<Semaphore>,
+    pub testing: bool,
 }
 
 impl Store {
@@ -61,7 +62,17 @@ impl Store {
             dir: dir.to_owned(),
             worlds,
             worlds_sem: Arc::new(Semaphore::new(128)), // TODO make configurable
+            testing: false,
         })
+    }
+
+    pub fn test() -> Self {
+        Self {
+            dir: Path::new("/tmp").to_owned(),
+            worlds: Default::default(),
+            worlds_sem: Arc::new(Semaphore::new(32)),
+            testing: true,
+        }
     }
 
     pub fn create_world(&self, config: WorldConfig) -> Result<WorldHandle> {

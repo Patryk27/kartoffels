@@ -1,8 +1,8 @@
 #![feature(map_try_insert)]
 
 mod common;
-mod http;
-mod ssh;
+pub mod http;
+pub mod ssh;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -12,6 +12,7 @@ use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::net::TcpListener;
 use tokio::{select, signal, try_join};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
@@ -103,8 +104,9 @@ impl Cmd {
             let shutdown = shutdown.clone();
 
             async {
-                if let Some(addr) = &self.http {
-                    http::start(addr, store, shutdown).await
+                if let Some(addr) = self.http {
+                    http::start(TcpListener::bind(addr).await?, store, shutdown)
+                        .await
                 } else {
                     Ok(())
                 }
@@ -116,8 +118,9 @@ impl Cmd {
             let shutdown = shutdown.clone();
 
             async {
-                if let Some(addr) = &self.ssh {
-                    ssh::start(addr, store, shutdown).await
+                if let Some(addr) = self.ssh {
+                    ssh::start(TcpListener::bind(addr).await?, store, shutdown)
+                        .await
                 } else {
                     Ok(())
                 }

@@ -23,13 +23,11 @@ use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 use tracing::{info, info_span, Instrument};
 
 pub async fn start(
-    addr: &SocketAddr,
+    socket: TcpListener,
     store: Arc<Store>,
     shutdown: CancellationToken,
 ) -> Result<()> {
-    info!(?addr, "starting http server");
-
-    let listener = TcpListener::bind(&addr).await?;
+    info!(addr = ?socket.local_addr()?, "starting http server");
 
     let app = {
         let cors = CorsLayer::new()
@@ -54,7 +52,7 @@ pub async fn start(
 
     let app = app.into_make_service_with_connect_info::<SocketAddr>();
 
-    axum::serve(listener, app)
+    axum::serve(socket, app)
         .with_graceful_shutdown(shutdown.cancelled_owned())
         .await?;
 
