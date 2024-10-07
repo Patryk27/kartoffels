@@ -5,7 +5,6 @@ members = [
     "crates/bots/dummy",
     "crates/bots/roberto",
     "crates/kartoffel",
-    "crates/kartoffels",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
     "crates/kartoffels-server",
@@ -62,8 +61,21 @@ tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 
-[workspace.metadata.crane]
+# ---
+
+[package]
 name = "kartoffels"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+kartoffels-server = { path = "./crates/kartoffels-server" }
+kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
+
+
+# ---
 
 [profile.dist]
 inherits = "release"
