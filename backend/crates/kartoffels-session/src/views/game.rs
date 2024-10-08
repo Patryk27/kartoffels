@@ -22,8 +22,8 @@ use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
-    SnapshotStreamExt,
+    BotId, ClockSpeed, Handle as WorldHandle, Snapshot as WorldSnapshot,
+    SnapshotStream, SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
@@ -65,13 +65,13 @@ struct State {
     dialog: Option<Dialog>,
     handle: Option<WorldHandle>,
     help: Option<HelpDialogRef>,
-    locked: bool,
     map: Map,
     paused: bool,
     perms: Perms,
     poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
+    speed: ClockSpeed,
     status: Option<(String, Instant)>,
 }
 
@@ -100,12 +100,12 @@ impl State {
 
         Clear::render(ui);
 
-        ui.enable(!self.locked, |ui| {
-            ui.enable(self.dialog.is_none(), |ui| {
-                ui.clamp(bottom_area, |ui| {
-                    BottomPanel::render(ui, self);
-                });
+        ui.enable(self.dialog.is_none(), |ui| {
+            ui.clamp(bottom_area, |ui| {
+                BottomPanel::render(ui, self);
+            });
 
+            ui.enable(self.perms.enabled, |ui| {
                 ui.clamp(side_area, |ui| {
                     SidePanel::render(ui, self);
                 });
@@ -114,11 +114,11 @@ impl State {
                     Map::render(ui, self);
                 });
             });
-
-            if let Some(dialog) = &mut self.dialog {
-                dialog.render(ui, &self.snapshot);
-            }
         });
+
+        if let Some(dialog) = &mut self.dialog {
+            dialog.render(ui, &self.snapshot);
+        }
     }
 
     async fn poll(

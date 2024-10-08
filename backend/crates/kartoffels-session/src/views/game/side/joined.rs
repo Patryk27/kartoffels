@@ -20,7 +20,7 @@ impl JoinedSidePanel {
 
         let footer_height = if state.perms.single_bot_mode {
             1
-        } else if state.perms.user_can_alter_bots {
+        } else if state.perms.user_can_manage_bots {
             4
         } else {
             2
@@ -96,7 +96,7 @@ impl JoinedSidePanel {
 
     fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         if state.perms.single_bot_mode {
-            if state.perms.user_can_alter_bots {
+            if state.perms.user_can_manage_bots {
                 Button::new(KeyCode::Char('D'), "destroy")
                     .throwing(Event::DestroyBot)
                     .render(ui);
@@ -119,7 +119,7 @@ impl JoinedSidePanel {
                     .render(ui);
             }
 
-            if state.perms.user_can_alter_bots {
+            if state.perms.user_can_manage_bots {
                 ui.enable(!state.paused, |ui| {
                     Button::new(KeyCode::Char('R'), "restart")
                         .throwing(Event::RestartBot)

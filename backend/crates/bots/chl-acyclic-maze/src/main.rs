@@ -12,6 +12,14 @@ fn main() {
             radar_scan_3x3()
         };
 
+        if is_bot(scan[0][1]) {
+            arm_stab();
+
+            loop {
+                //
+            }
+        }
+
         if is_floor(scan[0][1]) {
             if is_wall(scan[0][2]) {
                 motor_wait();
@@ -33,10 +41,14 @@ fn main() {
     }
 }
 
-fn is_wall(ch: char) -> bool {
-    ch == '-' || ch == '|'
+fn is_bot(ch: char) -> bool {
+    ch == '@'
 }
 
 fn is_floor(ch: char) -> bool {
     ch == '.'
+}
+
+fn is_wall(ch: char) -> bool {
+    ch == '-' || ch == '|'
 }

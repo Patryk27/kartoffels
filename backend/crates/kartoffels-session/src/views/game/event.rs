@@ -3,19 +3,17 @@ use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::{BotId, BOT_ROBERTO};
+use kartoffels_world::prelude::{BotId, ClockSpeed, BOT_ROBERTO};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
     CloseDialog,
-    CopyToClipboard(String),
     GoBack,
     JoinBot(BotId),
     MoveCamera(IVec2),
     TogglePause,
     ShowBotsDialog,
-    ShowSpeedDialog,
     ShowErrorDialog(String),
     ShowHelpDialog,
     ShowJoinBotDialog,
@@ -27,6 +25,8 @@ pub enum Event {
     RestartBot,
     DestroyBot,
     FollowBot,
+    Overclock(ClockSpeed),
+    CopyToClipboard(String),
 }
 
 impl Event {
@@ -71,10 +71,6 @@ impl Event {
 
             Event::ShowBotsDialog => {
                 state.dialog = Some(Dialog::Bots(Default::default()));
-            }
-
-            Event::ShowSpeedDialog => {
-                state.dialog = Some(Dialog::Speed(Default::default()));
             }
 
             Event::ShowHelpDialog => {
@@ -132,6 +128,11 @@ impl Event {
                 if let Some(bot) = &mut state.bot {
                     bot.is_followed = !bot.is_followed;
                 }
+            }
+
+            Event::Overclock(speed) => {
+                state.handle.as_ref().unwrap().overclock(speed).await?;
+                state.speed = speed;
             }
 
             Event::CopyToClipboard(payload) => {

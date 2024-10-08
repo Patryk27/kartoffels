@@ -1,5 +1,6 @@
 use super::{Event, State};
 use kartoffels_ui::{theme, Button, Render, Ui};
+use kartoffels_world::prelude::ClockSpeed;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -12,13 +13,18 @@ impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
         ui.row(|ui| {
             Self::render_go_back_btn(ui);
-            Self::render_pause_btn(ui, state);
-            Self::render_help_btn(ui, state);
-            Self::render_bots_btn(ui, state);
-            Self::render_speed_btn(ui, state);
+
+            ui.enable(state.perms.enabled, |ui| {
+                Self::render_pause_btn(ui, state);
+                Self::render_help_btn(ui, state);
+                Self::render_bots_btn(ui, state);
+                Self::render_speed_btn(ui, state);
+            });
         });
 
-        Self::render_status(ui, state);
+        ui.enable(state.perms.enabled, |ui| {
+            Self::render_status(ui, state);
+        });
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
@@ -31,9 +37,7 @@ impl BottomPanel {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
-
-        let enabled =
-            state.handle.is_some() && state.perms.user_can_pause_world;
+        let enabled = state.handle.is_some() && state.perms.user_can_pause;
 
         Button::new(KeyCode::Char(' '), label)
             .throwing(Event::TogglePause)
@@ -62,11 +66,13 @@ impl BottomPanel {
     }
 
     fn render_speed_btn(ui: &mut Ui<Event>, state: &State) {
-        if !state.perms.user_can_alter_speed {
+        if state.perms.user_can_set_speed {
             ui.space(2);
 
-            Button::new(KeyCode::Char('S'), "speed")
-                .throwing(Event::ShowSpeedDialog)
+            Button::multi("speed")
+                .with(KeyCode::Char('1'), Event::Overclock(ClockSpeed::Normal))
+                .with(KeyCode::Char('2'), Event::Overclock(ClockSpeed::Faster))
+                .with(KeyCode::Char('3'), Event::Overclock(ClockSpeed::Fastest))
                 .enabled(state.handle.is_some())
                 .render(ui);
         }
@@ -105,6 +111,27 @@ impl BottomPanel {
 
                 span.render(ui);
             });
+        } else {
+            let speed = match state.speed {
+                ClockSpeed::Normal => None,
+                ClockSpeed::Faster => Some("SPD:FASTER"),
+                ClockSpeed::Fastest => Some("SPD:FASTERER"),
+            };
+
+            if let Some(speed) = speed {
+                let width = speed.len() as u16;
+
+                let area = Rect {
+                    x: ui.area().width - width,
+                    y: ui.area().y,
+                    width,
+                    height: 1,
+                };
+
+                ui.clamp(area, |ui| {
+                    Span::raw(speed).fg(theme::WASHED_PINK).render(ui);
+                });
+            }
         }
     }
 }

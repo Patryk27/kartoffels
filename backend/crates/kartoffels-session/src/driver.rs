@@ -1,7 +1,7 @@
 use crate::views::game::{HelpDialogRef, Perms, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::{theme, Dialog, Ui};
-use kartoffels_world::prelude::{BotId, Handle as WorldHandle};
+use kartoffels_world::prelude::Handle as WorldHandle;
 use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time;
@@ -23,12 +23,6 @@ impl DrivenGame {
 
     pub async fn join(&self, world: WorldHandle) -> Result<()> {
         self.send(DriverEvent::Join(world)).await?;
-
-        Ok(())
-    }
-
-    pub async fn join_bot(&self, id: BotId) -> Result<()> {
-        self.send(DriverEvent::JoinBot(id)).await?;
 
         Ok(())
     }
@@ -110,12 +104,6 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn open_help(&self) -> Result<()> {
-        self.send(DriverEvent::OpenHelp).await?;
-
-        Ok(())
-    }
-
     pub async fn set_status(&self, status: Option<String>) -> Result<()> {
         self.send(DriverEvent::SetStatus(status)).await?;
 
@@ -148,20 +136,6 @@ impl DrivenGame {
         Ok(rx.await?)
     }
 
-    // TODO model through `Perms`
-    pub async fn lock(&self) -> Result<()> {
-        self.send(DriverEvent::Lock).await?;
-
-        Ok(())
-    }
-
-    // TODO model through `Perms`
-    pub async fn unlock(&self) -> Result<()> {
-        self.send(DriverEvent::Unlock).await?;
-
-        Ok(())
-    }
-
     pub async fn copy_to_clipboard(
         &self,
         payload: impl Into<String>,
@@ -188,7 +162,6 @@ pub type DriverEventRx = mpsc::Receiver<DriverEvent>;
 #[allow(clippy::type_complexity)]
 pub enum DriverEvent {
     Join(WorldHandle),
-    JoinBot(BotId),
     Pause,
     Resume,
     SetPerms(Perms),
@@ -196,10 +169,7 @@ pub enum DriverEvent {
     OpenDialog(Box<dyn FnMut(&mut Ui<()>) + Send>),
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),
-    OpenHelp,
     SetStatus(Option<String>),
     Poll(PollFn),
-    Lock,
-    Unlock,
     CopyToClipboard(String),
 }

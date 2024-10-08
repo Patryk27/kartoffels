@@ -7,11 +7,10 @@ use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
 pub struct Button<'a, T> {
-    pub key: Option<KeyCode>,
-    pub label: Cow<'a, str>,
-    pub throwing: Option<T>,
-    pub alignment: Alignment,
-    pub enabled: bool,
+    label: Cow<'a, str>,
+    options: Vec<(Option<KeyCode>, Option<T>)>,
+    alignment: Alignment,
+    enabled: bool,
 }
 
 impl<'a, T> Button<'a, T> {
@@ -20,16 +19,29 @@ impl<'a, T> Button<'a, T> {
         label: impl Into<Cow<'a, str>>,
     ) -> Self {
         Self {
-            key: key.into(),
             label: label.into(),
-            throwing: None,
+            options: vec![(key.into(), None)],
             alignment: Alignment::Left,
             enabled: true,
         }
     }
 
+    pub fn multi(label: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            label: label.into(),
+            options: Default::default(),
+            alignment: Alignment::Left,
+            enabled: true,
+        }
+    }
+
+    pub fn with(mut self, key: KeyCode, event: T) -> Self {
+        self.options.push((Some(key), Some(event)));
+        self
+    }
+
     pub fn throwing(mut self, event: T) -> Self {
-        self.throwing = Some(event);
+        self.options.last_mut().unwrap().1 = Some(event);
         self
     }
 
@@ -49,11 +61,23 @@ impl<'a, T> Button<'a, T> {
     }
 
     pub fn width(&self) -> u16 {
-        if let Some(key) = self.key {
-            (Self::key_name(key).len() + self.label.len() + 3) as u16
+        if self.is_mouse_only() {
+            self.label.len() as u16 + 2
         } else {
-            (self.label.len() + 2) as u16
+            let keys = self
+                .options
+                .iter()
+                .map(|(key, _)| Self::key_name(key.unwrap()).len() as u16)
+                .sum::<u16>();
+
+            let slashes = (self.options.len() - 1) as u16;
+
+            keys + slashes + self.label.len() as u16 + 3
         }
+    }
+
+    fn is_mouse_only(&self) -> bool {
+        self.options.len() == 1 && self.options[0].0.is_none()
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
@@ -75,19 +99,50 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
-        let hovered = ui.enabled() && self.enabled && ui.mouse_over(area);
+        if !ui.enabled() || !self.enabled {
+            return ButtonResponse {
+                hovered: false,
+                pressed: false,
+                option: None,
+            };
+        }
+
+        let option = {
+            // TODO
+            let by_mouse = None;
+
+            let by_keyboard = self
+                .options
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, &(key, _))| {
+                    let key = key?;
+
+                    if ui.key(key, Modifiers::NONE) {
+                        Some(idx)
+                    } else {
+                        None
+                    }
+                })
+                .next();
+
+            by_mouse.or(by_keyboard)
+        };
+
+        let hovered = ui.mouse_over(area);
 
         let pressed = {
             let by_mouse = hovered && ui.mouse_pressed();
-
-            let by_keyboard = ui.enabled()
-                && self.enabled
-                && self.key.map_or(false, |key| ui.key(key, Modifiers::NONE));
+            let by_keyboard = option.is_some();
 
             by_mouse || by_keyboard
         };
 
-        ButtonResponse { hovered, pressed }
+        ButtonResponse {
+            hovered,
+            pressed,
+            option,
+        }
     }
 
     fn style(&self, ui: &Ui<T>, response: &ButtonResponse) -> (Style, Style) {
@@ -129,25 +184,34 @@ impl<'a, T> Button<'a, T> {
 impl<T> Render<T> for Button<'_, T> {
     type Response = ButtonResponse;
 
-    fn render(self, ui: &mut Ui<T>) -> Self::Response {
+    fn render(mut self, ui: &mut Ui<T>) -> Self::Response {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
-
-        let key = self.key.map(Self::key_name);
-        let label = &*self.label;
+        let is_mouse_only = self.is_mouse_only();
 
         ui.clamp(area, |ui| {
             ui.row(|ui| {
-                if let Some(key) = key {
+                if is_mouse_only {
                     ui.span(Span::styled("[", label_style));
-                    ui.span(Span::styled(key, key_style));
-                    ui.span(Span::styled("] ", label_style));
-                    ui.span(Span::styled(label, label_style));
+                    ui.span(Span::styled(self.label, key_style));
+                    ui.span(Span::styled("]", label_style));
                 } else {
                     ui.span(Span::styled("[", label_style));
-                    ui.span(Span::styled(label, key_style));
-                    ui.span(Span::styled("]", label_style));
+
+                    for (idx, (key, _)) in self.options.iter().enumerate() {
+                        if idx > 0 {
+                            ui.span(Span::styled("/", label_style));
+                        }
+
+                        ui.span(Span::styled(
+                            Self::key_name(key.unwrap()),
+                            key_style,
+                        ));
+                    }
+
+                    ui.span(Span::styled("] ", label_style));
+                    ui.span(Span::styled(self.label, label_style));
                 }
             });
         });
@@ -159,8 +223,10 @@ impl<T> Render<T> for Button<'_, T> {
         }
 
         if resp.pressed {
-            if let Some(event) = self.throwing {
-                ui.throw(event);
+            if let Some(idx) = resp.option {
+                if let Some(event) = self.options.swap_remove(idx).1 {
+                    ui.throw(event);
+                }
             }
         }
 
@@ -172,4 +238,5 @@ impl<T> Render<T> for Button<'_, T> {
 pub struct ButtonResponse {
     pub hovered: bool,
     pub pressed: bool,
+    pub option: Option<usize>,
 }
