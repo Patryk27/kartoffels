@@ -1,4 +1,5 @@
 use super::Response;
+use kartoffels_store::Store;
 use kartoffels_ui::{theme, Button, Render, Ui};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
@@ -12,24 +13,28 @@ impl Menu {
         20
     }
 
-    pub fn height<T>(ui: &Ui<T>) -> u16 {
-        if ui.ty().is_ssh() {
-            8
+    pub fn height<T>(store: &Store, ui: &Ui<T>) -> u16 {
+        let height = if ui.ty().is_ssh() { 7 } else { 5 };
+
+        if store.worlds.is_empty() {
+            height
         } else {
-            6
+            height + 1
         }
     }
 
-    pub fn render(ui: &mut Ui<Response>) {
+    pub fn render(store: &Store, ui: &mut Ui<Response>) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            Button::new(KeyCode::Char('p'), "play")
-                .throwing(Response::Play)
-                .centered()
-                .render(ui);
+            if !store.worlds.is_empty() {
+                Button::new(KeyCode::Char('p'), "play")
+                    .throwing(Response::Play)
+                    .centered()
+                    .render(ui);
+            }
 
             Button::new(KeyCode::Char('s'), "sandbox")
                 .throwing(Response::Sandbox)

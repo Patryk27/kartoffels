@@ -54,7 +54,7 @@ async fn main_ex(
     bg: &mut Background,
 ) -> Result<()> {
     loop {
-        match home::run(term, bg).await? {
+        match home::run(term, store, bg).await? {
             #[allow(clippy::while_let_loop)]
             home::Response::Play => loop {
                 match play::run(term, store, bg).await? {
