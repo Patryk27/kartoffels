@@ -1,0 +1,32 @@
+
+
+
+
+âââââââââââââââââââââââââ acyclic-maze âââââââââââââââââââââââââ
+â a bot who knows what it wants is most admirable              â
+â                                                              â
+â but sometimes a bot's reasoning system goes mental and       â
+â decides that what they want is a longer antenna... and they  â
+â do stupid things to achieve this goal                        â
+â                                                              â
+â like making a pact with the devil                            â
+â                                                              â
+â poor fella thought it's getting an upgrade, while in reality â
+â the fiendish devil just took the bot's wheels and left it to â
+â rot in the top-left corner of the maze                       â
+â                                                              â
+â show mercy: implement a robot that traverses the maze,       â
+â locates that other bot and kills it - you'll be starting in  â
+â the bottom-right corner                                      â
+â                                                              â
+â [esc] go back                                  [enter] start â
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+
+
+
+
+
+
+
+[esc] go back

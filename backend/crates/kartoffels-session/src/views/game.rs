@@ -105,15 +105,17 @@ impl State {
                 BottomPanel::render(ui, self);
             });
 
-            ui.enable(self.perms.enabled, |ui| {
-                ui.clamp(side_area, |ui| {
-                    SidePanel::render(ui, self);
-                });
+            if self.handle.is_some() {
+                ui.enable(self.perms.ui_enabled, |ui| {
+                    ui.clamp(side_area, |ui| {
+                        SidePanel::render(ui, self);
+                    });
 
-                ui.clamp(map_area, |ui| {
-                    Map::render(ui, self);
+                    ui.clamp(map_area, |ui| {
+                        Map::render(ui, self);
+                    });
                 });
-            });
+            }
         });
 
         if let Some(dialog) = &mut self.dialog {
@@ -234,7 +236,12 @@ impl State {
             Either::Right(src) => src,
         };
 
-        let id = self.handle.as_ref().unwrap().create_bot(src, None).await;
+        let id = self
+            .handle
+            .as_ref()
+            .unwrap()
+            .create_bot(src, None, None)
+            .await;
 
         let id = match id {
             Ok(id) => id,

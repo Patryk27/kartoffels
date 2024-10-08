@@ -81,12 +81,14 @@ impl Handle {
         &self,
         src: impl Into<Cow<'static, [u8]>>,
         pos: impl Into<Option<IVec2>>,
+        dir: impl Into<Option<Dir>>,
     ) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::CreateBot {
             src: src.into(),
             pos: pos.into(),
+            dir: dir.into(),
             tx,
         })
         .await?;
@@ -194,6 +196,7 @@ pub enum Request {
         src: Cow<'static, [u8]>,
 
         pos: Option<IVec2>,
+        dir: Option<Dir>,
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,

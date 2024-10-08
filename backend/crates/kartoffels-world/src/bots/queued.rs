@@ -117,6 +117,7 @@ mod tests {
         QueuedBot {
             id: id.into(),
             pos: None,
+            dir: None,
             requeued: false,
             events: Default::default(),
             serial: Default::default(),

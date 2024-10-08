@@ -22,6 +22,7 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
         world.bots.queued.push(QueuedBot {
             id,
             pos: None,
+            dir: None,
             requeued: true,
             events: bot.events,
             serial: bot.serial,

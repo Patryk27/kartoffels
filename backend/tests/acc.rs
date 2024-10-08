@@ -103,10 +103,6 @@ impl TestContext {
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
     }
 
-    pub async fn upload_bot(&mut self, _id: &str) {
-        todo!();
-    }
-
     pub async fn wait_for(&mut self, text: &str) {
         let result = time::timeout(Duration::from_secs(1), async {
             while !self.stdout().contains(text) {
@@ -119,6 +115,21 @@ impl TestContext {
             let stdout = self.term.text().join("\n");
 
             panic!("wait_for(\"{text}\") failed, stdout was:\n\n{stdout}");
+        }
+    }
+
+    pub async fn wait_while(&mut self, text: &str) {
+        let result = time::timeout(Duration::from_secs(1), async {
+            while self.stdout().contains(text) {
+                self.recv().await;
+            }
+        })
+        .await;
+
+        if result.is_err() {
+            let stdout = self.term.text().join("\n");
+
+            panic!("wait_while(\"{text}\") failed, stdout was:\n\n{stdout}");
         }
     }
 

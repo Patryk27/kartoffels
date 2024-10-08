@@ -14,17 +14,21 @@ impl BottomPanel {
         ui.row(|ui| {
             Self::render_go_back_btn(ui);
 
-            ui.enable(state.perms.enabled, |ui| {
-                Self::render_pause_btn(ui, state);
-                Self::render_help_btn(ui, state);
-                Self::render_bots_btn(ui, state);
-                Self::render_speed_btn(ui, state);
-            });
+            if state.handle.is_some() {
+                ui.enable(state.perms.ui_enabled, |ui| {
+                    Self::render_pause_btn(ui, state);
+                    Self::render_help_btn(ui, state);
+                    Self::render_bots_btn(ui, state);
+                    Self::render_speed_btn(ui, state);
+                });
+            }
         });
 
-        ui.enable(state.perms.enabled, |ui| {
-            Self::render_status(ui, state);
-        });
+        if state.handle.is_some() {
+            ui.enable(state.perms.ui_enabled, |ui| {
+                Self::render_status(ui, state);
+            });
+        }
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
@@ -37,7 +41,7 @@ impl BottomPanel {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
-        let enabled = state.handle.is_some() && state.perms.user_can_pause;
+        let enabled = state.perms.user_can_pause;
 
         Button::new(KeyCode::Char(' '), label)
             .throwing(Event::TogglePause)
@@ -60,7 +64,6 @@ impl BottomPanel {
 
             Button::new(KeyCode::Char('b'), "bots")
                 .throwing(Event::ShowBotsDialog)
-                .enabled(state.handle.is_some())
                 .render(ui);
         }
     }
@@ -73,7 +76,6 @@ impl BottomPanel {
                 .with(KeyCode::Char('1'), Event::Overclock(ClockSpeed::Normal))
                 .with(KeyCode::Char('2'), Event::Overclock(ClockSpeed::Faster))
                 .with(KeyCode::Char('3'), Event::Overclock(ClockSpeed::Fastest))
-                .enabled(state.handle.is_some())
                 .render(ui);
         }
     }

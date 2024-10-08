@@ -40,8 +40,10 @@ fn determine_spawn_point(
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     if let Some(pos) = bot.pos {
+        let dir = bot.dir.unwrap_or_else(|| rng.gen());
+
         return if is_pos_legal(map, bots, pos) {
-            Some((pos, rng.gen()))
+            Some((pos, dir))
         } else {
             None
         };
@@ -57,13 +59,14 @@ fn determine_spawn_point(
         };
     }
 
-    sample_map(rng, map, bots)
+    sample_map(rng, map, bots, bot)
 }
 
 fn sample_map(
     rng: &mut impl RngCore,
     map: &Map,
     bots: &Bots,
+    bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     let mut nth = 0;
 
@@ -71,7 +74,9 @@ fn sample_map(
         let pos = map.sample_pos(rng);
 
         if is_pos_legal(map, bots, pos) {
-            return Some((pos, rng.gen()));
+            let dir = bot.dir.unwrap_or_else(|| rng.gen());
+
+            return Some((pos, dir));
         }
 
         nth += 1;

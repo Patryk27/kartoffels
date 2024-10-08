@@ -15,6 +15,7 @@ fn main() {
         if is_bot(scan[0][1]) {
             arm_stab();
 
+            #[allow(clippy::empty_loop)]
             loop {
                 //
             }

@@ -44,8 +44,8 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 break ControlFlow::Break(Shutdown { tx: Some(tx) });
             }
 
-            Ok(Request::CreateBot { src, pos, tx }) => {
-                _ = tx.send(bots::create::run(world, src, pos));
+            Ok(Request::CreateBot { src, pos, dir, tx }) => {
+                _ = tx.send(bots::create::run(world, src, pos, dir));
             }
 
             Ok(Request::RestartBot { id, tx }) => {

@@ -52,7 +52,7 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
 
 async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
-    game.set_perms(Perms::PENDING).await?;
+    game.set_perms(Perms::SANDBOX.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
     let world = store.create_world(Config {

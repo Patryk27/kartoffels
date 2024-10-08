@@ -132,6 +132,7 @@ pub struct DeadBot {
 pub struct QueuedBot {
     pub id: BotId,
     pub pos: Option<IVec2>,
+    pub dir: Option<Dir>,
     pub requeued: bool,
 
     pub cpu: Cpu,

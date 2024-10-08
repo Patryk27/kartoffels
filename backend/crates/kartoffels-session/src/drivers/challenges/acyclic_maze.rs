@@ -79,7 +79,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
 
 async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
-    game.set_perms(Perms::PENDING).await?;
+    game.set_perms(Perms::CHALLENGE.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
     let world = store.create_world(Config {
@@ -106,7 +106,7 @@ async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
         .await?;
 
     world.set_spawn(SPAWN, Dir::W).await?;
-    world.create_bot(BOT_DUMMY, TARGET).await?;
+    world.create_bot(BOT_DUMMY, TARGET, Dir::S).await?;
 
     game.join(world.clone()).await?;
 

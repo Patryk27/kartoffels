@@ -12,7 +12,7 @@ async fn smoke() {
     let mut asserter = asserter("smoke");
 
     for _ in 0..16 {
-        world.create_bot(BOT_ROBERTO, None).await.unwrap();
+        world.create_bot(BOT_ROBERTO, None, None).await.unwrap();
     }
 
     world.assert(&mut asserter, "1.md").await;
@@ -31,7 +31,7 @@ async fn pause_and_resume() {
     let world = kartoffels_world::create(config());
 
     for _ in 0..16 {
-        world.create_bot(BOT_ROBERTO, None).await.unwrap();
+        world.create_bot(BOT_ROBERTO, None, None).await.unwrap();
     }
 
     for _ in 0..32 {
@@ -79,9 +79,9 @@ async fn pause_and_resume() {
 async fn destroy_bot() {
     let world = kartoffels_world::create(config());
 
-    let bot1 = world.create_bot(BOT_DUMMY, None).await.unwrap();
-    let bot2 = world.create_bot(BOT_DUMMY, None).await.unwrap();
-    let bot3 = world.create_bot(BOT_DUMMY, None).await.unwrap();
+    let bot1 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
+    let bot2 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
+    let bot3 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
 
     world.tick().await.unwrap();
     world.tick().await.unwrap();
@@ -113,9 +113,9 @@ async fn destroy_bot() {
 async fn restart_bot() {
     let world = kartoffels_world::create(config());
 
-    let bot1 = world.create_bot(BOT_DUMMY, None).await.unwrap();
-    let bot2 = world.create_bot(BOT_DUMMY, None).await.unwrap();
-    let bot3 = world.create_bot(BOT_DUMMY, None).await.unwrap();
+    let bot1 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
+    let bot2 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
+    let bot3 = world.create_bot(BOT_DUMMY, None, None).await.unwrap();
 
     world.tick().await.unwrap();
     world.tick().await.unwrap();
@@ -155,25 +155,37 @@ async fn set_spawn() {
     let world = kartoffels_world::create(config());
 
     // First bot gets spawned at a random place
-    world.create_bot(BOT_DUMMY, None).await.unwrap();
+    world.create_bot(BOT_DUMMY, None, None).await.unwrap();
     world.tick().await.unwrap();
 
     // Second bot gets spawned at (10,9)
-    world.create_bot(BOT_DUMMY, ivec2(10, 9)).await.unwrap();
+    world
+        .create_bot(BOT_DUMMY, ivec2(10, 9), None)
+        .await
+        .unwrap();
+
     world.tick().await.unwrap();
 
     // Third bot gets spawned at (15,19)
     world.set_spawn(ivec2(15, 19), Dir::W).await.unwrap();
-    world.create_bot(BOT_DUMMY, None).await.unwrap();
+    world.create_bot(BOT_DUMMY, None, None).await.unwrap();
     world.tick().await.unwrap();
 
     // Fourth bot gets spawned at (16,1), since specifying a bot position
     // overrides the default spawn configuration
-    world.create_bot(BOT_DUMMY, ivec2(16, 1)).await.unwrap();
+    world
+        .create_bot(BOT_DUMMY, ivec2(16, 1), None)
+        .await
+        .unwrap();
+
     world.tick().await.unwrap();
 
     // Fifth bot doesn't get spawned, because the spawn-point is taken
-    world.create_bot(BOT_DUMMY, ivec2(16, 1)).await.unwrap();
+    world
+        .create_bot(BOT_DUMMY, ivec2(16, 1), None)
+        .await
+        .unwrap();
+
     world.tick().await.unwrap();
 
     // ---
@@ -234,11 +246,11 @@ async fn err_too_many_robots_queued() {
     });
 
     for _ in 0..20 {
-        world.create_bot(BOT_ROBERTO, None).await.unwrap();
+        world.create_bot(BOT_ROBERTO, None, None).await.unwrap();
     }
 
     let err = world
-        .create_bot(BOT_ROBERTO, None)
+        .create_bot(BOT_ROBERTO, None, None)
         .await
         .unwrap_err()
         .to_string();
@@ -249,7 +261,7 @@ async fn err_too_many_robots_queued() {
 #[tokio::test]
 async fn err_couldnt_parse_firmware() {
     let err = kartoffels_world::create(config())
-        .create_bot(&[0x00], None)
+        .create_bot(&[0x00], None, None)
         .await
         .unwrap_err();
 
