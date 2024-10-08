@@ -130,7 +130,7 @@ impl TestContext {
         }
     }
 
-    pub fn not_see(&mut self, text: &str) {
+    pub fn dont_see(&mut self, text: &str) {
         let stdout = self.stdout();
 
         if stdout.contains(text) {
