@@ -1,6 +1,5 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -16,9 +15,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::new("🔪 the knife 🔪").centered().fg(theme::YELLOW).bold(),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("let's take a stab at it", ()),
-    ],
+    buttons: vec![DialogButton::confirm("let's take a stab at it", ())],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {

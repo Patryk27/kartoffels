@@ -1,6 +1,5 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -35,13 +34,11 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
             "waiting for readiness is important, because the cpu is much \
              faster than motor, so - say - calling `motor_step()` two times in \
              a row without `motor_wait()` in-between would actually move the \
-             bot just one tile forward"
+             bot just one tile forward",
         ),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("got it", ()),
-    ],
+    buttons: vec![DialogButton::confirm("got it", ())],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {

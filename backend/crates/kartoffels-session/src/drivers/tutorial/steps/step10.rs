@@ -1,6 +1,5 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -14,12 +13,9 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         ),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("let the hunger games begin", ()),
-    ],
+    buttons: vec![DialogButton::confirm("let the hunger games begin", ())],
 });
 
-#[rustfmt::skip]
 static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -37,12 +33,9 @@ static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         ),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("let's try again", ()),
-    ],
+    buttons: vec![DialogButton::confirm("let's try again", ())],
 });
 
-#[rustfmt::skip]
 static HELP_RETRY: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
@@ -55,9 +48,7 @@ static HELP_RETRY: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::web("!! don't forget to re-run `./build` !!"),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("got it", HelpDialogResponse::Close),
-    ],
+    buttons: vec![HelpDialogResponse::close()],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {

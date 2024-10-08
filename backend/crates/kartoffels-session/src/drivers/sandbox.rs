@@ -3,7 +3,6 @@ use crate::drivers::prelude::*;
 const SIZE: UVec2 = uvec2(64, 32);
 const MAX_BOTS: usize = 16;
 
-#[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
@@ -24,20 +23,20 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("# rules"),
         DialogLine::new(""),
         DialogLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
-        DialogLine::new("- as compared to the online play, in here you're allowed to"),
+        DialogLine::new(
+            "- as compared to the online play, in here you're allowed to",
+        ),
         DialogLine::new("  destroy bots, restart them etc."),
-        DialogLine::new("- you can also spawn *roberto*, the built-in moderately"),
+        DialogLine::new(
+            "- you can also spawn *roberto*, the built-in moderately",
+        ),
         DialogLine::new("  challenging bot"),
-        DialogLine::new("- a new world is generated every time you open the sandbox"),
+        DialogLine::new(
+            "- a new world is generated every time you open the sandbox",
+        ),
     ],
 
-    buttons: vec![
-        DialogButton::new(
-            KeyCode::Escape,
-            "close",
-            HelpDialogResponse::Close,
-        ).right_aligned(),
-    ],
+    buttons: vec![HelpDialogResponse::close()],
 });
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
