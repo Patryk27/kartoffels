@@ -36,3 +36,11 @@ impl Default for Clock {
         }
     }
 }
+
+#[derive(Clone, Copy, Debug, Default)]
+pub enum ClockSpeed {
+    #[default]
+    Normal,
+    Faster,
+    Fastest,
+}

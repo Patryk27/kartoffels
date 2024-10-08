@@ -26,7 +26,7 @@ mod cfg {
 
 pub mod prelude {
     pub use crate::bot::BotId;
-    pub use crate::clock::Clock;
+    pub use crate::clock::{Clock, ClockSpeed};
     pub use crate::config::Config;
     pub use crate::events::Event;
     pub use crate::handle::{
@@ -109,6 +109,7 @@ pub fn create(config: Config) -> Handle {
         clock,
         events: handle.inner.events.clone(),
         map,
+        metronome: clock.metronome(false),
         mode,
         name,
         path,
@@ -121,7 +122,7 @@ pub fn create(config: Config) -> Handle {
         theme,
         tick: None,
     }
-    .spawn(id, false);
+    .spawn(id);
 
     handle
 }
@@ -145,6 +146,7 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
         clock,
         events: handle.inner.events.clone(),
         map,
+        metronome: clock.metronome(bench),
         mode,
         name,
         path: Some(path),
@@ -157,7 +159,7 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
         theme,
         tick: None,
     }
-    .spawn(id, bench);
+    .spawn(id);
 
     Ok(handle)
 }
@@ -184,6 +186,7 @@ struct World {
     clock: Clock,
     events: broadcast::Sender<Arc<Event>>,
     map: Map,
+    metronome: Option<Metronome>,
     mode: Mode,
     name: Arc<String>,
     path: Option<PathBuf>,
@@ -198,7 +201,7 @@ struct World {
 }
 
 impl World {
-    fn spawn(mut self, id: Id, bench: bool) {
+    fn spawn(mut self, id: Id) {
         // We store bot indices into map's tile metadata - those are u8s, so
         // we can't index more than 256 bots
         assert!(self.policy.max_alive_bots <= 256);
@@ -209,16 +212,14 @@ impl World {
         thread::spawn(move || {
             let _rt = rt.enter();
             let _span = span.enter();
+            let mut systems = Container::default();
 
             info!(name=?self.name, "ready");
-
-            let mut metronome = self.clock.metronome(bench);
-            let mut systems = Container::default();
 
             let shutdown = loop {
                 match self.tick(&mut systems) {
                     ControlFlow::Continue(_) => {
-                        if let Some(metronome) = &mut metronome {
+                        if let Some(metronome) = &mut self.metronome {
                             metronome.tick();
                             metronome.wait();
                         }

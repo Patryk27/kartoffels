@@ -1,4 +1,5 @@
 use crate::{bots, Clock, Event, KillBot, Request, Shutdown, World};
+use anyhow::anyhow;
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -67,14 +68,29 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(());
             }
 
-            Ok(Request::SetSpawn { point, dir, tx }) => {
-                world.spawn = (point, dir);
+            Ok(Request::SetMap { map, tx }) => {
+                world.map = map;
+
                 _ = tx.send(());
             }
 
-            Ok(Request::SetMap { map, tx }) => {
-                world.map = map;
+            Ok(Request::SetSpawn { point, dir, tx }) => {
+                world.spawn = (point, dir);
+
                 _ = tx.send(());
+            }
+
+            Ok(Request::Overclock { speed, tx }) => {
+                if let Some(metronome) = &mut world.metronome {
+                    metronome.overclock(speed);
+
+                    _ = tx.send(Ok(()));
+                } else {
+                    _ = tx.send(Err(anyhow!(
+                        "world's clock configuration doesn't allow for \
+                         overclocking",
+                    )));
+                }
             }
 
             Err(TryRecvError::Empty) => {

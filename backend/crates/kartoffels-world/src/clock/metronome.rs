@@ -1,3 +1,4 @@
+use super::ClockSpeed;
 use anyhow::Result;
 use chrono::TimeDelta;
 use std::thread;
@@ -6,6 +7,7 @@ use std::time::{Duration, Instant};
 #[derive(Clone, Debug)]
 pub struct Metronome {
     interval: Duration,
+    speed: ClockSpeed,
     backlog: TimeDelta,
     now: Instant,
 }
@@ -19,15 +21,25 @@ impl Metronome {
 
         Self {
             interval,
+            speed: Default::default(),
             backlog: Default::default(),
             now: Instant::now(),
         }
     }
 
     pub fn tick(&mut self) {
+        let interval = {
+            let speed = match self.speed {
+                ClockSpeed::Normal => 1,
+                ClockSpeed::Faster => 2,
+                ClockSpeed::Fastest => 4,
+            };
+
+            self.interval.as_nanos() as i64 / speed
+        };
+
         self.backlog += TimeDelta::nanoseconds(
-            self.interval.as_nanos() as i64
-                - self.now.elapsed().as_nanos() as i64,
+            interval - self.now.elapsed().as_nanos() as i64,
         );
 
         if self.backlog.num_seconds() != 0 {
@@ -47,6 +59,10 @@ impl Metronome {
         }
 
         self.now = Instant::now();
+    }
+
+    pub fn overclock(&mut self, speed: ClockSpeed) {
+        self.speed = speed;
     }
 
     pub fn interval(&self) -> Duration {

@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Dir, Event, Map, Snapshot};
+use crate::{BotId, ClockSpeed, Dir, Event, Map, Snapshot};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use futures_util::Stream;
@@ -110,6 +110,14 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
+    pub async fn set_map(&self, map: Map) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::SetMap { map, tx }).await?;
+
+        rx.await.context(Self::ERR)
+    }
+
     pub async fn set_spawn(
         &self,
         point: impl Into<Option<IVec2>>,
@@ -127,12 +135,12 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn set_map(&self, map: Map) -> Result<()> {
+    pub async fn overclock(&self, speed: ClockSpeed) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::SetMap { map, tx }).await?;
+        self.send(Request::Overclock { speed, tx }).await?;
 
-        rx.await.context(Self::ERR)
+        rx.await.context(Self::ERR)?
     }
 
     async fn send(&self, request: Request) -> Result<()> {
@@ -182,7 +190,9 @@ pub enum Request {
     },
 
     CreateBot {
+        #[derivative(Debug = "ignore")]
         src: Cow<'static, [u8]>,
+
         pos: Option<IVec2>,
 
         #[derivative(Debug = "ignore")]
@@ -203,6 +213,13 @@ pub enum Request {
         tx: oneshot::Sender<()>,
     },
 
+    SetMap {
+        map: Map,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
     SetSpawn {
         point: Option<IVec2>,
         dir: Option<Dir>,
@@ -211,11 +228,11 @@ pub enum Request {
         tx: oneshot::Sender<()>,
     },
 
-    SetMap {
-        map: Map,
+    Overclock {
+        speed: ClockSpeed,
 
         #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<()>,
+        tx: oneshot::Sender<Result<()>>,
     },
 }
 
