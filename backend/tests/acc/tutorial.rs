@@ -16,14 +16,16 @@ async fn ctxt() -> TestContext {
 
 #[tokio::test]
 async fn smoke() {
-    ctxt().await;
+    let mut ctxt = ctxt().await;
+
+    ctxt.assert("tests/acc/tutorial/smoke/1.txt").await;
 }
 
 #[tokio::test]
 async fn leave() {
     let mut ctxt = ctxt().await;
 
-    ctxt.not_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::HOME);
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_for(TestContext::HOME).await;
 }
@@ -32,7 +34,7 @@ async fn leave() {
 async fn leave_and_start() {
     let mut ctxt = ctxt().await;
 
-    ctxt.not_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::HOME);
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_for(TestContext::HOME).await;
 
@@ -46,7 +48,7 @@ async fn leave_and_start() {
 async fn leave_using_ctrl_c() {
     let mut ctxt = ctxt().await;
 
-    ctxt.not_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::HOME);
     ctxt.press_ex(KeyCode::Char('a'), Modifiers::CTRL).await;
     ctxt.wait_for(TestContext::HOME).await;
 }
@@ -55,11 +57,15 @@ async fn leave_using_ctrl_c() {
 async fn start() {
     let mut ctxt = ctxt().await;
 
+    ctxt.assert("tests/acc/tutorial/start/1.txt").await;
+
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("lesson #1").await;
+    ctxt.assert("tests/acc/tutorial/start/2.txt").await;
     ctxt.see("[enter] sure");
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("look at you").await;
+    ctxt.assert("tests/acc/tutorial/start/3.txt").await;
     ctxt.see("[enter] i'm ready");
 }

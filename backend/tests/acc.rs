@@ -15,7 +15,7 @@ use termwiz::input::{
 };
 use tokio::net::TcpListener;
 use tokio::task::{self, JoinHandle};
-use tokio::time;
+use tokio::{fs, time};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tokio_util::sync::CancellationToken;
 use tungstenite::Error as WsError;
@@ -135,6 +135,23 @@ impl TestContext {
 
         if stdout.contains(text) {
             panic!("not_see(\"{text}\") failed, stdout was:\n\n{stdout}");
+        }
+    }
+
+    pub async fn assert(&mut self, expected_path: &str) {
+        let actual = self.stdout();
+
+        let expected =
+            fs::read_to_string(expected_path).await.unwrap_or_default();
+
+        let new_path = format!("{expected_path}.new");
+
+        if actual == expected {
+            _ = fs::remove_file(&new_path).await;
+        } else {
+            fs::write(&new_path, actual).await.unwrap();
+
+            panic!("snapshot(\"{expected_path}\") failed");
         }
     }
 

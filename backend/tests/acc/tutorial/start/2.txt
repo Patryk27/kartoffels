@@ -1,0 +1,32 @@
+
+
+
+
+               .........
+âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+â lesson #1:                                                   â
+â - you can navigate the interface using keyboard and/or mouse â
+â                                                              â
+â lesson #2, at any time:                                      â
+â - press [Ctrl-a] to go back to the main menu                 â
+â                                                              â
+â lesson #3, during the game, when no message is visible:      â
+â - press [h] to get help (ambulance paid separately)          â
+â - press [w/a/s/d] or arrow keys to move the camera           â
+â                                                              â
+â lesson #4:                                                   â
+â - don't lick yellow snow                                     â
+â                                                              â
+â                                                 [enter] sure â
+ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+         .....................
+          ...................
+           .................
+            ...............
+             .............
+               .........
+
+
+
+                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help
