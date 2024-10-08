@@ -22,6 +22,7 @@ pub fn radar_wait() {
 /// Scans a 3x3 square around the bot and returns the scan as a 2D array.
 ///
 /// See: [`radar_scan()`].
+#[inline(always)]
 pub fn radar_scan_3x3() -> [[char; 3]; 3] {
     radar_scan()
 }
@@ -29,6 +30,7 @@ pub fn radar_scan_3x3() -> [[char; 3]; 3] {
 /// Scans a 5x5 square around the bot and returns the scan as a 2D array.
 ///
 /// See: [`radar_scan()`].
+#[inline(always)]
 pub fn radar_scan_5x5() -> [[char; 5]; 5] {
     radar_scan()
 }
@@ -36,6 +38,7 @@ pub fn radar_scan_5x5() -> [[char; 5]; 5] {
 /// Scans a 7x7 square around the bot and returns the scan as a 2D array.
 ///
 /// See: [`radar_scan()`].
+#[inline(always)]
 pub fn radar_scan_7x7() -> [[char; 7]; 7] {
     radar_scan()
 }
@@ -43,6 +46,7 @@ pub fn radar_scan_7x7() -> [[char; 7]; 7] {
 /// Scans a 9x9 square around the bot and returns the scan as a 2D array.
 ///
 /// See: [`radar_scan()`].
+#[inline(always)]
 pub fn radar_scan_9x9() -> [[char; 9]; 9] {
     radar_scan()
 }
