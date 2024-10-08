@@ -1,7 +1,7 @@
 use crate::drivers::prelude::*;
 
 const SIZE: UVec2 = uvec2(64, 32);
-const MAX_BOTS: usize = 20;
+const MAX_BOTS: usize = 16;
 
 #[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
