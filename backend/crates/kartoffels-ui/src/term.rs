@@ -125,7 +125,7 @@ impl Term {
         let mut resp = None;
         let mut clipboard = Vec::new();
 
-        if self.size.x < 50 || self.size.y < 30 {
+        if self.size.x < 80 || self.size.y < 30 {
             self.term.draw(|frame| {
                 let area = frame.area();
                 let buf = frame.buffer_mut();
@@ -135,8 +135,8 @@ impl Term {
                 Paragraph::new(
                     "ouch, your terminal is too small to play kartoffels :'(\
                      \n\n\
-                     buy something with at least 50x30 characters... or try \
-                     zooming out",
+                     get something with at least 80x30 characters... or zoom \
+                     out (Ctrl+-, Cmd+- etc.)",
                 )
                 .wrap(Default::default())
                 .render(area, buf);
