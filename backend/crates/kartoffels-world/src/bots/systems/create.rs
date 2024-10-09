@@ -1,16 +1,18 @@
-use crate::{BotEvents, BotId, Dir, Event, QueuedBot, World};
+use crate::{BotEvents, BotId, CreateBotRequest, Event, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
-use glam::IVec2;
 use kartoffels_cpu::Cpu;
-use std::borrow::Cow;
+use rand::Rng;
 use std::sync::Arc;
 use tracing::info;
 
 pub fn run(
     world: &mut World,
-    src: Cow<'static, [u8]>,
-    pos: Option<IVec2>,
-    dir: Option<Dir>,
+    CreateBotRequest {
+        src,
+        pos,
+        dir,
+        oneshot,
+    }: CreateBotRequest,
 ) -> Result<BotId> {
     let cpu = Cpu::new(&src).context("couldn't parse firmware")?;
     let src_hash = sha256::digest(&src[..]);
@@ -18,7 +20,7 @@ pub fn run(
     info!(?src_hash, "creating bot");
 
     let id = loop {
-        let id = BotId::new(&mut world.rng);
+        let id = world.rng.gen();
 
         if !world.bots.contains(id) {
             break id;
@@ -34,13 +36,14 @@ pub fn run(
         };
 
         world.bots.queued.push(QueuedBot {
-            id,
-            pos,
-            dir,
             cpu,
+            dir,
             events,
-            serial: Default::default(),
+            id,
+            oneshot,
+            pos,
             requeued: false,
+            serial: Default::default(),
         });
 
         _ = world.events.send(Arc::new(Event::BotCreated { id }));

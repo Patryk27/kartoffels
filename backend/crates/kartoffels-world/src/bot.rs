@@ -35,6 +35,7 @@ pub struct AliveBot {
     pub dir: Dir,
     pub events: BotEvents,
     pub motor: BotMotor,
+    pub oneshot: bool,
     pub pos: IVec2,
     pub radar: BotRadar,
     pub serial: BotSerial,
@@ -65,6 +66,7 @@ impl AliveBot {
             dir,
             events: bot.events,
             motor: Default::default(),
+            oneshot: bot.oneshot,
             pos,
             radar: Default::default(),
             serial: Default::default(),
@@ -130,12 +132,12 @@ pub struct DeadBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
-    pub id: BotId,
-    pub pos: Option<IVec2>,
-    pub dir: Option<Dir>,
-    pub requeued: bool,
-
     pub cpu: Cpu,
+    pub dir: Option<Dir>,
     pub events: BotEvents,
+    pub id: BotId,
+    pub oneshot: bool,
+    pub pos: Option<IVec2>,
+    pub requeued: bool,
     pub serial: BotSerial,
 }

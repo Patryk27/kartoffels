@@ -1,6 +1,8 @@
 use anyhow::{anyhow, Context, Error};
 use itertools::Itertools;
-use rand::{Rng, RngCore};
+use rand::distributions::Standard;
+use rand::prelude::Distribution;
+use rand::Rng;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
@@ -13,8 +15,8 @@ pub struct Id(NonZeroU64);
 impl Id {
     pub const LENGTH: usize = 19;
 
-    pub fn new(rng: &mut impl RngCore) -> Self {
-        Self(rng.gen())
+    pub fn new(id: u64) -> Self {
+        Self(id.try_into().unwrap())
     }
 
     pub fn get(self) -> u64 {
@@ -22,9 +24,12 @@ impl Id {
     }
 }
 
-impl From<u64> for Id {
-    fn from(value: u64) -> Self {
-        Self(value.try_into().unwrap())
+impl Distribution<Id> for Standard {
+    fn sample<R>(&self, rng: &mut R) -> Id
+    where
+        R: Rng + ?Sized,
+    {
+        Id(rng.gen())
     }
 }
 
@@ -105,7 +110,7 @@ mod tests {
     #[test]
     fn test() {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
-        let id = Id::new(&mut rng);
+        let id = rng.gen::<Id>();
 
         assert_eq!("d640-5f89-2fef-003e", id.to_string());
 

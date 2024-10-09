@@ -44,16 +44,16 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 break ControlFlow::Break(Shutdown { tx: Some(tx) });
             }
 
-            Ok(Request::CreateBot { src, pos, dir, tx }) => {
-                _ = tx.send(bots::create::run(world, src, pos, dir));
+            Ok(Request::CreateBot { req, tx }) => {
+                _ = tx.send(bots::create::run(world, req));
             }
 
-            Ok(Request::RestartBot { id, tx }) => {
+            Ok(Request::KillBot { id, reason, tx }) => {
                 bots::kill::run(
                     world,
                     KillBot {
                         id,
-                        reason: "forcefully restarted".into(),
+                        reason,
                         killer: None,
                     },
                 );

@@ -31,3 +31,9 @@ impl Mode {
         }
     }
 }
+
+impl Default for Mode {
+    fn default() -> Self {
+        Mode::Deathmatch(Default::default())
+    }
+}

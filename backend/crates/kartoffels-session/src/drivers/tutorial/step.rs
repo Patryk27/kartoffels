@@ -4,8 +4,8 @@ use anyhow::Result;
 use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::{
-    ArenaTheme, BotId, Config, DeathmatchMode, Event, EventStreamExt, Handle,
-    Mode, Policy, SnapshotStreamExt, Theme,
+    ArenaTheme, BotId, Config, Event, EventStreamExt, Handle, Policy,
+    SnapshotStreamExt, Theme,
 };
 use std::task::Poll;
 
@@ -20,17 +20,14 @@ impl StepCtxt {
         game.set_perms(Perms::TUTORIAL).await?;
 
         let world = store.create_world(Config {
-            clock: Default::default(),
-            mode: Mode::Deathmatch(DeathmatchMode::default()),
             name: "tutorial".into(),
-            path: Default::default(),
             policy: Policy {
                 auto_respawn: false,
                 max_alive_bots: 16,
                 max_queued_bots: 16,
             },
-            rng: None,
             theme: Some(Theme::Arena(ArenaTheme::new(12))),
+            ..Default::default()
         })?;
 
         world.set_spawn(ivec2(12, 12), None).await?;

@@ -10,10 +10,10 @@ async fn acyclic_maze() {
     ctxt.press(KeyCode::Char('c')).await;
     ctxt.wait_for("[1] acyclic-maze").await;
     ctxt.press(KeyCode::Char('1')).await;
-    ctxt.wait_for("[enter] start").await;
-    ctxt.assert("tests/acc/challenges/acyclic-maze/1.txt").await;
+    ctxt.wait_for("[enter] let's do it").await;
+    ctxt.see_frame("challenges/acyclic-maze/1.txt").await;
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("BUILDING WORLD").await;
     ctxt.wait_while("BUILDING WORLD").await;
-    ctxt.assert("tests/acc/challenges/acyclic-maze/2.txt").await;
+    ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
 }

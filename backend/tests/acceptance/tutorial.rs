@@ -18,7 +18,7 @@ async fn ctxt() -> TestContext {
 async fn smoke() {
     let mut ctxt = ctxt().await;
 
-    ctxt.assert("tests/acc/tutorial/smoke/1.txt").await;
+    ctxt.see_frame("tutorial/smoke/1.txt").await;
 }
 
 #[tokio::test]
@@ -57,15 +57,15 @@ async fn leave_using_ctrl_c() {
 async fn start() {
     let mut ctxt = ctxt().await;
 
-    ctxt.assert("tests/acc/tutorial/start/1.txt").await;
+    ctxt.see_frame("tutorial/start/1.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("lesson #1").await;
-    ctxt.assert("tests/acc/tutorial/start/2.txt").await;
+    ctxt.see_frame("tutorial/start/2.txt").await;
     ctxt.see("[enter] sure");
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("look at you").await;
-    ctxt.assert("tests/acc/tutorial/start/3.txt").await;
+    ctxt.see_frame("tutorial/start/3.txt").await;
     ctxt.see("[enter] i'm ready");
 }

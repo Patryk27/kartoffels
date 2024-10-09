@@ -115,13 +115,14 @@ mod tests {
 
     fn bot(id: u64) -> QueuedBot {
         QueuedBot {
-            id: id.into(),
-            pos: None,
-            dir: None,
-            requeued: false,
-            events: Default::default(),
-            serial: Default::default(),
             cpu: Default::default(),
+            dir: None,
+            events: Default::default(),
+            id: BotId::new(id),
+            oneshot: false,
+            pos: None,
+            requeued: false,
+            serial: Default::default(),
         }
     }
 
@@ -136,27 +137,27 @@ mod tests {
         target.push(bot(50));
 
         for id in [10, 20, 30, 40, 50] {
-            let id = BotId::from(id);
+            let id = BotId::new(id);
 
             assert_eq!(id, target.get(id).unwrap().bot.id);
         }
 
         // ---
 
-        assert_eq!(BotId::from(10), target.pop().unwrap().id);
-        assert_eq!(BotId::from(20), target.pop().unwrap().id);
-        assert_eq!(BotId::from(30), target.pop().unwrap().id);
+        assert_eq!(BotId::new(10), target.pop().unwrap().id);
+        assert_eq!(BotId::new(20), target.pop().unwrap().id);
+        assert_eq!(BotId::new(30), target.pop().unwrap().id);
 
-        assert!(target.get(10.into()).is_none());
-        assert!(target.get(30.into()).is_none());
+        assert!(target.get(BotId::new(10)).is_none());
+        assert!(target.get(BotId::new(30)).is_none());
 
-        assert_eq!(BotId::from(40), target.get(40.into()).unwrap().bot.id);
-        assert_eq!(BotId::from(50), target.get(50.into()).unwrap().bot.id);
+        assert_eq!(BotId::new(40), target.get(BotId::new(40)).unwrap().bot.id);
+        assert_eq!(BotId::new(50), target.get(BotId::new(50)).unwrap().bot.id);
 
         // ---
 
-        assert_eq!(BotId::from(40), target.pop().unwrap().id);
-        assert_eq!(BotId::from(50), target.pop().unwrap().id);
+        assert_eq!(BotId::new(40), target.pop().unwrap().id);
+        assert_eq!(BotId::new(50), target.pop().unwrap().id);
         assert!(target.pop().is_none());
     }
 }

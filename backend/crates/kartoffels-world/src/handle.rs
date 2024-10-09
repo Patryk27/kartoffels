@@ -77,29 +77,27 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn create_bot(
-        &self,
-        src: impl Into<Cow<'static, [u8]>>,
-        pos: impl Into<Option<IVec2>>,
-        dir: impl Into<Option<Dir>>,
-    ) -> Result<BotId> {
+    pub async fn create_bot(&self, req: CreateBotRequest) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::CreateBot {
-            src: src.into(),
-            pos: pos.into(),
-            dir: dir.into(),
-            tx,
-        })
-        .await?;
+        self.send(Request::CreateBot { req, tx }).await?;
 
         rx.await.context(Self::ERR)?
     }
 
-    pub async fn restart_bot(&self, id: BotId) -> Result<()> {
+    pub async fn kill_bot(
+        &self,
+        id: BotId,
+        reason: impl ToString,
+    ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::RestartBot { id, tx }).await?;
+        self.send(Request::KillBot {
+            id,
+            reason: reason.to_string(),
+            tx,
+        })
+        .await?;
 
         rx.await.context(Self::ERR)
     }
@@ -192,18 +190,15 @@ pub enum Request {
     },
 
     CreateBot {
-        #[derivative(Debug = "ignore")]
-        src: Cow<'static, [u8]>,
-
-        pos: Option<IVec2>,
-        dir: Option<Dir>,
+        req: CreateBotRequest,
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
-    RestartBot {
+    KillBot {
         id: BotId,
+        reason: String,
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
@@ -237,6 +232,42 @@ pub enum Request {
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<()>>,
     },
+}
+
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct CreateBotRequest {
+    #[derivative(Debug = "ignore")]
+    pub src: Cow<'static, [u8]>,
+    pub pos: Option<IVec2>,
+    pub dir: Option<Dir>,
+    pub oneshot: bool,
+}
+
+impl CreateBotRequest {
+    pub fn new(src: impl Into<Cow<'static, [u8]>>) -> Self {
+        Self {
+            src: src.into(),
+            pos: None,
+            dir: None,
+            oneshot: false,
+        }
+    }
+
+    pub fn at(mut self, pos: IVec2) -> Self {
+        self.pos = Some(pos);
+        self
+    }
+
+    pub fn facing(mut self, dir: Dir) -> Self {
+        self.dir = Some(dir);
+        self
+    }
+
+    pub fn oneshot(mut self) -> Self {
+        self.oneshot = true;
+        self
+    }
 }
 
 // ---

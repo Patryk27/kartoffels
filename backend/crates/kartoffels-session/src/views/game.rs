@@ -22,8 +22,8 @@ use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, ClockSpeed, Handle as WorldHandle, Snapshot as WorldSnapshot,
-    SnapshotStream, SnapshotStreamExt,
+    BotId, ClockSpeed, CreateBotRequest, Handle as WorldHandle,
+    Snapshot as WorldSnapshot, SnapshotStream, SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
@@ -240,7 +240,7 @@ impl State {
             .handle
             .as_ref()
             .unwrap()
-            .create_bot(src, None, None)
+            .create_bot(CreateBotRequest::new(src))
             .await;
 
         let id = match id {

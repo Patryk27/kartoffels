@@ -115,7 +115,12 @@ impl Event {
             Event::RestartBot => {
                 let id = state.bot.as_ref().unwrap().id;
 
-                state.handle.as_ref().unwrap().restart_bot(id).await?;
+                state
+                    .handle
+                    .as_ref()
+                    .unwrap()
+                    .kill_bot(id, "forcefully restarted")
+                    .await?;
             }
 
             Event::DestroyBot => {

@@ -30,8 +30,8 @@ pub mod prelude {
     pub use crate::config::Config;
     pub use crate::events::Event;
     pub use crate::handle::{
-        EventStream, EventStreamExt, Handle, Request, SnapshotStream,
-        SnapshotStreamExt,
+        CreateBotRequest, EventStream, EventStreamExt, Handle, Request,
+        SnapshotStream, SnapshotStreamExt,
     };
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, Mode};
@@ -67,7 +67,7 @@ use anyhow::Result;
 use glam::IVec2;
 use kartoffels_utils::Id;
 use rand::rngs::SmallRng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -79,8 +79,8 @@ use tracing::{debug, info, info_span};
 pub fn create(config: Config) -> Handle {
     assert!(
         !(config.path.is_some() && config.rng.is_some()),
-        "setting path and rng at the same time is not supported, because rng \
-         state is not currently saved into the file system"
+        "enabling path and rng at the same time is not supported, because rng \
+         state is currently not persisted"
     );
 
     let mut rng = config
@@ -95,7 +95,7 @@ pub fn create(config: Config) -> Handle {
     let policy = config.policy;
     let theme = config.theme;
 
-    let id = Id::new(&mut rng);
+    let id = rng.gen();
 
     let map = theme
         .as_ref()

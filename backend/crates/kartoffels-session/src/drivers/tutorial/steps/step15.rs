@@ -134,7 +134,9 @@ async fn setup_dummies(ctxt: &mut StepCtxt) -> Result<()> {
     ];
 
     for pos in dummies {
-        ctxt.world.create_bot(BOT_DUMMY, pos, None).await?;
+        ctxt.world
+            .create_bot(CreateBotRequest::new(BOT_DUMMY).at(pos))
+            .await?;
     }
 
     Ok(())

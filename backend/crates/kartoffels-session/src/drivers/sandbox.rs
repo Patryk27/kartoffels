@@ -56,17 +56,13 @@ async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
     let world = store.create_world(Config {
-        clock: Default::default(),
-        mode: Mode::Deathmatch(DeathmatchMode::default()),
         name: "sandbox".into(),
-        path: Default::default(),
         policy: Policy {
             auto_respawn: true,
             max_alive_bots: MAX_BOTS,
             max_queued_bots: MAX_BOTS,
         },
-        rng: None,
-        theme: None,
+        ..Default::default()
     })?;
 
     game.join(world.clone()).await?;
@@ -126,7 +122,7 @@ async fn create_map_ex(
                 }
             }
 
-            if nth % 32 == 0 {
+            if nth % 64 == 0 {
                 let map = map.clone().map(|_, tile| {
                     if tile.meta[0] == NOT_VISITED {
                         TileBase::VOID.into()

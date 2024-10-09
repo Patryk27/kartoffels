@@ -1,7 +1,6 @@
-use crate::{AliveBot, Bots, Dir, Event, Map, QueuedBot, World};
+use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
 use glam::IVec2;
 use rand::{Rng, RngCore};
-use std::sync::Arc;
 
 pub fn run(world: &mut World) {
     if world.bots.alive.len() >= world.policy.max_alive_bots {
@@ -28,8 +27,6 @@ pub fn run(world: &mut World) {
     let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
 
     world.bots.alive.add(id, bot);
-
-    _ = world.events.send(Arc::new(Event::BotSpawned { id }));
 }
 
 fn determine_spawn_point(

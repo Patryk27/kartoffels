@@ -5,17 +5,17 @@ use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "acyclic-maze",
-    desc: "what can go wrong when you make a pact with the devil?",
+    desc: "what can go wrong when a tiny bot enters a huge maze?",
     run,
 };
 
-static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
+static INIT_MSG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
     title: Some(" acyclic-maze "),
     body: INSTRUCTION.clone(),
 
     buttons: vec![
         DialogButton::abort("go back", false),
-        DialogButton::confirm("start", true),
+        DialogButton::confirm("let's do it", true),
     ],
 });
 
@@ -27,94 +27,92 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
 
 static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new("a bot who knows what it wants is most admirable"),
-        DialogLine::new(""),
         DialogLine::new(
-            "but sometimes a bot's reasoning system goes mental and decides \
-             that what they want is a longer antenna... and they do stupid \
-             things to achieve this goal",
-        ),
-        DialogLine::new(""),
-        DialogLine::new("_like making a pact with the devil_"),
-        DialogLine::new(""),
-        DialogLine::new(
-            "poor fella thought it's getting an upgrade, while in reality the \
-             fiendish devil just took the bot's wheels and left it to rot in \
-             the top-left corner of the maze",
+            "poor timmy-bot went for a walk and got attacked by a masked \
+             perpetrator which took poor timmy-bot's wheels and ran away",
         ),
         DialogLine::new(""),
         DialogLine::new(
             "*show mercy*: implement a robot that traverses the maze, locates \
-             that other bot and kills it - you'll be starting in the \
-             bottom-right corner",
+             timmy and _kills it_ - you'll be starting in the bottom-right \
+             corner",
         ),
     ]
+});
+
+static WIN_MSG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+    title: Some(" acyclic-maze "),
+
+    body: vec![DialogLine::new(
+        "congrats - poor timmy-bot is surely in a better place now, thanks to \
+         you!",
+    )],
+
+    buttons: vec![DialogButton::confirm("ok", ())],
 });
 
 const AREA: UVec2 = uvec2(37, 19);
 const ENTRANCE_LEN: u32 = 5;
 const SIZE: UVec2 = uvec2(AREA.x + ENTRANCE_LEN, AREA.y);
 
-const TARGET: IVec2 = ivec2(1, 1);
-const SPAWN: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
+const TIMMY_POS: IVec2 = ivec2(1, 1);
+const PLAYER_POS: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
 
 fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
     Box::pin(async move {
-        if !game.run_dialog(&DIALOG).await? {
+        if !game.run_dialog(&INIT_MSG).await? {
             return Ok(());
         }
 
-        let world = init(store, &game).await?;
+        let (world, timmy) = setup(store, &game).await?;
 
-        create_map(store, &world).await?;
+        wait(&world, timmy).await?;
 
-        game.set_perms(Perms::CHALLENGE).await?;
-        game.set_status(None).await?;
-
-        future::pending::<()>().await;
+        game.run_dialog(&WIN_MSG).await?;
 
         Ok(())
     })
 }
 
-async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
+async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
     game.set_help(Some(&*HELP)).await?;
     game.set_perms(Perms::CHALLENGE.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
     let world = store.create_world(Config {
-        clock: Default::default(),
-        mode: Mode::Deathmatch(DeathmatchMode::default()),
         name: "challenge:acyclic-maze".into(),
-        path: Default::default(),
         policy: Policy {
-            auto_respawn: true,
+            auto_respawn: false,
             max_alive_bots: 2,
             max_queued_bots: 1,
         },
-        rng: None,
-        theme: None,
+        ..Default::default()
     })?;
 
     world
         .set_map({
             let mut map = Map::new(SIZE);
 
-            map.set(TARGET, TileBase::FLOOR);
+            map.set(TIMMY_POS, TileBase::FLOOR);
             map
         })
         .await?;
 
-    world.set_spawn(SPAWN, Dir::W).await?;
-    world.create_bot(BOT_DUMMY, TARGET, Dir::S).await?;
+    world.set_spawn(PLAYER_POS, Dir::W).await?;
+
+    let timmy = world
+        .create_bot(
+            CreateBotRequest::new(BOT_DUMMY)
+                .at(TIMMY_POS)
+                .facing(Dir::S),
+        )
+        .await?;
 
     game.join(world.clone()).await?;
 
-    Ok(world)
-}
+    // ---
 
-async fn create_map(store: &Store, world: &Handle) -> Result<()> {
-    utils::create_map(store, world, |tx| async move {
+    utils::create_map(store, &world, |tx| async move {
         let seed = if store.testing {
             Default::default()
         } else {
@@ -127,7 +125,10 @@ async fn create_map(store: &Store, world: &Handle) -> Result<()> {
     })
     .await?;
 
-    Ok(())
+    game.set_perms(Perms::CHALLENGE).await?;
+    game.set_status(None).await?;
+
+    Ok((world, timmy))
 }
 
 async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
@@ -165,10 +166,10 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     let mut frontier = Vec::new();
 
     for dir in Dir::shuffled(&mut rng) {
-        frontier.push((TARGET, dir));
+        frontier.push((TIMMY_POS, dir));
     }
 
-    map.get_mut(TARGET).meta[0] = VISITED;
+    map.get_mut(TIMMY_POS).meta[0] = VISITED;
 
     while !frontier.is_empty() {
         let idx = rng.gen_range(0..frontier.len());
@@ -249,6 +250,18 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     );
 
     map
+}
+
+async fn wait(world: &Handle, timmy: BotId) -> Result<()> {
+    let mut events = world.events();
+
+    loop {
+        if events.next_or_err().await?.is_bot_killed(timmy) {
+            break;
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

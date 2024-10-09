@@ -16,17 +16,19 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
 
     _ = world.events.send(Arc::new(Event::BotKilled { id }));
 
-    if world.policy.auto_respawn
+    if !bot.oneshot
+        && world.policy.auto_respawn
         && world.bots.queued.len() < world.policy.max_queued_bots
     {
         world.bots.queued.push(QueuedBot {
-            id,
-            pos: None,
-            dir: None,
-            requeued: true,
-            events: bot.events,
-            serial: bot.serial,
             cpu: bot.cpu.reset(),
+            dir: None,
+            events: bot.events,
+            id,
+            oneshot: false,
+            pos: None,
+            requeued: true,
+            serial: bot.serial,
         });
     } else {
         bot.log("discarded");

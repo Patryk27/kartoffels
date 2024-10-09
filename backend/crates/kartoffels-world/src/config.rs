@@ -3,7 +3,7 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use std::path::PathBuf;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Config {
     pub clock: Clock,
     pub mode: Mode,

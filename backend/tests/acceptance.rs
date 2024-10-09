@@ -1,4 +1,4 @@
-mod acc {
+mod acceptance {
     mod challenges;
     mod home;
     mod tutorial;
@@ -32,14 +32,23 @@ impl TestContext {
         "welcome to kartoffels, a game where you're given a potato";
 
     pub async fn new() -> Self {
-        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
-        let store = Arc::new(Store::test());
-        let shutdown = CancellationToken::new();
-        let addr = listener.local_addr().unwrap();
+        Self::new_ex(80, 30).await
+    }
 
-        let server = task::spawn(kartoffels_server::http::start(
-            listener, store, shutdown,
-        ));
+    async fn new_ex(cols: usize, rows: usize) -> Self {
+        let addr;
+
+        let server = {
+            let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+            let store = Arc::new(Store::test());
+            let shutdown = CancellationToken::new();
+
+            addr = listener.local_addr().unwrap();
+
+            task::spawn(kartoffels_server::http::start(
+                listener, store, shutdown,
+            ))
+        };
 
         let client = time::timeout(Duration::from_secs(1), async move {
             loop {
@@ -60,7 +69,9 @@ impl TestContext {
         let (mut stdin, mut stdout) = client.split();
 
         stdin
-            .send(WsMessage::Text(r#"{ "cols": 64, "rows": 32 }"#.into()))
+            .send(WsMessage::Text(format!(
+                "{{ \"cols\": {cols}, \"rows\": {rows} }}",
+            )))
             .await
             .unwrap();
 
@@ -68,7 +79,7 @@ impl TestContext {
 
         Self {
             server,
-            term: Vt::new(64, 32),
+            term: Vt::new(cols, rows),
             stdin: Box::new(stdin),
             stdout: Box::new(stdout),
         }
@@ -141,19 +152,13 @@ impl TestContext {
         }
     }
 
-    pub fn dont_see(&mut self, text: &str) {
-        let stdout = self.stdout();
-
-        if stdout.contains(text) {
-            panic!("not_see(\"{text}\") failed, stdout was:\n\n{stdout}");
-        }
-    }
-
-    pub async fn assert(&mut self, expected_path: &str) {
+    pub async fn see_frame(&mut self, expected_path: &str) {
         let actual = self.stdout();
 
+        let expected_path = format!("tests/acceptance/{expected_path}");
+
         let expected =
-            fs::read_to_string(expected_path).await.unwrap_or_default();
+            fs::read_to_string(&expected_path).await.unwrap_or_default();
 
         let new_path = format!("{expected_path}.new");
 
@@ -163,6 +168,14 @@ impl TestContext {
             fs::write(&new_path, actual).await.unwrap();
 
             panic!("snapshot(\"{expected_path}\") failed");
+        }
+    }
+
+    pub fn dont_see(&mut self, text: &str) {
+        let stdout = self.stdout();
+
+        if stdout.contains(text) {
+            panic!("not_see(\"{text}\") failed, stdout was:\n\n{stdout}");
         }
     }
 
