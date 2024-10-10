@@ -10,7 +10,7 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
 
     if let Some(killer) = killer {
         if let Some(killer) = world.bots.alive.get_mut(killer) {
-            killer.bot.log(format!("stabbed {}", id));
+            killer.bot.log(format!("stabbed {id}"));
         }
     }
 

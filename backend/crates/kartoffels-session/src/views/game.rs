@@ -222,11 +222,9 @@ impl State {
                 match BASE64_STANDARD.decode(src) {
                     Ok(src) => src,
                     Err(err) => {
-                        self.dialog =
-                            Some(Dialog::Error(ErrorDialog::new(format!(
-                                "couldn't decode pasted content:\n\n{}",
-                                err
-                            ))));
+                        self.dialog = Some(Dialog::Error(ErrorDialog::new(
+                            format!("couldn't decode pasted content:\n\n{err}"),
+                        )));
 
                         return Ok(());
                     }
@@ -248,7 +246,7 @@ impl State {
 
             Err(err) => {
                 self.dialog =
-                    Some(Dialog::Error(ErrorDialog::new(format!("{:?}", err))));
+                    Some(Dialog::Error(ErrorDialog::new(format!("{err:?}"))));
 
                 return Ok(());
             }

@@ -113,7 +113,7 @@ impl Cpu {
 
         macro_rules! err_unknown {
             () => {
-                format!("unknown instruction: 0x{:08x}", word).into()
+                format!("unknown instruction: 0x{word:08x}").into()
             };
         }
 

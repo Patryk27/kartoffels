@@ -101,8 +101,7 @@ impl JoinBotDialog {
 
         if world.bots().by_id(id).is_none() {
             ui.throw(Event::ShowErrorDialog(format!(
-                "bot `{}` was not found\n\nmaybe it's dead?",
-                id
+                "bot `{id}` was not found\n\nmaybe it's dead?",
             )));
 
             return;

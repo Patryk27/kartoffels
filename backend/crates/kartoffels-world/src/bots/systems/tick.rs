@@ -27,7 +27,7 @@ fn tick(world: &mut World, ids: &[BotId]) {
 
             Err(err) => Some(KillBot {
                 id,
-                reason: format!("firmware crashed: {}", err),
+                reason: format!("firmware crashed: {err}"),
                 killer: None,
             }),
         };

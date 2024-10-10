@@ -15,7 +15,7 @@ impl AliveBotTick {
             {
                 return Some(KillBot {
                     id: killed_id,
-                    reason: format!("stabbed out of existence by {}", id),
+                    reason: format!("stabbed out of existence by {id}"),
                     killer: Some(id),
                 });
             }

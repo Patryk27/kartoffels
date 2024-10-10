@@ -39,7 +39,7 @@ impl AppClient {
     fn channel_mut(&mut self, id: ChannelId) -> Result<&mut AppChannel> {
         self.channels
             .get_mut(&id)
-            .with_context(|| format!("unknown channel: {}", id))
+            .with_context(|| format!("unknown channel: {id}"))
     }
 }
 

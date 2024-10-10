@@ -55,7 +55,7 @@ impl TestContext {
                 time::sleep(Duration::from_millis(1)).await;
 
                 let conn =
-                    tokio_tungstenite::connect_async(format!("ws://{}", addr))
+                    tokio_tungstenite::connect_async(format!("ws://{addr}"))
                         .await;
 
                 if let Ok((client, _)) = conn {

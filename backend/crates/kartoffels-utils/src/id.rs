@@ -67,7 +67,7 @@ impl fmt::Display for Id {
             .get()
             .to_be_bytes()
             .array_chunks()
-            .map(|[a, b]| format!("{:02x}{:02x}", a, b))
+            .map(|[a, b]| format!("{a:02x}{b:02x}"))
             .join("-");
 
         write!(f, "{}", id)
