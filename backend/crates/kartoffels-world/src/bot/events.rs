@@ -28,7 +28,7 @@ impl BotEvents {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BotEvent {
     pub at: DateTime<Utc>,
     pub msg: String,

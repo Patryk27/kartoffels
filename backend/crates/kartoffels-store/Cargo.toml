@@ -4,9 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-kartoffels-world = { path = "../kartoffels-world" }
-kartoffels-utils = { path = "../kartoffels-utils" }
-
 anyhow.workspace = true
+kartoffels-utils = { path = "../kartoffels-utils" }
+kartoffels-world = { path = "../kartoffels-world" }
 tokio.workspace = true
 tracing.workspace = true

@@ -4,14 +4,13 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
-use ratatui::widgets::{Block, Padding, Widget, WidgetRef};
-use ratatui::Frame;
+use ratatui::widgets::{Block, Padding, Paragraph, Widget, WidgetRef, Wrap};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct Ui<'a, 'b, T> {
+pub struct Ui<'a, T> {
     pub(super) ty: TermType,
-    pub(super) frame: &'a mut Frame<'b>,
+    pub(super) buf: &'a mut Buffer,
     pub(super) area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
     pub(super) event: Option<&'a InputEvent>,
@@ -21,13 +20,13 @@ pub struct Ui<'a, 'b, T> {
     pub(super) thrown: &'a mut Option<T>,
 }
 
-impl<'a, 'b, T> Ui<'a, 'b, T> {
+impl<'a, T> Ui<'a, T> {
     pub fn ty(&self) -> TermType {
         self.ty
     }
 
     pub fn buf(&mut self) -> &mut Buffer {
-        self.frame.buffer_mut()
+        self.buf
     }
 
     pub fn area(&self) -> Rect {
@@ -46,10 +45,10 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
         self.enabled
     }
 
-    fn with(&mut self, f: impl FnOnce(&mut Ui<T>)) {
+    fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         f(&mut Ui {
             ty: self.ty,
-            frame: self.frame,
+            buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,
@@ -57,31 +56,39 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
             layout: self.layout,
             enabled: self.enabled,
             thrown: self.thrown,
-        });
+        })
     }
 
-    pub fn clamp(&mut self, area: Rect, f: impl FnOnce(&mut Ui<T>)) {
+    pub fn clamp<U>(
+        &mut self,
+        area: Rect,
+        f: impl FnOnce(&mut Ui<T>) -> U,
+    ) -> U {
         self.with(|ui| {
             ui.area = ui.area.clamp(area);
 
-            f(ui);
-        });
+            f(ui)
+        })
     }
 
-    pub fn row(&mut self, f: impl FnOnce(&mut Ui<T>)) {
+    pub fn row<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         self.with(|ui| {
             ui.layout = UiLayout::Row;
 
-            f(ui);
-        });
+            f(ui)
+        })
     }
 
-    pub fn enable(&mut self, enabled: bool, f: impl FnOnce(&mut Ui<T>)) {
+    pub fn enable<U>(
+        &mut self,
+        enabled: bool,
+        f: impl FnOnce(&mut Ui<T>) -> U,
+    ) -> U {
         self.with(|ui| {
             ui.enabled = ui.enabled && enabled;
 
-            f(ui);
-        });
+            f(ui)
+        })
     }
 
     pub fn space(&mut self, len: u16) {
@@ -98,13 +105,14 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
         }
     }
 
-    pub fn line<'x>(&mut self, text: impl Into<Text<'x>>) {
-        self.text(text);
-        self.space(1);
-    }
+    pub fn line<'x>(&mut self, line: impl Into<Text<'x>>) -> u16 {
+        let para = Paragraph::new(line).wrap(Wrap::default());
+        let height = para.line_count(self.area.width) as u16;
 
-    pub fn text<'x>(&mut self, text: impl Into<Text<'x>>) {
-        text.into().render(self.area, self.buf());
+        para.render(self.area, self.buf());
+        self.space(height);
+
+        height
     }
 
     pub fn span<'x>(&mut self, span: impl Into<Span<'x>>) {
@@ -224,7 +232,7 @@ impl<'a, 'b, T> Ui<'a, 'b, T> {
 
         f(&mut Ui {
             ty: self.ty,
-            frame: self.frame,
+            buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,

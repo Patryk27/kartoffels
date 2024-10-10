@@ -16,10 +16,6 @@ impl DeadBots {
         self.entries.put(id, bot);
     }
 
-    pub fn get_mut(&mut self, id: BotId) -> Option<&mut DeadBot> {
-        self.entries.peek_mut(&id)
-    }
-
     pub fn remove(&mut self, id: BotId) {
         self.entries.pop_entry(&id);
     }

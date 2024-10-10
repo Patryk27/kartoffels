@@ -40,14 +40,14 @@ pub async fn start_session(
                 info!("session crashed");
             }
 
-            _ = term.send("whoopsie, the game has crashed\r\n".into()).await;
+            _ = term.send("ouch, the game has crashed\r\n".into()).await;
         }
 
         None => {
             info!("session aborted: server is shutting down");
 
             _ = term
-                .send("whoopsie, the server is shutting down\r\n".into())
+                .send("ouch, the server is shutting down\r\n".into())
                 .await;
         }
     }

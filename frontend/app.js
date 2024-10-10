@@ -8,10 +8,12 @@ import { WebglAddon } from "@xterm/addon-webgl";
 const $app = document.getElementById("app");
 
 document.fonts.ready.then(() => {
+  let isConnected = false;
+
   const term = new Terminal({
     rows: 0,
     cols: 0,
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: "Fira Code",
   });
 
@@ -24,13 +26,18 @@ document.fonts.ready.then(() => {
   term.loadAddon(new ClipboardAddon());
 
   term.attachCustomKeyEventHandler((event) => {
-    // Prevent xterm from catching C-c & C-v, so that they invoke the usual copy
-    // and paste actions
-    if (
-      event.type === "keydown" &&
-      event.ctrlKey &&
-      (event.key === "c" || event.key === "v")
-    ) {
+    const isCtrl = (key) => {
+      return event.type === "keydown" && event.ctrlKey && event.key === key;
+    };
+
+    // Don't catch C-c and C-v, so that they invoke the good-old copy and paste
+    if (isCtrl("c") || isCtrl("v")) {
+      return false;
+    }
+
+    // Don't catch C-r, unless we're disconnected - then allow for C-r, so that
+    // the user can refresh the page
+    if (isCtrl("r") && !isConnected) {
       return false;
     }
   });
@@ -46,10 +53,14 @@ document.fonts.ready.then(() => {
   const socket = new WebSocket(`${import.meta.env.VITE_API_URL}`);
 
   socket.onopen = () => {
-    socket.send(JSON.stringify({
-      cols: term.cols,
-      rows: term.rows,
-    }));
+    isConnected = true;
+
+    socket.send(
+      JSON.stringify({
+        cols: term.cols,
+        rows: term.rows,
+      }),
+    );
 
     term.loadAddon(
       new AttachAddon(socket, {
@@ -81,10 +92,14 @@ document.fonts.ready.then(() => {
   socket.onerror = () => {
     term.reset();
     term.write("couldn't connect to the server");
+
+    isConnected = false;
   };
 
   socket.onclose = () => {
     term.write("\n\rconnection to server closed");
+
+    isConnected = false;
   };
 
   window.onbeforeunload = () => {

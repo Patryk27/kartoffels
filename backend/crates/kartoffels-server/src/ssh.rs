@@ -12,20 +12,20 @@ use kartoffels_store::Store;
 use rand::rngs::OsRng;
 use russh::server::{Config, Server as _};
 use russh_keys::key::KeyPair;
-use std::net::SocketAddr;
 use std::pin::pin;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::net::TcpListener;
 use tokio::{fs, select, time};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
 pub async fn start(
-    addr: &SocketAddr,
+    socket: TcpListener,
     store: Arc<Store>,
     shutdown: CancellationToken,
 ) -> Result<()> {
-    info!(?addr, "starting ssh server");
+    info!(addr = ?socket.local_addr()?, "starting ssh server");
 
     let key = load_key(&store).await?;
 
@@ -40,7 +40,7 @@ pub async fn start(
     info!("ready");
 
     let mut server = AppServer::new(store, shutdown.clone());
-    let server = server.run_on_address(config, addr);
+    let server = server.run_on_socket(config, &socket);
     let shutdown = shutdown.cancelled();
 
     let result = {
@@ -68,7 +68,7 @@ pub async fn start(
 }
 
 async fn load_key(store: &Store) -> Result<KeyPair> {
-    let path = store.dir.join("ssh.key");
+    let path = store.dir.as_ref().unwrap().join("ssh.key");
 
     if !path.exists() {
         info!(?path, "generating server key");

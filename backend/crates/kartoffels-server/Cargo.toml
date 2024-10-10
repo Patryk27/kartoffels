@@ -4,11 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-kartoffels-session = { path = "../kartoffels-session" }
-kartoffels-store = { path = "../kartoffels-store" }
-kartoffels-ui = { path = "../kartoffels-ui" }
-kartoffels-world = { path = "../kartoffels-world" }
-
 ahash.workspace = true
 anyhow.workspace = true
 axum.workspace = true
@@ -18,6 +13,10 @@ futures-util.workspace = true
 glam.workspace = true
 indoc.workspace = true
 itertools.workspace = true
+kartoffels-session = { path = "../kartoffels-session" }
+kartoffels-store = { path = "../kartoffels-store" }
+kartoffels-ui = { path = "../kartoffels-ui" }
+kartoffels-world = { path = "../kartoffels-world" }
 rand.workspace = true
 russh-keys.workspace = true
 russh.workspace = true

@@ -10,22 +10,25 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
 
     if let Some(killer) = killer {
         if let Some(killer) = world.bots.alive.get_mut(killer) {
-            killer.bot.log(format!("stabbed {}", id));
+            killer.bot.log(format!("stabbed {id}"));
         }
     }
 
     _ = world.events.send(Arc::new(Event::BotKilled { id }));
 
-    if world.policy.auto_respawn
+    if !bot.oneshot
+        && world.policy.auto_respawn
         && world.bots.queued.len() < world.policy.max_queued_bots
     {
         world.bots.queued.push(QueuedBot {
+            cpu: bot.cpu.reset(),
+            dir: None,
+            events: bot.events,
             id,
+            oneshot: false,
             pos: None,
             requeued: true,
-            events: bot.events,
             serial: bot.serial,
-            cpu: bot.cpu.reset(),
         });
     } else {
         bot.log("discarded");

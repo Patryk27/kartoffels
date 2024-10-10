@@ -4,9 +4,8 @@ mod systems;
 
 use self::header::*;
 pub use self::systems::*;
-use crate::{Bots, Map, Mode, Policy, Theme};
+use crate::{Bots, Clock, Map, Metronome, Mode, Policy, Theme};
 use anyhow::{Context, Result};
-use kartoffels_utils::Metronome;
 use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
@@ -16,16 +15,17 @@ use std::path::Path;
 use std::time::Duration;
 use tokio::task;
 
-const VERSION: u32 = 6;
+const VERSION: u32 = 10;
 
 #[derive(Serialize, Deserialize)]
 pub struct SerializedWorld<'a> {
     pub bots: MaybeOwned<'a, Bots>,
+    pub clock: MaybeOwned<'a, Clock>,
     pub map: MaybeOwned<'a, Map>,
     pub mode: MaybeOwned<'a, Mode>,
     pub name: MaybeOwned<'a, String>,
     pub policy: MaybeOwned<'a, Policy>,
-    pub theme: MaybeOwned<'a, Theme>,
+    pub theme: Option<MaybeOwned<'a, Theme>>,
 }
 
 impl SerializedWorld<'_> {

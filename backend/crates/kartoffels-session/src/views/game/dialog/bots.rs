@@ -1,56 +1,57 @@
 use crate::views::game::Event;
 use crate::BotIdExt;
-use kartoffels_ui::{Button, RectExt, Ui};
-use kartoffels_world::prelude::{BotId, Snapshot};
+use kartoffels_ui::{
+    Button, RectExt, Render, Ui, VirtualRow, WidgetList, WidgetListState,
+};
+use kartoffels_world::prelude::{BotId, Snapshot, SnapshotAliveBot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
-use ratatui::widgets::{Cell, Row, StatefulWidget, Table, TableState};
+use ratatui::text::Span;
 use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct BotsDialog {
-    table: TableState,
+    state: WidgetListState,
 }
 
 impl BotsDialog {
-    const WIDTHS: [u16; 4] = [
-        4,                    // nth
-        BotId::LENGTH as u16, // id
-        6,                    // age
-        7,                    // score
+    const WIDTHS: &[u16] = &[
+        5,                        // nth
+        BotId::LENGTH as u16 + 1, // id
+        7,                        // age
+        8,                        // score
+        6,                        // action
     ];
 
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
-        let width = Self::WIDTHS.iter().copied().sum::<u16>() + 7;
+        let width = Self::WIDTHS.iter().copied().sum();
         let height = ui.area().height - 2;
 
         ui.info_window(width, height, Some(" bots "), |ui| {
-            let header = Row::new(vec!["nth", "id", "age", "score ⯆"]);
+            VirtualRow::new(ui, Self::WIDTHS)
+                .add(Span::raw("nth"))
+                .add(Span::raw("id"))
+                .add(Span::raw("age"))
+                .add(Span::raw("score"))
+                .add(Span::raw("action"));
+
+            ui.space(1);
 
             let rows = world
                 .bots()
                 .alive()
                 .iter_sorted_by_scores()
                 .enumerate()
-                .map(|(nth, bot)| {
-                    Row::new([
-                        Cell::new(format!("#{}", nth + 1)),
-                        Cell::new(bot.id.to_string()).fg(bot.id.color()),
-                        Cell::new(format!("{}s", bot.age)),
-                        Cell::new(bot.score.to_string()),
-                    ])
-                });
+                .map(|(nth, bot)| BotsDialogRow { nth, bot });
 
             let area = Rect {
                 height: ui.area().height - 2,
                 ..ui.area()
             };
 
-            Table::new(rows, Self::WIDTHS).header(header).render(
-                area,
-                ui.buf(),
-                &mut self.table,
-            );
+            ui.clamp(area, |ui| {
+                WidgetList::new(rows, &mut self.state).render(ui);
+            });
 
             ui.space(2);
 
@@ -60,8 +61,7 @@ impl BotsDialog {
                         .render(ui)
                         .pressed
                     {
-                        *self.table.offset_mut() =
-                            self.table.offset().saturating_sub(8);
+                        self.state.offset = self.state.offset.saturating_sub(8);
                     }
 
                     ui.space(2);
@@ -70,8 +70,7 @@ impl BotsDialog {
                         .render(ui)
                         .pressed
                     {
-                        *self.table.offset_mut() =
-                            self.table.offset().saturating_add(8);
+                        self.state.offset = self.state.offset.saturating_add(8);
                     }
 
                     ui.space(2);
@@ -82,5 +81,30 @@ impl BotsDialog {
                 });
             });
         });
+    }
+}
+
+#[derive(Clone, Debug)]
+struct BotsDialogRow<'a> {
+    nth: usize,
+    bot: &'a SnapshotAliveBot,
+}
+
+impl Render<Event> for BotsDialogRow<'_> {
+    fn render(self, ui: &mut Ui<Event>) {
+        let nth = Span::raw(format!("#{}", self.nth + 1));
+        let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
+        let age = Span::raw(format!("{}s", self.bot.age));
+        let score = Span::raw(self.bot.score.to_string());
+
+        let join =
+            Button::new(None, "join").throwing(Event::JoinBot(self.bot.id));
+
+        VirtualRow::new(ui, BotsDialog::WIDTHS)
+            .add(nth)
+            .add(id)
+            .add(age)
+            .add(score)
+            .add(join);
     }
 }

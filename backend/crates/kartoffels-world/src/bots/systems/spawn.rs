@@ -1,29 +1,8 @@
-use crate::{AliveBot, Bots, Dir, Event, Map, QueuedBot, World};
+use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
 use glam::IVec2;
 use rand::{Rng, RngCore};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-#[derive(Debug)]
-pub struct State {
-    next_run_at: Instant,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            next_run_at: Instant::now(),
-        }
-    }
-}
-
-pub fn run(world: &mut World, state: &mut State) {
-    if Instant::now() < state.next_run_at {
-        return;
-    }
-
-    state.next_run_at = Instant::now() + Duration::from_millis(16);
-
+pub fn run(world: &mut World) {
     if world.bots.alive.len() >= world.policy.max_alive_bots {
         return;
     }
@@ -44,11 +23,10 @@ pub fn run(world: &mut World, state: &mut State) {
 
     // Unwrap-safety: We've just made sure that the queue is not empty
     let bot = world.bots.queued.pop().unwrap();
-    let (bot, id) = AliveBot::spawn(&mut world.rng, bot, dir);
+    let id = bot.id;
+    let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
 
-    world.bots.alive.add(id, pos, bot);
-
-    _ = world.events.send(Arc::new(Event::BotSpawned { id }));
+    world.bots.alive.add(id, bot);
 }
 
 fn determine_spawn_point(
@@ -59,8 +37,10 @@ fn determine_spawn_point(
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     if let Some(pos) = bot.pos {
+        let dir = bot.dir.unwrap_or_else(|| rng.gen());
+
         return if is_pos_legal(map, bots, pos) {
-            Some((pos, rng.gen()))
+            Some((pos, dir))
         } else {
             None
         };
@@ -76,13 +56,14 @@ fn determine_spawn_point(
         };
     }
 
-    sample_map(rng, map, bots)
+    sample_map(rng, map, bots, bot)
 }
 
 fn sample_map(
     rng: &mut impl RngCore,
     map: &Map,
     bots: &Bots,
+    bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     let mut nth = 0;
 
@@ -90,7 +71,9 @@ fn sample_map(
         let pos = map.sample_pos(rng);
 
         if is_pos_legal(map, bots, pos) {
-            return Some((pos, rng.gen()));
+            let dir = bot.dir.unwrap_or_else(|| rng.gen());
+
+            return Some((pos, dir));
         }
 
         nth += 1;
@@ -102,5 +85,5 @@ fn sample_map(
 }
 
 fn is_pos_legal(map: &Map, bots: &Bots, pos: IVec2) -> bool {
-    map.get(pos).is_floor() && bots.alive.lookup_by_pos(pos).is_none()
+    map.get(pos).is_floor() && bots.alive.get_by_pos(pos).is_none()
 }

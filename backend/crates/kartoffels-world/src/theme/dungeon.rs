@@ -12,19 +12,19 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DungeonTheme {
-    config: DungeonThemeConfig,
+    size: UVec2,
 }
 
 impl DungeonTheme {
-    pub fn new(config: DungeonThemeConfig) -> Self {
-        Self { config }
+    pub fn new(size: UVec2) -> Self {
+        Self { size }
     }
 
     pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
-        let min_occupied_tiles = self.config.size.element_product() / 4;
+        let min_occupied_tiles = self.size.element_product() / 4;
 
         for _ in 0..128 {
-            let mut map = self.create_empty_map();
+            let mut map = Map::new(self.size);
             let rooms = self.generate_rooms(rng, &map);
             let corrs = self.generate_corridors(&rooms);
 
@@ -43,10 +43,6 @@ impl DungeonTheme {
         Err(anyhow!(
             "couldn't generate a valid dungeon within the time limit"
         ))
-    }
-
-    fn create_empty_map(&self) -> Map {
-        Map::new(self.config.size)
     }
 
     fn generate_rooms(&self, rng: &mut impl RngCore, map: &Map) -> Vec<Room> {
@@ -145,7 +141,7 @@ impl DungeonTheme {
 
         while let Some(pos) = stack.pop_front() {
             for dir in Dir::all() {
-                let pos = pos + dir.as_vec();
+                let pos = pos + dir;
                 let tile = map.get(pos);
 
                 if tile.is_floor() && tile.meta[0] == NOT_VISITED {
@@ -164,16 +160,11 @@ impl DungeonTheme {
 
         // ---
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                let pos = ivec2(x as i32, y as i32);
-                let tile = map.get(pos);
-
-                if tile.is_floor() && tile.meta[0] == NOT_VISITED {
-                    map.set(pos, Tile::new(TileBase::VOID));
-                }
+        map.for_each_mut(|_, tile| {
+            if tile.is_floor() && tile.meta[0] == NOT_VISITED {
+                *tile = TileBase::VOID.into();
             }
-        }
+        });
 
         for y in 0..map.size().y {
             for x in 0..map.size().x {
@@ -191,11 +182,15 @@ impl DungeonTheme {
                     }
 
                     if !has_floor_nearby {
-                        map.set(pos, Tile::new(TileBase::VOID));
+                        map.set(pos, TileBase::VOID);
                     }
                 }
             }
         }
+
+        map.for_each_mut(|_, tile| {
+            tile.meta[0] = 0;
+        });
 
         Ok(())
     }
@@ -203,21 +198,14 @@ impl DungeonTheme {
     fn count_occupied_tiles(&self, map: &Map) -> u32 {
         let mut tiles = 0;
 
-        for y in 0..map.size().y {
-            for x in 0..map.size().x {
-                if !map.get(ivec2(x as i32, y as i32)).is_void() {
-                    tiles += 1;
-                }
+        map.for_each(|_, tile| {
+            if !tile.is_void() {
+                tiles += 1;
             }
-        }
+        });
 
         tiles
     }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DungeonThemeConfig {
-    pub size: UVec2,
 }
 
 #[cfg(test)]
@@ -240,11 +228,11 @@ mod tests {
 
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-        let actual = DungeonTheme::new(DungeonThemeConfig { size })
+        let actual = DungeonTheme::new(size)
             .create_map(&mut rng)
             .unwrap()
             .to_string();
 
-        Asserter::new(dir).assert(format!("{}.txt", case), actual);
+        Asserter::new(dir).assert(format!("{case}.txt"), actual);
     }
 }

@@ -53,11 +53,12 @@ pub fn run_now(world: &mut World, state: &mut State, wait: bool) {
 
     let world = SerializedWorld {
         bots: MaybeOwned::Borrowed(&world.bots),
+        clock: MaybeOwned::Borrowed(&world.clock),
         map: MaybeOwned::Borrowed(&world.map),
         mode: MaybeOwned::Borrowed(&world.mode),
         name: MaybeOwned::Borrowed(&world.name),
         policy: MaybeOwned::Borrowed(&world.policy),
-        theme: MaybeOwned::Borrowed(&world.theme),
+        theme: world.theme.as_ref().map(MaybeOwned::Borrowed),
     };
 
     let task = world.store(path).expect("couldn't save the world");

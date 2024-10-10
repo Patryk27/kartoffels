@@ -5,10 +5,18 @@ use self::header::*;
 use self::menu::*;
 use crate::Background;
 use anyhow::Result;
+use kartoffels_store::Store;
 use kartoffels_ui::Term;
 use ratatui::layout::{Constraint, Layout};
+use tracing::debug;
 
-pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
+pub async fn run(
+    term: &mut Term,
+    store: &Store,
+    bg: &Background,
+) -> Result<Response> {
+    debug!("run()");
+
     loop {
         let resp = term
             .draw(|ui| {
@@ -23,7 +31,7 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
                     Constraint::Fill(1),
                     Constraint::Length(Header::height()),
                     Constraint::Fill(1),
-                    Constraint::Length(Menu::height(ui)),
+                    Constraint::Length(Menu::height(store, ui)),
                     Constraint::Fill(1),
                 ])
                 .areas(area);
@@ -42,7 +50,7 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
                 });
 
                 ui.clamp(menu_area, |ui| {
-                    Menu::render(ui);
+                    Menu::render(store, ui);
                 });
             })
             .await?;
@@ -58,6 +66,8 @@ pub async fn run(term: &mut Term, bg: &mut Background) -> Result<Response> {
 #[derive(Debug)]
 pub enum Response {
     Play,
+    Sandbox,
     Tutorial,
+    Challenges,
     Quit,
 }

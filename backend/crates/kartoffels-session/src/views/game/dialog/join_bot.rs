@@ -1,5 +1,5 @@
 use crate::views::game::Event;
-use kartoffels_ui::{Button, Caret, Ui};
+use kartoffels_ui::{Button, Caret, Render, Ui};
 use kartoffels_world::prelude::{BotId, Snapshot};
 use ratatui::text::{Line, Span};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
@@ -101,8 +101,7 @@ impl JoinBotDialog {
 
         if world.bots().by_id(id).is_none() {
             ui.throw(Event::ShowErrorDialog(format!(
-                "bot `{}` was not found\n\nmaybe it's dead?",
-                id
+                "bot `{id}` was not found\n\nmaybe it's dead?",
             )));
 
             return;

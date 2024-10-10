@@ -17,7 +17,7 @@ web:
     cd frontend \
     && npm run dev
 
-# ------------------------------------------------------------------------------
+# ---
 
 check:
     cd backend \
@@ -31,7 +31,10 @@ test:
     cd backend \
     && cargo test
 
-# ------------------------------------------------------------------------------
+bless:
+    fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
+
+# ---
 
 bot name:
     cd backend \
@@ -39,6 +42,7 @@ bot name:
            -p bot-{{ name }} \
            --release \
            --target riscv64-kartoffel-bot.json \
+           --target-dir target.bots \
            -Z build-std \
            -Z build-std-features=compiler-builtins-mem
 

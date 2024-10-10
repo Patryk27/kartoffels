@@ -1,5 +1,5 @@
 use crate::views::game::{Event, State};
-use kartoffels_ui::{Button, Ui};
+use kartoffels_ui::{Button, Render, Ui};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
 
@@ -30,7 +30,9 @@ impl IdleSidePanel {
             btns.push(Action::JoinBot);
         }
 
-        btns.push(Action::UploadBot);
+        if state.perms.user_can_upload_bots {
+            btns.push(Action::UploadBot);
+        }
 
         if state.perms.user_can_spawn_prefabs {
             btns.push(Action::SpawnRoberto);

@@ -1,30 +1,33 @@
-use crate::{cfg, AliveBotEntryMut, KillBot, World};
+use crate::{AliveBotEntryMut, BotId, Clock, KillBot, World};
 
 pub fn run(world: &mut World) {
-    for _ in 0..cfg::SIM_TICKS {
-        tick(world);
-    }
+    let ids = world.bots.alive.pick_ids(&mut world.rng);
 
-    world
-        .mode
-        .on_after_tick(&mut world.rng, &mut world.theme, &mut world.map);
+    let steps = match world.clock {
+        Clock::Auto { steps, .. } => steps,
+        Clock::Manual { steps } => steps,
+    };
+
+    for _ in 0..steps {
+        tick(world, &ids);
+    }
 }
 
-fn tick(world: &mut World) {
-    for id in world.bots.alive.pick_ids(&mut world.rng) {
-        let Some(AliveBotEntryMut { pos, bot, locator }) =
+fn tick(world: &mut World, ids: &[BotId]) {
+    for &id in ids {
+        let Some(AliveBotEntryMut { bot, locator }) =
             world.bots.alive.get_mut(id)
         else {
             // Our bot got killed in the meantime, happens
             continue;
         };
 
-        let kill = match bot.tick(&mut world.rng, &world.map, &locator, pos) {
-            Ok(state) => state.apply(world, id, pos),
+        let kill = match bot.tick(&mut world.rng, &world.map, &locator) {
+            Ok(state) => state.apply(world, id),
 
             Err(err) => Some(KillBot {
                 id,
-                reason: format!("{:?}", err),
+                reason: format!("firmware crashed: {err}"),
                 killer: None,
             }),
         };

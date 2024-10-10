@@ -1,15 +1,14 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::new("faboulous!").fg(theme::PINK).bold(),
+        DialogLine::new("fabulous!").fg(theme::PINK).bold(),
         DialogLine::new(""),
         DialogLine::new(
             "now launch vscode, vim, emacs or whatever gives your life colors \
-             and open `main.rs` from the cloned repository"
+             and open `main.rs` from the cloned repository",
         ),
         DialogLine::new(""),
         DialogLine::new(
@@ -18,7 +17,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         ),
         DialogLine::new(""),
         DialogLine::new(
-            "like, you-dont-have-access-to-standard-library different"
+            "like, you-dont-have-access-to-standard-library different",
         ),
         DialogLine::new(""),
         DialogLine::new(
@@ -30,13 +29,11 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
         DialogLine::new("you know, like people in ancient rome did"),
     ],
 
-    buttons: vec![
-        DialogButton::confirm("got it", ()),
-    ],
+    buttons: vec![DialogButton::confirm("got it", ())],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
 
     Ok(())
 }

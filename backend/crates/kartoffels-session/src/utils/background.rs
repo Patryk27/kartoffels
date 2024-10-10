@@ -1,8 +1,6 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_ui::{theme, Term, Ui};
-use kartoffels_world::prelude::{
-    Dir, DungeonTheme, DungeonThemeConfig, Map, Tile, TileBase,
-};
+use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileBase};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
@@ -39,7 +37,7 @@ impl Background {
         Self { stream, camera }
     }
 
-    pub fn render<T>(&mut self, ui: &mut Ui<T>) {
+    pub fn render<T>(&self, ui: &mut Ui<T>) {
         let map = self.stream.borrow().clone();
 
         for x in 0..ui.area().width {
@@ -74,21 +72,15 @@ static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
 fn refresh(tx: watch::Sender<Arc<Map>>) {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let mut map = DungeonTheme::new(DungeonThemeConfig {
-        size: Background::MAP_SIZE,
-    })
-    .create_map(&mut rng)
-    .unwrap();
+    let mut map = DungeonTheme::new(Background::MAP_SIZE)
+        .create_map(&mut rng)
+        .unwrap();
 
-    for y in 0..map.size().y {
-        for x in 0..map.size().x {
-            let point = ivec2(x as i32, y as i32);
-
-            if map.get(point).base == TileBase::FLOOR && rng.gen_bool(0.05) {
-                map.set(point, Tile::new(TileBase::BOT));
-            }
+    map.for_each_mut(|_, tile| {
+        if tile.is_floor() && rng.gen_bool(0.05) {
+            *tile = TileBase::BOT.into();
         }
-    }
+    });
 
     let mut frame = 0;
 
@@ -104,10 +96,10 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
-                    let dst = src + rng.gen::<Dir>().as_vec();
+                    let dst = src + rng.gen::<Dir>();
 
                     if map.get(dst).base == TileBase::FLOOR {
-                        map.set(src, Tile::new(TileBase::FLOOR));
+                        map.set(src, TileBase::FLOOR);
 
                         map.set(
                             dst,

@@ -1,0 +1,30 @@
+
+        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+        â cool!                                                        â
+        â                                                              â
+        â now let's try to unwrap what the code in main.rs does:       â
+        â                                                              â
+        â # motor_step()                                               â
+        â                                                              â
+        â this boi causes the bot to move one tile in the direction    â
+        â the robot is currently facing (north / east / west / south)  â
+        â                                                              â
+        â # motor_turn_*()                                             â
+        â                                                              â
+        â this boi causes the bot to turn left (counterclockwise) or   â
+        â right (clockwise)                                            â
+        â                                                              â
+        â # motor_wait()                                               â
+        â                                                              â
+        â this boi waits until the motor is ready to accept another    â
+        â command                                                      â
+        â                                                              â
+        â waiting for readiness is important, because the cpu is much  â
+        â faster than motor, so - say - calling motor_step() two times â
+        â in a row without motor_wait() in-between would actually move â
+        â the bot just one tile forward                                â
+        â                                                              â
+        â                                               [enter] got it â
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help

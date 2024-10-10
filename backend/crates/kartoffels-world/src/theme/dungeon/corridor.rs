@@ -1,4 +1,4 @@
-use crate::{Map, Tile, TileBase};
+use crate::{Map, TileBase};
 use glam::{ivec2, IVec2};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -15,17 +15,9 @@ impl Corridor {
                 for delta in 0..self.len {
                     let point = self.anchor + ivec2(delta as i32, 0);
 
-                    map.set(point, Tile::new(TileBase::FLOOR));
-
-                    map.set_if_void(
-                        point - ivec2(0, 1),
-                        Tile::new(TileBase::WALL_H),
-                    );
-
-                    map.set_if_void(
-                        point + ivec2(0, 1),
-                        Tile::new(TileBase::WALL_H),
-                    );
+                    map.set(point, TileBase::FLOOR);
+                    map.set_if_void(point - ivec2(0, 1), TileBase::WALL_H);
+                    map.set_if_void(point + ivec2(0, 1), TileBase::WALL_H);
                 }
             }
 
@@ -33,17 +25,9 @@ impl Corridor {
                 for delta in 0..self.len {
                     let point = self.anchor + ivec2(0, delta as i32);
 
-                    map.set(point, Tile::new(TileBase::FLOOR));
-
-                    map.set_if_void(
-                        point - ivec2(1, 0),
-                        Tile::new(TileBase::WALL_V),
-                    );
-
-                    map.set_if_void(
-                        point + ivec2(1, 0),
-                        Tile::new(TileBase::WALL_V),
-                    );
+                    map.set(point, TileBase::FLOOR);
+                    map.set_if_void(point - ivec2(1, 0), TileBase::WALL_V);
+                    map.set_if_void(point + ivec2(1, 0), TileBase::WALL_V);
                 }
             }
         }

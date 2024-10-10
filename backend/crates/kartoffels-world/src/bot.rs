@@ -20,7 +20,6 @@ pub use self::serial::*;
 pub use self::tick::*;
 pub use self::timer::*;
 use crate::{AliveBotsLocator, Dir, Map};
-use anyhow::{Context, Result};
 use glam::IVec2;
 use kartoffels_cpu::Cpu;
 use rand::RngCore;
@@ -33,8 +32,11 @@ pub struct AliveBot {
     pub arm: BotArm,
     pub battery: BotBattery,
     pub cpu: Cpu,
+    pub dir: Dir,
     pub events: BotEvents,
     pub motor: BotMotor,
+    pub oneshot: bool,
+    pub pos: IVec2,
     pub radar: BotRadar,
     pub serial: BotSerial,
     pub timer: BotTimer,
@@ -50,32 +52,26 @@ impl AliveBot {
 
     pub fn spawn(
         rng: &mut impl RngCore,
-        bot: QueuedBot,
+        pos: IVec2,
         dir: Dir,
-    ) -> (Self, BotId) {
-        let QueuedBot {
-            id,
-            pos: _,
-            requeued,
-            mut events,
-            serial: _,
-            cpu,
-        } = bot;
+        mut bot: QueuedBot,
+    ) -> Self {
+        bot.events
+            .add(if bot.requeued { "respawned" } else { "spawned" });
 
-        events.add(if requeued { "respawned" } else { "spawned" });
-
-        let this = Self {
+        Self {
             arm: Default::default(),
             battery: Default::default(),
-            cpu,
-            events,
-            motor: BotMotor::new(dir),
+            cpu: bot.cpu,
+            dir,
+            events: bot.events,
+            motor: Default::default(),
+            oneshot: bot.oneshot,
+            pos,
             radar: Default::default(),
             serial: Default::default(),
             timer: BotTimer::new(rng),
-        };
-
-        (this, id)
+        }
     }
 
     pub fn log(&mut self, msg: impl Into<String>) {
@@ -87,43 +83,45 @@ impl AliveBot {
         rng: &mut impl RngCore,
         map: &Map,
         bots: &AliveBotsLocator,
-        pos: IVec2,
-    ) -> Result<AliveBotTick> {
+    ) -> Result<AliveBotTick, String> {
         self.timer.tick();
         self.serial.tick();
         self.arm.tick();
         self.motor.tick();
-        self.radar.tick(map, bots, pos, self.motor.dir);
+        self.radar.tick(map, bots, self.pos, self.dir);
 
-        // ---
-
-        self.cpu
-            .tick(&mut BotMmio {
-                timer: &mut self.timer,
-                battery: &mut self.battery,
-                serial: &mut self.serial,
-                motor: &mut self.motor,
-                arm: &mut self.arm,
-                radar: &mut self.radar,
-                ctxt: BotMmioContext { rng: &mut *rng },
-            })
-            .context("firmware crashed")?;
+        self.cpu.tick(&mut BotMmio {
+            timer: &mut self.timer,
+            battery: &mut self.battery,
+            serial: &mut self.serial,
+            motor: &mut self.motor,
+            arm: &mut self.arm,
+            radar: &mut self.radar,
+            ctxt: BotMmioContext {
+                dir: &mut self.dir,
+                rng: &mut *rng,
+            },
+        })?;
 
         // ---
 
         let stab_dir = if mem::take(&mut self.arm.is_stabbing) {
-            Some(self.motor.dir)
+            Some(self.dir)
         } else {
             None
         };
 
         let move_dir = if mem::take(&mut self.motor.vel) == 1 {
-            Some(self.motor.dir)
+            Some(self.dir)
         } else {
             None
         };
 
-        Ok(AliveBotTick { stab_dir, move_dir })
+        Ok(AliveBotTick {
+            pos: self.pos,
+            stab_dir,
+            move_dir,
+        })
     }
 }
 
@@ -134,11 +132,12 @@ pub struct DeadBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
+    pub cpu: Cpu,
+    pub dir: Option<Dir>,
+    pub events: BotEvents,
     pub id: BotId,
+    pub oneshot: bool,
     pub pos: Option<IVec2>,
     pub requeued: bool,
-
-    pub cpu: Cpu,
-    pub events: BotEvents,
     pub serial: BotSerial,
 }

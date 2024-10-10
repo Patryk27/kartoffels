@@ -1,8 +1,8 @@
 use crate::views::game::Event;
-use kartoffels_ui::{theme, Button, FromMarkdown, Spinner, Ui};
+use kartoffels_ui::{theme, Button, FromMarkdown, Render, Spinner, Ui};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Paragraph, Widget, WidgetRef, Wrap};
+use ratatui::widgets::{Paragraph, WidgetRef, Wrap};
 use std::cmp;
 use std::sync::LazyLock;
 use std::time::Instant;
@@ -64,7 +64,7 @@ impl UploadBotDialog {
                     spinner,
                 ])
                 .centered()
-                .render(ui.area(), ui.buf());
+                .render(ui);
 
                 ui.space(2);
 

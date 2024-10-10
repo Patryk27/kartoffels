@@ -1,16 +1,14 @@
 use super::{Dialog, ErrorDialog, State};
-use crate::bots;
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::BotId;
+use kartoffels_world::prelude::{BotId, ClockSpeed, BOT_ROBERTO};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
     CloseDialog,
-    CopyToClipboard(String),
     GoBack,
     JoinBot(BotId),
     MoveCamera(IVec2),
@@ -27,6 +25,8 @@ pub enum Event {
     RestartBot,
     DestroyBot,
     FollowBot,
+    Overclock(ClockSpeed),
+    CopyToClipboard(String),
 }
 
 impl Event {
@@ -99,7 +99,7 @@ impl Event {
 
             Event::SpawnRoberto => {
                 state
-                    .upload_bot(Either::Right(bots::ROBERTO.to_vec()))
+                    .upload_bot(Either::Right(BOT_ROBERTO.to_vec()))
                     .await?;
             }
 
@@ -115,7 +115,12 @@ impl Event {
             Event::RestartBot => {
                 let id = state.bot.as_ref().unwrap().id;
 
-                state.handle.as_ref().unwrap().restart_bot(id).await?;
+                state
+                    .handle
+                    .as_ref()
+                    .unwrap()
+                    .kill_bot(id, "forcefully restarted")
+                    .await?;
             }
 
             Event::DestroyBot => {
@@ -128,6 +133,11 @@ impl Event {
                 if let Some(bot) = &mut state.bot {
                     bot.is_followed = !bot.is_followed;
                 }
+            }
+
+            Event::Overclock(speed) => {
+                state.handle.as_ref().unwrap().overclock(speed).await?;
+                state.speed = speed;
             }
 
             Event::CopyToClipboard(payload) => {

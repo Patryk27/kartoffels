@@ -1,0 +1,30 @@
+
+
+
+                       .........
+        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+        â fabulous!                                                    â
+        â                                                              â
+        â now launch vscode, vim, emacs or whatever gives your life    â
+        â colors and open main.rs from the cloned repository           â
+        â                                                              â
+        â for, you see, writing a bot is similar to writing a regular  â
+        â rust program - but it's also different, mucho different      â
+        â                                                              â
+        â like, you-dont-have-access-to-standard-library different     â
+        â                                                              â
+        â this means there's no println!(), no std::fs, everything the â
+        â robot has access to is a bit of memory, motor, radar and     â
+        â serial port                                                  â
+        â                                                              â
+        â you know, like people in ancient rome did                    â
+        â                                                              â
+        â                                               [enter] got it â
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+                    ...............
+                     .............
+                       .........
+
+
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help

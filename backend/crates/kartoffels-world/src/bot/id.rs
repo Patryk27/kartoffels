@@ -1,7 +1,9 @@
 use anyhow::{Error, Result};
 use derivative::Derivative;
 use kartoffels_utils::Id;
-use rand::RngCore;
+use rand::distributions::Standard;
+use rand::prelude::Distribution;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -24,8 +26,8 @@ pub struct BotId(Id);
 impl BotId {
     pub const LENGTH: usize = Id::LENGTH;
 
-    pub fn new(rng: &mut impl RngCore) -> Self {
-        Self(Id::new(rng))
+    pub fn new(id: u64) -> Self {
+        Self(Id::new(id))
     }
 
     pub fn get(&self) -> Id {
@@ -33,9 +35,12 @@ impl BotId {
     }
 }
 
-impl From<u64> for BotId {
-    fn from(value: u64) -> Self {
-        Self(Id::from(value))
+impl Distribution<BotId> for Standard {
+    fn sample<R>(&self, rng: &mut R) -> BotId
+    where
+        R: Rng + ?Sized,
+    {
+        BotId(rng.gen())
     }
 }
 

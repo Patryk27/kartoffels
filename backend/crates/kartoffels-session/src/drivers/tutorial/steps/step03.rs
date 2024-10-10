@@ -2,7 +2,6 @@ use super::prelude::*;
 
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -23,7 +22,7 @@ static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     loop {
-        match ctxt.run_dialog(&DIALOG).await? {
+        match ctxt.game.run_dialog(&DIALOG).await? {
             "copy" => {
                 ctxt.game.copy_to_clipboard(CMD).await?;
             }

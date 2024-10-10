@@ -1,4 +1,4 @@
-use crate::{cfg, World};
+use crate::{Clock, World};
 use std::time::{Duration, Instant};
 use tracing::debug;
 
@@ -17,7 +17,11 @@ impl Default for State {
 }
 
 pub fn run(world: &mut World, state: &mut State) {
-    state.ticks += cfg::SIM_TICKS;
+    let Clock::Auto { steps, .. } = world.clock else {
+        return;
+    };
+
+    state.ticks += steps;
 
     if Instant::now() < state.next_run_at {
         return;

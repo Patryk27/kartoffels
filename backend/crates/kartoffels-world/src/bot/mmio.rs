@@ -1,14 +1,15 @@
 use super::{BotArm, BotBattery, BotMotor, BotRadar, BotSerial, BotTimer};
+use crate::Dir;
 use kartoffels_cpu::Mmio;
 use rand::{Rng, RngCore};
 
 pub struct BotMmio<'a> {
-    pub timer: &'a mut BotTimer,
-    pub battery: &'a mut BotBattery,
-    pub serial: &'a mut BotSerial,
-    pub motor: &'a mut BotMotor,
     pub arm: &'a mut BotArm,
+    pub battery: &'a mut BotBattery,
+    pub motor: &'a mut BotMotor,
     pub radar: &'a mut BotRadar,
+    pub serial: &'a mut BotSerial,
+    pub timer: &'a mut BotTimer,
     pub ctxt: BotMmioContext<'a>,
 }
 
@@ -35,6 +36,7 @@ impl<'a> Mmio for BotMmio<'a> {
 }
 
 pub struct BotMmioContext<'a> {
+    pub dir: &'a mut Dir,
     pub rng: &'a mut dyn RngCore,
 }
 

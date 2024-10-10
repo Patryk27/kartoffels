@@ -1,6 +1,5 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
@@ -19,69 +18,60 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     .chain(INSTRUCTION.clone())
     .collect(),
 
-    buttons: vec![
-        DialogButton::confirm("scoooby doooby dooo, let's catch them", ()),
-    ],
+    buttons: vec![DialogButton::confirm(
+        "scoooby doooby dooo, let's catch them",
+        (),
+    )],
 });
 
-#[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
     body: INSTRUCTION.clone(),
-
-    buttons: vec![
-        DialogButton::confirm("got it", HelpDialogResponse::Close),
-    ],
+    buttons: vec![HelpDialogResponse::close()],
 });
 
-#[rustfmt::skip]
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
-    DialogLine::new("# arm_wait()"),
-    DialogLine::new(""),
-    DialogLine::new(
-        "as you can guess, this boi waits until the arm is ready (until it's \
-         armed, you could say)",
-    ),
-    DialogLine::new(""),
-    DialogLine::new("# arm_stab()"),
-    DialogLine::new(""),
-    DialogLine::new(
-        "stabs the bot that's directly in front of you, killing it and giving \
-         your robot one point - note that you have to be _facing_ the other \
-         bot in order to stab it",
-    ),
-    DialogLine::new(""),
-    DialogLine::new("easy enough, isn't it?"),
-    DialogLine::new(""),
-    DialogLine::new(
-        "now, to complete the tutorial, implement a bot that does a 3x3 radar \
-         scan, rotates towards the closest enemy robot (`'@'`), goes forward \
-         and stabs it; when no enemy is in sight, let your robot continue \
-         moving in its current direction",
-    ),
-    DialogLine::new(""),
-    DialogLine::new(
-        "for simplicity, the enemies will not try to kill you and they will be \
-         located directly north / east / west / south - i.e. you don't have to \
-         worry about diagonals",
-    ),
-]);
+static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+    vec![
+        DialogLine::new("# arm_wait()"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "as you can guess, this boi waits until the arm is ready (until \
+             it's _armed_, you could say)",
+        ),
+        DialogLine::new(""),
+        DialogLine::new("# arm_stab()"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "stabs the bot that's directly in front of you, killing it and \
+             giving your robot one point - note that you have to be _facing_ \
+             the other bot in order to stab it",
+        ),
+        DialogLine::new(""),
+        DialogLine::new("easy enough, isn't it?"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "now, to complete the tutorial, implement a bot that does a 3x3 \
+             radar scan, rotates towards the closest enemy robot (`'@'`), goes \
+             forward and stabs it; when no enemy is in sight, let your robot \
+             continue moving in its current direction",
+        ),
+        DialogLine::new(""),
+        DialogLine::new(
+            "for simplicity, the enemies will not try to kill you and they \
+             will be located directly north / east / west / south - i.e. you \
+             don't have to worry about diagonals",
+        ),
+    ]
+});
 
-#[rustfmt::skip]
 static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
-
-    body: vec![
-        DialogLine::new("hmm, your robot seems to have died"),
-    ],
-
-    buttons: vec![
-        DialogButton::confirm("let's try again", ()),
-    ],
+    body: vec![DialogLine::new("hmm, your robot seems to have died")],
+    buttons: vec![DialogButton::confirm("let's try again", ())],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     loop {
@@ -102,7 +92,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             }
 
             Err(()) => {
-                ctxt.run_dialog(&DIALOG_RETRY).await?;
+                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
             }
         }
     }
@@ -119,14 +109,12 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
         .set_map({
             let mut map = Map::new(uvec2(20, 10));
 
-            map.rect(ivec2(0, 0), ivec2(19, 9), Tile::new(TileBase::FLOOR));
+            map.rect(ivec2(0, 0), ivec2(19, 9), TileBase::FLOOR);
             map
         })
         .await?;
 
-    ctxt.world
-        .set_spawn(Some(ivec2(10, 9)), Some(Dir::Up))
-        .await?;
+    ctxt.world.set_spawn(ivec2(10, 9), Dir::N).await?;
 
     Ok(())
 }
@@ -146,7 +134,9 @@ async fn setup_dummies(ctxt: &mut StepCtxt) -> Result<()> {
     ];
 
     for pos in dummies {
-        ctxt.world.create_bot(bots::DUMMY, Some(pos)).await?;
+        ctxt.world
+            .create_bot(CreateBotRequest::new(BOT_DUMMY).at(pos))
+            .await?;
     }
 
     Ok(())

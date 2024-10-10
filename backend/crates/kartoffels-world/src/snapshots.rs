@@ -4,11 +4,14 @@ pub use self::systems::*;
 use crate::{BotEvent, BotId, Dir, Map};
 use ahash::AHashMap;
 use glam::IVec2;
-use itertools::Either;
+use itertools::{Either, Itertools};
+use prettytable::{row, Table};
+use std::cmp::Reverse;
 use std::collections::VecDeque;
+use std::fmt;
 use std::sync::Arc;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Snapshot {
     map: Map,
     bots: SnapshotBots,
@@ -24,7 +27,26 @@ impl Snapshot {
     }
 }
 
-#[derive(Debug, Default)]
+impl fmt::Display for Snapshot {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "# map")?;
+        writeln!(f)?;
+        writeln!(f, "```")?;
+        writeln!(f, "{}", self.map)?;
+        writeln!(f, "```")?;
+
+        if !self.bots.is_empty() {
+            writeln!(f)?;
+            writeln!(f, "# bots")?;
+            writeln!(f)?;
+            writeln!(f, "{}", self.bots)?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SnapshotBots {
     alive: SnapshotAliveBots,
     queued: SnapshotQueuedBots,
@@ -59,7 +81,19 @@ impl SnapshotBots {
     }
 }
 
-#[derive(Debug, Default)]
+impl fmt::Display for SnapshotBots {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if !self.alive.is_empty() {
+            writeln!(f, "## alive")?;
+            writeln!(f)?;
+            writeln!(f, "{}", self.alive)?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SnapshotAliveBots {
     entries: Vec<SnapshotAliveBot>,
     id_to_idx: AHashMap<BotId, u8>,
@@ -79,6 +113,14 @@ impl SnapshotAliveBots {
         self.entries.iter()
     }
 
+    pub fn iter_sorted_by_birth(
+        &self,
+    ) -> impl Iterator<Item = &SnapshotAliveBot> {
+        self.entries
+            .iter()
+            .sorted_unstable_by_key(|bot| (Reverse(bot.age), bot.id))
+    }
+
     pub fn iter_sorted_by_scores(
         &self,
     ) -> impl Iterator<Item = &SnapshotAliveBot> + '_ {
@@ -96,7 +138,21 @@ impl SnapshotAliveBots {
     }
 }
 
-#[derive(Debug)]
+impl fmt::Display for SnapshotAliveBots {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut table = Table::init(vec![]);
+
+        table.set_titles(row!["id", "pos", "dir", "age", "score"]);
+
+        for bot in self.iter_sorted_by_scores() {
+            table.add_row(row![bot.id, bot.pos, bot.dir, bot.age, bot.score]);
+        }
+
+        write!(f, "{table}")
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotAliveBot {
     pub id: BotId,
     pub pos: IVec2,
@@ -107,7 +163,7 @@ pub struct SnapshotAliveBot {
     pub events: Vec<Arc<BotEvent>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SnapshotQueuedBots {
     entries: AHashMap<BotId, SnapshotQueuedBot>,
 }
@@ -122,7 +178,7 @@ impl SnapshotQueuedBots {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotQueuedBot {
     pub serial: Arc<VecDeque<u32>>,
     pub events: Vec<Arc<BotEvent>>,

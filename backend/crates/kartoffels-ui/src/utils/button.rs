@@ -1,33 +1,47 @@
-use crate::{theme, Ui};
+use crate::{theme, Render, Ui};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Stylize};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::Widget;
+use ratatui::text::Span;
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
 pub struct Button<'a, T> {
-    pub key: KeyCode,
-    pub label: Cow<'a, str>,
-    pub throwing: Option<T>,
-    pub alignment: Alignment,
-    pub enabled: bool,
+    label: Cow<'a, str>,
+    options: Vec<(Option<KeyCode>, Option<T>)>,
+    alignment: Alignment,
+    enabled: bool,
 }
 
 impl<'a, T> Button<'a, T> {
-    pub fn new(key: KeyCode, label: impl Into<Cow<'a, str>>) -> Self {
+    pub fn new(
+        key: impl Into<Option<KeyCode>>,
+        label: impl Into<Cow<'a, str>>,
+    ) -> Self {
         Self {
-            key,
             label: label.into(),
-            throwing: None,
+            options: vec![(key.into(), None)],
             alignment: Alignment::Left,
             enabled: true,
         }
     }
 
+    pub fn multi(label: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            label: label.into(),
+            options: Default::default(),
+            alignment: Alignment::Left,
+            enabled: true,
+        }
+    }
+
+    pub fn with(mut self, key: KeyCode, event: T) -> Self {
+        self.options.push((Some(key), Some(event)));
+        self
+    }
+
     pub fn throwing(mut self, event: T) -> Self {
-        self.throwing = Some(event);
+        self.options.last_mut().unwrap().1 = Some(event);
         self
     }
 
@@ -47,38 +61,23 @@ impl<'a, T> Button<'a, T> {
     }
 
     pub fn width(&self) -> u16 {
-        (Self::key_name(self.key).len() + self.label.len() + 3) as u16
+        if self.is_mouse_only() {
+            self.label.len() as u16 + 2
+        } else {
+            let keys = self
+                .options
+                .iter()
+                .map(|(key, _)| Self::key_name(key.unwrap()).len() as u16)
+                .sum::<u16>();
+
+            let slashes = (self.options.len() - 1) as u16;
+
+            keys + slashes + self.label.len() as u16 + 3
+        }
     }
 
-    pub fn render(self, ui: &mut Ui<T>) -> ButtonResponse {
-        let area = self.layout(ui);
-        let resp = self.response(ui, area);
-        let (key_style, label_style) = self.style(ui, &resp);
-
-        let key = Self::key_name(self.key);
-        let label = &*self.label;
-
-        Line::from_iter([
-            Span::styled("[", label_style),
-            Span::styled(key, key_style),
-            Span::styled("] ", label_style),
-            Span::styled(label, label_style),
-        ])
-        .render(area, ui.buf());
-
-        if ui.layout().is_row() {
-            ui.space(area.width);
-        } else {
-            ui.space(area.height);
-        }
-
-        if resp.pressed {
-            if let Some(event) = self.throwing {
-                ui.throw(event);
-            }
-        }
-
-        resp
+    fn is_mouse_only(&self) -> bool {
+        self.options.len() == 1 && self.options[0].0.is_none()
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
@@ -100,19 +99,43 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
-        let hovered = ui.enabled() && self.enabled && ui.mouse_over(area);
+        if !ui.enabled() || !self.enabled {
+            return ButtonResponse {
+                hovered: false,
+                pressed: false,
+                option: None,
+            };
+        }
 
-        let pressed = {
-            let by_mouse = hovered && ui.mouse_pressed();
+        let hovered = ui.mouse_over(area);
 
-            let by_keyboard = ui.enabled()
-                && self.enabled
-                && ui.key(self.key, Modifiers::NONE);
-
-            by_mouse || by_keyboard
+        let mouse_option = if ui.mouse_over(area) && ui.mouse_pressed() {
+            // TODO support multi-buttons
+            Some(0)
+        } else {
+            None
         };
 
-        ButtonResponse { hovered, pressed }
+        let kbd_option = self
+            .options
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, &(key, _))| {
+                let key = key?;
+
+                if ui.key(key, Modifiers::NONE) {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .next();
+
+        ButtonResponse {
+            hovered,
+            pressed: mouse_option.is_some() || kbd_option.is_some(),
+            option: mouse_option.or(kbd_option),
+        }
     }
 
     fn style(&self, ui: &Ui<T>, response: &ButtonResponse) -> (Style, Style) {
@@ -120,7 +143,7 @@ impl<'a, T> Button<'a, T> {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
-                Style::new().bold().fg(theme::GREEN)
+                Style::new().fg(theme::GREEN)
             }
         } else {
             Style::new().fg(theme::DARK_GRAY)
@@ -151,8 +174,62 @@ impl<'a, T> Button<'a, T> {
     }
 }
 
+impl<T> Render<T> for Button<'_, T> {
+    type Response = ButtonResponse;
+
+    fn render(mut self, ui: &mut Ui<T>) -> Self::Response {
+        let area = self.layout(ui);
+        let resp = self.response(ui, area);
+        let (key_style, label_style) = self.style(ui, &resp);
+        let is_mouse_only = self.is_mouse_only();
+
+        ui.clamp(area, |ui| {
+            ui.row(|ui| {
+                if is_mouse_only {
+                    ui.span(Span::styled("[", label_style));
+                    ui.span(Span::styled(self.label, key_style));
+                    ui.span(Span::styled("]", label_style));
+                } else {
+                    ui.span(Span::styled("[", label_style));
+
+                    for (idx, (key, _)) in self.options.iter().enumerate() {
+                        if idx > 0 {
+                            ui.span(Span::styled("/", label_style));
+                        }
+
+                        ui.span(Span::styled(
+                            Self::key_name(key.unwrap()),
+                            key_style,
+                        ));
+                    }
+
+                    ui.span(Span::styled("] ", label_style));
+                    ui.span(Span::styled(self.label, label_style));
+                }
+            });
+        });
+
+        if ui.layout().is_row() {
+            ui.space(area.width);
+        } else {
+            ui.space(area.height);
+        }
+
+        if resp.pressed {
+            if let Some(idx) = resp.option {
+                if let Some(event) = self.options.swap_remove(idx).1 {
+                    ui.throw(event);
+                }
+            }
+        }
+
+        resp
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct ButtonResponse {
     pub hovered: bool,
     pub pressed: bool,
+    pub option: Option<usize>,
 }

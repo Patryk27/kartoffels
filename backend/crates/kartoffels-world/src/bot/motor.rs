@@ -1,22 +1,13 @@
-use crate::{AliveBot, BotMmioContext, Dir};
+use crate::{AliveBot, BotMmioContext};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotMotor {
-    pub dir: Dir,
     pub vel: u8,
     pub cooldown: u32,
 }
 
 impl BotMotor {
-    pub fn new(dir: Dir) -> Self {
-        Self {
-            dir,
-            vel: 0,
-            cooldown: 0,
-        }
-    }
-
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
     }
@@ -51,9 +42,9 @@ impl BotMotor {
 
                     #[allow(clippy::comparison_chain)]
                     if val < 0 {
-                        self.dir = self.dir.turned_left();
+                        *ctxt.dir = ctxt.dir.turned_left();
                     } else if val > 0 {
-                        self.dir = self.dir.turned_right();
+                        *ctxt.dir = ctxt.dir.turned_right();
                     }
 
                     if val != 0 {
@@ -65,17 +56,6 @@ impl BotMotor {
             }
 
             _ => Err(()),
-        }
-    }
-}
-
-#[cfg(test)]
-impl Default for BotMotor {
-    fn default() -> Self {
-        Self {
-            dir: Dir::Up,
-            vel: Default::default(),
-            cooldown: Default::default(),
         }
     }
 }

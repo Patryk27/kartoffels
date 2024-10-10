@@ -1,0 +1,30 @@
+        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+        â da radar returns a scan of the environment around the robot  â
+        â - for starters, you need to know about these two functions:  â
+        â                                                              â
+        â # radar_wait()                                               â
+        â                                                              â
+        â similarly to motor_wait(), this boi waits until the radar is â
+       .â ready to accept another command; it's important to call this â
+      ..â function before operating on the radar                       â
+      ..â                                                              â
+     ...â # radar_scan_3x3()                                           â
+     ...â                                                              â
+     ...â this boi returns a yx-indexed array representing tiles in a  â
+     ...â 3x3 square around the robot, so basically:                   â
+     ...â                                                              â
+     ...â     let scan = radar_scan_3x3();                             â
+     ...â                                                              â
+     ...â ... yields:                                                  â
+     ...â                                                              â
+      ..â     - scan[1][1] = center, always '@'                        â
+      ..â     - scan[0][1] = tile in front of us                       â
+       .â     - scan[2][1] = tile behind us                            â
+        â     - scan[1][0] = tile to our left                          â
+        â     - scan[1][2] = tile to our right                         â
+        â                                                              â
+        â the tiles correspond to what you see on the map, so there's  â
+        â '@', '.' and ' '                                             â
+        â                                                              â
+        â                                               [enter] got it â
+[esc] goââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ

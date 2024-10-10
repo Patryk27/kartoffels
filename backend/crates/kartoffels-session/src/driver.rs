@@ -1,9 +1,10 @@
-use crate::views::game::{HelpDialogRef, Permissions, PollCtxt, PollFn};
+use crate::views::game::{HelpDialogRef, Perms, PollCtxt, PollFn};
 use anyhow::{anyhow, Result};
-use kartoffels_ui::Ui;
+use kartoffels_ui::{theme, Dialog, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
+use tokio::time;
 
 #[derive(Debug)]
 pub struct DrivenGame {
@@ -20,8 +21,8 @@ impl DrivenGame {
         (this, rx)
     }
 
-    pub async fn join(&self, handle: WorldHandle) -> Result<()> {
-        self.send(DriverEvent::Join(handle)).await?;
+    pub async fn join(&self, world: WorldHandle) -> Result<()> {
+        self.send(DriverEvent::Join(world)).await?;
 
         Ok(())
     }
@@ -38,7 +39,7 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn set_perms(&self, perms: Permissions) -> Result<()> {
+    pub async fn set_perms(&self, perms: Perms) -> Result<()> {
         self.send(DriverEvent::SetPerms(perms)).await?;
 
         Ok(())
@@ -46,7 +47,7 @@ impl DrivenGame {
 
     pub async fn update_perms(
         &self,
-        f: impl FnOnce(&mut Permissions) + Send + 'static,
+        f: impl FnOnce(&mut Perms) + Send + 'static,
     ) -> Result<()> {
         self.send(DriverEvent::UpdatePerms(Box::new(f))).await?;
 
@@ -66,6 +67,35 @@ impl DrivenGame {
         self.send(DriverEvent::CloseDialog).await?;
 
         Ok(())
+    }
+
+    pub async fn run_dialog<T>(&self, dialog: &'static Dialog<T>) -> Result<T>
+    where
+        T: Clone + Send + Sync + 'static,
+    {
+        let (tx, rx) = oneshot::channel();
+        let mut tx = Some(tx);
+
+        self.open_dialog(move |ui| {
+            let resp = ui.catch(|ui| {
+                dialog.render(ui);
+            });
+
+            if let Some(resp) = resp {
+                if let Some(tx) = tx.take() {
+                    _ = tx.send(resp);
+                }
+            }
+        })
+        .await?;
+
+        let resp = rx.await?;
+
+        time::sleep(theme::FRAME_TIME).await;
+
+        self.close_dialog().await?;
+
+        Ok(resp)
     }
 
     pub async fn set_help(&self, dialog: Option<HelpDialogRef>) -> Result<()> {
@@ -134,8 +164,8 @@ pub enum DriverEvent {
     Join(WorldHandle),
     Pause,
     Resume,
-    SetPerms(Permissions),
-    UpdatePerms(Box<dyn FnOnce(&mut Permissions) + Send>),
+    SetPerms(Perms),
+    UpdatePerms(Box<dyn FnOnce(&mut Perms) + Send>),
     OpenDialog(Box<dyn FnMut(&mut Ui<()>) + Send>),
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),

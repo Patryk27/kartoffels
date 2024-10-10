@@ -1,6 +1,5 @@
 #![feature(let_chains)]
 
-mod bots;
 mod driver;
 mod drivers;
 mod utils;
@@ -19,48 +18,49 @@ use tracing::info;
 pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
     info!("session started");
 
+    let mut bg = Background::new(term);
+
     loop {
-        match main_ex(term, store).await {
+        match main_ex(term, store, &mut bg).await {
             Ok(_) => {
                 return Ok(());
             }
 
             Err(err) => {
-                if let Some(abort) = err.downcast_ref::<Abort>() {
-                    if abort.soft {
-                        continue;
+                match err.downcast::<Abort>() {
+                    Ok(abort) => {
+                        if abort.soft {
+                            // Let soft-aborts generate a new background, just
+                            // for fun
+                            bg = Background::new(term);
+                            continue;
+                        } else {
+                            return Err(abort.into());
+                        }
+                    }
+
+                    Err(err) => {
+                        error::run(term, &bg, err).await?;
                     }
                 }
-
-                return Err(err);
             }
         }
     }
 }
 
-async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
+async fn main_ex(
+    term: &mut Term,
+    store: &Store,
+    bg: &mut Background,
+) -> Result<()> {
     loop {
-        let mut bg = Background::new(term);
-
-        match home::run(term, &mut bg).await? {
+        match home::run(term, store, bg).await? {
+            #[allow(clippy::while_let_loop)]
             home::Response::Play => loop {
-                match play::run(term, store, &mut bg).await? {
+                match play::run(term, store, bg).await? {
                     play::Response::Play(world) => {
-                        run_game(term, |game| {
-                            drivers::online::run(world, game)
-                        })
-                        .await?;
-                    }
-
-                    play::Response::Sandbox => {
-                        run_game(term, |game| {
-                            drivers::sandbox::run(store, game)
-                        })
-                        .await?;
-                    }
-
-                    play::Response::Challenges => {
-                        challenges::run(term, &mut bg).await?;
+                        drive(term, |game| drivers::online::run(world, game))
+                            .await?;
                     }
 
                     play::Response::GoBack => {
@@ -69,10 +69,27 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
                 }
             },
 
-            home::Response::Tutorial => {
-                run_game(term, |game| drivers::tutorial::run(store, game))
-                    .await?;
+            home::Response::Sandbox => {
+                drive(term, |game| drivers::sandbox::run(store, game)).await?;
             }
+
+            home::Response::Tutorial => {
+                drive(term, |game| drivers::tutorial::run(store, game)).await?;
+            }
+
+            #[allow(clippy::while_let_loop)]
+            home::Response::Challenges => loop {
+                match challenges::run(term, bg).await? {
+                    challenges::Response::Play(challenge) => {
+                        drive(term, |game| (challenge.run)(store, game))
+                            .await?;
+                    }
+
+                    challenges::Response::GoBack => {
+                        break;
+                    }
+                }
+            },
 
             home::Response::Quit => {
                 return Ok(());
@@ -81,7 +98,7 @@ async fn main_ex(term: &mut Term, store: &Store) -> Result<()> {
     }
 }
 
-async fn run_game<F, Fut>(term: &mut Term, f: F) -> Result<()>
+async fn drive<F, Fut>(term: &mut Term, f: F) -> Result<()>
 where
     F: FnOnce(DrivenGame) -> Fut,
     Fut: Future<Output = Result<()>>,

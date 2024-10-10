@@ -1,21 +1,23 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Dir, Event, Map, Snapshot};
+use crate::{BotId, ClockSpeed, Dir, Event, Map, Snapshot};
 use anyhow::{anyhow, Context, Result};
+use derivative::Derivative;
 use futures_util::Stream;
 use glam::IVec2;
 use kartoffels_utils::Id;
 use std::borrow::Cow;
 use std::future::Future;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
 use tokio_stream::wrappers::{BroadcastStream, WatchStream};
 use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
 pub struct Handle {
     pub(super) inner: Arc<HandleInner>,
+    pub(super) permit: Option<Arc<OwnedSemaphorePermit>>,
 }
 
 impl Handle {
@@ -38,16 +40,33 @@ impl Handle {
         WatchStream::new(self.inner.snapshots.subscribe())
     }
 
-    pub async fn pause(&self) -> Result<()> {
-        self.send(Request::Pause).await?;
+    pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {
+        self.permit = Some(Arc::new(permit));
+        self
+    }
 
-        Ok(())
+    pub async fn tick(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Tick { tx }).await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn pause(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Pause { tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn resume(&self) -> Result<()> {
-        self.send(Request::Resume).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::Resume { tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn shutdown(&self) -> Result<()> {
@@ -58,49 +77,70 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn create_bot(
-        &self,
-        src: impl Into<Cow<'static, [u8]>>,
-        pos: Option<IVec2>,
-    ) -> Result<BotId> {
+    pub async fn create_bot(&self, req: CreateBotRequest) -> Result<BotId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::CreateBot {
-            src: src.into(),
-            pos,
-            tx,
-        })
-        .await?;
+        self.send(Request::CreateBot { req, tx }).await?;
 
         rx.await.context(Self::ERR)?
     }
 
-    pub async fn restart_bot(&self, id: BotId) -> Result<()> {
-        self.send(Request::RestartBot { id }).await?;
+    pub async fn kill_bot(
+        &self,
+        id: BotId,
+        reason: impl ToString,
+    ) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::KillBot {
+            id,
+            reason: reason.to_string(),
+            tx,
+        })
+        .await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn destroy_bot(&self, id: BotId) -> Result<()> {
-        self.send(Request::DestroyBot { id }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::DestroyBot { id, tx }).await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn set_map(&self, map: Map) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::SetMap { map, tx }).await?;
+
+        rx.await.context(Self::ERR)
     }
 
     pub async fn set_spawn(
         &self,
-        point: Option<IVec2>,
-        dir: Option<Dir>,
+        point: impl Into<Option<IVec2>>,
+        dir: impl Into<Option<Dir>>,
     ) -> Result<()> {
-        self.send(Request::SetSpawn { point, dir }).await?;
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::SetSpawn {
+            point: point.into(),
+            dir: dir.into(),
+            tx,
+        })
+        .await?;
+
+        rx.await.context(Self::ERR)
     }
 
-    pub async fn set_map(&self, map: Map) -> Result<()> {
-        self.send(Request::SetMap { map }).await?;
+    pub async fn overclock(&self, speed: ClockSpeed) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
 
-        Ok(())
+        self.send(Request::Overclock { speed, tx }).await?;
+
+        rx.await.context(Self::ERR)?
     }
 
     async fn send(&self, request: Request) -> Result<()> {
@@ -126,36 +166,108 @@ pub struct HandleInner {
 pub type RequestTx = mpsc::Sender<Request>;
 pub type RequestRx = mpsc::Receiver<Request>;
 
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub enum Request {
-    Pause,
-    Resume,
+    Tick {
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
+    Pause {
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
+    Resume {
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
 
     Shutdown {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateBot {
-        src: Cow<'static, [u8]>,
-        pos: Option<IVec2>,
+        req: CreateBotRequest,
+
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
-    RestartBot {
+    KillBot {
         id: BotId,
+        reason: String,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
     },
 
     DestroyBot {
         id: BotId,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
+    SetMap {
+        map: Map,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
     },
 
     SetSpawn {
         point: Option<IVec2>,
         dir: Option<Dir>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
     },
 
-    SetMap {
-        map: Map,
+    Overclock {
+        speed: ClockSpeed,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<Result<()>>,
     },
+}
+
+#[derive(Derivative)]
+#[derivative(Debug)]
+pub struct CreateBotRequest {
+    #[derivative(Debug = "ignore")]
+    pub src: Cow<'static, [u8]>,
+    pub pos: Option<IVec2>,
+    pub dir: Option<Dir>,
+    pub oneshot: bool,
+}
+
+impl CreateBotRequest {
+    pub fn new(src: impl Into<Cow<'static, [u8]>>) -> Self {
+        Self {
+            src: src.into(),
+            pos: None,
+            dir: None,
+            oneshot: false,
+        }
+    }
+
+    pub fn at(mut self, pos: IVec2) -> Self {
+        self.pos = Some(pos);
+        self
+    }
+
+    pub fn facing(mut self, dir: Dir) -> Self {
+        self.dir = Some(dir);
+        self
+    }
+
+    pub fn oneshot(mut self) -> Self {
+        self.oneshot = true;
+        self
+    }
 }
 
 // ---

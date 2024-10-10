@@ -2,15 +2,19 @@
 resolver = "2"
 
 members = [
-    "crates/bot-dummy",
-    "crates/bot-roberto",
+    "crates/bots/chl-acyclic-maze",
+    "crates/bots/dummy",
+    "crates/bots/roberto",
+    "crates/bots/tut-01",
+    "crates/bots/tut-02",
+    "crates/bots/tut-03",
     "crates/kartoffel",
-    "crates/kartoffels",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
     "crates/kartoffels-server",
     "crates/kartoffels-session",
     "crates/kartoffels-store",
+    "crates/kartoffels-toolbox",
     "crates/kartoffels-ui",
     "crates/kartoffels-utils",
     "crates/kartoffels-world",
@@ -23,6 +27,7 @@ edition = "2021"
 [workspace.dependencies]
 ahash = { version = "0.8.11", features = ["serde"] }
 anyhow = "1.0.82"
+avt = "0.13.0"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
 base64 = "0.22.1"
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -39,7 +44,9 @@ itertools = "0.12.1"
 lru = "0.12.3"
 maybe-owned = { version = "0.3.4", features = ["serde"] }
 num-traits = { version = "0.2.19", default-features = false }
+ordinal = "0.3.2"
 pretty_assertions = "1.4.0"
+prettytable-rs = "0.10.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 rand_chacha = "0.3.1"
 ratatui = { git = "https://github.com/ratatui/ratatui", features = ["unstable-backend-writer", "unstable-rendered-line-info", "unstable-widget-ref"] }
@@ -48,19 +55,47 @@ russh-keys = "0.45.0"
 serde = { version = "1.0.200", features = ["derive", "rc"] }
 serde_bytes = "0.11.14"
 serde_json = "1.0.117"
+sha256 = "1.5.0"
 spin = "0.9.8"
 talc = "4.4.1"
 termwiz = "0.22.0"
 test-case = "3.3.1"
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full", "test-util"] }
 tokio-stream = { version = "0.1.15", features = ["sync"] }
+tokio-tungstenite = "0.21.0"
 tokio-util = "0.7.11"
 tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tungstenite = "0.21.0"
 
-[workspace.metadata.crane]
+# ---
+
+[package]
 name = "kartoffels"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+kartoffels-server = { path = "./crates/kartoffels-server" }
+kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
+
+[dev-dependencies]
+avt.workspace = true
+base64.workspace = true
+futures-util.workspace = true
+kartoffels-store = { path = "./crates/kartoffels-store" }
+kartoffels-world = { path = "./crates/kartoffels-world" }
+termwiz.workspace = true
+tokio-tungstenite.workspace = true
+tokio-util.workspace = true
+tokio.workspace = true
+tracing-subscriber.workspace = true
+tungstenite.workspace = true
+
+# ---
 
 [profile.dist]
 inherits = "release"

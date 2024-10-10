@@ -1,13 +1,12 @@
 use super::prelude::*;
 
-#[rustfmt::skip]
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
         DialogLine::new(
             "how about we implement a *line following robot* to solidify all \
-             this knowledge, eh?"
+             this knowledge, eh?",
         ),
         DialogLine::new(""),
     ]
@@ -15,12 +14,9 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     .chain(INSTRUCTION.clone())
     .collect(),
 
-    buttons: vec![
-        DialogButton::confirm("let's implement a line-follower", ()),
-    ],
+    buttons: vec![DialogButton::confirm("let's implement a line-follower", ())],
 });
 
-#[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
@@ -39,54 +35,46 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         ])
         .collect(),
 
-    buttons: vec![
-        DialogButton::confirm("got it", HelpDialogResponse::Close),
-    ],
+    buttons: vec![HelpDialogResponse::close()],
 });
 
-#[rustfmt::skip]
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| vec![
-    DialogLine::new(
-        "a line following robot does what its name says - it uses radar to \
-         check where to go next and then goes there, like:",
-    ),
-    DialogLine::new(""),
-    DialogLine::new("\t1. scan the area"),
-    DialogLine::new("\t2a. if there's `'.'` in front you, move there"),
-    DialogLine::new("\t2b. or, if there's `'.'` to your left, turn left"),
-    DialogLine::new("\t2c. or, if there's `'.'` to your right, turn right"),
-    DialogLine::new("\t2d. otherwise stop"),
-    DialogLine::new("\t3. go to 1"),
-    DialogLine::new(""),
-    DialogLine::new("overall, all of those functions should be used:"),
-    DialogLine::new(""),
-    DialogLine::new("\t- `motor_wait()`"),
-    DialogLine::new("\t- `motor_step()`"),
-    DialogLine::new("\t- `motor_turn_left()`"),
-    DialogLine::new("\t- `motor_turn_right()`"),
-    DialogLine::new("\t- `radar_wait()`"),
-    DialogLine::new("\t- `radar_scan_3x3()`"),
-    DialogLine::new(""),
-    DialogLine::new(
-        "... and `serial_send_str()` might come handy for debugging!",
-    ),
-]);
+static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+    vec![
+        DialogLine::new(
+            "a line following robot does what its name says - it uses radar to \
+             check where to go next and then goes there, like:",
+        ),
+        DialogLine::new(""),
+        DialogLine::new("\t1. scan the area"),
+        DialogLine::new("\t2a. if there's `'.'` in front you, move there"),
+        DialogLine::new("\t2b. or, if there's `'.'` to your left, turn left"),
+        DialogLine::new("\t2c. or, if there's `'.'` to your right, turn right"),
+        DialogLine::new("\t2d. otherwise stop"),
+        DialogLine::new("\t3. go to 1"),
+        DialogLine::new(""),
+        DialogLine::new("overall, all of those functions should be used:"),
+        DialogLine::new(""),
+        DialogLine::new("\t- `motor_wait()`"),
+        DialogLine::new("\t- `motor_step()`"),
+        DialogLine::new("\t- `motor_turn_left()`"),
+        DialogLine::new("\t- `motor_turn_right()`"),
+        DialogLine::new("\t- `radar_wait()`"),
+        DialogLine::new("\t- `radar_scan_3x3()`"),
+        DialogLine::new(""),
+        DialogLine::new(
+            "... and `serial_send_str()` might come handy for debugging!",
+        ),
+    ]
+});
 
-#[rustfmt::skip]
 static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
-
-    body: vec![
-        DialogLine::new("hmm, your robot seems to have died"),
-    ],
-
-    buttons: vec![
-        DialogButton::confirm("let's try again", ()),
-    ],
+    body: vec![DialogLine::new("hmm, your robot seems to have died")],
+    buttons: vec![DialogButton::confirm("let's try again", ())],
 });
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.run_dialog(&DIALOG).await?;
+    ctxt.game.run_dialog(&DIALOG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     ctxt.game
@@ -111,7 +99,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             }
 
             Err(()) => {
-                ctxt.run_dialog(&DIALOG_RETRY).await?;
+                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
             }
         }
     }
@@ -122,9 +110,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
 }
 
 async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.world
-        .set_spawn(Some(ivec2(10, 10)), Some(Dir::Right))
-        .await?;
+    ctxt.world.set_spawn(ivec2(10, 10), Dir::E).await?;
 
     ctxt.world
         .set_map({
@@ -146,7 +132,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
                     ivec2(10, 13),
                     ivec2(10, 12),
                 ],
-                Tile::new(TileBase::FLOOR),
+                TileBase::FLOOR,
             );
 
             map

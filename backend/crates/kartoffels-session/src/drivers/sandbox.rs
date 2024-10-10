@@ -1,20 +1,8 @@
-use crate::views::game::{HelpDialog, HelpDialogResponse, Permissions};
-use crate::DrivenGame;
-use anyhow::Result;
-use glam::uvec2;
-use kartoffels_store::Store;
-use kartoffels_ui::{Dialog, DialogButton, DialogLine};
-use kartoffels_world::prelude::{
-    Config, DeathmatchModeConfig, DungeonThemeConfig, ModeConfig, Policy,
-    ThemeConfig,
-};
-use std::future;
-use std::sync::LazyLock;
-use termwiz::input::KeyCode;
+use crate::drivers::prelude::*;
 
-const MAX_BOTS: usize = 20;
+const SIZE: UVec2 = uvec2(64, 32);
+const MAX_BOTS: usize = 16;
 
-#[rustfmt::skip]
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     title: Some(" help "),
 
@@ -35,42 +23,126 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("# rules"),
         DialogLine::new(""),
         DialogLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
-        DialogLine::new("- as compared to the online play, in here you're allowed to"),
+        DialogLine::new(
+            "- as compared to the online play, in here you're allowed to",
+        ),
         DialogLine::new("  destroy bots, restart them etc."),
-        DialogLine::new("- you can also spawn *roberto*, the built-in moderately"),
+        DialogLine::new(
+            "- you can also spawn *roberto*, the built-in moderately",
+        ),
         DialogLine::new("  challenging bot"),
-        DialogLine::new("- a new world is generated every time you open the sandbox"),
+        DialogLine::new(
+            "- a new world is generated every time you open the sandbox",
+        ),
     ],
 
-    buttons: vec![
-        DialogButton::new(
-            KeyCode::Escape,
-            "close",
-            HelpDialogResponse::Close,
-        ).right_aligned(),
-    ],
+    buttons: vec![HelpDialogResponse::close()],
 });
 
 pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
+    let world = init(store, &game).await?;
+
+    create_map(store, &world).await?;
+
+    game.set_perms(Perms::SANDBOX).await?;
+    game.set_status(None).await?;
+
+    future::pending().await
+}
+
+async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
-    game.set_perms(Permissions::SANDBOX).await?;
+    game.set_perms(Perms::SANDBOX.disabled()).await?;
+    game.set_status(Some("BUILDING WORLD".into())).await?;
 
     let world = store.create_world(Config {
         name: "sandbox".into(),
-        mode: ModeConfig::Deathmatch(DeathmatchModeConfig {
-            round_duration: None,
-        }),
-        theme: ThemeConfig::Dungeon(DungeonThemeConfig {
-            size: uvec2(64, 32),
-        }),
         policy: Policy {
             auto_respawn: true,
             max_alive_bots: MAX_BOTS,
             max_queued_bots: MAX_BOTS,
         },
+        ..Default::default()
+    })?;
+
+    game.join(world.clone()).await?;
+
+    Ok(world)
+}
+
+async fn create_map(store: &Store, world: &Handle) -> Result<()> {
+    utils::create_map(store, world, |tx| async move {
+        let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
+        let map = create_map_ex(rng, tx).await?;
+
+        Ok(map)
+    })
+    .await?;
+
+    Ok(())
+}
+
+async fn create_map_ex(
+    mut rng: impl RngCore,
+    progress: mpsc::Sender<Map>,
+) -> Result<Map> {
+    const NOT_VISITED: u8 = 0;
+    const VISITED: u8 = 1;
+
+    let mut map = DungeonTheme::new(SIZE).create_map(&mut rng)?;
+    let mut nth = 0;
+    let mut frontier = Vec::new();
+
+    // ---
+
+    for _ in 0..1024 {
+        if frontier.len() >= 2 {
+            break;
+        }
+
+        let pos = map.sample_pos(&mut rng);
+
+        if map.get(pos).is_floor() {
+            frontier.push(pos);
+        }
+    }
+
+    // ---
+
+    while !frontier.is_empty() {
+        let idx = rng.gen_range(0..frontier.len());
+        let pos = frontier.swap_remove(idx);
+
+        if map.get(pos).meta[0] == NOT_VISITED {
+            map.get_mut(pos).meta[0] = VISITED;
+
+            for dir in Dir::all() {
+                if map.contains(pos + dir) {
+                    frontier.push(pos + dir);
+                }
+            }
+
+            if nth % 64 == 0 {
+                let map = map.clone().map(|_, tile| {
+                    if tile.meta[0] == NOT_VISITED {
+                        TileBase::VOID.into()
+                    } else {
+                        tile
+                    }
+                });
+
+                _ = progress.send(map).await;
+            }
+
+            nth += 1;
+        }
+    }
+
+    // ---
+
+    map.for_each_mut(|_, tile| {
+        tile.meta[0] = 0;
     });
 
-    game.join(world).await?;
-
-    future::pending().await
+    Ok(map)
 }

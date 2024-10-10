@@ -22,16 +22,19 @@ use glam::IVec2;
 use itertools::Either;
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
-    SnapshotStreamExt,
+    BotId, ClockSpeed, CreateBotRequest, Handle as WorldHandle,
+    Snapshot as WorldSnapshot, SnapshotStream, SnapshotStreamExt,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::task::Poll;
 use std::time::Instant;
+use tracing::debug;
 
 pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
+    debug!("run()");
+
     let mut state = State::default();
 
     loop {
@@ -64,16 +67,16 @@ struct State {
     help: Option<HelpDialogRef>,
     map: Map,
     paused: bool,
-    perms: Permissions,
+    perms: Perms,
     poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
-    status: Option<String>,
+    speed: ClockSpeed,
+    status: Option<(String, Instant)>,
 }
 
 impl State {
     fn render(&mut self, ui: &mut Ui<Event>) {
-        // TODO doesn't belong here
         if let Some(bot) = &self.bot {
             if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
@@ -101,13 +104,17 @@ impl State {
                 BottomPanel::render(ui, self);
             });
 
-            ui.clamp(side_area, |ui| {
-                SidePanel::render(ui, self);
-            });
+            if self.handle.is_some() {
+                ui.enable(self.perms.ui_enabled, |ui| {
+                    ui.clamp(side_area, |ui| {
+                        SidePanel::render(ui, self);
+                    });
 
-            ui.clamp(map_area, |ui| {
-                Map::render(ui, self);
-            });
+                    ui.clamp(map_area, |ui| {
+                        Map::render(ui, self);
+                    });
+                });
+            }
         });
 
         if let Some(dialog) = &mut self.dialog {
@@ -214,11 +221,9 @@ impl State {
                 match BASE64_STANDARD.decode(src) {
                     Ok(src) => src,
                     Err(err) => {
-                        self.dialog =
-                            Some(Dialog::Error(ErrorDialog::new(format!(
-                                "couldn't decode pasted content:\n\n{}",
-                                err
-                            ))));
+                        self.dialog = Some(Dialog::Error(ErrorDialog::new(
+                            format!("couldn't decode pasted content:\n\n{err}"),
+                        )));
 
                         return Ok(());
                     }
@@ -228,14 +233,19 @@ impl State {
             Either::Right(src) => src,
         };
 
-        let id = self.handle.as_ref().unwrap().create_bot(src, None).await;
+        let id = self
+            .handle
+            .as_ref()
+            .unwrap()
+            .create_bot(CreateBotRequest::new(src))
+            .await;
 
         let id = match id {
             Ok(id) => id,
 
             Err(err) => {
                 self.dialog =
-                    Some(Dialog::Error(ErrorDialog::new(format!("{:?}", err))));
+                    Some(Dialog::Error(ErrorDialog::new(format!("{err:?}"))));
 
                 return Ok(());
             }

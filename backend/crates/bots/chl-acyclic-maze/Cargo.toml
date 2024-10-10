@@ -1,0 +1,7 @@
+[package]
+name = "bot-chl-acyclic-maze"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+kartoffel = { path = "../../kartoffel" }

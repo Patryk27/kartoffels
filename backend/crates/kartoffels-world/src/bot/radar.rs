@@ -91,7 +91,7 @@ impl BotRadar {
 impl Default for BotRadar {
     fn default() -> Self {
         Self {
-            payload: vec![TileBase::UNKNOWN; 9 * 9],
+            payload: vec![TileBase::VOID; 9 * 9],
             cooldown: Default::default(),
             pending_scan: Default::default(),
         }
@@ -130,7 +130,7 @@ impl BotRadarDistance {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AliveBots, Tile};
+    use crate::AliveBots;
     use glam::uvec2;
     use indoc::indoc;
     use itertools::Itertools;
@@ -164,9 +164,9 @@ mod tests {
         let map = {
             let mut map = Map::new(uvec2(7, 7));
 
-            map.rect(ivec2(0, 0), ivec2(6, 6), Tile::new(TileBase::FLOOR));
-            map.set(ivec2(3, 1), Tile::new(TileBase::FLAG));
-            map.set(ivec2(3, 2), Tile::new(TileBase::BOT));
+            map.rect(ivec2(0, 0), ivec2(6, 6), TileBase::FLOOR);
+            map.set(ivec2(3, 1), TileBase::FLAG);
+            map.set(ivec2(3, 2), TileBase::BOT);
             map
         };
 
@@ -174,13 +174,17 @@ mod tests {
         let bots = bots.locator();
         let mut radar = BotRadar::default();
         let mut rng = ChaCha8Rng::from_seed(Default::default());
-        let mut ctxt = BotMmioContext { rng: &mut rng };
+
+        let mut ctxt = BotMmioContext {
+            dir: &mut Dir::N,
+            rng: &mut rng,
+        };
 
         // ---
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 3).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::N);
 
         radar.assert::<3>(indoc! {"
             . @ .
@@ -192,7 +196,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Up);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::N);
 
         radar.assert::<5>(indoc! {"
             . . = . .
@@ -206,7 +210,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Right);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::E);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -220,7 +224,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Left);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::W);
 
         radar.assert::<5>(indoc! {"
             . . . . .
@@ -234,7 +238,7 @@ mod tests {
 
         radar.mmio_store(&mut ctxt, AliveBot::MEM_RADAR, 5).unwrap();
         radar.cooldown = 0;
-        radar.tick(&map, &bots, ivec2(3, 3), Dir::Down);
+        radar.tick(&map, &bots, ivec2(3, 3), Dir::S);
 
         radar.assert::<5>(indoc! {"
             . . . . .

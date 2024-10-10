@@ -1,5 +1,5 @@
 use crate::{
-    Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
+    Clock, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
     SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileBase, World,
 };
 use ahash::AHashMap;
@@ -26,12 +26,14 @@ pub fn run(world: &mut World, state: &mut State) {
 
     let bots = prepare_bots(world);
     let map = prepare_map(&bots, world);
+    let snapshot = Arc::new(Snapshot { map, bots });
 
-    world
-        .snapshots
-        .send_replace(Arc::new(Snapshot { map, bots }));
+    world.snapshots.send_replace(snapshot);
 
-    state.next_run_at = Instant::now() + Duration::from_millis(50);
+    state.next_run_at = match world.clock {
+        Clock::Auto { .. } => Instant::now() + Duration::from_millis(50),
+        Clock::Manual { .. } => Instant::now(),
+    };
 }
 
 fn prepare_bots(world: &World) -> SnapshotBots {
@@ -50,9 +52,9 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         .iter()
         .map(|entry| SnapshotAliveBot {
             id: entry.id,
-            pos: entry.pos,
-            dir: entry.bot.motor.dir,
-            age: entry.bot.timer.age(),
+            pos: entry.bot.pos,
+            dir: entry.bot.dir,
+            age: entry.bot.timer.age(&world.clock),
             score: scores.get(&entry.id).copied().unwrap_or_default(),
             serial: Arc::new(entry.bot.serial.buffer.clone()),
             events: Default::default(), // TODO
@@ -71,7 +73,7 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
         idx.sort_unstable_by_key(|idx| {
             let bot = &entries[*idx as usize];
 
-            (Reverse(bot.score), Reverse(bot.age))
+            (Reverse(bot.score), Reverse(bot.age), bot.id)
         });
 
         idx
@@ -113,7 +115,7 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
             meta: [idx as u8, 0, 0],
         };
 
-        let chevron_pos = bot.pos + bot.dir.as_vec();
+        let chevron_pos = bot.pos + bot.dir;
 
         let chevron_tile = Tile {
             base: TileBase::BOT_CHEVRON,

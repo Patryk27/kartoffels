@@ -1,5 +1,4 @@
 use super::{Cpu, Mmio};
-use anyhow::{anyhow, Context, Result};
 
 macro_rules! arg {
     ($word:expr => $($val:ident),*) => {
@@ -49,10 +48,11 @@ macro_rules! arg {
 }
 
 impl Cpu {
-    pub(super) fn do_tick(&mut self, mmio: &mut dyn Mmio) -> Result<bool> {
-        let word = self
-            .mem_load::<4>(mmio, self.pc)
-            .context("cannot fetch instruction")? as u32;
+    pub(super) fn do_tick(
+        &mut self,
+        mmio: &mut dyn Mmio,
+    ) -> Result<(), Box<str>> {
+        let word = self.mem_load::<4>(mmio, self.pc)? as u32;
 
         let op = word & 0x7f;
         let funct3 = (word >> 12) & 0x7;
@@ -74,7 +74,7 @@ impl Cpu {
 
             ($name:ident ( $self:ident, $($arg:ident),* ) try $body:tt) => {{
                 #[inline(never)]
-                fn $name($self: &mut Cpu, word: u32) -> Result<()> {
+                fn $name($self: &mut Cpu, word: u32) -> Result<(), Box<str>> {
                     arg!(word => $($arg),*);
                     $body;
 
@@ -96,7 +96,11 @@ impl Cpu {
 
             ($name:ident ( $self:ident+$mmio:ident, $($arg:ident),* ) try $body:tt) => {{
                 #[inline(never)]
-                fn $name($self: &mut Cpu, $mmio: &mut dyn Mmio, word: u32) -> Result<()> {
+                fn $name(
+                    $self: &mut Cpu,
+                    $mmio: &mut dyn Mmio,
+                    word: u32,
+                ) -> Result<(), Box<str>> {
                     arg!(word => $($arg),*);
                     $body;
 
@@ -109,7 +113,7 @@ impl Cpu {
 
         macro_rules! err_unknown {
             () => {
-                anyhow!("unknown instruction: 0x{:08x}", word)
+                format!("unknown instruction: 0x{word:08x}").into()
             };
         }
 
@@ -726,7 +730,7 @@ impl Cpu {
                 jal(this, rd, j_imm) try {
                     #[cfg(test)]
                     if j_imm == 0 {
-                        return Err(anyhow!("infinite loop detected"));
+                        return Err("infinite loop detected".into());
                     }
 
                     this.reg_store(rd, this.pc as i64);
@@ -749,9 +753,9 @@ impl Cpu {
                 arg!(word => i_imm);
 
                 match i_imm {
+                    // ebreak
                     0x01 => {
-                        // ebreak
-                        return Ok(false);
+                        return Err("got `ebreak`".into());
                     }
 
                     _ => {
@@ -765,7 +769,7 @@ impl Cpu {
             }
         }
 
-        Ok(true)
+        Ok(())
     }
 
     fn do_branch(
@@ -790,7 +794,7 @@ impl Cpu {
         rs1: usize,
         rs2: usize,
         op: fn(i64, i64) -> i64,
-    ) -> Result<()> {
+    ) -> Result<(), Box<str>> {
         let addr = self.regs[rs1] as u64;
         let old_val = self.mem_load::<BYTES>(mmio, addr)?;
         let new_val = op(old_val, self.regs[rs2]);

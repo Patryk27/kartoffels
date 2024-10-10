@@ -1,18 +1,24 @@
 use ciborium::Value as CborValue;
 use serde_json::{Number as JsonNumber, Value as JsonValue};
 
-pub fn cbor_to_json(val: CborValue) -> JsonValue {
+pub fn cbor_to_json(val: CborValue, censor_bytes: bool) -> JsonValue {
     match val {
         CborValue::Integer(val) => {
             JsonValue::Number((i128::from(val) as i64).into())
         }
 
-        CborValue::Bytes(val) => JsonValue::Array(
-            val.into_iter()
-                .map(JsonNumber::from)
-                .map(JsonValue::Number)
-                .collect(),
-        ),
+        CborValue::Bytes(val) => {
+            if censor_bytes {
+                JsonValue::String("[bytes]".into())
+            } else {
+                JsonValue::Array(
+                    val.into_iter()
+                        .map(JsonNumber::from)
+                        .map(JsonValue::Number)
+                        .collect(),
+                )
+            }
+        }
 
         CborValue::Float(val) => {
             JsonValue::Number(JsonNumber::from_f64(val).unwrap())
@@ -22,18 +28,21 @@ pub fn cbor_to_json(val: CborValue) -> JsonValue {
         CborValue::Bool(val) => JsonValue::Bool(val),
         CborValue::Null => JsonValue::Null,
 
-        CborValue::Array(val) => {
-            JsonValue::Array(val.into_iter().map(cbor_to_json).collect())
-        }
+        CborValue::Array(val) => JsonValue::Array(
+            val.into_iter()
+                .map(|val| cbor_to_json(val, censor_bytes))
+                .collect(),
+        ),
 
         CborValue::Map(val) => JsonValue::Object(
             val.into_iter()
                 .map(|(key, val)| {
-                    let JsonValue::String(key) = cbor_to_json(key) else {
+                    let JsonValue::String(key) = cbor_to_json(key, false)
+                    else {
                         panic!();
                     };
 
-                    let val = cbor_to_json(val);
+                    let val = cbor_to_json(val, censor_bytes);
 
                     (key, val)
                 })

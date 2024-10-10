@@ -1,24 +1,30 @@
-use pretty_assertions as pa;
-use std::fs;
+use pretty_assertions::private::CreateComparison;
 use std::path::{Path, PathBuf};
+use std::{fs, thread};
 
 #[derive(Clone, Debug)]
 pub struct Asserter {
     dir: PathBuf,
+    failed: bool,
 }
 
 impl Asserter {
     pub fn new(dir: impl AsRef<Path>) -> Self {
+        let dir = dir.as_ref();
+
+        assert!(dir.exists(), "directory not found: {dir:?}");
+
         Self {
-            dir: dir.as_ref().to_owned(),
+            dir: dir.to_owned(),
+            failed: false,
         }
     }
 
     pub fn assert(
-        &self,
+        &mut self,
         fixture: impl AsRef<str>,
         actual: impl AsRef<str>,
-    ) -> &Self {
+    ) -> &mut Self {
         let fixture = fixture.as_ref();
         let actual = actual.as_ref();
 
@@ -30,16 +36,29 @@ impl Asserter {
             _ = fs::remove_file(&expected_new_path);
         } else {
             _ = fs::write(&expected_new_path, actual);
+
+            eprintln!(
+                "found differences between `{}` and `{}`:\n\n{}",
+                expected_path.display(),
+                expected_new_path.display(),
+                (expected, actual).create_comparison(),
+            );
+
+            self.failed = true;
         }
 
-        pa::assert_eq!(
-            expected,
-            actual,
-            "Found differences between `{}` and `{}`",
-            expected_path.display(),
-            expected_new_path.display(),
-        );
-
         self
+    }
+}
+
+impl Drop for Asserter {
+    fn drop(&mut self) {
+        if thread::panicking() {
+            return;
+        }
+
+        if self.failed {
+            panic!("some assertions failed");
+        }
     }
 }
