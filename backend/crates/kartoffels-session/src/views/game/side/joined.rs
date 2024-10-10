@@ -3,6 +3,7 @@ use crate::BotIdExt;
 use itertools::Either;
 use kartoffels_ui::{theme, Button, RectExt, Render, Ui};
 use kartoffels_world::prelude::{SnapshotAliveBot, SnapshotQueuedBot};
+use ordinal::Ordinal;
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Line;
@@ -90,7 +91,7 @@ impl JoinedSidePanel {
             };
 
             ui.span(status.fg(theme::PINK));
-            ui.span(format!(" ({})", bot.place));
+            ui.span(format!(" ({})", Ordinal(bot.place)));
         });
     }
 

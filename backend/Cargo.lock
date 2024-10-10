@@ -1524,6 +1524,7 @@ dependencies = [
  "kartoffels-ui",
  "kartoffels-utils",
  "kartoffels-world",
+ "ordinal",
  "rand",
  "rand_chacha",
  "ratatui",
@@ -1937,6 +1938,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a91171844676f8c7990ce64959210cd2eaef32c2612c50f9fae9f8aaa6065a6"
 dependencies = [
  "num-traits",
+]
+
+[[package]]
+name = "ordinal"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c80c1530f46e9d8985706d7deb80b83172b250538902f607dea6cd6028851083"
+dependencies = [
+ "num-integer",
 ]
 
 [[package]]
