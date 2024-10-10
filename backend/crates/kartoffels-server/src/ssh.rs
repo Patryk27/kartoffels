@@ -68,7 +68,7 @@ pub async fn start(
 }
 
 async fn load_key(store: &Store) -> Result<KeyPair> {
-    let path = store.dir.join("ssh.key");
+    let path = store.dir.as_ref().unwrap().join("ssh.key");
 
     if !path.exists() {
         info!(?path, "generating server key");

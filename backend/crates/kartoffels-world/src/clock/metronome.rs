@@ -28,15 +28,18 @@ impl Metronome {
     }
 
     pub fn tick(&mut self) {
-        let interval = {
-            let speed = match self.speed {
-                ClockSpeed::Normal => 1,
-                ClockSpeed::Faster => 2,
-                ClockSpeed::Fastest => 4,
-            };
-
-            self.interval.as_nanos() as i64 / speed
+        let speed = match self.speed {
+            ClockSpeed::Normal => Some(1),
+            ClockSpeed::Faster => Some(2),
+            ClockSpeed::Fastest => Some(4),
+            ClockSpeed::Unlimited => None,
         };
+
+        let Some(speed) = speed else {
+            return;
+        };
+
+        let interval = self.interval.as_nanos() as i64 / speed;
 
         self.backlog += TimeDelta::nanoseconds(
             interval - self.now.elapsed().as_nanos() as i64,

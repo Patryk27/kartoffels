@@ -5,6 +5,9 @@ members = [
     "crates/bots/chl-acyclic-maze",
     "crates/bots/dummy",
     "crates/bots/roberto",
+    "crates/bots/tut-01",
+    "crates/bots/tut-02",
+    "crates/bots/tut-03",
     "crates/kartoffel",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
@@ -57,14 +60,14 @@ spin = "0.9.8"
 talc = "4.4.1"
 termwiz = "0.22.0"
 test-case = "3.3.1"
-tokio = { version = "1.37.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full", "test-util"] }
 tokio-stream = { version = "0.1.15", features = ["sync"] }
-tokio-tungstenite = "0.24.0"
+tokio-tungstenite = "0.21.0"
 tokio-util = "0.7.11"
 tower-http = { version = "0.5.2", features = ["auth", "cors", "trace", "validate-request"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tungstenite = "0.24.0"
+tungstenite = "0.21.0"
 
 # ---
 
@@ -81,8 +84,10 @@ kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
 
 [dev-dependencies]
 avt.workspace = true
+base64.workspace = true
 futures-util.workspace = true
 kartoffels-store = { path = "./crates/kartoffels-store" }
+kartoffels-world = { path = "./crates/kartoffels-world" }
 termwiz.workspace = true
 tokio-tungstenite.workspace = true
 tokio-util.workspace = true

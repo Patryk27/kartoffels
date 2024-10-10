@@ -91,7 +91,7 @@ mod tests {
 
         let elf_dir = Path::new("..")
             .join("..")
-            .join("target")
+            .join("target.bots")
             .join("riscv64-kartoffel-bot")
             .join("release");
 
@@ -110,7 +110,7 @@ mod tests {
 
         let elf_path = Path::new("..")
             .join("..")
-            .join("target")
+            .join("target.bots")
             .join("riscv64-kartoffel-bot")
             .join("release")
             .join("xx-ints");

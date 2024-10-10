@@ -91,8 +91,9 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!(?self, "starting");
 
-        let store =
-            Store::open(&self.data, self.bench).await.with_context(|| {
+        let store = Store::open(Some(&self.data), self.bench)
+            .await
+            .with_context(|| {
                 format!("couldn't load store from `{}`", self.data.display())
             })?;
 

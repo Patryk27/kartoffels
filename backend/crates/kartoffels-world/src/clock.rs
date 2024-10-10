@@ -43,4 +43,5 @@ pub enum ClockSpeed {
     Normal,
     Faster,
     Fastest,
+    Unlimited,
 }

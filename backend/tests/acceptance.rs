@@ -1,3 +1,5 @@
+#![feature(async_fn_track_caller)]
+
 mod acceptance {
     mod challenges;
     mod home;
@@ -6,14 +8,17 @@ mod acceptance {
 
 use anyhow::Result;
 use avt::Vt;
+use base64::Engine;
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use kartoffels_store::Store;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use termwiz::input::{
     KeyCode, KeyCodeEncodeModes, KeyboardEncoding, Modifiers,
 };
 use tokio::net::TcpListener;
+use tokio::process::Command;
 use tokio::task::{self, JoinHandle};
 use tokio::{fs, time};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
@@ -21,6 +26,7 @@ use tokio_util::sync::CancellationToken;
 use tungstenite::Error as WsError;
 
 struct TestContext {
+    store: Arc<Store>,
     server: JoinHandle<Result<()>>,
     term: Vt,
     stdin: Box<dyn Sink<WsMessage, Error = WsError> + Unpin>,
@@ -36,19 +42,16 @@ impl TestContext {
     }
 
     async fn new_ex(cols: usize, rows: usize) -> Self {
-        let addr;
+        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let store = Arc::new(Store::test().await);
+        let shutdown = CancellationToken::new();
+        let addr = listener.local_addr().unwrap();
 
-        let server = {
-            let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
-            let store = Arc::new(Store::test());
-            let shutdown = CancellationToken::new();
-
-            addr = listener.local_addr().unwrap();
-
-            task::spawn(kartoffels_server::http::start(
-                listener, store, shutdown,
-            ))
-        };
+        let server = task::spawn(kartoffels_server::http::start(
+            listener,
+            store.clone(),
+            shutdown,
+        ));
 
         let client = time::timeout(Duration::from_secs(1), async move {
             loop {
@@ -78,6 +81,7 @@ impl TestContext {
         stdout.next().await.unwrap().unwrap();
 
         Self {
+            store,
             server,
             term: Vt::new(cols, rows),
             stdin: Box::new(stdin),
@@ -114,6 +118,7 @@ impl TestContext {
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
     }
 
+    #[track_caller]
     pub async fn wait_for(&mut self, text: &str) {
         let result = time::timeout(Duration::from_secs(1), async {
             while !self.stdout().contains(text) {
@@ -123,12 +128,14 @@ impl TestContext {
         .await;
 
         if result.is_err() {
-            let stdout = self.term.text().join("\n");
-
-            panic!("wait_for(\"{text}\") failed, stdout was:\n\n{stdout}");
+            panic!(
+                "wait_for(\"{text}\") failed, stdout was:\n\n{}",
+                self.stdout()
+            );
         }
     }
 
+    #[track_caller]
     pub async fn wait_while(&mut self, text: &str) {
         let result = time::timeout(Duration::from_secs(1), async {
             while self.stdout().contains(text) {
@@ -138,12 +145,33 @@ impl TestContext {
         .await;
 
         if result.is_err() {
-            let stdout = self.term.text().join("\n");
-
-            panic!("wait_while(\"{text}\") failed, stdout was:\n\n{stdout}");
+            panic!(
+                "wait_while(\"{text}\") failed, stdout was:\n\n{}",
+                self.stdout()
+            );
         }
     }
 
+    #[track_caller]
+    pub async fn wait_for_change(&mut self) {
+        let result = time::timeout(Duration::from_secs(1), async {
+            let stdout = self.stdout();
+
+            while self.stdout() == stdout {
+                self.recv().await;
+            }
+        })
+        .await;
+
+        if result.is_err() {
+            panic!(
+                "wait_for_change() failed, stdout was:\n\n{}",
+                self.stdout()
+            );
+        }
+    }
+
+    #[track_caller]
     pub fn see(&mut self, text: &str) {
         let stdout = self.stdout();
 
@@ -152,6 +180,7 @@ impl TestContext {
         }
     }
 
+    #[track_caller]
     pub async fn see_frame(&mut self, expected_path: &str) {
         let actual = self.stdout();
 
@@ -167,16 +196,57 @@ impl TestContext {
         } else {
             fs::write(&new_path, actual).await.unwrap();
 
-            panic!("snapshot(\"{expected_path}\") failed");
+            panic!("see_frame(\"{expected_path}\") failed");
         }
     }
 
+    #[track_caller]
     pub fn dont_see(&mut self, text: &str) {
         let stdout = self.stdout();
 
         if stdout.contains(text) {
             panic!("not_see(\"{text}\") failed, stdout was:\n\n{stdout}");
         }
+    }
+
+    pub async fn upload_bot(&mut self, name: &str) {
+        let status = Command::new("just")
+            .arg("bot")
+            .arg(name)
+            .status()
+            .await
+            .unwrap();
+
+        if !status.success() {
+            panic!("upload_bot(\"{name}\") failed");
+        }
+
+        let bot = fs::read(
+            Path::new("target.bots")
+                .join("riscv64-kartoffel-bot")
+                .join("release")
+                .join(format!("bot-{name}")),
+        )
+        .await
+        .unwrap();
+
+        let payload = base64::engine::general_purpose::STANDARD.encode(bot);
+
+        let bracketed_paste_beg = "\x1b[200~";
+        let bracketed_paste_end = "\x1b[201~";
+
+        let payload = bracketed_paste_beg
+            .bytes()
+            .chain(payload.bytes())
+            .chain(bracketed_paste_end.bytes())
+            .collect();
+
+        self.press(KeyCode::Char('u')).await;
+        self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
+    }
+
+    pub fn store(&self) -> &Store {
+        &self.store
     }
 
     pub fn stdout(&self) -> String {

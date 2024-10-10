@@ -1,9 +1,9 @@
 [alias]
-build-cpu-tests = "build -p kartoffels-cpu-tests --release --target ../../riscv64-kartoffel-bot.json -Z build-std -Z build-std-features=compiler-builtins-mem"
+build-cpu-tests = "build -p kartoffels-cpu-tests --release --target ../../riscv64-kartoffel-bot.json --target-dir ../../target.bots -Z build-std -Z build-std-features=compiler-builtins-mem"
 
 [env]
-KARTOFFELS_BOT_DUMMY = "../../../target/riscv64-kartoffel-bot/release/bot-dummy"
-KARTOFFELS_BOT_ROBERTO = "../../../target/riscv64-kartoffel-bot/release/bot-roberto"
+KARTOFFELS_BOT_DUMMY = "../../../target.bots/riscv64-kartoffel-bot/release/bot-dummy"
+KARTOFFELS_BOT_ROBERTO = "../../../target.bots/riscv64-kartoffel-bot/release/bot-roberto"
 
 [target.riscv64-kartoffel-bot]
 rustflags = [

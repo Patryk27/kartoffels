@@ -16,7 +16,7 @@ impl Menu {
     pub fn height<T>(store: &Store, ui: &Ui<T>) -> u16 {
         let height = if ui.ty().is_ssh() { 7 } else { 5 };
 
-        if store.worlds.is_empty() {
+        if store.worlds.public.is_empty() {
             height
         } else {
             height + 1
@@ -29,7 +29,7 @@ impl Menu {
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            if !store.worlds.is_empty() {
+            if !store.worlds.public.is_empty() {
                 Button::new(KeyCode::Char('p'), "play")
                     .throwing(Response::Play)
                     .centered()

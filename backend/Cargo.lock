@@ -225,7 +225,7 @@ dependencies = [
  "sha1",
  "sync_wrapper 1.0.1",
  "tokio",
- "tokio-tungstenite 0.21.0",
+ "tokio-tungstenite",
  "tower",
  "tower-layer",
  "tower-service",
@@ -386,6 +386,27 @@ dependencies = [
 
 [[package]]
 name = "bot-roberto"
+version = "0.4.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
+name = "bot-tut-01"
+version = "0.4.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
+name = "bot-tut-02"
+version = "0.4.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
+name = "bot-tut-03"
 version = "0.4.0"
 dependencies = [
  "kartoffel",
@@ -1446,17 +1467,19 @@ version = "0.4.0"
 dependencies = [
  "anyhow",
  "avt",
+ "base64 0.22.1",
  "clap",
  "futures-util",
  "kartoffels-server",
  "kartoffels-store",
  "kartoffels-toolbox",
+ "kartoffels-world",
  "termwiz",
  "tokio",
- "tokio-tungstenite 0.24.0",
+ "tokio-tungstenite",
  "tokio-util",
  "tracing-subscriber",
- "tungstenite 0.24.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -3242,19 +3265,7 @@ dependencies = [
  "futures-util",
  "log",
  "tokio",
- "tungstenite 0.21.0",
-]
-
-[[package]]
-name = "tokio-tungstenite"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc5f74e248dc973e0dbb7b74c7e0d6fcc301c694ff50049504004ef4d0cdcd9"
-dependencies = [
- "futures-util",
- "log",
- "tokio",
- "tungstenite 0.24.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -3395,24 +3406,6 @@ dependencies = [
  "sha1",
  "thiserror",
  "url",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
-dependencies = [
- "byteorder",
- "bytes",
- "data-encoding",
- "http",
- "httparse",
- "log",
- "rand",
- "sha1",
- "thiserror",
  "utf-8",
 ]
 

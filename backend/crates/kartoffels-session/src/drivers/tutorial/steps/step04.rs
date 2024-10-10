@@ -4,7 +4,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     title: Some(" tutorial "),
 
     body: vec![
-        DialogLine::new("faboulous!").fg(theme::PINK).bold(),
+        DialogLine::new("fabulous!").fg(theme::PINK).bold(),
         DialogLine::new(""),
         DialogLine::new(
             "now launch vscode, vim, emacs or whatever gives your life colors \

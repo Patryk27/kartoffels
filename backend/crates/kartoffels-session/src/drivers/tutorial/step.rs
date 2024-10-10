@@ -27,6 +27,11 @@ impl StepCtxt {
                 max_queued_bots: 16,
             },
             theme: Some(Theme::Arena(ArenaTheme::new(12))),
+            rng: if store.testing {
+                Some(Default::default())
+            } else {
+                None
+            },
             ..Default::default()
         })?;
 

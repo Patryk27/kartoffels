@@ -1,0 +1,30 @@
+
+        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+        â how about we implement a line following robot to solidify    â
+        â all this knowledge, eh?                                      â
+        â                                                              â
+        â a line following robot does what its name says - it uses     â
+        â radar to check where to go next and then goes there, like:   â
+       .â                                                              â
+      ..â     1. scan the area                                         â
+      ..â     2a. if there's '.' in front you, move there              â
+     ...â     2b. or, if there's '.' to your left, turn left           â
+     ...â     2c. or, if there's '.' to your right, turn right         â
+     ...â     2d. otherwise stop                                       â
+     ...â     3. go to 1                                               â
+     ...â                                                              â
+     ...â overall, all of those functions should be used:              â
+     ...â                                                              â
+     ...â     - motor_wait()                                           â
+     ...â     - motor_step()                                           â
+      ..â     - motor_turn_left()                                      â
+      ..â     - motor_turn_right()                                     â
+       .â     - radar_wait()                                           â
+        â     - radar_scan_3x3()                                       â
+        â                                                              â
+        â ... and serial_send_str() might come handy for debugging!    â
+        â                                                              â
+        â                      [enter] let's implement a line-follower â
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help

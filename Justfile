@@ -42,10 +42,10 @@ bot name:
            -p bot-{{ name }} \
            --release \
            --target riscv64-kartoffel-bot.json \
+           --target-dir target.bots \
            -Z build-std \
            -Z build-std-features=compiler-builtins-mem
 
 bots:
-    just bot chl-acyclic-maze
     just bot dummy
     just bot roberto

@@ -118,6 +118,7 @@ impl BottomPanel {
                 ClockSpeed::Normal => None,
                 ClockSpeed::Faster => Some("SPD:FASTER"),
                 ClockSpeed::Fastest => Some("SPD:FASTERER"),
+                ClockSpeed::Unlimited => Some("SPD:UNLIM"),
             };
 
             if let Some(speed) = speed {

@@ -18,18 +18,19 @@ pub async fn run(
             .draw(|ui| {
                 let width = store
                     .worlds
+                    .public
                     .iter()
                     .map(|world| world.name().len() as u16 + 4)
                     .max()
                     .unwrap_or(0)
                     .max(11);
 
-                let height = store.worlds.len() as u16 + 2;
+                let height = store.worlds.public.len() as u16 + 2;
 
                 bg.render(ui);
 
                 ui.info_window(width, height, Some(" play "), |ui| {
-                    for (idx, world) in store.worlds.iter().enumerate() {
+                    for (idx, world) in store.worlds.public.iter().enumerate() {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
                         if Button::new(key, world.name()).render(ui).pressed {
@@ -37,9 +38,7 @@ pub async fn run(
                         }
                     }
 
-                    if !store.worlds.is_empty() {
-                        ui.space(1);
-                    }
+                    ui.space(1);
 
                     Button::new(KeyCode::Escape, "go back")
                         .throwing(Response::GoBack)
