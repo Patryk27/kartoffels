@@ -6,6 +6,7 @@ mod v06;
 mod v07;
 mod v08;
 mod v09;
+mod v10;
 
 use crate::storage::VERSION;
 use anyhow::Result;
@@ -21,6 +22,7 @@ const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] = [
     v07::run,
     v08::run,
     v09::run,
+    v10::run,
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
@@ -35,27 +37,17 @@ pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use kartoffels_utils::{cbor_to_json, json_to_cbor, Asserter};
-    use std::fs;
-    use std::path::Path;
+    use kartoffels_utils::{cbor_to_json, json_to_cbor};
+    use pretty_assertions as pa;
 
-    pub fn run(nth: u32) {
-        let dir = Path::new("src")
-            .join("storage")
-            .join("migrations")
-            .join(format!("v{:02}", nth))
-            .join("test");
-
-        let given_path = dir.join("given.json");
-
-        let given = fs::read_to_string(&given_path).unwrap();
-        let given = serde_json::from_str(&given).unwrap();
+    pub fn run(nth: u32, given: &str, expected: &str) {
+        let given = serde_json::from_str(given).unwrap();
         let given = json_to_cbor(given);
 
         let actual = super::run(nth - 1, nth, given).unwrap();
         let actual = cbor_to_json(actual, false);
         let actual = serde_json::to_string_pretty(&actual).unwrap();
 
-        Asserter::new(dir).assert("expected.json", actual);
+        pa::assert_eq!(expected.trim(), actual.trim());
     }
 }
