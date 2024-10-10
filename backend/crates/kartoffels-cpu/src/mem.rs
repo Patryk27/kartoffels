@@ -1,5 +1,3 @@
-//! TODO prepare a special message for possible stack overflows
-
 use super::{Cpu, Mmio};
 
 impl Cpu {

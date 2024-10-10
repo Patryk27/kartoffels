@@ -77,7 +77,6 @@ struct State {
 
 impl State {
     fn render(&mut self, ui: &mut Ui<Event>) {
-        // TODO doesn't belong here
         if let Some(bot) = &self.bot {
             if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
