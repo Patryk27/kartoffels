@@ -107,41 +107,34 @@ impl<'a, T> Button<'a, T> {
             };
         }
 
-        let option = {
-            // TODO
-            let by_mouse = None;
-
-            let by_keyboard = self
-                .options
-                .iter()
-                .enumerate()
-                .filter_map(|(idx, &(key, _))| {
-                    let key = key?;
-
-                    if ui.key(key, Modifiers::NONE) {
-                        Some(idx)
-                    } else {
-                        None
-                    }
-                })
-                .next();
-
-            by_mouse.or(by_keyboard)
-        };
-
         let hovered = ui.mouse_over(area);
 
-        let pressed = {
-            let by_mouse = hovered && ui.mouse_pressed();
-            let by_keyboard = option.is_some();
-
-            by_mouse || by_keyboard
+        let mouse_option = if ui.mouse_over(area) && ui.mouse_pressed() {
+            // TODO support multi-buttons
+            Some(0)
+        } else {
+            None
         };
+
+        let kbd_option = self
+            .options
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, &(key, _))| {
+                let key = key?;
+
+                if ui.key(key, Modifiers::NONE) {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .next();
 
         ButtonResponse {
             hovered,
-            pressed,
-            option,
+            pressed: mouse_option.is_some() || kbd_option.is_some(),
+            option: mouse_option.or(kbd_option),
         }
     }
 
