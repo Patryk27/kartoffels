@@ -372,42 +372,42 @@ dependencies = [
 
 [[package]]
 name = "bot-chl-acyclic-maze"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
 
 [[package]]
 name = "bot-dummy"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
 
 [[package]]
 name = "bot-roberto"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
 
 [[package]]
 name = "bot-tut-01"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
 
 [[package]]
 name = "bot-tut-02"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
 
 [[package]]
 name = "bot-tut-03"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
 ]
@@ -1455,7 +1455,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffel"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "spin",
  "talc",
@@ -1463,7 +1463,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "avt",
@@ -1484,7 +1484,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-cpu"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "elf",
@@ -1495,7 +1495,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-cpu-tests"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "kartoffel",
  "num-traits",
@@ -1505,7 +1505,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-server"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "ahash",
  "anyhow",
@@ -1535,7 +1535,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-session"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1559,7 +1559,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-store"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "kartoffels-utils",
@@ -1570,7 +1570,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-toolbox"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "ciborium",
@@ -1581,7 +1581,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-ui"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "futures-util",
@@ -1594,7 +1594,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-utils"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1609,7 +1609,7 @@ dependencies = [
 
 [[package]]
 name = "kartoffels-world"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "ahash",
  "anyhow",
