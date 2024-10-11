@@ -48,6 +48,10 @@ in
 crane'.buildPackage {
   inherit src cargoVendorDir;
 
+  nativeBuildInputs = with pkgs; [
+    just
+  ];
+
   cargoExtraArgs = "-p kartoffels";
   CARGO_PROFILE = "dist";
   KARTOFFELS_BOT_DUMMY = mkBot "dummy";

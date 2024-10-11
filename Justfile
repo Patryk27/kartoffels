@@ -38,13 +38,7 @@ bless:
 
 bot name:
     cd backend \
-    && cargo build \
-           -p bot-{{ name }} \
-           --release \
-           --target riscv64-kartoffel-bot.json \
-           --target-dir target.bots \
-           -Z build-std \
-           -Z build-std-features=compiler-builtins-mem
+    && just bot {{ name }}
 
 bots:
     just bot dummy
