@@ -34,12 +34,6 @@ test:
 bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
 
-# ---
-
-bot name:
-    cd backend \
-    && just bot {{ name }}
-
 bots:
-    just bot dummy
-    just bot roberto
+    cd backend \
+    && just bots

@@ -11,7 +11,7 @@ let
 
     cargoLockList = [
       ./Cargo.lock
-      "${toolchain.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/Cargo.lock"
+      "${toolchain.passthru.availableComponents.rust-src}/lib/rustlib/src/rust/library/Cargo.lock"
     ];
   };
 
@@ -29,7 +29,7 @@ let
 
         cargoExtraArgs = builtins.concatStringsSep " " [
           "-p bot-${name}"
-          "-Z build-std"
+          "-Z build-std=alloc,core"
           "-Z build-std-features=compiler-builtins-mem"
           "--target ${./riscv64-kartoffel-bot.json}"
         ];

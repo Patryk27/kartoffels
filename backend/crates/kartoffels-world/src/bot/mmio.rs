@@ -13,7 +13,7 @@ pub struct BotMmio<'a> {
     pub ctxt: BotMmioContext<'a>,
 }
 
-impl<'a> Mmio for BotMmio<'a> {
+impl Mmio for BotMmio<'_> {
     fn load(&self, addr: u32) -> Result<u32, ()> {
         self.timer
             .mmio_load(addr)

@@ -68,10 +68,6 @@ impl AliveBots {
         self.entries.len()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
-    }
-
     pub fn pick_ids(&self, rng: &mut impl RngCore) -> Vec<BotId> {
         let mut ids: Vec<_> = self.entries.keys().copied().collect();
 
@@ -79,6 +75,7 @@ impl AliveBots {
         ids
     }
 
+    #[cfg(test)]
     pub fn locator(&self) -> AliveBotsLocator {
         AliveBotsLocator {
             pos_to_id: &self.pos_to_id,

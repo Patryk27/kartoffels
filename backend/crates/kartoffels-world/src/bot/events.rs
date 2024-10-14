@@ -22,10 +22,6 @@ impl BotEvents {
             msg: msg.into(),
         }));
     }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Arc<BotEvent>> {
-        self.entries.iter()
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

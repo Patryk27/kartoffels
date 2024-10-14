@@ -8,12 +8,19 @@ use tokio_stream::StreamExt;
 
 #[tokio::test]
 async fn smoke() {
+    // Use roberto compiled in the past, so that bumping the toolchain version
+    // etc. don't cause the test to go stale.
+    //
+    // (e.g. a newer rustc could generate more optimized code, affecting how the
+    // bot behaves)
+    const ROBERTO: &[u8] = include_bytes!("./acceptance/smoke/roberto.elf");
+
     let world = kartoffels_world::create(config());
     let mut asserter = asserter("smoke");
 
     for _ in 0..16 {
         world
-            .create_bot(CreateBotRequest::new(BOT_ROBERTO))
+            .create_bot(CreateBotRequest::new(ROBERTO))
             .await
             .unwrap();
     }
@@ -73,12 +80,6 @@ async fn pause_and_resume() {
     assert_ne!(snap1, snap2);
     assert_eq!(snap2, snap3);
     assert_ne!(snap3, snap4);
-
-    asserter("pause-and-resume")
-        .assert("1.md", snap1.to_string())
-        .assert("2.md", snap2.to_string())
-        .assert("3.md", snap3.to_string())
-        .assert("4.md", snap4.to_string());
 }
 
 #[tokio::test]

@@ -36,6 +36,7 @@ impl QueuedBots {
         self.reindex();
     }
 
+    #[cfg(test)]
     pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
         let place = *self.id_to_place.get(&id)?;
         let bot = &self.entries[place as usize];
@@ -57,10 +58,6 @@ impl QueuedBots {
 
     pub fn len(&self) -> usize {
         self.entries.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
     }
 
     fn reindex(&mut self) {

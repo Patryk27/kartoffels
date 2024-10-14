@@ -68,10 +68,6 @@ impl Metronome {
         self.speed = speed;
     }
 
-    pub fn interval(&self) -> Duration {
-        self.interval
-    }
-
     pub fn measure<T>(f: impl FnOnce() -> T) -> (T, Duration) {
         let tt = Instant::now();
         let result = f();

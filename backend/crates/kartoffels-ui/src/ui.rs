@@ -20,7 +20,7 @@ pub struct Ui<'a, T> {
     pub(super) thrown: &'a mut Option<T>,
 }
 
-impl<'a, T> Ui<'a, T> {
+impl<T> Ui<'_, T> {
     pub fn ty(&self) -> TermType {
         self.ty
     }

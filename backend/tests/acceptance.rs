@@ -222,7 +222,7 @@ impl TestContext {
         }
 
         let bot = fs::read(
-            Path::new("target.bots")
+            Path::new("target.riscv")
                 .join("riscv64-kartoffel-bot")
                 .join("release")
                 .join(format!("bot-{name}")),

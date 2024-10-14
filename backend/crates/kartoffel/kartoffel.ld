@@ -13,9 +13,10 @@ SECTIONS {
     .text : {
         KEEP(*(.init))
         *(.text .text.*)
-        *(.rodata .rodata.*)
         *(.data .data.*)
+        *(.rodata .rodata.*)
         *(.sdata .sdata.*)
+        *(.srodata .srodata.*)
         *(.bss .bss.*)
         *(.sbss .sbss.*)
         *(.eh_frame)
