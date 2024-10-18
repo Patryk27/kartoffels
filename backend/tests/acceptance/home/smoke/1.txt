@@ -1,0 +1,29 @@
+
+
+         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+         â welcome to kartoffels, a game where you're given a potato: â
+         â                                                            â
+         â                           ââââââ                           â
+         â                         ââââââââââ                         â
+         â                       ââââââââââââââ                       â
+         â                       ââââââââââââââ                       â
+         â                         ââââââââââââ                       â
+         â                         ooââââââââoo                       â
+         â                         oo        oo                       â
+         â                                                            â
+         â    ... and your job is to implement a firmware for it!     â
+         â                                                            â
+         â   you've got 64 khz cpu & 128 kb ram at hand and you can   â
+         â  either compete against other players in the online play   â
+         â      or indulge yourself in single-player challenges       â
+         â                                                            â
+         â                         have fun!                          â
+         â                            ~pwy                            â
+         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+                              ââââââââââââââââââââ
+                              â   [s] sandbox    â
+                              â   [t] tutorial   â
+                              â  [c] challenges  â
+                              ââââââââââââââââââââ
+

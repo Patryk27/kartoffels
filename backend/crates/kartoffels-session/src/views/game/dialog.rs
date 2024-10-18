@@ -12,6 +12,7 @@ pub use self::join_bot::*;
 pub use self::leaving::*;
 pub use self::upload_bot::*;
 use super::Event;
+use kartoffels_store::SessionId;
 use kartoffels_ui::{Backdrop, Ui};
 use kartoffels_world::prelude::Snapshot;
 use termwiz::input::{KeyCode, Modifiers};
@@ -29,7 +30,12 @@ pub enum Dialog {
 }
 
 impl Dialog {
-    pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
+    pub fn render(
+        &mut self,
+        ui: &mut Ui<Event>,
+        sess: SessionId,
+        world: &Snapshot,
+    ) {
         Backdrop::render(ui);
 
         match self {
@@ -46,7 +52,7 @@ impl Dialog {
                 this.render(ui);
             }
             Dialog::UploadBot(this) => {
-                this.render(ui);
+                this.render(ui, sess);
             }
 
             Dialog::Help(this) => {

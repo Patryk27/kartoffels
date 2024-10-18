@@ -82,10 +82,8 @@ impl AppChannel {
         )?;
 
         task::spawn(
-            async move {
-                common::start_session(term, store, shutdown).await;
-            }
-            .instrument(self.span.clone()),
+            common::start_session(store, term, shutdown)
+                .instrument(self.span.clone()),
         );
 
         self.state = AppChannelState::Ready { stdin };

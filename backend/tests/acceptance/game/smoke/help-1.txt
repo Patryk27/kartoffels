@@ -1,0 +1,30 @@
+        âââââââââââââââââââââââââââââ help âââââââââââââââââââââââââââââ
+        â hey there and welcome to kartoffels ð                        â507
+        â                                                              â
+        â you're in the online mode, which means that you're playing   â
+        â against bots programmed by other people, deathmatch-style    â
+        â                                                              â
+        â if you want to learn how to create your own bot, go back to  â
+        â the main menu and press [t] - but here's the spirit:         â
+        â                                                              â
+        â # rules                                                      â
+        â                                                              â
+        â - your bot gets a point for each bot killed                  â
+        â - unless the upload queue is full, each killed bot gets      â
+        â   auto-respawned upon death, to keep the party going         â
+        â                                                              â
+        â # controls                                                   â
+        â                                                              â
+        â - use mouse and/or keyboard                                  â
+        â - press [u] to upload a bot                                  â
+        â - press [w/a/s/d] or arrow keys to move the camera           â
+        â - click on any bot visible on map to join it                 â
+        â                                                              â
+        â # uploading a bot                                            â
+        â                                                              â
+        â run git clone https://github.com/Patryk27/kartoffel and      â
+        â consult README.md for further instructions                   â
+        â                                                              â
+        â [c] copy command                                 [esc] close âng
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+[esc] go back  [spc] pause  [h] help  [b] bots

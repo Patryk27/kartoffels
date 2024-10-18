@@ -1,4 +1,5 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
+use kartoffels_store::Store;
 use kartoffels_ui::{theme, Term, Ui};
 use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileBase};
 use rand::{Rng, SeedableRng};
@@ -16,8 +17,12 @@ pub struct Background {
 impl Background {
     const MAP_SIZE: UVec2 = uvec2(256, 256);
 
-    pub fn new(term: &Term) -> Self {
-        let stream = STREAM.subscribe();
+    pub fn new(store: &Store, term: &Term) -> Self {
+        let stream = if store.is_testing() {
+            watch::channel(Default::default()).1
+        } else {
+            STREAM.subscribe()
+        };
 
         // Sample the camera position, so that every time the user opens the
         // menu, we show them a different piece of map.

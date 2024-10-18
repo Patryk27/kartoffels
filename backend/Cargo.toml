@@ -50,6 +50,7 @@ prettytable-rs = "0.10.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 rand_chacha = "0.3.1"
 ratatui = { git = "https://github.com/ratatui/ratatui", features = ["unstable-backend-writer", "unstable-rendered-line-info", "unstable-widget-ref"] }
+reqwest = { version = "0.12.8", default-features = false }
 russh = "0.45.0"
 russh-keys = "0.45.0"
 serde = { version = "1.0.200", features = ["derive", "rc"] }
@@ -88,6 +89,7 @@ base64.workspace = true
 futures-util.workspace = true
 kartoffels-store = { path = "./crates/kartoffels-store" }
 kartoffels-world = { path = "./crates/kartoffels-world" }
+reqwest.workspace = true
 termwiz.workspace = true
 tokio-tungstenite.workspace = true
 tokio-util.workspace = true

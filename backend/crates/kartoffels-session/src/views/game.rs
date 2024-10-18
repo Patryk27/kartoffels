@@ -20,6 +20,7 @@ use base64::Engine;
 use futures_util::FutureExt;
 use glam::IVec2;
 use itertools::Either;
+use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
     BotId, ClockSpeed, CreateBotRequest, Handle as WorldHandle,
@@ -32,7 +33,12 @@ use std::task::Poll;
 use std::time::Instant;
 use tracing::debug;
 
-pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
+pub async fn run(
+    store: &Store,
+    sess: SessionId,
+    term: &mut Term,
+    mut driver: DriverEventRx,
+) -> Result<()> {
     debug!("run()");
 
     let mut state = State::default();
@@ -40,7 +46,7 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
     loop {
         let event = term
             .draw(|ui| {
-                state.render(ui);
+                state.render(ui, sess);
             })
             .await?;
 
@@ -48,7 +54,7 @@ pub async fn run(term: &mut Term, mut driver: DriverEventRx) -> Result<()> {
 
         if let Some(event) = event {
             if let ControlFlow::Break(_) =
-                event.handle(&mut state, term).await?
+                event.handle(store, sess, term, &mut state).await?
             {
                 return Ok(());
             }
@@ -76,7 +82,7 @@ struct State {
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui<Event>) {
+    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
         if let Some(bot) = &self.bot {
             if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
@@ -118,7 +124,7 @@ impl State {
         });
 
         if let Some(dialog) = &mut self.dialog {
-            dialog.render(ui, &self.snapshot);
+            dialog.render(ui, sess, &self.snapshot);
         }
     }
 

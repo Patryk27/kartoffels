@@ -9,19 +9,21 @@ use tokio_util::sync::CancellationToken;
 use tracing::info;
 
 pub async fn start_session(
-    mut term: Term,
     store: Arc<Store>,
+    mut term: Term,
     shutdown: CancellationToken,
 ) {
     _ = term.init().await;
 
+    let sess = store.create_session();
+
     let result = {
-        let session = kartoffels_session::main(&mut term, &store);
-        let session = AssertUnwindSafe(session).catch_unwind();
-        let session = pin!(session);
+        let sess = kartoffels_session::main(&store, &sess, &mut term);
+        let sess = AssertUnwindSafe(sess).catch_unwind();
+        let sess = pin!(sess);
 
         select! {
-            result = session => Some(result),
+            result = sess => Some(result),
             _ = shutdown.cancelled() => None,
         }
     };

@@ -7,8 +7,8 @@ use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub async fn run(
-    term: &mut Term,
     store: &Store,
+    term: &mut Term,
     bg: &Background,
 ) -> Result<Response> {
     debug!("run()");
@@ -17,20 +17,20 @@ pub async fn run(
         let resp = term
             .draw(|ui| {
                 let width = store
-                    .worlds
-                    .public
+                    .public_worlds()
                     .iter()
                     .map(|world| world.name().len() as u16 + 4)
                     .max()
                     .unwrap_or(0)
                     .max(11);
 
-                let height = store.worlds.public.len() as u16 + 2;
+                let height = store.public_worlds().len() as u16 + 2;
 
                 bg.render(ui);
 
                 ui.info_window(width, height, Some(" play "), |ui| {
-                    for (idx, world) in store.worlds.public.iter().enumerate() {
+                    for (idx, world) in store.public_worlds().iter().enumerate()
+                    {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
                         if Button::new(key, world.name()).render(ui).pressed {

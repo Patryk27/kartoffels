@@ -55,7 +55,7 @@ async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     game.set_perms(Perms::SANDBOX.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
-    let world = store.create_world(Config {
+    let world = store.create_private_world(Config {
         name: "sandbox".into(),
         policy: Policy {
             auto_respawn: true,

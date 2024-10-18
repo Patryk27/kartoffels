@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+             ââââââââââââââââââââââââ ouch ââââââââââââââââââââââââ
+             â too many robots queued, try again in a moment      â
+             â                                                    â
+             â                                     [enter] got it â
+             ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        [j] join bot
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help  [b] bots

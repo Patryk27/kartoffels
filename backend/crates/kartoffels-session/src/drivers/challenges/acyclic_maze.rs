@@ -79,7 +79,7 @@ async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
     game.set_perms(Perms::CHALLENGE.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 
-    let world = store.create_world(Config {
+    let world = store.create_private_world(Config {
         name: "challenge:acyclic-maze".into(),
         policy: Policy {
             auto_respawn: false,
@@ -113,7 +113,7 @@ async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
     // ---
 
     utils::create_map(store, &world, |tx| async move {
-        let seed = if store.testing {
+        let seed = if store.is_testing() {
             Default::default()
         } else {
             rand::thread_rng().gen()

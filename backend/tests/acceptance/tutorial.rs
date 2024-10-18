@@ -5,7 +5,7 @@ use termwiz::input::{KeyCode, Modifiers};
 use tokio::time;
 
 async fn ctxt() -> TestContext {
-    let mut ctxt = TestContext::new().await;
+    let mut ctxt = TestContext::new([]).await;
 
     ctxt.wait_for(TestContext::HOME).await;
     ctxt.see("[t] tutorial");
@@ -169,8 +169,7 @@ async fn flow() {
     ctxt.wait_for_change().await;
 
     ctxt.store()
-        .worlds
-        .first_private()
+        .first_private_world()
         .overclock(ClockSpeed::Fastest)
         .await
         .unwrap();
@@ -217,8 +216,7 @@ async fn flow() {
     ctxt.wait_for_change().await;
 
     ctxt.store()
-        .worlds
-        .first_private()
+        .first_private_world()
         .overclock(ClockSpeed::Unlimited)
         .await
         .unwrap();

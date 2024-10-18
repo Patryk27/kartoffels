@@ -9,19 +9,20 @@ use self::driver::*;
 use self::utils::*;
 use self::views::*;
 use anyhow::Result;
-use kartoffels_store::Store;
+use kartoffels_store::{SessionId, SessionToken, Store};
 use kartoffels_ui::{Abort, Term};
 use std::future::Future;
 use tokio::select;
-use tracing::info;
 
-pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
-    info!("session started");
-
-    let mut bg = Background::new(term);
+pub async fn main(
+    store: &Store,
+    sess: &SessionToken,
+    term: &mut Term,
+) -> Result<()> {
+    let mut bg = Background::new(store, term);
 
     loop {
-        match main_ex(term, store, &mut bg).await {
+        match main_ex(store, sess.id(), term, &mut bg).await {
             Ok(_) => {
                 return Ok(());
             }
@@ -32,7 +33,7 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
                         if abort.soft {
                             // Let soft-aborts generate a new background, just
                             // for fun
-                            bg = Background::new(term);
+                            bg = Background::new(store, term);
                             continue;
                         } else {
                             return Err(abort.into());
@@ -49,18 +50,21 @@ pub async fn main(term: &mut Term, store: &Store) -> Result<()> {
 }
 
 async fn main_ex(
-    term: &mut Term,
     store: &Store,
+    sess: SessionId,
+    term: &mut Term,
     bg: &mut Background,
 ) -> Result<()> {
     loop {
-        match home::run(term, store, bg).await? {
+        match home::run(store, term, bg).await? {
             #[allow(clippy::while_let_loop)]
             home::Response::Play => loop {
-                match play::run(term, store, bg).await? {
+                match play::run(store, term, bg).await? {
                     play::Response::Play(world) => {
-                        drive(term, |game| drivers::online::run(world, game))
-                            .await?;
+                        drive(store, sess, term, |game| {
+                            drivers::online::run(world, game)
+                        })
+                        .await?;
                     }
 
                     play::Response::GoBack => {
@@ -70,19 +74,27 @@ async fn main_ex(
             },
 
             home::Response::Sandbox => {
-                drive(term, |game| drivers::sandbox::run(store, game)).await?;
+                drive(store, sess, term, |game| {
+                    drivers::sandbox::run(store, game)
+                })
+                .await?;
             }
 
             home::Response::Tutorial => {
-                drive(term, |game| drivers::tutorial::run(store, game)).await?;
+                drive(store, sess, term, |game| {
+                    drivers::tutorial::run(store, game)
+                })
+                .await?;
             }
 
             #[allow(clippy::while_let_loop)]
             home::Response::Challenges => loop {
                 match challenges::run(term, bg).await? {
                     challenges::Response::Play(challenge) => {
-                        drive(term, |game| (challenge.run)(store, game))
-                            .await?;
+                        drive(store, sess, term, |game| {
+                            (challenge.run)(store, game)
+                        })
+                        .await?;
                     }
 
                     challenges::Response::GoBack => {
@@ -98,13 +110,18 @@ async fn main_ex(
     }
 }
 
-async fn drive<F, Fut>(term: &mut Term, f: F) -> Result<()>
+async fn drive<F, Fut>(
+    store: &Store,
+    sess: SessionId,
+    term: &mut Term,
+    f: F,
+) -> Result<()>
 where
     F: FnOnce(DrivenGame) -> Fut,
     Fut: Future<Output = Result<()>>,
 {
     let (tx, rx) = DrivenGame::new();
-    let view = Box::pin(game::run(term, rx));
+    let view = Box::pin(game::run(store, sess, term, rx));
     let driver = Box::pin(f(tx));
 
     select! {

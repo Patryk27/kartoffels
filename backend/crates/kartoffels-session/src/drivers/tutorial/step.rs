@@ -19,7 +19,7 @@ impl StepCtxt {
     pub async fn new(store: &Store, game: DrivenGame) -> Result<Self> {
         game.set_perms(Perms::TUTORIAL).await?;
 
-        let world = store.create_world(Config {
+        let world = store.create_private_world(Config {
             name: "tutorial".into(),
             policy: Policy {
                 auto_respawn: false,
@@ -27,7 +27,7 @@ impl StepCtxt {
                 max_queued_bots: 16,
             },
             theme: Some(Theme::Arena(ArenaTheme::new(12))),
-            rng: if store.testing {
+            rng: if store.is_testing() {
                 Some(Default::default())
             } else {
                 None

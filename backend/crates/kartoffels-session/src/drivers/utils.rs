@@ -20,11 +20,12 @@ where
 
     let progress = async {
         while let Some(map) = rx.recv().await {
-            if !store.testing {
-                world.set_map(map).await?;
-
-                time::sleep(theme::FRAME_TIME).await;
+            if store.is_testing() {
+                continue;
             }
+
+            world.set_map(map).await?;
+            time::sleep(theme::FRAME_TIME).await;
         }
 
         Ok(())

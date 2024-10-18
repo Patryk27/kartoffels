@@ -4,7 +4,7 @@ use termwiz::input::KeyCode;
 
 #[tokio::test]
 async fn acyclic_maze() {
-    let mut ctxt = TestContext::new().await;
+    let mut ctxt = TestContext::new([]).await;
 
     ctxt.wait_for(TestContext::HOME).await;
     ctxt.see("[c] challenges");
@@ -22,8 +22,7 @@ async fn acyclic_maze() {
     ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
 
     ctxt.store()
-        .worlds
-        .first_private()
+        .first_private_world()
         .overclock(ClockSpeed::Unlimited)
         .await
         .unwrap();

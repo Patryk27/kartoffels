@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+                 ââââââââââââââââââ leaving âââââââââââââââââââ
+                 â do you want to go back to the main menu?   â
+                 â                                            â
+                 â [n] no, continue game  [y] yes, leave game â
+                 ââââââââââââââââââââââââââââââââââââââââââââââ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        [j] join bot
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help  [b] bots

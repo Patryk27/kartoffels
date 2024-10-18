@@ -4,8 +4,11 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+ahash.workspace = true
 anyhow.workspace = true
 kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
+rand.workspace = true
+serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true

@@ -2,6 +2,7 @@
 
 mod acceptance {
     mod challenges;
+    mod game;
     mod home;
     mod tutorial;
 }
@@ -10,7 +11,9 @@ use anyhow::Result;
 use avt::Vt;
 use base64::Engine;
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
-use kartoffels_store::Store;
+use kartoffels_store::{SessionId, Store};
+use kartoffels_world::prelude::Handle as WorldHandle;
+use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
@@ -26,6 +29,7 @@ use tokio_util::sync::CancellationToken;
 use tungstenite::Error as WsError;
 
 struct TestContext {
+    addr: SocketAddr,
     store: Arc<Store>,
     server: JoinHandle<Result<()>>,
     term: Vt,
@@ -37,13 +41,17 @@ impl TestContext {
     pub const HOME: &str =
         "welcome to kartoffels, a game where you're given a potato";
 
-    pub async fn new() -> Self {
-        Self::new_ex(80, 30).await
+    pub async fn new(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
+        Self::new_ex(80, 30, worlds).await
     }
 
-    async fn new_ex(cols: usize, rows: usize) -> Self {
+    async fn new_ex(
+        cols: usize,
+        rows: usize,
+        worlds: impl IntoIterator<Item = WorldHandle>,
+    ) -> Self {
         let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
-        let store = Arc::new(Store::test().await);
+        let store = Arc::new(Store::test(worlds).await);
         let shutdown = CancellationToken::new();
         let addr = listener.local_addr().unwrap();
 
@@ -81,6 +89,7 @@ impl TestContext {
         stdout.next().await.unwrap().unwrap();
 
         Self {
+            addr,
             store,
             server,
             term: Vt::new(cols, rows),
@@ -136,6 +145,11 @@ impl TestContext {
     }
 
     #[track_caller]
+    pub async fn wait_for_modal(&mut self, text: &str) {
+        self.wait_for(&format!("â {text} â")).await;
+    }
+
+    #[track_caller]
     pub async fn wait_while(&mut self, text: &str) {
         let result = time::timeout(Duration::from_secs(1), async {
             while self.stdout().contains(text) {
@@ -150,6 +164,11 @@ impl TestContext {
                 self.stdout()
             );
         }
+    }
+
+    #[track_caller]
+    pub async fn wait_while_modal(&mut self, text: &str) {
+        self.wait_while(&format!("â {text} â")).await;
     }
 
     #[track_caller]
@@ -210,27 +229,8 @@ impl TestContext {
     }
 
     pub async fn upload_bot(&mut self, name: &str) {
-        let status = Command::new("just")
-            .arg("bot")
-            .arg(name)
-            .status()
-            .await
-            .unwrap();
-
-        if !status.success() {
-            panic!("upload_bot(\"{name}\") failed");
-        }
-
-        let bot = fs::read(
-            Path::new("target.riscv")
-                .join("riscv64-kartoffel-bot")
-                .join("release")
-                .join(format!("bot-{name}")),
-        )
-        .await
-        .unwrap();
-
-        let payload = base64::engine::general_purpose::STANDARD.encode(bot);
+        let payload = Self::build_bot(name).await;
+        let payload = base64::engine::general_purpose::STANDARD.encode(payload);
 
         let bracketed_paste_beg = "\x1b[200~";
         let bracketed_paste_end = "\x1b[201~";
@@ -245,12 +245,48 @@ impl TestContext {
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
     }
 
+    pub async fn upload_bot_http(&mut self, sess: SessionId, name: &str) {
+        let url = format!("http://{}/sessions/{sess}/bots", self.addr);
+        let body = Self::build_bot(name).await;
+
+        reqwest::Client::new()
+            .post(url)
+            .body(body)
+            .send()
+            .await
+            .unwrap()
+            .error_for_status()
+            .unwrap();
+    }
+
     pub fn store(&self) -> &Store {
         &self.store
     }
 
     pub fn stdout(&self) -> String {
         self.term.text().join("\n")
+    }
+
+    async fn build_bot(name: &str) -> Vec<u8> {
+        let status = Command::new("just")
+            .arg("bot")
+            .arg(name)
+            .status()
+            .await
+            .unwrap();
+
+        if !status.success() {
+            panic!("upload_bot(\"{name}\") failed");
+        }
+
+        fs::read(
+            Path::new("target.riscv")
+                .join("riscv64-kartoffel-bot")
+                .join("release")
+                .join(format!("bot-{name}")),
+        )
+        .await
+        .unwrap()
     }
 }
 

@@ -11,8 +11,8 @@ use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
 pub async fn run(
-    term: &mut Term,
     store: &Store,
+    term: &mut Term,
     bg: &Background,
 ) -> Result<Response> {
     debug!("run()");

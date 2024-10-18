@@ -29,7 +29,7 @@ fmt:
 
 test:
     cd backend \
-    && cargo test
+    && cargo test --release --workspace
 
 bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}

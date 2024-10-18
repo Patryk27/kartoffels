@@ -1,7 +1,8 @@
-use super::{Dialog, ErrorDialog, State};
+use super::{Dialog, ErrorDialog, State, UploadBotDialog};
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
+use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::{BotId, ClockSpeed, BOT_ROBERTO};
 use std::ops::ControlFlow;
@@ -20,7 +21,7 @@ pub enum Event {
     ShowUploadBotDialog,
     ShowBotHistoryDialog,
     SpawnRoberto,
-    UploadBot(String),
+    UploadBot(Either<String, Vec<u8>>),
     LeaveBot,
     RestartBot,
     DestroyBot,
@@ -32,8 +33,10 @@ pub enum Event {
 impl Event {
     pub async fn handle(
         self,
-        state: &mut State,
+        store: &Store,
+        sess: SessionId,
         term: &mut Term,
+        state: &mut State,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
             Event::CloseDialog => {
@@ -90,7 +93,8 @@ impl Event {
                     term.send(vec![0x04]).await?;
                 }
 
-                state.dialog = Some(Dialog::UploadBot(Default::default()));
+                state.dialog =
+                    Some(Dialog::UploadBot(UploadBotDialog::new(store, sess)));
             }
 
             Event::ShowBotHistoryDialog => {
@@ -105,7 +109,7 @@ impl Event {
 
             Event::UploadBot(src) => {
                 state.dialog = None;
-                state.upload_bot(Either::Left(src)).await?;
+                state.upload_bot(src).await?;
             }
 
             Event::LeaveBot => {

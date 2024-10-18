@@ -1,0 +1,30 @@
+                                                        id
+                                                        61da-6f3d-c380-d507
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                        [f] stop following
+                                                        [l] leave
+[esc] go back  [spc] resume  [h] help  [b] bots                           PAUSED
