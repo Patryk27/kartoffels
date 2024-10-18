@@ -21,6 +21,10 @@ nixpkgs.lib.nixosSystem {
         kartoffels = {
           enable = true;
 
+          backend = {
+            debug = true;
+          };
+
           nginx = {
             enable = true;
           };
