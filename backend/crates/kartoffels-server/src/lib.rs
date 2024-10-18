@@ -61,7 +61,7 @@ impl Cmd {
     fn init_tracing(&self) {
         let filter = env::var("RUST_LOG").unwrap_or_else(|_| {
             if self.debug {
-                "kartoffels=debug".into()
+                "tower=debug,kartoffels=debug".into()
             } else {
                 "kartoffels=info".into()
             }
