@@ -93,7 +93,7 @@ in
             };
 
             "/api" = {
-              proxyPass = "http://${cfg.backend.http}/";
+              proxyPass = "http://${cfg.backend.http}";
               proxyWebsockets = true;
             };
           };
