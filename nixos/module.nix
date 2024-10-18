@@ -96,6 +96,11 @@ in
               proxyPass = "http://${cfg.backend.http}/";
               proxyWebsockets = true;
             };
+
+            "/api/" = {
+              proxyPass = "http://${cfg.backend.http}/";
+              proxyWebsockets = true;
+            };
           };
         };
       };
