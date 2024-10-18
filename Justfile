@@ -37,3 +37,15 @@ bless:
 bots:
     cd backend \
     && just bots
+
+# ---
+
+start-demo:
+    sudo nixos-container update demo --flake .
+    sudo nixos-container start demo
+    @echo
+    @echo "ready:"
+    @echo "http://$(nixos-container show-ip demo)"
+
+stop-demo:
+    sudo nixos-container stop demo
