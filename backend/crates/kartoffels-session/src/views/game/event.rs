@@ -57,7 +57,7 @@ impl Event {
             }
 
             Event::MoveCamera(delta) => {
-                state.camera += delta;
+                state.camera.animate_by(delta);
 
                 if let Some(bot) = &mut state.bot {
                     bot.is_followed = false;

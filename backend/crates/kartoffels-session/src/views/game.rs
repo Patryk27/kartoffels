@@ -1,4 +1,5 @@
 mod bottom;
+mod camera;
 mod dialog;
 mod driver;
 mod event;
@@ -7,6 +8,7 @@ mod perms;
 mod side;
 
 use self::bottom::*;
+use self::camera::*;
 use self::dialog::*;
 pub use self::dialog::{HelpDialog, HelpDialogRef, HelpDialogResponse};
 use self::event::*;
@@ -18,7 +20,6 @@ use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use futures_util::FutureExt;
-use glam::IVec2;
 use itertools::Either;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Clear, Term, Ui};
@@ -46,6 +47,7 @@ pub async fn run(
     loop {
         let event = term
             .draw(|ui| {
+                state.tick(store);
                 state.render(ui, sess);
             })
             .await?;
@@ -67,7 +69,7 @@ pub async fn run(
 #[derive(Default)]
 struct State {
     bot: Option<JoinedBot>,
-    camera: IVec2,
+    camera: Camera,
     dialog: Option<Dialog>,
     handle: Option<WorldHandle>,
     help: Option<HelpDialogRef>,
@@ -82,17 +84,19 @@ struct State {
 }
 
 impl State {
-    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
+    fn tick(&mut self, store: &Store) {
         if let Some(bot) = &self.bot {
             if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
-                    self.camera = bot.pos;
+                    self.camera.animate_to(bot.pos);
                 }
             }
         }
 
-        // ---
+        self.camera.tick(store);
+    }
 
+    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
         let [main_area, bottom_area] =
             Layout::vertical([Constraint::Fill(1), Constraint::Length(1)])
                 .areas(ui.area());
@@ -157,10 +161,10 @@ impl State {
     }
 
     fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
-        // If map size's changed, re-center the camera; this comes handy during
-        // tutorial where the driver changes maps.
+        // If map size's changed, recenter the camera - this comes handy for
+        // drivers which call `world.set_map()`, e.g. the tutorial
         if snapshot.map().size() != self.snapshot.map().size() {
-            self.camera = snapshot.map().center();
+            self.camera.move_to(snapshot.map().center());
         }
 
         self.snapshot = snapshot;

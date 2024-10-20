@@ -17,7 +17,7 @@ impl DriverEvent {
 
                 state.snapshot = snapshots.next_or_err().await?;
                 state.snapshots = Some(snapshots);
-                state.camera = state.snapshot.map().center();
+                state.camera.move_to(state.snapshot.map().center());
                 state.handle = Some(handle);
                 state.bot = None;
             }

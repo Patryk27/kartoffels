@@ -21,8 +21,8 @@ impl Map {
     fn render_tiles(ui: &mut Ui<Event>, state: &mut State) {
         let area = ui.area();
 
-        let offset =
-            state.camera - ivec2(area.width as i32, area.height as i32) / 2;
+        let offset = state.camera.pos()
+            - ivec2(area.width as i32, area.height as i32) / 2;
 
         for dy in 0..area.height {
             for dx in 0..area.width {
