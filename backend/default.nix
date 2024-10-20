@@ -1,4 +1,4 @@
-{ crane, pkgs }:
+{ crane, pkgs, rev }:
 
 let
   toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
@@ -54,6 +54,7 @@ crane'.buildPackage {
 
   cargoExtraArgs = "-p kartoffels";
   CARGO_PROFILE = "dist";
+  KARTOFFELS_REV = rev;
   KARTOFFELS_BOT_DUMMY = mkBot "dummy";
   KARTOFFELS_BOT_ROBERTO = mkBot "roberto";
 }

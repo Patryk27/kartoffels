@@ -1,6 +1,8 @@
+mod footer;
 mod header;
 mod menu;
 
+use self::footer::*;
 use self::header::*;
 use self::menu::*;
 use crate::Background;
@@ -52,6 +54,8 @@ pub async fn run(
                 ui.clamp(menu_area, |ui| {
                     Menu::render(store, ui);
                 });
+
+                Footer::render(store, ui);
             })
             .await?;
 

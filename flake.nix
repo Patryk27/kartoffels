@@ -47,6 +47,8 @@
 
           backend = import ./backend {
             inherit crane pkgs;
+
+            rev = builtins.substring 0 7 (self.rev or "dirty");
           };
 
           frontend = import ./frontend {

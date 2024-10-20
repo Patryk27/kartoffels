@@ -23,7 +23,6 @@ static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
         Line::raw("or indulge yourself in single-player challenges"),
         Line::raw(""),
         Line::raw("have fun!"),
-        Line::raw("~pwy"),
     ])
     .centered()
 });

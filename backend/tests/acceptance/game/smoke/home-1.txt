@@ -1,4 +1,5 @@
 
+
          ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
          â welcome to kartoffels, a game where you're given a potato: â
          â                                                            â
@@ -17,9 +18,7 @@
          â      or indulge yourself in single-player challenges       â
          â                                                            â
          â                         have fun!                          â
-         â                            ~pwy                            â
          ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
 
                               ââââââââââââââââââââ
                               â     [p] play     â
@@ -27,3 +26,5 @@
                               â   [t] tutorial   â
                               â  [c] challenges  â
                               ââââââââââââââââââââ
+
+                                                                       localhost
