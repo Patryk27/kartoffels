@@ -32,10 +32,10 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
              perpetrator which took poor timmy-bot's wheels and ran away",
         ),
         DialogLine::new(""),
+        DialogLine::new("*show mercy:*"),
         DialogLine::new(
-            "*show mercy*: implement a robot that traverses the maze, locates \
-             timmy and _kills it_ - you'll be starting in the bottom-right \
-             corner",
+            "implement a robot that traverses the maze, locates timmy and \
+             _kills it_ - you'll be starting in the bottom-right corner",
         ),
     ]
 });

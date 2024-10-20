@@ -9,9 +9,9 @@
         â poor timmy-bot went for a walk and got attacked by a masked  â
         â perpetrator which took poor timmy-bot's wheels and ran away  â
         â                                                              â
-        â show mercy: implement a robot that traverses the maze,       â
-        â locates timmy and kills it - you'll be starting in the       â
-        â bottom-right corner                                          â
+        â show mercy:                                                  â
+        â implement a robot that traverses the maze, locates timmy and â
+        â kills it - you'll be starting in the bottom-right corner     â
         â                                                              â
         â [esc] go back                            [enter] let's do it â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
