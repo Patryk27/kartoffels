@@ -69,6 +69,7 @@ bin = [
     { name = "ps-neg", path = "src/ps-neg.rs" },
     { name = "ps-not", path = "src/ps-not.rs" },
     { name = "ps-sextw", path = "src/ps-sextw.rs" },
+    { name = "xx-floats", path = "src/xx-floats.rs" },
     { name = "xx-ints", path = "src/xx-ints.rs" },
     { name = "xx-map", path = "src/xx-map.rs" },
     { name = "xx-vec", path = "src/xx-vec.rs" },
