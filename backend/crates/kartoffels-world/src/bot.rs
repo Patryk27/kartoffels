@@ -21,7 +21,7 @@ pub use self::tick::*;
 pub use self::timer::*;
 use crate::{AliveBotsLocator, Dir, Map};
 use glam::IVec2;
-use kartoffels_cpu::Cpu;
+use kartoffels_cpu::{Cpu, Firmware};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::mem;
@@ -34,6 +34,7 @@ pub struct AliveBot {
     pub cpu: Cpu,
     pub dir: Dir,
     pub events: BotEvents,
+    pub fw: Firmware,
     pub motor: BotMotor,
     pub oneshot: bool,
     pub pos: IVec2,
@@ -62,9 +63,10 @@ impl AliveBot {
         Self {
             arm: Default::default(),
             battery: Default::default(),
-            cpu: bot.cpu,
+            cpu: Cpu::new(&bot.fw),
             dir,
             events: bot.events,
+            fw: bot.fw,
             motor: Default::default(),
             oneshot: bot.oneshot,
             pos,
@@ -132,9 +134,9 @@ pub struct DeadBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
-    pub cpu: Cpu,
     pub dir: Option<Dir>,
     pub events: BotEvents,
+    pub fw: Firmware,
     pub id: BotId,
     pub oneshot: bool,
     pub pos: Option<IVec2>,

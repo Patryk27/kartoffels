@@ -787,7 +787,7 @@ impl Cpu {
         }
     }
 
-    fn do_atomic<const BYTES: usize>(
+    fn do_atomic<const SIZE: usize>(
         &mut self,
         mmio: &mut dyn Mmio,
         rd: usize,
@@ -795,11 +795,20 @@ impl Cpu {
         rs2: usize,
         op: fn(i64, i64) -> i64,
     ) -> Result<(), Box<str>> {
-        let addr = self.regs[rs1] as u64;
-        let old_val = self.mem_load::<BYTES>(mmio, addr)?;
+        let addr = Self::mem_translate(self.regs[rs1] as u64, SIZE)?;
+
+        if addr >= Self::MMIO_BASE {
+            return Err(Self::mem_fault(
+                "unsupported atomic mmio operation",
+                addr,
+                SIZE,
+            ));
+        }
+
+        let old_val = self.mem_load::<SIZE>(mmio, addr as u64)?;
         let new_val = op(old_val, self.regs[rs2]);
 
-        self.mem_store::<BYTES>(mmio, addr, new_val)?;
+        self.mem_store::<SIZE>(mmio, addr as u64, new_val)?;
         self.reg_store(rd, old_val);
 
         Ok(())

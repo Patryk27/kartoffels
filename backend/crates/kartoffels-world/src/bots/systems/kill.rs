@@ -21,9 +21,9 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
         && world.bots.queued.len() < world.policy.max_queued_bots
     {
         world.bots.queued.push(QueuedBot {
-            cpu: bot.cpu.reset(),
             dir: None,
             events: bot.events,
+            fw: bot.fw,
             id,
             oneshot: false,
             pos: None,

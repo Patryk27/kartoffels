@@ -1,6 +1,6 @@
 use crate::{BotEvents, BotId, CreateBotRequest, Event, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
-use kartoffels_cpu::Cpu;
+use kartoffels_cpu::Firmware;
 use rand::Rng;
 use std::sync::Arc;
 use tracing::info;
@@ -14,10 +14,9 @@ pub fn run(
         oneshot,
     }: CreateBotRequest,
 ) -> Result<BotId> {
-    let cpu = Cpu::new(&src).context("couldn't parse firmware")?;
-    let src_hash = sha256::digest(&src[..]);
+    info!(src = ?sha256::digest(&src[..]), "creating bot");
 
-    info!(?src_hash, "creating bot");
+    let fw = Firmware::from_elf(&src).context("couldn't parse firmware")?;
 
     let id = loop {
         let id = world.rng.gen();
@@ -36,9 +35,9 @@ pub fn run(
         };
 
         world.bots.queued.push(QueuedBot {
-            cpu,
             dir,
             events,
+            fw,
             id,
             oneshot,
             pos,

@@ -15,7 +15,7 @@ use std::path::Path;
 use std::time::Duration;
 use tokio::task;
 
-const VERSION: u32 = 10;
+const VERSION: u32 = 11;
 
 #[derive(Serialize, Deserialize)]
 pub struct SerializedWorld<'a> {

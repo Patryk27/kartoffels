@@ -112,9 +112,9 @@ mod tests {
 
     fn bot(id: u64) -> QueuedBot {
         QueuedBot {
-            cpu: Default::default(),
             dir: None,
             events: Default::default(),
+            fw: Default::default(),
             id: BotId::new(id),
             oneshot: false,
             pos: None,

@@ -7,12 +7,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Firmware {
-    pub segments: Vec<Segment>,
-    pub entry_pc: u64,
+    pub(crate) segments: Vec<Segment>,
+    pub(crate) entry_pc: u64,
 }
 
 impl Firmware {
-    pub fn new(src: &[u8]) -> Result<Self> {
+    pub fn from_elf(src: &[u8]) -> Result<Self> {
         let mut segments = Vec::new();
 
         let elf = ElfBytes::<LittleEndian>::minimal_parse(src)?;
