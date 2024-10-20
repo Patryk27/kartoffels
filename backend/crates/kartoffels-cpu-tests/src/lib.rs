@@ -35,5 +35,5 @@ pub fn exit(val: u32) {
 
 #[cfg(not(target_arch = "riscv64"))]
 pub fn exit(val: u32) {
-    println!("{}", val);
+    println!("{val}");
 }
