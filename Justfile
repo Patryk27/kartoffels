@@ -21,7 +21,10 @@ web:
 
 check:
     cd backend \
-    && cargo check
+    && cargo check --workspace \
+    && cargo check --workspace --tests \
+    && cargo clippy --workspace \
+    && cargo clippy --workspace --tests
 
 fmt:
     cd backend \
