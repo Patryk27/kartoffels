@@ -24,7 +24,8 @@ check:
     && cargo check --workspace \
     && cargo check --workspace --tests \
     && cargo clippy --workspace \
-    && cargo clippy --workspace --tests
+    && cargo clippy --workspace --tests \
+    && cargo doc -p kartoffel
 
 clean:
     cd backend \
