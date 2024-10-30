@@ -4,12 +4,12 @@
 
 
 
-
         âââââââââââââââââââââââââ acyclic-maze âââââââââââââââââââââââââ
         â poor timmy-bot went for a walk and got attacked by a masked  â
         â perpetrator which took poor timmy-bot's wheels and ran away  â
         â                                                              â
         â show mercy:                                                  â
+        â                                                              â
         â implement a robot that traverses the maze, locates timmy and â
         â kills it - you'll be starting in the bottom-right corner     â
         â                                                              â

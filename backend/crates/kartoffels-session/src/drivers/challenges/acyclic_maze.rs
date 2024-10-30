@@ -33,6 +33,7 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
         ),
         DialogLine::new(""),
         DialogLine::new("*show mercy:*"),
+        DialogLine::new(""),
         DialogLine::new(
             "implement a robot that traverses the maze, locates timmy and \
              _kills it_ - you'll be starting in the bottom-right corner",
