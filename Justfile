@@ -31,6 +31,10 @@ clean:
     cd backend \
     && cargo clean
 
+doc *args:
+    cd backend \
+    && cargo doc -p kartoffel {{ args }}
+
 fmt:
     cd backend \
     && cargo fmt
