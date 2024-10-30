@@ -26,6 +26,10 @@ check:
     && cargo clippy --workspace \
     && cargo clippy --workspace --tests
 
+clean:
+    cd backend \
+    && cargo clean
+
 fmt:
     cd backend \
     && cargo fmt
