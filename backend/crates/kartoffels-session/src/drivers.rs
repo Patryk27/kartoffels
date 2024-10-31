@@ -21,7 +21,6 @@ mod prelude {
     pub(super) use ratatui::text::Span;
     pub(super) use std::future;
     pub(super) use std::sync::LazyLock;
-    pub(super) use std::task::Poll;
     pub(super) use std::time::Duration;
     pub(super) use termwiz::input::KeyCode;
     pub(super) use tokio::sync::mpsc;

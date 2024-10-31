@@ -67,7 +67,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
 
         let (world, timmy) = setup(store, &game).await?;
 
-        wait(&world, timmy).await?;
+        main(&world, timmy).await?;
 
         game.run_dialog(&WIN_MSG).await?;
 
@@ -253,16 +253,19 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     map
 }
 
-async fn wait(world: &Handle, timmy: BotId) -> Result<()> {
-    let mut events = world.events();
+async fn main(world: &Handle, timmy: BotId) -> Result<()> {
+    let mut snapshots = world.snapshots();
+
+    // Wait for Timmy to appear - that's required only for tests, because there
+    // we don't animate the map and so it might happen that the code is so quick
+    // we get here and don't see Timmy yet
+    snapshots.wait_for_bot(timmy).await?;
 
     loop {
-        if events.next_or_err().await?.is_bot_killed(timmy) {
-            break;
+        if !snapshots.next().await?.bots().alive().has(timmy) {
+            return Ok(());
         }
     }
-
-    Ok(())
 }
 
 #[cfg(test)]

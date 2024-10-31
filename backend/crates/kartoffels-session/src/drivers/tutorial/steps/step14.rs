@@ -20,6 +20,7 @@ static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
 
 pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     ctxt.destroy_bots().await?;
+    ctxt.wait_for_ui().await?;
     ctxt.game.run_dialog(&DIALOG).await?;
 
     Ok(())

@@ -1,17 +1,16 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClockSpeed, Dir, Event, Map, Snapshot};
+use crate::{BotId, ClockSpeed, Dir, Map, Snapshot};
+use ahash::HashSet;
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
-use futures_util::Stream;
 use glam::IVec2;
 use kartoffels_utils::Id;
 use std::borrow::Cow;
-use std::future::Future;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
-use tokio_stream::wrappers::{BroadcastStream, WatchStream};
+use tokio::sync::{mpsc, oneshot, watch, OwnedSemaphorePermit};
+use tokio_stream::wrappers::WatchStream;
 use tokio_stream::StreamExt;
 
 #[derive(Clone, Debug)]
@@ -31,13 +30,10 @@ impl Handle {
         &self.inner.name
     }
 
-    pub fn events(&self) -> EventStream {
-        BroadcastStream::new(self.inner.events.subscribe())
-            .filter_map(|msg| msg.ok())
-    }
-
     pub fn snapshots(&self) -> SnapshotStream {
-        WatchStream::new(self.inner.snapshots.subscribe())
+        SnapshotStream {
+            rx: WatchStream::new(self.inner.snapshots.subscribe()),
+        }
     }
 
     pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {
@@ -159,7 +155,6 @@ pub struct HandleInner {
     pub tx: RequestTx,
     pub id: Id,
     pub name: Arc<String>,
-    pub events: broadcast::Sender<Arc<Event>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
@@ -270,36 +265,57 @@ impl CreateBotRequest {
     }
 }
 
-// ---
-
-pub type EventStream = impl Stream<Item = Arc<Event>> + Send + Unpin;
-
-pub trait EventStreamExt {
-    fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Event>>>;
+#[derive(Debug)]
+pub struct SnapshotStream {
+    rx: WatchStream<Arc<Snapshot>>,
 }
 
-impl<T> EventStreamExt for T
-where
-    T: Stream<Item = Arc<Event>> + Unpin,
-{
-    async fn next_or_err(&mut self) -> Result<Arc<Event>> {
-        self.next().await.context(Handle::ERR)
+impl SnapshotStream {
+    pub async fn next(&mut self) -> Result<Arc<Snapshot>> {
+        self.rx.next().await.with_context(|| Handle::ERR)
     }
-}
 
-// ---
+    pub async fn wait_for_bot(&mut self, id: BotId) -> Result<()> {
+        loop {
+            if self.next().await?.bots().alive().has(id) {
+                return Ok(());
+            }
+        }
+    }
 
-pub type SnapshotStream = impl Stream<Item = Arc<Snapshot>> + Send + Unpin;
+    pub async fn wait_until_bot_is_spawned(&mut self) -> Result<BotId> {
+        let known_bots: HashSet<_> = self
+            .next()
+            .await?
+            .bots()
+            .alive()
+            .iter()
+            .map(|bot| bot.id)
+            .collect();
 
-pub trait SnapshotStreamExt {
-    fn next_or_err(&mut self) -> impl Future<Output = Result<Arc<Snapshot>>>;
-}
+        loop {
+            let curr_bots: HashSet<_> = self
+                .next()
+                .await?
+                .bots()
+                .alive()
+                .iter()
+                .map(|bot| bot.id)
+                .collect();
 
-impl<T> SnapshotStreamExt for T
-where
-    T: Stream<Item = Arc<Snapshot>> + Unpin,
-{
-    async fn next_or_err(&mut self) -> Result<Arc<Snapshot>> {
-        self.next().await.context(Handle::ERR)
+            if let Some(id) = curr_bots.difference(&known_bots).next() {
+                return Ok(*id);
+            }
+        }
+    }
+
+    pub async fn wait_until_bot_is_killed(&mut self) -> Result<()> {
+        let known_bots = self.next().await?.bots().alive().len();
+
+        loop {
+            if self.next().await?.bots().alive().len() < known_bots {
+                return Ok(());
+            }
+        }
     }
 }

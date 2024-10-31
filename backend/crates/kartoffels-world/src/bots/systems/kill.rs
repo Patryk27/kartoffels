@@ -1,5 +1,4 @@
-use crate::{DeadBot, Event, KillBot, QueuedBot, World};
-use std::sync::Arc;
+use crate::{DeadBot, KillBot, QueuedBot, World};
 
 pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
     world.mode.on_bot_killed(id, killer);
@@ -13,8 +12,6 @@ pub fn run(world: &mut World, KillBot { id, reason, killer }: KillBot) {
             killer.bot.log(format!("stabbed {id}"));
         }
     }
-
-    _ = world.events.send(Arc::new(Event::BotKilled { id }));
 
     if !bot.oneshot
         && world.policy.auto_respawn

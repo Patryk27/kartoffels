@@ -2,7 +2,6 @@ use super::{Dialog, State};
 use crate::DriverEvent;
 use anyhow::Result;
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::SnapshotStreamExt;
 use std::time::Instant;
 
 impl DriverEvent {
@@ -15,7 +14,7 @@ impl DriverEvent {
             DriverEvent::Join(handle) => {
                 let mut snapshots = handle.snapshots();
 
-                state.snapshot = snapshots.next_or_err().await?;
+                state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
                 state.camera.move_to(state.snapshot.map().center());
                 state.handle = Some(handle);
@@ -54,12 +53,12 @@ impl DriverEvent {
                 state.status = status.map(|status| (status, Instant::now()));
             }
 
-            DriverEvent::Poll(f) => {
-                state.poll = Some(f);
-            }
-
             DriverEvent::CopyToClipboard(payload) => {
                 term.copy_to_clipboard(payload).await?;
+            }
+
+            DriverEvent::GetSnapshotVersion(tx) => {
+                _ = tx.send(state.snapshot.version());
             }
         }
 

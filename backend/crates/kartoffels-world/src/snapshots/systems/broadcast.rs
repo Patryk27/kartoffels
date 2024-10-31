@@ -9,12 +9,14 @@ use std::time::{Duration, Instant};
 
 pub struct State {
     next_run_at: Instant,
+    version: u64,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
             next_run_at: Instant::now(),
+            version: 0,
         }
     }
 }
@@ -24,9 +26,13 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     }
 
-    let bots = prepare_bots(world);
-    let map = prepare_map(&bots, world);
-    let snapshot = Arc::new(Snapshot { map, bots });
+    let snapshot = {
+        let bots = prepare_bots(world);
+        let map = prepare_map(&bots, world);
+        let version = state.version;
+
+        Arc::new(Snapshot { map, bots, version })
+    };
 
     world.snapshots.send_replace(snapshot);
 
@@ -34,6 +40,8 @@ pub fn run(world: &mut World, state: &mut State) {
         Clock::Auto { .. } => Instant::now() + Duration::from_millis(50),
         Clock::Manual { .. } => Instant::now(),
     };
+
+    state.version += 1;
 }
 
 fn prepare_bots(world: &World) -> SnapshotBots {

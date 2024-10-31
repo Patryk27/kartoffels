@@ -1,7 +1,6 @@
-use crate::{bots, Clock, Event, KillBot, Request, Shutdown, World};
+use crate::{bots, Clock, KillBot, Request, Shutdown, World};
 use anyhow::anyhow;
 use std::ops::ControlFlow;
-use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
 use tracing::debug;
 
@@ -64,7 +63,6 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
             Ok(Request::DestroyBot { id, tx }) => {
                 world.bots.remove(id);
 
-                _ = world.events.send(Arc::new(Event::BotKilled { id }));
                 _ = tx.send(());
             }
 

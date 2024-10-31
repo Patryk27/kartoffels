@@ -1,8 +1,7 @@
-use crate::views::game::{HelpDialogRef, Perms, PollCtxt, PollFn};
+use crate::views::game::{HelpDialogRef, Perms};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::{theme, Dialog, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
-use std::task::Poll;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time;
 
@@ -110,32 +109,6 @@ impl DrivenGame {
         Ok(())
     }
 
-    pub async fn poll<T>(
-        &self,
-        mut f: impl FnMut(PollCtxt) -> Poll<T> + Send + 'static,
-    ) -> Result<T>
-    where
-        T: Send + 'static,
-    {
-        let (tx, rx) = oneshot::channel();
-        let mut tx = Some(tx);
-
-        self.send(DriverEvent::Poll(Box::new(move |world| {
-            if let Poll::Ready(result) = f(world) {
-                if let Some(tx) = tx.take() {
-                    _ = tx.send(result);
-                }
-
-                Poll::Ready(())
-            } else {
-                Poll::Pending
-            }
-        })))
-        .await?;
-
-        Ok(rx.await?)
-    }
-
     pub async fn copy_to_clipboard(
         &self,
         payload: impl Into<String>,
@@ -144,6 +117,14 @@ impl DrivenGame {
             .await?;
 
         Ok(())
+    }
+
+    pub async fn get_snapshot_version(&self) -> Result<u64> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(DriverEvent::GetSnapshotVersion(tx)).await?;
+
+        rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
 
     async fn send(&self, event: DriverEvent) -> Result<()> {
@@ -170,6 +151,6 @@ pub enum DriverEvent {
     CloseDialog,
     SetHelp(Option<HelpDialogRef>),
     SetStatus(Option<String>),
-    Poll(PollFn),
     CopyToClipboard(String),
+    GetSnapshotVersion(oneshot::Sender<u64>),
 }

@@ -28,6 +28,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     time::sleep(Duration::from_secs(6)).await;
 
     ctxt.destroy_bots().await?;
+    ctxt.wait_for_ui().await?;
 
     Ok(())
 }

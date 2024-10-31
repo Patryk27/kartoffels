@@ -8,7 +8,6 @@ mod bot;
 mod bots;
 mod clock;
 mod config;
-mod events;
 mod handle;
 mod map;
 mod mode;
@@ -21,17 +20,14 @@ mod utils;
 
 mod cfg {
     pub const MAX_REQUEST_BACKLOG: usize = 128;
-    pub const MAX_EVENT_BACKLOG: usize = 128;
 }
 
 pub mod prelude {
     pub use crate::bot::BotId;
     pub use crate::clock::{Clock, ClockSpeed};
     pub use crate::config::Config;
-    pub use crate::events::Event;
     pub use crate::handle::{
-        CreateBotRequest, EventStream, EventStreamExt, Handle, Request,
-        SnapshotStream, SnapshotStreamExt,
+        CreateBotRequest, Handle, Request, SnapshotStream,
     };
     pub use crate::map::{Map, Tile, TileBase};
     pub use crate::mode::{DeathmatchMode, Mode};
@@ -53,7 +49,6 @@ pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
 pub(crate) use self::clock::*;
 pub(crate) use self::config::*;
-pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
@@ -73,7 +68,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
-use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tokio::sync::{mpsc, oneshot, watch};
 use tracing::{debug, info, info_span};
 
 pub fn create(config: Config) -> Handle {
@@ -107,7 +102,6 @@ pub fn create(config: Config) -> Handle {
     World {
         bots: Default::default(),
         clock,
-        events: handle.inner.events.clone(),
         map,
         metronome: clock.metronome(false),
         mode,
@@ -144,7 +138,6 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     World {
         bots,
         clock,
-        events: handle.inner.events.clone(),
         map,
         metronome: clock.metronome(bench),
         mode,
@@ -172,8 +165,7 @@ fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
             id,
             tx,
             name,
-            events: broadcast::Sender::new(cfg::MAX_EVENT_BACKLOG),
-            snapshots: watch::Sender::new(Default::default()),
+            snapshots: Default::default(),
         }),
         permit: None,
     };
@@ -184,7 +176,6 @@ fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
 struct World {
     bots: Bots,
     clock: Clock,
-    events: broadcast::Sender<Arc<Event>>,
     map: Map,
     metronome: Option<Metronome>,
     mode: Mode,

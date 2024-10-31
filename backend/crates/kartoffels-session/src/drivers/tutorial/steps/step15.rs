@@ -75,25 +75,20 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     ctxt.game.set_help(Some(&HELP)).await?;
 
     loop {
-        setup_map(ctxt).await?;
-        setup_dummies(ctxt).await?;
-
-        let user_bot_id = ctxt.wait_until_bot_is_spawned().await?;
+        let dummies = setup_map(ctxt).await?;
+        let player = ctxt.snapshots.wait_until_bot_is_spawned().await?;
 
         ctxt.game.set_status(Some("WATCHING".into())).await?;
 
-        let outcome = wait(ctxt, user_bot_id).await?;
+        let succeeded = wait(ctxt, &dummies, player).await?;
 
+        ctxt.wait_for_ui().await?;
         ctxt.game.set_status(None).await?;
 
-        match outcome {
-            Ok(()) => {
-                break;
-            }
-
-            Err(()) => {
-                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
-            }
+        if succeeded {
+            break;
+        } else {
+            ctxt.game.run_dialog(&DIALOG_RETRY).await?;
         }
     }
 
@@ -102,7 +97,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
+async fn setup_map(ctxt: &mut StepCtxt) -> Result<Vec<BotId>> {
     ctxt.destroy_bots().await?;
 
     ctxt.world
@@ -116,10 +111,8 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
 
     ctxt.world.set_spawn(ivec2(10, 9), Dir::N).await?;
 
-    Ok(())
-}
+    // ---
 
-async fn setup_dummies(ctxt: &mut StepCtxt) -> Result<()> {
     let dummies = [
         ivec2(10, 8),
         ivec2(10, 7),
@@ -130,35 +123,49 @@ async fn setup_dummies(ctxt: &mut StepCtxt) -> Result<()> {
         ivec2(19, 2),
         ivec2(19, 9),
         ivec2(18, 9),
-        ivec2(0, 9),
+        ivec2(2, 9),
     ];
 
-    for pos in dummies {
-        ctxt.world
-            .create_bot(CreateBotRequest::new(BOT_DUMMY).at(pos))
-            .await?;
+    let dummies: Vec<_> = dummies
+        .into_iter()
+        .map(|pos| {
+            ctxt.world
+                .create_bot(CreateBotRequest::new(BOT_DUMMY).at(pos))
+        })
+        .collect::<FuturesOrdered<_>>()
+        .collect::<Result<_>>()
+        .await?;
+
+    loop {
+        if ctxt
+            .snapshots
+            .next()
+            .await?
+            .bots()
+            .alive()
+            .has_all_of(&dummies)
+        {
+            break;
+        }
     }
 
-    Ok(())
+    Ok(dummies)
 }
 
 async fn wait(
     ctxt: &mut StepCtxt,
-    user_bot_id: BotId,
-) -> Result<Result<(), ()>> {
-    ctxt.game
-        .poll(move |ctxt| {
-            let bots = ctxt.world.bots().alive();
+    dummies: &[BotId],
+    player: BotId,
+) -> Result<bool> {
+    loop {
+        let snapshot = ctxt.snapshots.next().await?;
 
-            if bots.by_id(user_bot_id).is_none() {
-                return Poll::Ready(Err(()));
-            }
+        if !snapshot.bots().alive().has_any_of(dummies) {
+            return Ok(true);
+        }
 
-            if bots.len() == 1 {
-                return Poll::Ready(Ok(()));
-            }
-
-            Poll::Pending
-        })
-        .await
+        if !snapshot.bots().alive().has(player) {
+            return Ok(false);
+        }
+    }
 }

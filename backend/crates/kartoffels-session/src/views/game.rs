@@ -25,12 +25,11 @@ use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Clear, Term, Ui};
 use kartoffels_world::prelude::{
     BotId, ClockSpeed, CreateBotRequest, Handle as WorldHandle,
-    Snapshot as WorldSnapshot, SnapshotStream, SnapshotStreamExt,
+    Snapshot as WorldSnapshot, SnapshotStream,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::ops::ControlFlow;
 use std::sync::Arc;
-use std::task::Poll;
 use std::time::Instant;
 use tracing::debug;
 
@@ -76,7 +75,6 @@ struct State {
     map: Map,
     paused: bool,
     perms: Perms,
-    poll: Option<PollFn>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
     speed: ClockSpeed,
@@ -142,18 +140,8 @@ impl State {
         }
 
         if let Some(snapshots) = &mut self.snapshots {
-            if let Some(snapshot) = snapshots.next_or_err().now_or_never() {
+            if let Some(snapshot) = snapshots.next().now_or_never() {
                 self.update_snapshot(snapshot?);
-            }
-        }
-
-        if let Some(poll) = &mut self.poll {
-            let ctxt = PollCtxt {
-                world: &self.snapshot,
-            };
-
-            if poll(ctxt).is_ready() {
-                self.poll = None;
             }
         }
 
@@ -274,10 +262,3 @@ struct JoinedBot {
     is_followed: bool,
     is_known_to_exist: bool,
 }
-
-#[derive(Debug)]
-pub struct PollCtxt<'a> {
-    pub world: &'a WorldSnapshot,
-}
-
-pub type PollFn = Box<dyn FnMut(PollCtxt) -> Poll<()> + Send>;

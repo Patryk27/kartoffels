@@ -1,8 +1,7 @@
-use crate::{BotEvents, BotId, CreateBotRequest, Event, QueuedBot, World};
+use crate::{BotEvents, BotId, CreateBotRequest, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use kartoffels_cpu::Firmware;
 use rand::Rng;
-use std::sync::Arc;
 use tracing::info;
 
 pub fn run(
@@ -44,8 +43,6 @@ pub fn run(
             requeued: false,
             serial: Default::default(),
         });
-
-        _ = world.events.send(Arc::new(Event::BotCreated { id }));
 
         Ok(id)
     } else {

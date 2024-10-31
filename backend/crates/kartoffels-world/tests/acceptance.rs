@@ -4,7 +4,6 @@ use kartoffels_world::prelude::*;
 use std::future::Future;
 use std::path::Path;
 use std::sync::Arc;
-use tokio_stream::StreamExt;
 
 #[tokio::test]
 async fn smoke() {
@@ -77,9 +76,14 @@ async fn pause_and_resume() {
 
     // ---
 
-    assert_ne!(snap1, snap2);
-    assert_eq!(snap2, snap3);
-    assert_ne!(snap3, snap4);
+    assert_ne!(snap1.map(), snap2.map());
+    assert_ne!(snap1.bots(), snap2.bots());
+
+    assert_eq!(snap2.map(), snap3.map());
+    assert_eq!(snap2.bots(), snap3.bots());
+
+    assert_ne!(snap3.map(), snap4.map());
+    assert_ne!(snap3.bots(), snap4.bots());
 }
 
 #[tokio::test]

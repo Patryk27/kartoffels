@@ -15,6 +15,7 @@ use std::sync::Arc;
 pub struct Snapshot {
     map: Map,
     bots: SnapshotBots,
+    version: u64,
 }
 
 impl Snapshot {
@@ -24,6 +25,10 @@ impl Snapshot {
 
     pub fn bots(&self) -> &SnapshotBots {
         &self.bots
+    }
+
+    pub fn version(&self) -> u64 {
+        self.version
     }
 }
 
@@ -135,6 +140,18 @@ impl SnapshotAliveBots {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    pub fn has(&self, id: BotId) -> bool {
+        self.by_id(id).is_some()
+    }
+
+    pub fn has_all_of(&self, ids: &[BotId]) -> bool {
+        ids.iter().all(|id| self.has(*id))
+    }
+
+    pub fn has_any_of(&self, ids: &[BotId]) -> bool {
+        ids.iter().any(|id| self.has(*id))
     }
 }
 

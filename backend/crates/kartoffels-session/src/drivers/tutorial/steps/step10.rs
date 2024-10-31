@@ -60,7 +60,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
 
         let result = time::timeout(
             Duration::from_secs(10),
-            ctxt.wait_until_bot_is_killed(),
+            ctxt.snapshots.wait_until_bot_is_killed(),
         )
         .await;
 
@@ -75,7 +75,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             Err(_) => {
                 ctxt.game.run_dialog(&DIALOG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.wait_until_bot_is_spawned().await?;
+                ctxt.snapshots.wait_until_bot_is_spawned().await?;
                 ctxt.game.set_help(None).await?;
             }
         }
