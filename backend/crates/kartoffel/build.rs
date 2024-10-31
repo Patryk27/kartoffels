@@ -1,9 +1,9 @@
-use std::env;
+use std::path::Path;
 
 fn main() {
     println!(
         "cargo:rustc-link-search={}",
-        env::current_dir().unwrap().display(),
+        Path::new(file!()).parent().unwrap().display(),
     );
 
     println!("cargo:rerun-if-changed=kartoffel.ld");
