@@ -1,3 +1,4 @@
+
         âââââââââââââââââââââââââââââ help âââââââââââââââââââââââââââââ
         â a line following robot does what its name says - it uses     â
         â radar to check where to go next and then goes there, like:   â
@@ -18,13 +19,12 @@
         â     - radar_wait()                                           â
         â     - radar_scan_3x3()                                       â
         â                                                              â
-        â ... and serial_send_str() might come handy for debugging!    â
+        â ... and serial_write() might come handy for debugging!       â
         â                                                              â
-        â as a reminder, given let scan = radar_scan_3x3();, you get:  â
-        â                                                              â
-        â     - scan[0][1] = tile in front of the bot                  â
-        â     - scan[1][0] = tile on bot's left side                   â
-        â     - scan[1][2] = tile on bot's right side                  â
+        â also, feel free to consult scan.tile_at()'s documentation to â
+        â see example usage of the radar                               â
         â                                                              â
         â                                                  [esc] close â
-[esc] goââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help

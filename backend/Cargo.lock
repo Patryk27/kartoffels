@@ -406,6 +406,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bot-tut-04"
+version = "0.5.0"
+dependencies = [
+ "kartoffel",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

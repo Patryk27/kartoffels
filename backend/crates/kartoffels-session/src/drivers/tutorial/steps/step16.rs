@@ -1,20 +1,20 @@
 use super::prelude::*;
 
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (16/16) "),
 
     body: vec![
-        DialogLine::new("✨ *you made it!* ✨")
+        DialogLine::new("✨ *yay, you made it!* ✨")
             .fg(theme::GREEN)
             .bold()
             .centered(),
         DialogLine::new(""),
         DialogLine::new(
-            "your progress over the previous couple of minutes was incredible \
-             - you can now go and conquer the world, legally!",
+            "not sure if your mom and dad are proud of you, but _i_ am !!",
         )
         .centered(),
         DialogLine::new(""),
+        DialogLine::new("now, waste no time:").centered(),
         DialogLine::new("🥔 have fun and remember the power of potato 🥔")
             .centered(),
     ],

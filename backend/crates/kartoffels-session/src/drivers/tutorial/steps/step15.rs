@@ -1,25 +1,13 @@
 use super::prelude::*;
+use futures::stream::FuturesOrdered;
+use tokio_stream::StreamExt;
 
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
-
-    body: vec![
-        DialogLine::new(
-            "first, the peripheral it's actually not a knife - it's *arm*",
-        ),
-        DialogLine::new(""),
-        DialogLine::new(
-            "but the only action currently exposed by this peripheral is \
-             `arm_stab()`, so...",
-        ),
-        DialogLine::new(""),
-    ]
-    .into_iter()
-    .chain(INSTRUCTION.clone())
-    .collect(),
+    title: Some(" tutorial (15/16) "),
+    body: INSTRUCTION.clone(),
 
     buttons: vec![DialogButton::confirm(
-        "scoooby doooby dooo, let's catch them",
+        "scoooby doooby dooo, let's catch 'em",
         (),
     )],
 });
@@ -65,7 +53,7 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
 });
 
 static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (15/16) "),
     body: vec![DialogLine::new("hmm, your robot seems to have died")],
     buttons: vec![DialogButton::confirm("let's try again", ())],
 });

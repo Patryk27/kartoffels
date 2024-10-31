@@ -2,7 +2,7 @@
 
 
                        .........
-        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+        âââââââââââââââââââââââ tutorial (5/16) ââââââââââââââââââââââââ
         â as you can see, the code in main.rs just calls a couple of   â
         â functions in a loop - but before we jump into explanations,  â
         â let's see the robot in action!                               â

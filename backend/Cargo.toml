@@ -8,6 +8,7 @@ members = [
     "bots/tut-01",
     "bots/tut-02",
     "bots/tut-03",
+    "bots/tut-04",
     "crates/kartoffel",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",

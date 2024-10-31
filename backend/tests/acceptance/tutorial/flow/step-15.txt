@@ -1,9 +1,6 @@
-        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
-        â first, the peripheral it's actually not a knife - it's arm   â
-        â                                                              â
-        â but the only action currently exposed by this peripheral is  â
-        â arm_stab(), so...                                            â
-        â                                                              â
+
+
+        âââââââââââââââââââââââ tutorial (15/16) âââââââââââââââââââââââ
         â # arm_wait()                                                 â
         â                                                              â
         â as you can guess, this boi waits until the arm is ready      â
@@ -26,5 +23,8 @@
         â they will be located directly north / east / west / south -  â
         â i.e. you don't have to worry about diagonals                 â
         â                                                              â
-        â                [enter] scoooby doooby dooo, let's catch them â
-[esc] goââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        â                 [enter] scoooby doooby dooo, let's catch 'em â
+        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+                                                        [u] upload bot
+[esc] go back  [spc] pause  [h] help

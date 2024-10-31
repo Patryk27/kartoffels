@@ -1,12 +1,12 @@
 use super::prelude::*;
 
 static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (13/16) "),
 
     body: vec![
         DialogLine::new(
-            "how about we implement a *line following robot* to solidify all \
-             this knowledge, eh?",
+            "so, how about we implement a *line following robot* to solidify \
+             all this knowledge, eh?",
         ),
         DialogLine::new(""),
     ]
@@ -26,12 +26,9 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         .chain([
             DialogLine::new(""),
             DialogLine::new(
-                "as a reminder, given `let scan = radar_scan_3x3();`, you get:",
+                "also, feel free to consult `scan.tile_at()`'s documentation \
+                 to see example usage of the radar",
             ),
-            DialogLine::new(""),
-            DialogLine::new("\t- `scan[0][1]` = tile in front of the bot"),
-            DialogLine::new("\t- `scan[1][0]` = tile on bot's left side"),
-            DialogLine::new("\t- `scan[1][2]` = tile on bot's right side"),
         ])
         .collect(),
 
@@ -62,13 +59,13 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
         DialogLine::new("\t- `radar_scan_3x3()`"),
         DialogLine::new(""),
         DialogLine::new(
-            "... and `serial_send_str()` might come handy for debugging!",
+            "... and `serial_write()` might come handy for debugging!",
         ),
     ]
 });
 
 static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (13/16) "),
     body: vec![DialogLine::new("hmm, your robot seems to have died")],
     buttons: vec![DialogButton::confirm("let's try again", ())],
 });
@@ -86,21 +83,17 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     setup_map(ctxt).await?;
 
     loop {
-        ctxt.wait_until_bot_is_spawned().await?;
+        ctxt.snapshots.wait_until_bot_is_spawned().await?;
         ctxt.game.set_status(Some("WATCHING".into())).await?;
 
-        let outcome = wait(ctxt).await?;
+        let succeeded = wait(ctxt).await?;
 
         ctxt.game.set_status(None).await?;
 
-        match outcome {
-            Ok(()) => {
-                break;
-            }
-
-            Err(()) => {
-                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
-            }
+        if succeeded {
+            break;
+        } else {
+            ctxt.game.run_dialog(&DIALOG_RETRY).await?;
         }
     }
 
@@ -142,18 +135,16 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn wait(ctxt: &mut StepCtxt) -> Result<Result<(), ()>> {
-    ctxt.game
-        .poll(|ctxt| {
-            let Some(bot) = ctxt.world.bots().alive().iter().next() else {
-                return Poll::Ready(Err(()));
-            };
-
+async fn wait(ctxt: &mut StepCtxt) -> Result<bool> {
+    loop {
+        if let Some(bot) =
+            ctxt.snapshots.next().await?.bots().alive().iter().next()
+        {
             if bot.pos == ivec2(10, 12) {
-                return Poll::Ready(Ok(()));
+                return Ok(true);
             }
-
-            Poll::Pending
-        })
-        .await
+        } else {
+            return Ok(false);
+        }
+    }
 }

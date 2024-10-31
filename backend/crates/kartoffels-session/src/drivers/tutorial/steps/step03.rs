@@ -3,7 +3,7 @@ use super::prelude::*;
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
 static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (3/16) "),
 
     body: vec![
         DialogLine::new("look at you, learning so fast - *NEXT LESSON!*"),

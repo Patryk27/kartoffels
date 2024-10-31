@@ -1,7 +1,7 @@
 
-        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
-        â how about we implement a line following robot to solidify    â
-        â all this knowledge, eh?                                      â
+        âââââââââââââââââââââââ tutorial (13/16) âââââââââââââââââââââââ
+        â so, how about we implement a line following robot to         â
+        â solidify all this knowledge, eh?                             â
         â                                                              â
         â a line following robot does what its name says - it uses     â
         â radar to check where to go next and then goes there, like:   â
@@ -22,7 +22,7 @@
        .â     - radar_wait()                                           â
         â     - radar_scan_3x3()                                       â
         â                                                              â
-        â ... and serial_send_str() might come handy for debugging!    â
+        â ... and serial_write() might come handy for debugging!       â
         â                                                              â
         â                      [enter] let's implement a line-follower â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ

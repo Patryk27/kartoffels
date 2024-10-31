@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
-    title: Some(" tutorial "),
+    title: Some(" tutorial (1/16) "),
 
     body: vec![
         DialogLine::new("hey there and welcome to kartoffels 🫡"),

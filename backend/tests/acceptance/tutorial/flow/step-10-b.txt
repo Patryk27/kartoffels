@@ -1,10 +1,10 @@
+                                                        id
+                                                        0543-c377-57f0-8d9a
 
-
-
-                        .........
-                      .............
-                     ...............
-        âââââââââââââââââââââââââââ tutorial âââââââââââââââââââââââââââ
+                        .........                       status
+                      .............                     alive (0s)
+                     ...............                    > score: 0
+        âââââââââââââââââââââââ tutorial (10/16) âââââââââââââââââââââââ
         â hmm, your robot seems to be still alive                      â
         â                                                              â
         â this wasn't a triumph, i'm making a note here, NOT a huge    â
@@ -26,5 +26,5 @@
                         .........
 
 
-                                                        [u] upload bot
+
 [esc] go back  [spc] pause  [h] help

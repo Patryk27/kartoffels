@@ -172,25 +172,6 @@ impl TestContext {
     }
 
     #[track_caller]
-    pub async fn wait_for_change(&mut self) {
-        let result = time::timeout(Duration::from_secs(1), async {
-            let stdout = self.stdout();
-
-            while self.stdout() == stdout {
-                self.recv().await;
-            }
-        })
-        .await;
-
-        if result.is_err() {
-            panic!(
-                "wait_for_change() failed, stdout was:\n\n{}",
-                self.stdout()
-            );
-        }
-    }
-
-    #[track_caller]
     pub fn see(&mut self, text: &str) {
         let stdout = self.stdout();
 
