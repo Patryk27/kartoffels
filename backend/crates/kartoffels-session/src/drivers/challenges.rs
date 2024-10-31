@@ -1,4 +1,5 @@
 mod acyclic_maze;
+mod flight_syndrome;
 
 use crate::DrivenGame;
 use anyhow::Result;

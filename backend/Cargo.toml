@@ -3,6 +3,7 @@ resolver = "2"
 
 members = [
     "bots/chl-acyclic-maze",
+    "bots/chl-flight-syndrome-enemy",
     "bots/dummy",
     "bots/roberto",
     "bots/tut-01",
