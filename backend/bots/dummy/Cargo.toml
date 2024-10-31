@@ -1,7 +1,7 @@
 [package]
-name = "bot-tut-03"
+name = "bot-dummy"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-kartoffel = { path = "../../kartoffel" }
+kartoffel = { path = "../../crates/kartoffel" }

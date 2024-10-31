@@ -1,30 +1,30 @@
 use crate::{wri, MEM_SERIAL};
+use alloc::string::String;
 
-/// Sends a character to the serial port (i.e. the web browser).
+/// Writes a character or a string to the serial port.
 ///
 /// Serial port is a circular buffer with capacity for 256 UTF-8 characters -
 /// writing 257th character will shift all the characters by one, removing the
 /// first character.
 ///
-/// See also: [`serial_send_str()`], [`serial_send_ansi()`].
+/// See also: [`SerialControlCode`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// serial_write('H');
+/// serial_write("Hello\nWorld");
+/// serial_write(format!("n = {}", 123));
+/// ```
 #[inline(always)]
-pub fn serial_send(ch: char) {
-    wri(MEM_SERIAL, 0, ch as u32);
+pub fn serial_write(val: impl SerialWritable) {
+    val.write();
 }
 
-/// Sends a string to the serial port.
-///
-/// See: [`serial_send()`].
-#[inline(always)]
-pub fn serial_send_str(str: &str) {
-    for ch in str.chars() {
-        serial_send(ch);
-    }
-}
-
-/// Sends a special control character - see: [`SerialCtrlChar`].
-///
-/// See also: [`serial_send()`], [`serial_send_str()`].
+/// Terminal control code - similar to ANSI color code, i.e. it allows to
+/// manipulate the terminal.
 ///
 /// # Examples
 ///
@@ -39,35 +39,64 @@ pub fn serial_send_str(str: &str) {
 /// let mut n = 0;
 ///
 /// loop {
-///     serial_send_ctrl(SerialCtrlChar::StartBuffering);
-///     serial_send_str("hello: ");
-///     serial_send((b'0' + (n % 10)) as char);
-///     serial_send_ctrl(SerialCtrlChar::FlushBuffer);
+///     serial_write(SerialControlCode::StartBuffering);
+///     serial_write("hello: ");
+///     serial_write(format!("{n}"));
+///     serial_write(SerialControlCode::FlushBuffer);
 /// }
 /// ```
-pub fn serial_send_ctrl(ctrl: SerialCtrlChar) {
-    wri(MEM_SERIAL, 0, ctrl.encode());
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum SerialCtrlChar {
+pub enum SerialControlCode {
     /// Start buffering the output.
     ///
     /// All characters sent from this point on will not be displayed until you
-    /// send [`SerialCtrlChar::FlushBuffer`].
+    /// send [`SerialControlCode::FlushBuffer`].
     StartBuffering,
 
     /// Flush the buffered output and print it on the terminal.
     FlushBuffer,
 }
 
-impl SerialCtrlChar {
+impl SerialControlCode {
     pub fn encode(&self) -> u32 {
         let ctrl = match self {
-            SerialCtrlChar::StartBuffering => 0x00,
-            SerialCtrlChar::FlushBuffer => 0x01,
+            SerialControlCode::StartBuffering => 0x00,
+            SerialControlCode::FlushBuffer => 0x01,
         };
 
         0xffffff00 | ctrl
+    }
+}
+
+/// Thing that can be written into the terminal - see [`serial_write()`].
+pub trait SerialWritable {
+    fn write(self);
+}
+
+impl SerialWritable for char {
+    fn write(self) {
+        wri(MEM_SERIAL, 0, self as u32);
+    }
+}
+
+impl SerialWritable for &str {
+    fn write(self) {
+        for ch in self.chars() {
+            ch.write();
+        }
+    }
+}
+
+impl SerialWritable for String {
+    fn write(self) {
+        for ch in self.chars() {
+            ch.write();
+        }
+    }
+}
+
+impl SerialWritable for SerialControlCode {
+    fn write(self) {
+        wri(MEM_SERIAL, 0, self.encode());
     }
 }

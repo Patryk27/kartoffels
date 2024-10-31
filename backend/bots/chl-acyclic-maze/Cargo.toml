@@ -4,4 +4,4 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-kartoffel = { path = "../../kartoffel" }
+kartoffel = { path = "../../crates/kartoffel" }

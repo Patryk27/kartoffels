@@ -12,17 +12,13 @@ fn main() {
             radar_scan_3x3()
         };
 
-        if is_bot(scan[0][1]) {
+        if scan.tile_at(0, -1) == '@' {
             arm_stab();
-
-            #[allow(clippy::empty_loop)]
-            loop {
-                //
-            }
+            break;
         }
 
-        if is_floor(scan[0][1]) {
-            if is_wall(scan[0][2]) {
+        if scan.tile_at(0, -1) == '.' {
+            if scan.tile_at(1, -1) == '-' || scan.tile_at(1, -1) == '|' {
                 motor_wait();
                 motor_step();
             } else {
@@ -40,16 +36,4 @@ fn main() {
             motor_turn_left();
         }
     }
-}
-
-fn is_bot(ch: char) -> bool {
-    ch == '@'
-}
-
-fn is_floor(ch: char) -> bool {
-    ch == '.'
-}
-
-fn is_wall(ch: char) -> bool {
-    ch == '-' || ch == '|'
 }

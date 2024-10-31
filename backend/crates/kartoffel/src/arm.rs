@@ -1,6 +1,20 @@
 use crate::{rdi, wri, MEM_ARM};
 
 /// Returns whether the arm is ready and [`arm_stab()`] can be invoked.
+///
+/// See also: [`arm_wait()`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// if is_arm_ready() {
+///     arm_stab();
+/// } else {
+///     // run, forrest, run!
+/// }
+/// ```
 #[inline(always)]
 pub fn is_arm_ready() -> bool {
     rdi(MEM_ARM, 0) == 1
@@ -8,7 +22,16 @@ pub fn is_arm_ready() -> bool {
 
 /// Waits for the arm to become ready.
 ///
-/// See: [`is_arm_ready()`].
+/// See also: [`is_arm_ready()`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// arm_wait();
+/// arm_stab();
+/// ```
 #[inline(always)]
 pub fn arm_wait() {
     while !is_arm_ready() {
@@ -16,12 +39,23 @@ pub fn arm_wait() {
     }
 }
 
-/// Stabs the bot in front of us (if any), killing it.
+/// Stabs the bot in front of you, killing it; if there's no bot there, nothing
+/// happens.
 ///
 /// # Cooldown
 ///
-/// This function introduces a cooldown period of 60_000 +- 15% ticks (~930 ms)
-/// - see: [`is_arm_ready()`].
+/// ```text
+/// 60_000 +- 15% ticks (~930 ms)
+/// ```
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// arm_wait();
+/// arm_stab();
+/// ```
 #[inline(always)]
 pub fn arm_stab() {
     wri(MEM_ARM, 0, 1)

@@ -2,12 +2,12 @@
 resolver = "2"
 
 members = [
-    "crates/bots/chl-acyclic-maze",
-    "crates/bots/dummy",
-    "crates/bots/roberto",
-    "crates/bots/tut-01",
-    "crates/bots/tut-02",
-    "crates/bots/tut-03",
+    "bots/chl-acyclic-maze",
+    "bots/dummy",
+    "bots/roberto",
+    "bots/tut-01",
+    "bots/tut-02",
+    "bots/tut-03",
     "crates/kartoffel",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",

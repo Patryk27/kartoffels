@@ -3,7 +3,7 @@
 extern crate alloc;
 
 use alloc::collections::VecDeque;
-use core::ops::Range;
+use core::ops::RangeInclusive;
 use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
@@ -20,42 +20,50 @@ fn main() {
             radar_scan_5x5()
         };
 
-        if scan[1][2] == '@' {
+        // If there's an enemy right in front of us, attack, attack, attack!
+        if scan.tile_at(0, -1) == '@' {
             display.log('!');
             arm_wait();
             arm_stab();
             continue;
         }
 
-        if scan[1][2] == '.' && got_enemy_in(scan, 0..5, 0..2) {
+        // If there's an enemy somewhere in front of us, move forward
+        if scan.tile_at(0, -1) == '.' && got_enemy_in(&scan, -2..=2, -2..=1) {
             display.log('^');
             motor_wait();
             motor_step();
             continue;
         }
 
-        if got_enemy_in(scan, 3..5, 0..5) {
+        // If there's an enemy somewhere to the left of us, turn left
+        if got_enemy_in(&scan, -2..=0, -2..=2) {
             display.log('<');
             motor_wait();
-            motor_turn(1);
+            motor_turn_left();
             continue;
         }
 
-        if got_enemy_in(scan, 0..2, 0..5) {
+        // If there's an enemy somewhere to the right of us, turn right
+        if got_enemy_in(&scan, 0..=2, -2..=2) {
             display.log('>');
             motor_wait();
-            motor_turn(-1);
+            motor_turn_right();
             continue;
         }
 
-        if got_enemy_in(scan, 0..5, 3..5) {
+        // If there's an enemy behind us, turn in random direction (hoping to
+        // eventually turn back)
+        if got_enemy_in(&scan, -2..=2, 1..=2) {
             display.log('v');
             motor_wait();
             motor_turn(if rng.bool() { -1 } else { 1 });
             continue;
         }
 
-        if timer_ticks() < sample_dir_at && scan[1][2] != '.' {
+        // If the direction we're moving towards will cause us to fall outside
+        // the map, change direction
+        if timer_ticks() < sample_dir_at && scan.tile_at(0, -1) != '.' {
             sample_dir_at = 0;
         }
 
@@ -67,25 +75,25 @@ fn main() {
 
             let can_step = loop {
                 match rng.u32() % 4 {
-                    0 if scan[2][1] == '.' => {
+                    0 if scan.tile_at(-1, 0) == '.' => {
                         motor_wait();
-                        motor_turn(-1);
+                        motor_turn_left();
 
                         break true;
                     }
 
-                    1 if scan[1][2] == '.' => {
+                    1 if scan.tile_at(0, -1) == '.' => {
                         break true;
                     }
 
-                    2 if scan[2][3] == '.' => {
+                    2 if scan.tile_at(1, 0) == '.' => {
                         motor_wait();
-                        motor_turn(1);
+                        motor_turn_right();
 
                         break true;
                     }
 
-                    3 if scan[3][2] == '.' => {
+                    3 if scan.tile_at(0, 1) == '.' => {
                         motor_wait();
                         motor_turn(if rng.bool() { -1 } else { 1 });
 
@@ -107,13 +115,13 @@ fn main() {
 }
 
 fn got_enemy_in<const D: usize>(
-    scan: [[char; D]; D],
-    xs: Range<usize>,
-    ys: Range<usize>,
+    scan: &RadarScan<D>,
+    xs: RangeInclusive<i8>,
+    ys: RangeInclusive<i8>,
 ) -> bool {
-    for y in ys {
-        for x in xs.clone() {
-            if scan[y][x] == '@' {
+    for x in xs {
+        for y in ys.clone() {
+            if scan.tile_at(x, y) == '@' {
                 return true;
             }
         }
@@ -160,13 +168,13 @@ impl Display {
     }
 
     fn send(&self) {
-        serial_send_ctrl(SerialCtrlChar::StartBuffering);
-        serial_send_str("i'm roberto 🔪\n\n");
+        serial_write(SerialControlCode::StartBuffering);
+        serial_write("i'm roberto 🔪\n\n");
 
         for log in &self.logs {
-            serial_send(*log);
+            serial_write(*log);
         }
 
-        serial_send_ctrl(SerialCtrlChar::FlushBuffer);
+        serial_write(SerialControlCode::FlushBuffer);
     }
 }
