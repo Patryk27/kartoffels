@@ -9,23 +9,7 @@ pub static CHALLENGE: Challenge = Challenge {
     run,
 };
 
-static INIT_MSG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
-    title: Some(" acyclic-maze "),
-    body: INSTRUCTION.clone(),
-
-    buttons: vec![
-        DialogButton::abort("go back", false),
-        DialogButton::confirm("let's do it", true),
-    ],
-});
-
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
-    title: Some(" help "),
-    body: INSTRUCTION.clone(),
-    buttons: vec![HelpDialogResponse::close()],
-});
-
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
     vec![
         DialogLine::new(
             "poor timmy-bot went for a walk and got attacked by a masked \
@@ -39,6 +23,22 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
              _kills it_ - you'll be starting in the bottom-right corner",
         ),
     ]
+});
+
+static INIT_MSG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
+    title: Some(" acyclic-maze "),
+    body: DOCS.clone(),
+
+    buttons: vec![
+        DialogButton::abort("go back", false),
+        DialogButton::confirm("let's do it", true),
+    ],
+});
+
+static HELP_MSG: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+    title: Some(" help "),
+    body: DOCS.clone(),
+    buttons: vec![HelpDialogResponse::close()],
 });
 
 static WIN_MSG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
@@ -76,7 +76,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
 }
 
 async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
-    game.set_help(Some(&*HELP)).await?;
+    game.set_help(Some(&*HELP_MSG)).await?;
     game.set_perms(Perms::CHALLENGE.disabled()).await?;
     game.set_status(Some("BUILDING WORLD".into())).await?;
 

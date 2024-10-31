@@ -17,7 +17,7 @@ async fn acyclic_maze() {
     ctxt.see_frame("challenges/acyclic-maze/1.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for("BUILDING WORLD").await;
+    ctxt.wait_for("upload bot").await;
     ctxt.wait_while("BUILDING WORLD").await;
     ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
 
