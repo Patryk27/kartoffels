@@ -13,7 +13,7 @@ pub fn run(
         oneshot,
     }: CreateBotRequest,
 ) -> Result<BotId> {
-    info!(src = ?sha256::digest(&src[..]), "creating bot");
+    info!(src = ?sha256::digest(&src[..])[0..8], "creating bot");
 
     let fw = Firmware::from_elf(&src).context("couldn't parse firmware")?;
 
