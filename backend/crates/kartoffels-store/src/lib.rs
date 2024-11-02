@@ -116,7 +116,7 @@ impl Store {
         *self.sessions.lock().unwrap().keys().next().unwrap()
     }
 
-    pub fn is_testing(&self) -> bool {
+    pub fn testing(&self) -> bool {
         self.testing
     }
 

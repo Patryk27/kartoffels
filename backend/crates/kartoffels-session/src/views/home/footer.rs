@@ -9,7 +9,7 @@ pub struct Footer;
 
 impl Footer {
     pub fn render<T>(store: &Store, ui: &mut Ui<T>) {
-        let text = if store.is_testing() {
+        let text = if store.testing() {
             "localhost"
         } else {
             &*FOOTER

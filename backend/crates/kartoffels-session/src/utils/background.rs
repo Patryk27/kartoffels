@@ -18,7 +18,7 @@ impl Background {
     const MAP_SIZE: UVec2 = uvec2(256, 256);
 
     pub fn new(store: &Store, term: &Term) -> Self {
-        let stream = if store.is_testing() {
+        let stream = if store.testing() {
             watch::channel(Default::default()).1
         } else {
             STREAM.subscribe()

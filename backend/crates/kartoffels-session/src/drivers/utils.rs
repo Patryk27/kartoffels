@@ -20,7 +20,7 @@ where
 
     let progress = async {
         while let Some(map) = rx.recv().await {
-            if store.is_testing() {
+            if store.testing() {
                 continue;
             }
 

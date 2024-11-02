@@ -55,29 +55,42 @@ async fn main_ex(
     term: &mut Term,
     bg: &mut Background,
 ) -> Result<()> {
-    loop {
-        match home::run(store, term, bg).await? {
-            #[allow(clippy::while_let_loop)]
-            home::Response::Play => loop {
-                match play::run(store, term, bg).await? {
-                    play::Response::Play(world) => {
-                        drive(store, sess, term, |game| {
-                            drivers::online::run(world, game)
-                        })
-                        .await?;
-                    }
+    let mut fade_in = true;
 
-                    play::Response::GoBack => {
-                        break;
+    loop {
+        match home::run(store, term, bg, fade_in).await? {
+            #[allow(clippy::while_let_loop)]
+            home::Response::Play => {
+                fade_in = false;
+
+                loop {
+                    match play::run(store, term, bg, fade_in).await? {
+                        play::Response::Play(world) => {
+                            drive(store, sess, term, |game| {
+                                drivers::online::run(world, game)
+                            })
+                            .await?;
+
+                            fade_in = true;
+                            continue;
+                        }
+
+                        play::Response::GoBack => {
+                            fade_in = false;
+                            break;
+                        }
                     }
                 }
-            },
+            }
 
             home::Response::Sandbox => {
                 drive(store, sess, term, |game| {
                     drivers::sandbox::run(store, game)
                 })
                 .await?;
+
+                fade_in = true;
+                continue;
             }
 
             home::Response::Tutorial => {
@@ -85,23 +98,34 @@ async fn main_ex(
                     drivers::tutorial::run(store, game)
                 })
                 .await?;
+
+                fade_in = true;
+                continue;
             }
 
             #[allow(clippy::while_let_loop)]
-            home::Response::Challenges => loop {
-                match challenges::run(term, bg).await? {
-                    challenges::Response::Play(challenge) => {
-                        drive(store, sess, term, |game| {
-                            (challenge.run)(store, game)
-                        })
-                        .await?;
-                    }
+            home::Response::Challenges => {
+                fade_in = false;
 
-                    challenges::Response::GoBack => {
-                        break;
+                loop {
+                    match challenges::run(store, term, bg, fade_in).await? {
+                        challenges::Response::Play(challenge) => {
+                            drive(store, sess, term, |game| {
+                                (challenge.run)(store, game)
+                            })
+                            .await?;
+
+                            fade_in = true;
+                            continue;
+                        }
+
+                        challenges::Response::GoBack => {
+                            fade_in = false;
+                            break;
+                        }
                     }
                 }
-            },
+            }
 
             home::Response::Quit => {
                 return Ok(());

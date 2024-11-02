@@ -114,7 +114,7 @@ async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
     // ---
 
     utils::create_map(store, &world, |tx| async move {
-        let seed = if store.is_testing() {
+        let seed = if store.testing() {
             Default::default()
         } else {
             rand::thread_rng().gen()

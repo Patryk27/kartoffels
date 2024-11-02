@@ -24,7 +24,7 @@ impl Camera {
     }
 
     pub fn tick(&mut self, dt: f32, store: &Store) {
-        if store.is_testing() {
+        if store.testing() {
             // Don't bother animating camera during tests, it makes them less
             // reproducible
             self.pos = self.target;

@@ -22,7 +22,7 @@ use base64::Engine;
 use futures_util::FutureExt;
 use itertools::Either;
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Clear, Term, Ui};
+use kartoffels_ui::{Clear, Fade, FadeDir, Render, Term, Ui};
 use kartoffels_world::prelude::{
     BotId, ClockSpeed, CreateBotRequest, Handle as WorldHandle,
     Snapshot as WorldSnapshot, SnapshotStream,
@@ -41,6 +41,7 @@ pub async fn run(
 ) -> Result<()> {
     debug!("run()");
 
+    let mut fade = Some(Fade::new(FadeDir::In));
     let mut state = State::default();
     let mut frame = Instant::now();
 
@@ -49,6 +50,10 @@ pub async fn run(
             .draw(|ui| {
                 state.tick(frame.elapsed().as_secs_f32(), store);
                 state.render(ui, sess);
+
+                if let Some(fade) = &fade {
+                    fade.render(ui);
+                }
 
                 frame = Instant::now();
             })
@@ -60,11 +65,17 @@ pub async fn run(
             if let ControlFlow::Break(_) =
                 event.handle(store, sess, term, &mut state).await?
             {
-                return Ok(());
+                fade = Some(Fade::new(FadeDir::Out));
             }
         }
 
         state.poll(term, &mut driver).await?;
+
+        if let Some(fade) = &fade {
+            if fade.dir() == FadeDir::Out && fade.is_completed() {
+                return Ok(());
+            }
+        }
     }
 }
 
@@ -87,7 +98,7 @@ struct State {
 impl State {
     fn tick(&mut self, dt: f32, store: &Store) {
         if let Some(bot) = &self.bot {
-            if bot.is_followed {
+            if bot.follow {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
                     self.camera.animate_to(bot.pos);
                 }
@@ -163,9 +174,9 @@ impl State {
         if let Some(bot) = &mut self.bot {
             let exists_now = self.snapshot.bots().by_id(bot.id).is_some();
 
-            bot.is_known_to_exist |= exists_now;
+            bot.exists |= exists_now;
 
-            if bot.is_known_to_exist && !exists_now {
+            if bot.exists && !exists_now {
                 self.bot = None;
             }
         }
@@ -206,8 +217,8 @@ impl State {
     fn join_bot(&mut self, id: BotId) {
         self.bot = Some(JoinedBot {
             id,
-            is_followed: true,
-            is_known_to_exist: false,
+            follow: true,
+            exists: false,
         });
 
         self.map.blink = Instant::now();
@@ -262,6 +273,6 @@ impl State {
 #[derive(Debug)]
 struct JoinedBot {
     id: BotId,
-    is_followed: bool,
-    is_known_to_exist: bool,
+    follow: bool,
+    exists: bool,
 }
