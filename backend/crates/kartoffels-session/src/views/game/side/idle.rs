@@ -26,7 +26,7 @@ impl IdleSidePanel {
     fn layout(state: &State) -> Vec<Action> {
         let mut btns = Vec::new();
 
-        if !state.perms.single_bot_mode {
+        if !state.perms.hero_mode {
             btns.push(Action::JoinBot);
         }
 

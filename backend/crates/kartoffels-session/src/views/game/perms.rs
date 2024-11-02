@@ -6,7 +6,7 @@ pub struct Perms {
 
     /// When active, user can upload at most one bot - useful for tutorial and
     /// challenges.
-    pub single_bot_mode: bool,
+    pub hero_mode: bool,
 
     /// When active, pause will be synchronized between UI and the underlying
     /// world.
@@ -27,7 +27,7 @@ pub struct Perms {
 impl Perms {
     pub const ONLINE: Self = Self {
         ui_enabled: true,
-        single_bot_mode: false,
+        hero_mode: false,
         sync_pause: false,
         user_can_manage_bots: false,
         user_can_pause: true,
@@ -38,7 +38,7 @@ impl Perms {
 
     pub const SANDBOX: Self = Self {
         ui_enabled: true,
-        single_bot_mode: false,
+        hero_mode: false,
         sync_pause: true,
         user_can_manage_bots: true,
         user_can_pause: true,
@@ -49,7 +49,7 @@ impl Perms {
 
     pub const TUTORIAL: Self = Self {
         ui_enabled: true,
-        single_bot_mode: true,
+        hero_mode: true,
         sync_pause: true,
         user_can_manage_bots: false,
         user_can_pause: false,
@@ -60,7 +60,7 @@ impl Perms {
 
     pub const CHALLENGE: Self = Self {
         ui_enabled: true,
-        single_bot_mode: true,
+        hero_mode: true,
         sync_pause: true,
         user_can_manage_bots: true,
         user_can_pause: true,

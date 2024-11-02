@@ -59,7 +59,7 @@ impl BottomPanel {
     }
 
     fn render_bots_btn(ui: &mut Ui<Event>, state: &State) {
-        if !state.perms.single_bot_mode {
+        if !state.perms.hero_mode {
             ui.space(2);
 
             Button::new(KeyCode::Char('b'), "bots")
