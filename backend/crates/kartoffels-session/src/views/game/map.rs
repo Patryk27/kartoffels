@@ -154,7 +154,7 @@ impl Map {
             return;
         }
 
-        let offset = ivec2(ui.area().width as i32, ui.area().height as i32) / 5;
+        let offset = ivec2(ui.area().width as i32, ui.area().height as i32) / 3;
 
         if ui.key(KeyCode::Char('w'), Modifiers::NONE)
             || ui.key(KeyCode::UpArrow, Modifiers::NONE)

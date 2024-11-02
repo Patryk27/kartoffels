@@ -23,14 +23,22 @@ impl Camera {
         self.animate_to((self.target + delta.as_vec2()).as_ivec2());
     }
 
-    pub fn tick(&mut self, store: &Store) {
+    pub fn tick(&mut self, dt: f32, store: &Store) {
         if store.is_testing() {
             // Don't bother animating camera during tests, it makes them less
             // reproducible
-
             self.pos = self.target;
         } else {
-            self.pos = (self.pos * 4.0 + self.target) / 5.0;
+            let vec = self.target - self.pos;
+            let dir = vec.normalize();
+            let len = vec.length();
+
+            if len <= 0.5 {
+                self.pos = self.target;
+                return;
+            }
+
+            self.pos += dir * len.max(4.0) * (dt * 4.0).min(1.0);
         }
     }
 

@@ -42,12 +42,15 @@ pub async fn run(
     debug!("run()");
 
     let mut state = State::default();
+    let mut frame = Instant::now();
 
     loop {
         let event = term
             .draw(|ui| {
-                state.tick(store);
+                state.tick(frame.elapsed().as_secs_f32(), store);
                 state.render(ui, sess);
+
+                frame = Instant::now();
             })
             .await?;
 
@@ -82,7 +85,7 @@ struct State {
 }
 
 impl State {
-    fn tick(&mut self, store: &Store) {
+    fn tick(&mut self, dt: f32, store: &Store) {
         if let Some(bot) = &self.bot {
             if bot.is_followed {
                 if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
@@ -91,7 +94,7 @@ impl State {
             }
         }
 
-        self.camera.tick(store);
+        self.camera.tick(dt, store);
     }
 
     fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
