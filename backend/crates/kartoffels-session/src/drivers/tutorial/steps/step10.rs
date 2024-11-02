@@ -56,7 +56,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     ctxt.game.resume().await?;
 
     loop {
-        ctxt.game.set_status(Some("WATCHING".into())).await?;
+        ctxt.game.set_status(Some("watching".into())).await?;
 
         let result = time::timeout(
             Duration::from_secs(10),

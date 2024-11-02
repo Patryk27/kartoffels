@@ -66,7 +66,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
         let dummies = setup_map(ctxt).await?;
         let player = ctxt.snapshots.wait_until_bot_is_spawned().await?;
 
-        ctxt.game.set_status(Some("WATCHING".into())).await?;
+        ctxt.game.set_status(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt, &dummies, player).await?;
 

@@ -78,7 +78,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
 async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_perms(Perms::CHALLENGE.disabled()).await?;
-    game.set_status(Some("BUILDING WORLD".into())).await?;
+    game.set_status(Some("building world".into())).await?;
 
     let world = store.create_private_world(Config {
         name: "challenge:acyclic-maze".into(),
