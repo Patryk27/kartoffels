@@ -101,8 +101,8 @@ pub struct AliveBotsLocator<'a> {
 }
 
 impl AliveBotsLocator<'_> {
-    pub fn contains(&self, pos: IVec2) -> bool {
-        self.pos_to_id.contains_key(&pos)
+    pub fn at(&self, pos: IVec2) -> Option<BotId> {
+        self.pos_to_id.get(&pos).copied()
     }
 }
 

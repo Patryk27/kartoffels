@@ -15,8 +15,12 @@ pub struct Id(NonZeroU64);
 impl Id {
     pub const LENGTH: usize = 19;
 
-    pub fn new(id: u64) -> Self {
-        Self(id.try_into().unwrap())
+    pub const fn new(id: u64) -> Self {
+        Self(NonZeroU64::new(id).unwrap())
+    }
+
+    pub fn try_new(id: u64) -> Option<Self> {
+        NonZeroU64::new(id).map(Self)
     }
 
     pub fn get(self) -> u64 {

@@ -26,8 +26,12 @@ pub struct BotId(Id);
 impl BotId {
     pub const LENGTH: usize = Id::LENGTH;
 
-    pub fn new(id: u64) -> Self {
+    pub const fn new(id: u64) -> Self {
         Self(Id::new(id))
+    }
+
+    pub fn try_new(id: u64) -> Option<Self> {
+        Id::try_new(id).map(Self)
     }
 
     pub fn get(&self) -> Id {

@@ -124,8 +124,8 @@ pub fn radar_scan_9x9() -> RadarScan<9> {
 }
 
 #[inline(always)]
-fn radar_scan<const D: usize>() -> RadarScan<D> {
-    wri(MEM_RADAR, 0, D as u32);
+fn radar_scan<const R: usize>() -> RadarScan<R> {
+    wri(MEM_RADAR, 0, R as u32);
 
     RadarScan { _priv: () }
 }
@@ -199,11 +199,11 @@ fn radar_scan<const D: usize>() -> RadarScan<D> {
 /// If you need to preserve an older scan, you should call [`Self::tile_at()`]
 /// etc. and save all the information you need elsewhere.
 #[derive(Debug)]
-pub struct RadarScan<const D: usize> {
+pub struct RadarScan<const R: usize> {
     _priv: (),
 }
 
-impl<const D: usize> RadarScan<D> {
+impl<const R: usize> RadarScan<R> {
     /// Returns tile visible at given coordinates.
     ///
     /// # Coordinate system
@@ -219,8 +219,8 @@ impl<const D: usize> RadarScan<D> {
     /// returns zero.
     ///
     /// Bot ids are random, unique, non-zero 64-bit numbers assigned to each bot
-    /// during its upload - they can be used to distinguish your bots from
-    /// others and so on.
+    /// during its upload; ids are preserved when a bot is auto-respawned after
+    /// death.
     ///
     /// # Coordinate system
     ///
@@ -243,10 +243,10 @@ impl<const D: usize> RadarScan<D> {
     }
 
     fn get_ex(&self, dx: i8, dy: i8, z: u8) -> u32 {
-        let x = (dx + (D as i8 / 2)) as usize;
-        let y = (dy + (D as i8 / 2)) as usize;
+        let x = (dx + (R as i8 / 2)) as usize;
+        let y = (dy + (R as i8 / 2)) as usize;
         let z = z as usize;
 
-        rdi(MEM_RADAR, 1 + z * D * D + y * D + x)
+        rdi(MEM_RADAR, 1 + z * R * R + y * R + x)
     }
 }

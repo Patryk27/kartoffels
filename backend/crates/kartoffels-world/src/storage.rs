@@ -15,8 +15,6 @@ use std::path::Path;
 use std::time::Duration;
 use tokio::task;
 
-const VERSION: u32 = 11;
-
 #[derive(Serialize, Deserialize)]
 pub struct SerializedWorld<'a> {
     pub bots: MaybeOwned<'a, Bots>,
@@ -41,8 +39,9 @@ impl SerializedWorld<'_> {
         let this =
             ciborium::from_reader(&mut file).context("couldn't read state")?;
 
-        let this = migrations::run(header.version(), VERSION, this)
-            .context("couldn't migrate state")?;
+        let this =
+            migrations::run(header.version(), migrations::version(), this)
+                .context("couldn't migrate state")?;
 
         let this = ciborium::from_reader({
             let mut buffer = Vec::new();

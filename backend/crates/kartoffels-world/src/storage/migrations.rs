@@ -8,13 +8,13 @@ mod v08;
 mod v09;
 mod v10;
 mod v11;
+mod v12;
 
-use crate::storage::VERSION;
 use anyhow::Result;
 use ciborium::Value;
 use tracing::info;
 
-const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] = [
+static MIGRATIONS: &[fn(&mut Value)] = &[
     v02::run,
     v03::run,
     v04::run,
@@ -25,6 +25,7 @@ const MIGRATIONS: [fn(&mut Value); (VERSION - 1) as usize] = [
     v09::run,
     v10::run,
     v11::run,
+    v12::run,
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
@@ -37,6 +38,10 @@ pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
     Ok(world)
 }
 
+pub const fn version() -> u32 {
+    MIGRATIONS.len() as u32 + 1
+}
+
 #[cfg(test)]
 mod tests {
     use kartoffels_utils::{cbor_to_json, json_to_cbor};
@@ -46,10 +51,18 @@ mod tests {
         let given = serde_json::from_str(given).unwrap();
         let given = json_to_cbor(given);
 
-        let actual = super::run(nth - 1, nth, given).unwrap();
-        let actual = cbor_to_json(actual, false);
-        let actual = serde_json::to_string_pretty(&actual).unwrap();
+        let expected = serde_json::from_str(expected).unwrap();
+        let expected = json_to_cbor(expected);
 
-        pa::assert_eq!(expected.trim(), actual.trim());
+        let actual = super::run(nth - 1, nth, given).unwrap();
+
+        if expected != actual {
+            let actual = cbor_to_json(actual, false);
+            let actual = serde_json::to_string_pretty(&actual).unwrap();
+
+            let expected = serde_json::to_string_pretty(&expected).unwrap();
+
+            pa::assert_eq!(expected.trim(), actual.trim());
+        }
     }
 }

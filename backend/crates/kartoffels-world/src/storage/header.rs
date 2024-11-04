@@ -1,4 +1,4 @@
-use super::VERSION;
+use super::migrations;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
@@ -44,7 +44,7 @@ impl Header {
             return Err(anyhow!(
                 "unsupported version: got {}, expected <= {}",
                 self.version,
-                VERSION,
+                migrations::version(),
             ));
         }
 
@@ -64,7 +64,7 @@ impl Default for Header {
     fn default() -> Self {
         Self {
             magic: *b"kartoffels:",
-            version: VERSION,
+            version: migrations::version(),
             padding: 0,
         }
     }

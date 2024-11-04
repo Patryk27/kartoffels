@@ -90,7 +90,7 @@ impl AliveBot {
         self.serial.tick();
         self.arm.tick();
         self.motor.tick();
-        self.radar.tick(map, bots, self.pos, self.dir);
+        self.radar.tick();
 
         self.cpu.tick(&mut BotMmio {
             timer: &mut self.timer,
@@ -100,7 +100,10 @@ impl AliveBot {
             arm: &mut self.arm,
             radar: &mut self.radar,
             ctxt: BotMmioContext {
+                bots,
                 dir: &mut self.dir,
+                map,
+                pos: self.pos,
                 rng: &mut *rng,
             },
         })?;
