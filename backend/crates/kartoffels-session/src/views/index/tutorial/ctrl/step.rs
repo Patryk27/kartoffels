@@ -1,5 +1,4 @@
-use crate::views::game::Perms;
-use crate::DrivenGame;
+use crate::views::game::{GameCtrl, Perms};
 use anyhow::Result;
 use glam::ivec2;
 use kartoffels_store::Store;
@@ -8,13 +7,13 @@ use kartoffels_world::prelude::{
 };
 
 pub struct StepCtxt {
-    pub game: DrivenGame,
+    pub game: GameCtrl,
     pub world: Handle,
     pub snapshots: SnapshotStream,
 }
 
 impl StepCtxt {
-    pub async fn new(store: &Store, game: DrivenGame) -> Result<Self> {
+    pub async fn new(store: &Store, game: GameCtrl) -> Result<Self> {
         game.set_perms(Perms::TUTORIAL).await?;
 
         let world = store.create_private_world(Config {

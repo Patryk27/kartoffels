@@ -1,6 +1,19 @@
 use super::Challenge;
-use crate::drivers::prelude::*;
-use glam::IVec2;
+use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use crate::MapBroadcaster;
+use anyhow::Result;
+use futures::future::BoxFuture;
+use glam::{ivec2, uvec2, IVec2, UVec2};
+use kartoffels_store::Store;
+use kartoffels_ui::{Dialog, DialogButton, DialogLine};
+use kartoffels_world::prelude::{
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
+    BOT_DUMMY,
+};
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+use std::sync::LazyLock;
+use tokio::sync::mpsc;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
@@ -59,7 +72,7 @@ const SIZE: UVec2 = uvec2(AREA.x + ENTRANCE_LEN, AREA.y);
 const TIMMY_POS: IVec2 = ivec2(1, 1);
 const PLAYER_POS: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
 
-fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
+fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     Box::pin(async move {
         if !game.run_dialog(&INIT_MSG).await? {
             return Ok(());
@@ -75,7 +88,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
+async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_perms(Perms::CHALLENGE.disabled()).await?;
     game.set_status(Some("building world".into())).await?;
@@ -113,7 +126,7 @@ async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
 
     // ---
 
-    utils::create_map(store, &world, |tx| async move {
+    MapBroadcaster::new(|tx| async move {
         let seed = if store.testing() {
             Default::default()
         } else {
@@ -124,6 +137,7 @@ async fn setup(store: &Store, game: &DrivenGame) -> Result<(Handle, BotId)> {
 
         Ok(map)
     })
+    .run(store, &world)
     .await?;
 
     game.set_perms(Perms::CHALLENGE).await?;
@@ -278,8 +292,10 @@ mod tests {
     #[test]
     fn map() {
         let dir = Path::new("src")
-            .join("drivers")
+            .join("views")
+            .join("index")
             .join("challenges")
+            .join("ctrls")
             .join("acyclic_maze")
             .join("tests")
             .join("map");

@@ -3,11 +3,11 @@ mod steps;
 
 use self::step::*;
 use self::steps::*;
-use crate::DrivenGame;
+use crate::views::game::GameCtrl;
 use anyhow::Result;
 use kartoffels_store::Store;
 
-pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
+pub async fn run(store: &Store, game: GameCtrl) -> Result<()> {
     let mut ctxt = StepCtxt::new(store, game).await?;
 
     if !step01::run(&mut ctxt).await? {

@@ -1,6 +1,9 @@
+mod ctrl;
+
+use crate::views::game;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::Store;
+use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, Render, Term};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use termwiz::input::KeyCode;
@@ -8,10 +11,36 @@ use tracing::debug;
 
 pub async fn run(
     store: &Store,
+    sess: SessionId,
+    term: &mut Term,
+    bg: &Background,
+) -> Result<()> {
+    let mut fade_in = false;
+
+    loop {
+        match run_once(store, term, bg, fade_in).await? {
+            Event::Play(world) => {
+                game::run(store, sess, term, |game| {
+                    ctrl::run(world.clone(), game)
+                })
+                .await?;
+
+                fade_in = true;
+            }
+
+            Event::GoBack => {
+                return Ok(());
+            }
+        }
+    }
+}
+
+async fn run_once<'a>(
+    store: &'a Store,
     term: &mut Term,
     bg: &Background,
     fade_in: bool,
-) -> Result<Response> {
+) -> Result<Event<'a>> {
     debug!("run()");
 
     let mut fade_in = if fade_in && !store.testing() {
@@ -20,7 +49,7 @@ pub async fn run(
         None
     };
 
-    let mut fade_out: Option<(Fade, Response)> = None;
+    let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
         let resp = term
@@ -42,15 +71,15 @@ pub async fn run(
                     {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-                        if Button::new(key, world.name()).render(ui).pressed {
-                            ui.throw(Response::Play(world.clone()));
-                        }
+                        Button::new(key, world.name())
+                            .throwing(Event::Play(world))
+                            .render(ui);
                     }
 
                     ui.space(1);
 
                     Button::new(KeyCode::Escape, "go back")
-                        .throwing(Response::GoBack)
+                        .throwing(Event::GoBack)
                         .render(ui);
                 });
 
@@ -85,13 +114,13 @@ pub async fn run(
 }
 
 #[derive(Clone, Debug)]
-pub enum Response {
-    Play(WorldHandle),
+enum Event<'a> {
+    Play(&'a WorldHandle),
     GoBack,
 }
 
-impl Response {
+impl Event<'_> {
     fn fade_out(&self) -> bool {
-        matches!(self, Response::Play(_))
+        matches!(self, Event::Play(_))
     }
 }

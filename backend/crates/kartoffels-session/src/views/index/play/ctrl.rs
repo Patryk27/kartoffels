@@ -1,4 +1,10 @@
-use crate::drivers::prelude::*;
+use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse};
+use anyhow::Result;
+use kartoffels_ui::{Dialog, DialogButton, DialogLine};
+use kartoffels_world::prelude::Handle;
+use std::future;
+use std::sync::LazyLock;
+use termwiz::input::KeyCode;
 
 const CMD: &str = "git clone https://github.com/Patryk27/kartoffel";
 
@@ -52,7 +58,7 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     ],
 });
 
-pub async fn run(world: Handle, game: DrivenGame) -> Result<()> {
+pub async fn run(world: Handle, game: GameCtrl) -> Result<()> {
     game.set_help(Some(&HELP)).await?;
     game.join(world).await?;
 

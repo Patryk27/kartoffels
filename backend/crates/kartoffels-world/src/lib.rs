@@ -94,7 +94,7 @@ pub fn create(config: Config) -> Handle {
 
     let map = theme
         .as_ref()
-        .map(|theme| theme.create_map(&mut rng))
+        .map(|theme| theme.create_map(&mut rng).unwrap())
         .unwrap_or_default();
 
     let (handle, rx) = handle(id, name.clone());

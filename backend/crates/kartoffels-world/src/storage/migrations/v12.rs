@@ -18,7 +18,7 @@ pub fn run(world: &mut Value) {
         assert_eq!(81, scan.len());
 
         for _ in 0..(81 * 2) {
-            scan.push(Value::Integer(Integer::try_from(0).unwrap()));
+            scan.push(Value::Integer(Integer::from(0)));
         }
 
         radar.add_entry("scan", Value::Array(scan));

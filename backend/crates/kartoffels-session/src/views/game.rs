@@ -1,7 +1,7 @@
 mod bottom;
 mod camera;
+mod ctrl;
 mod dialog;
-mod driver;
 mod event;
 mod map;
 mod perms;
@@ -9,13 +9,13 @@ mod side;
 
 use self::bottom::*;
 use self::camera::*;
+pub use self::ctrl::*;
 use self::dialog::*;
 pub use self::dialog::{HelpDialog, HelpDialogRef, HelpDialogResponse};
 use self::event::*;
 use self::map::*;
 pub use self::perms::*;
 use self::side::*;
-use crate::DriverEventRx;
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -28,16 +28,38 @@ use kartoffels_world::prelude::{
     Snapshot as WorldSnapshot, SnapshotStream,
 };
 use ratatui::layout::{Constraint, Layout};
+use std::future::Future;
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::time::Instant;
+use tokio::select;
 use tracing::debug;
 
-pub async fn run(
+pub async fn run<CtrlFn, CtrlFut>(
     store: &Store,
     sess: SessionId,
     term: &mut Term,
-    mut driver: DriverEventRx,
+    ctrl: CtrlFn,
+) -> Result<()>
+where
+    CtrlFn: FnOnce(GameCtrl) -> CtrlFut,
+    CtrlFut: Future<Output = Result<()>>,
+{
+    let (tx, rx) = GameCtrl::new();
+    let view = Box::pin(run_once(store, sess, term, rx));
+    let ctrl = Box::pin(ctrl(tx));
+
+    select! {
+        result = view => result,
+        result = ctrl => result,
+    }
+}
+
+async fn run_once(
+    store: &Store,
+    sess: SessionId,
+    term: &mut Term,
+    mut ctrl: GameCtrlRx,
 ) -> Result<()> {
     debug!("run()");
 
@@ -69,7 +91,7 @@ pub async fn run(
             }
         }
 
-        state.poll(term, &mut driver).await?;
+        state.poll(term, &mut ctrl).await?;
 
         if let Some(fade) = &fade {
             if fade.dir() == FadeDir::Out && fade.is_completed() {
@@ -147,9 +169,9 @@ impl State {
     async fn poll(
         &mut self,
         term: &mut Term,
-        driver: &mut DriverEventRx,
+        ctrl: &mut GameCtrlRx,
     ) -> Result<()> {
-        while let Some(event) = driver.recv().now_or_never().flatten() {
+        while let Some(event) = ctrl.recv().now_or_never().flatten() {
             event.handle(self, term).await?;
         }
 
@@ -164,7 +186,7 @@ impl State {
 
     fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
         // If map size's changed, recenter the camera - this comes handy for
-        // drivers which call `world.set_map()`, e.g. the tutorial
+        // controllers which call `world.set_map()`, e.g. the tutorial
         if snapshot.map().size() != self.snapshot.map().size() {
             self.camera.move_to(snapshot.map().center());
         }

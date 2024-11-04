@@ -1,8 +1,15 @@
-// TODO
 #![allow(unused)]
 
 use super::Challenge;
-use crate::drivers::prelude::*;
+use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use anyhow::Result;
+use futures::future::BoxFuture;
+use kartoffels_store::Store;
+use kartoffels_ui::{Dialog, DialogButton, DialogLine};
+use kartoffels_world::prelude::{
+    ArenaTheme, BotId, Config, Handle, Policy, Theme,
+};
+use std::sync::LazyLock;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "flight-syndrome",
@@ -48,7 +55,7 @@ static _WIN_MSG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
     buttons: vec![DialogButton::confirm("ok", ())],
 });
 
-fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
+fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     Box::pin(async move {
         if !game.run_dialog(&INIT_MSG).await? {
             return Ok(());
@@ -60,10 +67,7 @@ fn run(store: &Store, game: DrivenGame) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn setup(
-    store: &Store,
-    game: &DrivenGame,
-) -> Result<(Handle, Vec<BotId>)> {
+async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, Vec<BotId>)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_perms(Perms::CHALLENGE).await?;
 

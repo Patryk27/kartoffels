@@ -1,23 +1,64 @@
-mod footer;
-mod header;
-mod menu;
+mod challenges;
+mod play;
+mod sandbox;
+mod tutorial;
+mod widgets;
 
-use self::footer::*;
-use self::header::*;
-use self::menu::*;
+use self::widgets::*;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::Store;
+use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Fade, FadeDir, Render, Term};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
+    sess: SessionId,
     term: &mut Term,
-    bg: &Background,
+    bg: &mut Background,
+) -> Result<()> {
+    let mut fade_in = true;
+
+    loop {
+        match run_once(store, term, bg, fade_in).await? {
+            Event::Play => {
+                play::run(store, sess, term, bg).await?;
+
+                fade_in = false;
+            }
+
+            Event::Sandbox => {
+                sandbox::run(store, sess, term, bg).await?;
+
+                fade_in = false;
+            }
+
+            Event::Tutorial => {
+                tutorial::run(store, sess, term).await?;
+
+                fade_in = true;
+            }
+
+            Event::Challenges => {
+                challenges::run(store, sess, term, bg).await?;
+
+                fade_in = false;
+            }
+
+            Event::Quit => {
+                return Ok(());
+            }
+        }
+    }
+}
+
+async fn run_once(
+    store: &Store,
+    term: &mut Term,
+    bg: &mut Background,
     fade_in: bool,
-) -> Result<Response> {
+) -> Result<Event> {
     debug!("run()");
 
     let mut fade_in = if fade_in && !store.testing() {
@@ -26,7 +67,7 @@ pub async fn run(
         None
     };
 
-    let mut fade_out: Option<(Fade, Response)> = None;
+    let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
         let resp = term
@@ -97,7 +138,7 @@ pub async fn run(
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum Response {
+enum Event {
     Play,
     Sandbox,
     Tutorial,
@@ -105,8 +146,8 @@ pub enum Response {
     Quit,
 }
 
-impl Response {
+impl Event {
     fn fade_out(&self) -> bool {
-        matches!(self, Response::Sandbox | Response::Tutorial)
+        matches!(self, Event::Tutorial)
     }
 }

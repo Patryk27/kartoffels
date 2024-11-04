@@ -1,6 +1,17 @@
-use crate::drivers::prelude::*;
+use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use crate::MapBroadcaster;
+use anyhow::Result;
+use kartoffels_store::Store;
+use kartoffels_ui::{Dialog, DialogLine};
+use kartoffels_world::prelude::{
+    Config, Dir, Handle, Map, Policy, Theme, TileBase,
+};
+use rand::{Rng, RngCore, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+use std::future;
+use std::sync::LazyLock;
+use tokio::sync::mpsc;
 
-const SIZE: UVec2 = uvec2(64, 32);
 const MAX_BOTS: usize = 16;
 
 static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
@@ -10,9 +21,9 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         DialogLine::new("hey there and welcome to kartoffels 🫡"),
         DialogLine::new(""),
         DialogLine::new(
-            "you're in the *sandbox mode*, which means that you're playing on \
+            "you're in the *sandbox mode*, which means that you're playing in \
              your own, private world - this is meant as a safe place for you \
-             to calmly play with and develop bots",
+             to calmly play with, develop and debug bots",
         ),
         DialogLine::new(""),
         DialogLine::new(
@@ -28,9 +39,8 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
         ),
         DialogLine::new("  destroy bots, restart them etc."),
         DialogLine::new(
-            "- you can also spawn *roberto*, the built-in moderately",
+            "- you can also spawn prefabs, a couple of built-in bots",
         ),
-        DialogLine::new("  challenging bot"),
         DialogLine::new(
             "- a new world is generated every time you open the sandbox",
         ),
@@ -39,10 +49,10 @@ static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
     buttons: vec![HelpDialogResponse::close()],
 });
 
-pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
+pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     let world = init(store, &game).await?;
 
-    create_map(store, &world).await?;
+    create_map(store, theme, &world).await?;
 
     game.set_perms(Perms::SANDBOX).await?;
     game.set_status(None).await?;
@@ -50,7 +60,7 @@ pub async fn run(store: &Store, game: DrivenGame) -> Result<()> {
     future::pending().await
 }
 
-async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
     game.set_perms(Perms::SANDBOX.disabled()).await?;
     game.set_status(Some("building world".into())).await?;
@@ -70,13 +80,14 @@ async fn init(store: &Store, game: &DrivenGame) -> Result<Handle> {
     Ok(world)
 }
 
-async fn create_map(store: &Store, world: &Handle) -> Result<()> {
-    utils::create_map(store, world, |tx| async move {
+async fn create_map(store: &Store, theme: Theme, world: &Handle) -> Result<()> {
+    MapBroadcaster::new(|tx| async move {
         let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
-        let map = create_map_ex(rng, tx).await?;
+        let map = create_map_ex(rng, theme, tx).await?;
 
         Ok(map)
     })
+    .run(store, world)
     .await?;
 
     Ok(())
@@ -84,12 +95,13 @@ async fn create_map(store: &Store, world: &Handle) -> Result<()> {
 
 async fn create_map_ex(
     mut rng: impl RngCore,
+    theme: Theme,
     progress: mpsc::Sender<Map>,
 ) -> Result<Map> {
     const NOT_VISITED: u8 = 0;
     const VISITED: u8 = 1;
 
-    let mut map = DungeonTheme::new(SIZE).create_map(&mut rng)?;
+    let mut map = theme.create_map(&mut rng)?;
     let mut nth = 0;
     let mut frontier = Vec::new();
 

@@ -4,6 +4,7 @@ mod dungeon;
 pub use self::arena::*;
 pub use self::dungeon::*;
 use crate::Map;
+use anyhow::Result;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
@@ -18,10 +19,10 @@ pub enum Theme {
 }
 
 impl Theme {
-    pub(crate) fn create_map(&self, rng: &mut impl RngCore) -> Map {
+    pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
         match self {
-            Theme::Arena(this) => this.create_map(),
-            Theme::Dungeon(this) => this.create_map(rng).unwrap(),
+            Theme::Arena(this) => Ok(this.create_map()),
+            Theme::Dungeon(this) => this.create_map(rng),
         }
     }
 }

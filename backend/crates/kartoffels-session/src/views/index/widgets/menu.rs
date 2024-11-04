@@ -1,4 +1,4 @@
-use super::Response;
+use super::super::Event;
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Button, Render, Ui};
 use ratatui::style::Style;
@@ -23,7 +23,7 @@ impl Menu {
         }
     }
 
-    pub fn render(store: &Store, ui: &mut Ui<Response>) {
+    pub fn render(store: &Store, ui: &mut Ui<Event>) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
@@ -31,23 +31,23 @@ impl Menu {
         ui.block(block, |ui| {
             if !store.public_worlds().is_empty() {
                 Button::new(KeyCode::Char('p'), "play")
-                    .throwing(Response::Play)
+                    .throwing(Event::Play)
                     .centered()
                     .render(ui);
             }
 
             Button::new(KeyCode::Char('s'), "sandbox")
-                .throwing(Response::Sandbox)
+                .throwing(Event::Sandbox)
                 .centered()
                 .render(ui);
 
             Button::new(KeyCode::Char('t'), "tutorial")
-                .throwing(Response::Tutorial)
+                .throwing(Event::Tutorial)
                 .centered()
                 .render(ui);
 
             Button::new(KeyCode::Char('c'), "challenges")
-                .throwing(Response::Challenges)
+                .throwing(Event::Challenges)
                 .centered()
                 .render(ui);
 
@@ -55,7 +55,7 @@ impl Menu {
                 ui.space(1);
 
                 Button::new(KeyCode::Escape, "quit")
-                    .throwing(Response::Quit)
+                    .throwing(Event::Quit)
                     .centered()
                     .render(ui);
             }

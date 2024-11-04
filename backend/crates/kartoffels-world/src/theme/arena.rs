@@ -12,7 +12,7 @@ impl ArenaTheme {
         Self { radius }
     }
 
-    pub(crate) fn create_map(&self) -> Map {
+    pub fn create_map(&self) -> Map {
         let map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
         let center = map.center();
         let radius = self.radius as f32;

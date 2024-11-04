@@ -1,7 +1,10 @@
-use crate::drivers::challenges::{Challenge, CHALLENGES};
+mod ctrls;
+
+use self::ctrls::*;
+use crate::views::game;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::Store;
+use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{theme, Button, Fade, FadeDir, Render, Term};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
@@ -12,10 +15,36 @@ use tracing::debug;
 
 pub async fn run(
     store: &Store,
+    sess: SessionId,
+    term: &mut Term,
+    bg: &Background,
+) -> Result<()> {
+    let mut fade_in = false;
+
+    loop {
+        match run_once(store, term, bg, fade_in).await? {
+            Event::Play(challenge) => {
+                game::run(store, sess, term, |game| {
+                    (challenge.run)(store, game)
+                })
+                .await?;
+
+                fade_in = true;
+            }
+
+            Event::GoBack => {
+                return Ok(());
+            }
+        }
+    }
+}
+
+async fn run_once(
+    store: &Store,
     term: &mut Term,
     bg: &Background,
     fade_in: bool,
-) -> Result<Response> {
+) -> Result<Event> {
     debug!("run()");
 
     let mut fade_in = if fade_in && !store.testing() {
@@ -24,7 +53,7 @@ pub async fn run(
         None
     };
 
-    let mut fade_out: Option<(Fade, Response)> = None;
+    let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
         let resp = term
@@ -55,7 +84,7 @@ pub async fn run(
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
                         Button::new(key, challenge.name)
-                            .throwing(Response::Play(challenge))
+                            .throwing(Event::Play(challenge))
                             .render(ui);
 
                         let desc_area = Rect {
@@ -72,7 +101,7 @@ pub async fn run(
                     }
 
                     Button::new(KeyCode::Escape, "go back")
-                        .throwing(Response::GoBack)
+                        .throwing(Event::GoBack)
                         .render(ui);
                 });
 
@@ -109,13 +138,13 @@ pub async fn run(
 }
 
 #[derive(Clone, Debug)]
-pub enum Response {
+enum Event {
     Play(&'static Challenge),
     GoBack,
 }
 
-impl Response {
+impl Event {
     fn fade_out(&self) -> bool {
-        matches!(self, Response::Play(_))
+        matches!(self, Event::Play(_))
     }
 }
