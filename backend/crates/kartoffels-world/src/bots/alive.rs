@@ -33,12 +33,12 @@ impl AliveBots {
         bot.pos = new_pos;
     }
 
-    pub fn remove(&mut self, id: BotId) -> AliveBot {
-        let bot = self.entries.remove(&id).unwrap();
+    pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
+        let bot = self.entries.remove(&id)?;
 
         self.pos_to_id.remove(&bot.pos).unwrap();
 
-        bot
+        Some(bot)
     }
 
     pub fn get_mut(&mut self, id: BotId) -> Option<AliveBotEntryMut> {
