@@ -2,27 +2,27 @@ use super::prelude::*;
 
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
-static DIALOG: LazyLock<Dialog<&'static str>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
     title: Some(" tutorial (3/16) "),
 
     body: vec![
-        DialogLine::new("look at you, learning so fast - *NEXT LESSON!*"),
-        DialogLine::new(""),
-        DialogLine::new("run this:"),
-        DialogLine::new(format!("    {CMD}")),
-        DialogLine::new(""),
-        DialogLine::new("... and press [`enter`] once you're ready"),
+        MsgLine::new("look at you, learning so fast - *NEXT LESSON!*"),
+        MsgLine::new(""),
+        MsgLine::new("run this:"),
+        MsgLine::new(format!("    {CMD}")),
+        MsgLine::new(""),
+        MsgLine::new("... and press [`enter`] once you're ready"),
     ],
 
     buttons: vec![
-        DialogButton::new(KeyCode::Char('c'), "copy command", "copy"),
-        DialogButton::confirm("i'm ready", "ready"),
+        MsgButton::new(KeyCode::Char('c'), "copy command", "copy"),
+        MsgButton::confirm("i'm ready", "ready"),
     ],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     loop {
-        match ctxt.game.run_dialog(&DIALOG).await? {
+        match ctxt.game.show_msg(&MSG).await? {
             "copy" => {
                 ctxt.game.copy_to_clipboard(CMD).await?;
             }

@@ -7,13 +7,13 @@ use std::cmp;
 use termwiz::input::KeyCode;
 
 #[derive(Clone, Debug)]
-pub struct Dialog<T> {
+pub struct Msg<T = ()> {
     pub title: Option<&'static str>,
-    pub body: Vec<DialogLine>,
-    pub buttons: Vec<DialogButton<T>>,
+    pub body: Vec<MsgLine>,
+    pub buttons: Vec<MsgButton<T>>,
 }
 
-impl<T> Dialog<T>
+impl<T> Msg<T>
 where
     T: Clone,
 {
@@ -38,7 +38,7 @@ where
 
             ui.row(|ui| {
                 for button in &self.buttons {
-                    button.btn.clone().render(ui);
+                    button.inner.clone().render(ui);
                 }
             });
         });
@@ -46,12 +46,12 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct DialogLine {
+pub struct MsgLine {
     inner: Line<'static>,
-    cond: Option<DialogLineCondition>,
+    cond: Option<MsgLineCondition>,
 }
 
-impl DialogLine {
+impl MsgLine {
     pub fn new(content: impl AsRef<str>) -> Self {
         Self {
             inner: Line::md(content.as_ref()),
@@ -61,14 +61,14 @@ impl DialogLine {
 
     pub fn ssh(content: impl AsRef<str>) -> Self {
         Self {
-            cond: Some(DialogLineCondition::ShowOnlyOnSsh),
+            cond: Some(MsgLineCondition::ShowOnlyOnSsh),
             ..Self::new(content)
         }
     }
 
     pub fn web(content: impl AsRef<str>) -> Self {
         Self {
-            cond: Some(DialogLineCondition::ShowOnlyOnWeb),
+            cond: Some(MsgLineCondition::ShowOnlyOnWeb),
             ..Self::new(content)
         }
     }
@@ -85,14 +85,14 @@ impl DialogLine {
 
     fn matches<E>(&self, ui: &Ui<E>) -> bool {
         match self.cond {
-            Some(DialogLineCondition::ShowOnlyOnSsh) => ui.ty().is_ssh(),
-            Some(DialogLineCondition::ShowOnlyOnWeb) => ui.ty().is_web(),
+            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.ty().is_ssh(),
+            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.ty().is_web(),
             None => true,
         }
     }
 }
 
-impl<'a> FromIterator<Span<'a>> for DialogLine {
+impl<'a> FromIterator<Span<'a>> for MsgLine {
     fn from_iter<T>(iter: T) -> Self
     where
         T: IntoIterator<Item = Span<'a>>,
@@ -110,7 +110,7 @@ impl<'a> FromIterator<Span<'a>> for DialogLine {
     }
 }
 
-impl Styled for DialogLine {
+impl Styled for MsgLine {
     type Item = Self;
 
     fn style(&self) -> Style {
@@ -129,20 +129,20 @@ impl Styled for DialogLine {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum DialogLineCondition {
+enum MsgLineCondition {
     ShowOnlyOnSsh,
     ShowOnlyOnWeb,
 }
 
 #[derive(Clone, Debug)]
-pub struct DialogButton<T> {
-    btn: Button<'static, T>,
+pub struct MsgButton<T> {
+    inner: Button<'static, T>,
 }
 
-impl<T> DialogButton<T> {
+impl<T> MsgButton<T> {
     pub fn new(key: KeyCode, label: impl AsRef<str>, resp: T) -> Self {
         Self {
-            btn: Button::new(key, label.as_ref().to_owned()).throwing(resp),
+            inner: Button::new(key, label.as_ref().to_owned()).throwing(resp),
         }
     }
 
@@ -155,7 +155,7 @@ impl<T> DialogButton<T> {
     }
 
     pub fn right_aligned(mut self) -> Self {
-        self.btn = self.btn.right_aligned();
+        self.inner = self.inner.right_aligned();
         self
     }
 }

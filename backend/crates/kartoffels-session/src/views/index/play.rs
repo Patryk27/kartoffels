@@ -53,7 +53,7 @@ async fn run_once<'a>(
 
     loop {
         let resp = term
-            .draw(|ui| {
+            .frame(|ui| {
                 let width = store
                     .public_worlds()
                     .iter()
@@ -94,8 +94,6 @@ async fn run_once<'a>(
                 }
             })
             .await?;
-
-        term.poll().await?;
 
         if let Some((fade, resp)) = &fade_out {
             if fade.is_completed() {

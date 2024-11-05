@@ -1,11 +1,11 @@
 #![allow(unused)]
 
 use super::Challenge;
-use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use kartoffels_store::Store;
-use kartoffels_ui::{Dialog, DialogButton, DialogLine};
+use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     ArenaTheme, BotId, Config, Handle, Policy, Theme,
 };
@@ -17,47 +17,47 @@ pub static CHALLENGE: Challenge = Challenge {
     run,
 };
 
-static DOCS: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new(
+        MsgLine::new(
             "one blink of an eye and you got surrounded by a gang of \
              mischievous bots, ready to take your battery away",
         ),
-        DialogLine::new(""),
-        DialogLine::new("*save yourself:*"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("*save yourself:*"),
+        MsgLine::new(""),
+        MsgLine::new(
             "implement a robot that runs away - keep yourself alive for at \
              least 30 seconds, and don't fall down",
         ),
     ]
 });
 
-static INIT_MSG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
+static INIT_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     title: Some(" flight-syndrome "),
     body: DOCS.clone(),
 
     buttons: vec![
-        DialogButton::abort("go back", false),
-        DialogButton::confirm("let's do it", true),
+        MsgButton::abort("go back", false),
+        MsgButton::confirm("let's do it", true),
     ],
 });
 
-static HELP_MSG: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
     body: DOCS.clone(),
-    buttons: vec![HelpDialogResponse::close()],
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static _WIN_MSG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static _WIN_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" flight-syndrome "),
-    body: vec![DialogLine::new("congrats - you're safe now!")],
-    buttons: vec![DialogButton::confirm("ok", ())],
+    body: vec![MsgLine::new("congrats - you're safe now!")],
+    buttons: vec![MsgButton::confirm("ok", ())],
 });
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     Box::pin(async move {
-        if !game.run_dialog(&INIT_MSG).await? {
+        if !game.show_msg(&INIT_MSG).await? {
             return Ok(());
         }
 

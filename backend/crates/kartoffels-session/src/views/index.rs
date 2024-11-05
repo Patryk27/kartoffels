@@ -71,7 +71,7 @@ async fn run_once(
 
     loop {
         let resp = term
-            .draw(|ui| {
+            .frame(|ui| {
                 let [_, area, _] = Layout::horizontal([
                     Constraint::Fill(1),
                     Constraint::Length(Header::width()),
@@ -118,8 +118,6 @@ async fn run_once(
                 }
             })
             .await?;
-
-        term.poll().await?;
 
         if let Some((fade, resp)) = &fade_out {
             if fade.is_completed() {

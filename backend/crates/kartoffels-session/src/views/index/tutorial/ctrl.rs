@@ -8,7 +8,7 @@ use anyhow::Result;
 use kartoffels_store::Store;
 
 pub async fn run(store: &Store, game: GameCtrl) -> Result<()> {
-    let mut ctxt = StepCtxt::new(store, game).await?;
+    let mut ctxt = TutorialCtxt::new(store, game).await?;
 
     if !step01::run(&mut ctxt).await? {
         return Ok(());

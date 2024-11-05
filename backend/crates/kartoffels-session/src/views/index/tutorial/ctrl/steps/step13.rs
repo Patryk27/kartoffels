@@ -1,77 +1,77 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
 
     body: vec![
-        DialogLine::new(
+        MsgLine::new(
             "so, how about we implement a *line following robot* to solidify \
              all this knowledge, eh?",
         ),
-        DialogLine::new(""),
+        MsgLine::new(""),
     ]
     .into_iter()
-    .chain(INSTRUCTION.clone())
+    .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![DialogButton::confirm("let's implement a line-follower", ())],
+    buttons: vec![MsgButton::confirm("let's implement a line-follower", ())],
 });
 
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
 
-    body: INSTRUCTION
+    body: DOCS
         .clone()
         .into_iter()
         .chain([
-            DialogLine::new(""),
-            DialogLine::new(
+            MsgLine::new(""),
+            MsgLine::new(
                 "also, feel free to consult `scan.tile_at()`'s documentation \
                  to see example usage of the radar",
             ),
         ])
         .collect(),
 
-    buttons: vec![HelpDialogResponse::close()],
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new(
+        MsgLine::new(
             "a line following robot does what its name says - it uses radar to \
              check where to go next and then goes there, like:",
         ),
-        DialogLine::new(""),
-        DialogLine::new("\t1. scan the area"),
-        DialogLine::new("\t2a. if there's `'.'` in front you, move there"),
-        DialogLine::new("\t2b. or, if there's `'.'` to your left, turn left"),
-        DialogLine::new("\t2c. or, if there's `'.'` to your right, turn right"),
-        DialogLine::new("\t2d. otherwise stop"),
-        DialogLine::new("\t3. go to 1"),
-        DialogLine::new(""),
-        DialogLine::new("overall, all of those functions should be used:"),
-        DialogLine::new(""),
-        DialogLine::new("\t- `motor_wait()`"),
-        DialogLine::new("\t- `motor_step()`"),
-        DialogLine::new("\t- `motor_turn_left()`"),
-        DialogLine::new("\t- `motor_turn_right()`"),
-        DialogLine::new("\t- `radar_wait()`"),
-        DialogLine::new("\t- `radar_scan_3x3()`"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("\t1. scan the area"),
+        MsgLine::new("\t2a. if there's `'.'` in front you, move there"),
+        MsgLine::new("\t2b. or, if there's `'.'` to your left, turn left"),
+        MsgLine::new("\t2c. or, if there's `'.'` to your right, turn right"),
+        MsgLine::new("\t2d. otherwise stop"),
+        MsgLine::new("\t3. go to 1"),
+        MsgLine::new(""),
+        MsgLine::new("overall, all of those functions should be used:"),
+        MsgLine::new(""),
+        MsgLine::new("\t- `motor_wait()`"),
+        MsgLine::new("\t- `motor_step()`"),
+        MsgLine::new("\t- `motor_turn_left()`"),
+        MsgLine::new("\t- `motor_turn_right()`"),
+        MsgLine::new("\t- `radar_wait()`"),
+        MsgLine::new("\t- `radar_scan_3x3()`"),
+        MsgLine::new(""),
+        MsgLine::new(
             "... and `serial_write()` might come handy for debugging!",
         ),
     ]
 });
 
-static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
-    body: vec![DialogLine::new("hmm, your robot seems to have died")],
-    buttons: vec![DialogButton::confirm("let's try again", ())],
+    body: vec![MsgLine::new("hmm, your robot seems to have died")],
+    buttons: vec![MsgButton::confirm("let's try again", ())],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     ctxt.game
@@ -93,7 +93,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
         if succeeded {
             break;
         } else {
-            ctxt.game.run_dialog(&DIALOG_RETRY).await?;
+            ctxt.game.show_msg(&MSG_RETRY).await?;
         }
     }
 
@@ -102,7 +102,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
+async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.world.set_spawn(ivec2(10, 10), Dir::E).await?;
 
     ctxt.world
@@ -135,7 +135,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn wait(ctxt: &mut StepCtxt) -> Result<bool> {
+async fn wait(ctxt: &mut TutorialCtxt) -> Result<bool> {
     loop {
         if let Some(bot) =
             ctxt.snapshots.next().await?.bots().alive().iter().next()

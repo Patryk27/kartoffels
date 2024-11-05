@@ -1,28 +1,28 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (7/16) "),
 
     body: vec![
-        DialogLine::new(
+        MsgLine::new(
             "anyway, close this message to resume the game and let's see the \
              robot in action",
         ),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new(
             "if everything goes correctly, we should see the robot driving in \
              squares, *how exquisite*!",
         ),
     ],
 
-    buttons: vec![DialogButton::confirm(
+    buttons: vec![MsgButton::confirm(
         "yes, let's see the robot driving in squares",
         (),
     )],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.resume().await?;
 
     time::sleep(Duration::from_secs(6)).await;

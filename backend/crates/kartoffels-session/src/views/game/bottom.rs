@@ -33,7 +33,7 @@ impl BottomPanel {
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go back")
-            .throwing(Event::GoBack)
+            .throwing(Event::GoBack(true))
             .render(ui);
     }
 

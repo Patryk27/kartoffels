@@ -2,49 +2,49 @@ use super::prelude::*;
 use futures::stream::FuturesOrdered;
 use tokio_stream::StreamExt;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
-    body: INSTRUCTION.clone(),
+    body: DOCS.clone(),
 
-    buttons: vec![DialogButton::confirm(
+    buttons: vec![MsgButton::confirm(
         "scoooby doooby dooo, let's catch 'em",
         (),
     )],
 });
 
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
-    body: INSTRUCTION.clone(),
-    buttons: vec![HelpDialogResponse::close()],
+    body: DOCS.clone(),
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new("# arm_wait()"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("# arm_wait()"),
+        MsgLine::new(""),
+        MsgLine::new(
             "as you can guess, this boi waits until the arm is ready (until \
              it's _armed_, you could say)",
         ),
-        DialogLine::new(""),
-        DialogLine::new("# arm_stab()"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("# arm_stab()"),
+        MsgLine::new(""),
+        MsgLine::new(
             "stabs the bot that's directly in front of you, killing it and \
              giving your robot one point - note that you have to be _facing_ \
              the other bot in order to stab it",
         ),
-        DialogLine::new(""),
-        DialogLine::new("easy enough, isn't it?"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("easy enough, isn't it?"),
+        MsgLine::new(""),
+        MsgLine::new(
             "now, to complete the tutorial, implement a bot that does a 3x3 \
              radar scan, rotates towards the closest enemy robot (`'@'`), goes \
              forward and stabs it; when no enemy is in sight, let your robot \
              continue moving in its current direction",
         ),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new(
             "for simplicity, the enemies will not try to kill you and they \
              will be located directly north / east / west / south - i.e. you \
              don't have to worry about diagonals",
@@ -52,14 +52,14 @@ static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
     ]
 });
 
-static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
-    body: vec![DialogLine::new("hmm, your robot seems to have died")],
-    buttons: vec![DialogButton::confirm("let's try again", ())],
+    body: vec![MsgLine::new("hmm, your robot seems to have died")],
+    buttons: vec![MsgButton::confirm("let's try again", ())],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     loop {
@@ -76,7 +76,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
         if succeeded {
             break;
         } else {
-            ctxt.game.run_dialog(&DIALOG_RETRY).await?;
+            ctxt.game.show_msg(&MSG_RETRY).await?;
         }
     }
 
@@ -85,7 +85,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut StepCtxt) -> Result<Vec<BotId>> {
+async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
     ctxt.destroy_bots().await?;
 
     ctxt.world
@@ -141,7 +141,7 @@ async fn setup_map(ctxt: &mut StepCtxt) -> Result<Vec<BotId>> {
 }
 
 async fn wait(
-    ctxt: &mut StepCtxt,
+    ctxt: &mut TutorialCtxt,
     dummies: &[BotId],
     player: BotId,
 ) -> Result<bool> {

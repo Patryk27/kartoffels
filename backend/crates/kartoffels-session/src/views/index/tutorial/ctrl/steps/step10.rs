@@ -1,58 +1,58 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (10/16) "),
 
     body: vec![
-        DialogLine::new("yes... ha ha ha... *YES*!"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("yes... ha ha ha... *YES*!"),
+        MsgLine::new(""),
+        MsgLine::new(
             "by telling the robot to always move forward instead of driving in \
              squares, we should see the robot, well, moving forward and \
              unknowingly falling out of the map",
         ),
     ],
 
-    buttons: vec![DialogButton::confirm("let the hunger games begin", ())],
+    buttons: vec![MsgButton::confirm("let the hunger games begin", ())],
 });
 
-static DIALOG_RETRY: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (10/16) "),
 
     body: vec![
-        DialogLine::new("hmm, your robot seems to be still alive"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("hmm, your robot seems to be still alive"),
+        MsgLine::new(""),
+        MsgLine::new(
             "this wasn't a triumph, i'm making a note here, NOT a huge \
              success",
         ),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new(
             "make sure you've removed the call to `motor_turn_right()` and \
              upload the bot again",
         ),
     ],
 
-    buttons: vec![DialogButton::confirm("let's try again", ())],
+    buttons: vec![MsgButton::confirm("let's try again", ())],
 });
 
-static HELP_RETRY: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
 
     body: vec![
-        DialogLine::new(
+        MsgLine::new(
             "make sure you've removed the call to `motor_turn_right()` and \
              upload the bot again",
         ),
-        DialogLine::web(""),
-        DialogLine::web("!! don't forget to re-run `./build` !!"),
+        MsgLine::web(""),
+        MsgLine::web("!! don't forget to re-run `./build` !!"),
     ],
 
-    buttons: vec![HelpDialogResponse::close()],
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.resume().await?;
 
     loop {
@@ -73,7 +73,7 @@ pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
             }
 
             Err(_) => {
-                ctxt.game.run_dialog(&DIALOG_RETRY).await?;
+                ctxt.game.show_msg(&MSG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
                 ctxt.snapshots.wait_until_bot_is_spawned().await?;
                 ctxt.game.set_help(None).await?;

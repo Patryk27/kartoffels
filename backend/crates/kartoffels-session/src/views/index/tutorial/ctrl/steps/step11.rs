@@ -1,24 +1,24 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (11/16) "),
 
     body: vec![
-        DialogLine::new("nice!"),
-        DialogLine::new(""),
-        DialogLine::new("i mean, not nice, because we're dead, but baby steps"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("nice!"),
+        MsgLine::new(""),
+        MsgLine::new("i mean, not nice, because we're dead, but baby steps"),
+        MsgLine::new(""),
+        MsgLine::new(
             "now it's time for you to learn about *da radar*, using which you \
              can program the bot to avoid falling out the map",
         ),
     ],
 
-    buttons: vec![DialogButton::confirm("let's learn", ())],
+    buttons: vec![MsgButton::confirm("let's learn", ())],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
 
     Ok(())
 }

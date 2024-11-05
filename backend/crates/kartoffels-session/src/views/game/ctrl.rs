@@ -1,7 +1,7 @@
-use super::{Dialog as GameDialog, State};
-use crate::views::game::{HelpDialogRef, Perms};
+use super::{Dialog, State};
+use crate::views::game::{HelpMsgRef, Perms};
 use anyhow::{anyhow, Result};
-use kartoffels_ui::{theme, Dialog, Term, Ui};
+use kartoffels_ui::{theme, Msg, Term, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::time::Instant;
 use tokio::sync::{mpsc, oneshot};
@@ -55,23 +55,23 @@ impl GameCtrl {
         Ok(())
     }
 
-    pub async fn open_dialog(
+    async fn open_dialog(
         &self,
         dialog: impl FnMut(&mut Ui<()>) + Send + 'static,
     ) -> Result<()> {
-        self.send(GameCtrlEvent::OpenDialog(Box::new(dialog)))
+        self.send(GameCtrlEvent::SetDialog(Some(Box::new(dialog))))
             .await?;
 
         Ok(())
     }
 
-    pub async fn close_dialog(&self) -> Result<()> {
-        self.send(GameCtrlEvent::CloseDialog).await?;
+    async fn close_dialog(&self) -> Result<()> {
+        self.send(GameCtrlEvent::SetDialog(None)).await?;
 
         Ok(())
     }
 
-    pub async fn run_dialog<T>(&self, dialog: &'static Dialog<T>) -> Result<T>
+    pub async fn show_msg<T>(&self, msg: &'static Msg<T>) -> Result<T>
     where
         T: Clone + Send + Sync + 'static,
     {
@@ -80,7 +80,7 @@ impl GameCtrl {
 
         self.open_dialog(move |ui| {
             let resp = ui.catch(|ui| {
-                dialog.render(ui);
+                msg.render(ui);
             });
 
             if let Some(resp) = resp {
@@ -100,7 +100,7 @@ impl GameCtrl {
         Ok(resp)
     }
 
-    pub async fn set_help(&self, dialog: Option<HelpDialogRef>) -> Result<()> {
+    pub async fn set_help(&self, dialog: Option<HelpMsgRef>) -> Result<()> {
         self.send(GameCtrlEvent::SetHelp(dialog)).await?;
 
         Ok(())
@@ -150,9 +150,8 @@ pub(super) enum GameCtrlEvent {
     Resume,
     SetPerms(Perms),
     UpdatePerms(Box<dyn FnOnce(&mut Perms) + Send>),
-    OpenDialog(Box<dyn FnMut(&mut Ui<()>) + Send>),
-    CloseDialog,
-    SetHelp(Option<HelpDialogRef>),
+    SetDialog(Option<Box<dyn FnMut(&mut Ui<()>) + Send>>),
+    SetHelp(Option<HelpMsgRef>),
     SetStatus(Option<String>),
     CopyToClipboard(String),
     GetSnapshotVersion(oneshot::Sender<u64>),
@@ -191,12 +190,8 @@ impl GameCtrlEvent {
                 f(&mut state.perms);
             }
 
-            GameCtrlEvent::OpenDialog(dialog) => {
-                state.dialog = Some(GameDialog::Custom(dialog));
-            }
-
-            GameCtrlEvent::CloseDialog => {
-                state.dialog = None;
+            GameCtrlEvent::SetDialog(dialog) => {
+                state.dialog = dialog.map(Dialog::Custom);
             }
 
             GameCtrlEvent::SetHelp(help) => {

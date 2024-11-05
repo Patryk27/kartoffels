@@ -219,8 +219,8 @@ impl<T> Ui<'_, T> {
         }
     }
 
-    pub fn copy(&mut self, payload: &str) {
-        self.clipboard.push(payload.to_owned());
+    pub fn copy(&mut self, payload: impl AsRef<str>) {
+        self.clipboard.push(payload.as_ref().to_owned());
     }
 
     pub fn throw(&mut self, event: T) {

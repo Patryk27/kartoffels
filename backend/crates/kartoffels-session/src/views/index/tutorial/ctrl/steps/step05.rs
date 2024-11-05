@@ -1,53 +1,53 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (5/16) "),
 
     body: vec![
-        DialogLine::new(
+        MsgLine::new(
             "as you can see, the code in `main.rs` just calls a couple of \
              functions in a loop - but before we jump into explanations, let's \
              see the robot in action!",
         ),
-        DialogLine::new(""),
+        MsgLine::new(""),
     ]
     .into_iter()
-    .chain(INSTRUCTION.clone())
+    .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![DialogButton::confirm("i have done so", ())],
+    buttons: vec![MsgButton::confirm("i have done so", ())],
 });
 
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
-    body: INSTRUCTION.clone(),
-    buttons: vec![HelpDialogResponse::close()],
+    body: DOCS.clone(),
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new("if you're on linux, macos, freebsd etc., run this:"),
-        DialogLine::web("    ./build"),
-        DialogLine::ssh("    ./build --copy"),
-        DialogLine::new(""),
-        DialogLine::new("if you're on windows, run this:"),
-        DialogLine::web("    ./build.bat"),
-        DialogLine::ssh("    ./build.bat --copy"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("if you're on linux, macos, freebsd etc., run this:"),
+        MsgLine::web("    ./build"),
+        MsgLine::ssh("    ./build --copy"),
+        MsgLine::new(""),
+        MsgLine::new("if you're on windows, run this:"),
+        MsgLine::web("    ./build.bat"),
+        MsgLine::ssh("    ./build.bat --copy"),
+        MsgLine::new(""),
+        MsgLine::new(
             "... and having done so, press [`enter`] to close this message and \
              then press [`u`] to upload the bot",
         ),
-        DialogLine::web(""),
-        DialogLine::web(
+        MsgLine::web(""),
+        MsgLine::web(
             "when the file picker opens, choose a file called `kartoffel` - it \
              should be located next to `README.md` etc.",
         ),
     ]
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
     ctxt.snapshots.wait_until_bot_is_spawned().await?;
     ctxt.game.set_help(None).await?;

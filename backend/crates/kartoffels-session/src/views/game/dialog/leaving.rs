@@ -3,11 +3,11 @@ use kartoffels_ui::{theme, Button, Render, Ui};
 use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
-pub struct LeavingDialog;
+pub struct GoBackDialog;
 
-impl LeavingDialog {
+impl GoBackDialog {
     pub fn render(&mut self, ui: &mut Ui<Event>) {
-        ui.window(42, 3, Some(" leaving "), theme::YELLOW, |ui| {
+        ui.window(42, 3, Some(" go back "), theme::YELLOW, |ui| {
             ui.line("do you want to go back to the main menu?");
             ui.space(1);
 
@@ -17,7 +17,7 @@ impl LeavingDialog {
                     .render(ui);
 
                 Button::new(KeyCode::Char('y'), "yes, leave game")
-                    .throwing(Event::GoBack)
+                    .throwing(Event::GoBack(false))
                     .right_aligned()
                     .render(ui);
             });

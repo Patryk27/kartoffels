@@ -35,7 +35,7 @@ impl IdleSidePanel {
         }
 
         if state.perms.user_can_spawn_prefabs {
-            btns.push(Action::SpawnRoberto);
+            btns.push(Action::SpawnPrefab);
         }
 
         btns
@@ -46,7 +46,7 @@ impl IdleSidePanel {
 enum Action {
     JoinBot,
     UploadBot,
-    SpawnRoberto,
+    SpawnPrefab,
 }
 
 impl Action {
@@ -65,9 +65,9 @@ impl Action {
                     .render(ui);
             }
 
-            Action::SpawnRoberto => {
-                Button::new(KeyCode::Char('S'), "spawn roberto")
-                    .throwing(Event::SpawnRoberto)
+            Action::SpawnPrefab => {
+                Button::new(KeyCode::Char('S'), "spawn prefab")
+                    .throwing(Event::ShowSpawnPrefabDialog)
                     .render(ui);
             }
         }

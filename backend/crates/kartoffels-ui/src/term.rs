@@ -118,7 +118,18 @@ impl Term {
         Ok(())
     }
 
-    pub async fn draw<F, T>(&mut self, render: F) -> Result<Option<T>>
+    pub async fn frame<F, T>(&mut self, render: F) -> Result<Option<T>>
+    where
+        F: FnOnce(&mut Ui<T>),
+    {
+        let result = self.draw(render).await?;
+
+        self.poll().await?;
+
+        Ok(result)
+    }
+
+    async fn draw<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
         F: FnOnce(&mut Ui<T>),
     {
@@ -168,7 +179,7 @@ impl Term {
         Ok(resp)
     }
 
-    pub async fn poll(&mut self) -> Result<()> {
+    async fn poll(&mut self) -> Result<()> {
         select! {
             stdin = self.stdin.recv() => {
                 // After retrieving an input event, reset the "when next frame"

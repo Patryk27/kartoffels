@@ -1,31 +1,31 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (16/16) "),
 
     body: vec![
-        DialogLine::new("✨ *yay, you made it!* ✨")
+        MsgLine::new("✨ *yay, you made it!* ✨")
             .fg(theme::GREEN)
             .bold()
             .centered(),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new(
             "not sure if your mom and dad are proud of you, but _i_ am !!",
         )
         .centered(),
-        DialogLine::new(""),
-        DialogLine::new("now, waste no time:").centered(),
-        DialogLine::new("🥔 have fun and remember the power of potato 🥔")
+        MsgLine::new(""),
+        MsgLine::new("now, waste no time:").centered(),
+        MsgLine::new("🥔 have fun and remember the power of potato 🥔")
             .centered(),
     ],
 
-    buttons: vec![DialogButton::confirm("thanks m8", ())],
+    buttons: vec![MsgButton::confirm("thanks m8", ())],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.world.set_map(Default::default()).await?;
     ctxt.wait_for_ui().await?;
-    ctxt.game.run_dialog(&DIALOG).await?;
+    ctxt.game.show_msg(&MSG).await?;
 
     Ok(())
 }

@@ -1,17 +1,17 @@
-use kartoffels_ui::{Dialog, DialogButton};
+use kartoffels_ui::{Msg, MsgButton};
 use termwiz::input::KeyCode;
 
-pub type HelpDialog = Dialog<HelpDialogResponse>;
-pub type HelpDialogRef = &'static HelpDialog;
+pub type HelpMsg = Msg<HelpMsgResponse>;
+pub type HelpMsgRef = &'static HelpMsg;
 
 #[derive(Clone, Copy, Debug)]
-pub enum HelpDialogResponse {
+pub enum HelpMsgResponse {
     Copy(&'static str),
     Close,
 }
 
-impl HelpDialogResponse {
-    pub fn close() -> DialogButton<Self> {
-        DialogButton::new(KeyCode::Escape, "close", Self::Close).right_aligned()
+impl HelpMsgResponse {
+    pub fn close() -> MsgButton<Self> {
+        MsgButton::new(KeyCode::Escape, "close", Self::Close).right_aligned()
     }
 }

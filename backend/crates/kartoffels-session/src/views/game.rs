@@ -11,7 +11,7 @@ use self::bottom::*;
 use self::camera::*;
 pub use self::ctrl::*;
 use self::dialog::*;
-pub use self::dialog::{HelpDialog, HelpDialogRef, HelpDialogResponse};
+pub use self::dialog::{HelpMsg, HelpMsgRef, HelpMsgResponse};
 use self::event::*;
 use self::map::*;
 pub use self::perms::*;
@@ -64,24 +64,22 @@ async fn run_once(
     debug!("run()");
 
     let mut fade = Some(Fade::new(FadeDir::In));
+    let mut tick = Instant::now();
     let mut state = State::default();
-    let mut frame = Instant::now();
 
     loop {
         let event = term
-            .draw(|ui| {
-                state.tick(frame.elapsed().as_secs_f32(), store);
+            .frame(|ui| {
+                state.tick(tick.elapsed().as_secs_f32(), store);
                 state.render(ui, sess);
 
                 if let Some(fade) = &fade {
                     fade.render(ui);
                 }
 
-                frame = Instant::now();
+                tick = Instant::now();
             })
             .await?;
-
-        term.poll().await?;
 
         if let Some(event) = event {
             if let ControlFlow::Break(_) =
@@ -107,7 +105,7 @@ struct State {
     camera: Camera,
     dialog: Option<Dialog>,
     handle: Option<WorldHandle>,
-    help: Option<HelpDialogRef>,
+    help: Option<HelpMsgRef>,
     map: Map,
     paused: bool,
     perms: Perms,

@@ -1,22 +1,22 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     title: Some(" tutorial (1/16) "),
 
     body: vec![
-        DialogLine::new("hey there and welcome to kartoffels 🫡"),
-        DialogLine::new(""),
-        DialogLine::from_iter([
+        MsgLine::new("hey there and welcome to kartoffels 🫡"),
+        MsgLine::new(""),
+        MsgLine::from_iter([
             Span::raw(
                 "in just a couple of minutes we're going to make a bots' boss \
                  out of you, so buckle up and let's get started! ",
             ),
             Span::raw("*").fg(theme::RED),
         ]),
-        DialogLine::new(""),
-        DialogLine::new("ready?").fg(theme::GREEN).bold().centered(),
-        DialogLine::new(""),
-        DialogLine::from_iter([
+        MsgLine::new(""),
+        MsgLine::new("ready?").fg(theme::GREEN).bold().centered(),
+        MsgLine::new(""),
+        MsgLine::from_iter([
             Span::raw("* ").fg(theme::RED),
             Span::raw(
                 "kartoffels ltd is not responsible for loss of hearing, loss \
@@ -29,11 +29,11 @@ static DIALOG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
     ],
 
     buttons: vec![
-        DialogButton::abort("no, leave tutorial", false),
-        DialogButton::confirm("yes, start tutorial", true),
+        MsgButton::abort("no, leave tutorial", false),
+        MsgButton::confirm("yes, start tutorial", true),
     ],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<bool> {
-    ctxt.game.run_dialog(&DIALOG).await
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    ctxt.game.show_msg(&MSG).await
 }

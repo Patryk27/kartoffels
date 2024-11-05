@@ -1,41 +1,37 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (2/16) "),
 
     body: vec![
-        DialogLine::new("lesson #1:").bold(),
-        DialogLine::new(
+        MsgLine::new("lesson #1:").bold(),
+        MsgLine::new(
             "- you can navigate the interface using keyboard and/or mouse",
         ),
-        DialogLine::ssh(
+        MsgLine::ssh(
             "  (that includes when you're connected through the terminal)",
         ),
-        DialogLine::new(""),
-        DialogLine::new("lesson #2, at any time:").bold(),
-        DialogLine::new("- press [`Ctrl-a`] to go back to the main menu"),
-        DialogLine::ssh("- press [`Ctrl-c`] to disconnect and leave the game"),
-        DialogLine::new(""),
-        DialogLine::new(
-            "lesson #3, during the game, when no message is visible:",
-        )
-        .bold(),
-        DialogLine::new(
-            "- press [`h`] to get help (ambulance paid separately)",
-        ),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("lesson #2, at any time:").bold(),
+        MsgLine::new("- press [`Ctrl-a`] to go back to the main menu"),
+        MsgLine::ssh("- press [`Ctrl-c`] to disconnect and leave the game"),
+        MsgLine::new(""),
+        MsgLine::new("lesson #3, during the game, when no message is visible:")
+            .bold(),
+        MsgLine::new("- press [`h`] to get help (ambulance paid separately)"),
+        MsgLine::new(
             "- press [`w`/`a`/`s`/`d`] or arrow keys to move the camera",
         ),
-        DialogLine::new(""),
-        DialogLine::new("lesson #4:").bold(),
-        DialogLine::new("- don't lick yellow snow"),
+        MsgLine::new(""),
+        MsgLine::new("lesson #4:").bold(),
+        MsgLine::new("- don't lick yellow snow"),
     ],
 
-    buttons: vec![DialogButton::confirm("sure", ())],
+    buttons: vec![MsgButton::confirm("sure", ())],
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
 
     Ok(())
 }

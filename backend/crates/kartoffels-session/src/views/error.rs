@@ -12,7 +12,7 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
 
     loop {
         let go_back = term
-            .draw(|ui| {
+            .frame(|ui| {
                 let width = 50;
                 let height = err.line_count(width) as u16 + 2;
 
@@ -31,8 +31,6 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
             })
             .await?
             .is_some();
-
-        term.poll().await?;
 
         if go_back {
             return Ok(());

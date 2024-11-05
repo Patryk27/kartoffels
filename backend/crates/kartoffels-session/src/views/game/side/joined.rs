@@ -113,13 +113,6 @@ impl JoinedSidePanel {
                 .throwing(Event::FollowBot)
                 .render(ui);
 
-            // TODO
-            if false {
-                Button::new(KeyCode::Char('i'), "history")
-                    .throwing(Event::ShowBotHistoryDialog)
-                    .render(ui);
-            }
-
             if state.perms.user_can_manage_bots {
                 ui.enable(!state.paused, |ui| {
                     Button::new(KeyCode::Char('R'), "restart")

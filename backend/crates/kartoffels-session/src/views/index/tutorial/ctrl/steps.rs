@@ -16,11 +16,11 @@ pub mod step15;
 pub mod step16;
 
 mod prelude {
-    pub(super) use super::super::StepCtxt;
-    pub(super) use crate::views::game::{HelpDialog, HelpDialogResponse};
+    pub(super) use super::super::TutorialCtxt;
+    pub(super) use crate::views::game::{HelpMsg, HelpMsgResponse};
     pub(super) use anyhow::Result;
     pub(super) use glam::*;
-    pub(super) use kartoffels_ui::{theme, Dialog, DialogButton, DialogLine};
+    pub(super) use kartoffels_ui::{theme, Msg, MsgButton, MsgLine};
     pub(super) use kartoffels_world::prelude::*;
     pub(super) use ratatui::style::Stylize;
     pub(super) use ratatui::text::Span;

@@ -1,8 +1,8 @@
-use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
 use crate::MapBroadcaster;
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_ui::{Dialog, DialogLine};
+use kartoffels_ui::{Msg, MsgLine};
 use kartoffels_world::prelude::{
     Config, Dir, Handle, Map, Policy, Theme, TileBase,
 };
@@ -14,39 +14,37 @@ use tokio::sync::mpsc;
 
 const MAX_BOTS: usize = 16;
 
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
 
     body: vec![
-        DialogLine::new("hey there and welcome to kartoffels 🫡"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new("hey there and welcome to kartoffels 🫡"),
+        MsgLine::new(""),
+        MsgLine::new(
             "you're in the *sandbox mode*, which means that you're playing in \
              your own, private world - this is meant as a safe place for you \
              to calmly play with, develop and debug bots",
         ),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new(
             "i'm assuming you've already went through the tutorial - if not, \
              feel free to go back and press [`t`]",
         ),
-        DialogLine::new(""),
-        DialogLine::new("# rules"),
-        DialogLine::new(""),
-        DialogLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("# rules"),
+        MsgLine::new(""),
+        MsgLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
+        MsgLine::new(
             "- as compared to the online play, in here you're allowed to",
         ),
-        DialogLine::new("  destroy bots, restart them etc."),
-        DialogLine::new(
-            "- you can also spawn prefabs, a couple of built-in bots",
-        ),
-        DialogLine::new(
+        MsgLine::new("  destroy bots, restart them etc."),
+        MsgLine::new("- you can also spawn prefabs, a couple of built-in bots"),
+        MsgLine::new(
             "- a new world is generated every time you open the sandbox",
         ),
     ],
 
-    buttons: vec![HelpDialogResponse::close()],
+    buttons: vec![HelpMsgResponse::close()],
 });
 
 pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {

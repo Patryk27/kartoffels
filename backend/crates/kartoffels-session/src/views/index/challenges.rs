@@ -57,7 +57,7 @@ async fn run_once(
 
     loop {
         let resp = term
-            .draw(|ui| {
+            .frame(|ui| {
                 bg.render(ui);
 
                 let width = (ui.area().width - 2).min(60);
@@ -116,8 +116,6 @@ async fn run_once(
                 }
             })
             .await?;
-
-        term.poll().await?;
 
         if let Some((fade, resp)) = &fade_out {
             if fade.is_completed() {

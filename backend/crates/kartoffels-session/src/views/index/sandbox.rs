@@ -59,7 +59,7 @@ async fn run_once(
 
     loop {
         let event = term
-            .draw(|ui| {
+            .frame(|ui| {
                 let width = 40;
 
                 let height = match focus {
@@ -86,8 +86,6 @@ async fn run_once(
                 }
             })
             .await?;
-
-        term.poll().await?;
 
         if let Some((fade, theme)) = &fade_out {
             if fade.is_completed() {

@@ -1,36 +1,36 @@
 use super::prelude::*;
 
-static DIALOG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (9/16) "),
 
-    body: vec![DialogLine::new("*time for some fun!*"), DialogLine::new("")]
+    body: vec![MsgLine::new("*time for some fun!*"), MsgLine::new("")]
         .into_iter()
-        .chain(INSTRUCTION.clone())
+        .chain(DOCS.clone())
         .collect(),
 
-    buttons: vec![DialogButton::confirm("i'm ready sir", ())],
+    buttons: vec![MsgButton::confirm("i'm ready sir", ())],
 });
 
-static HELP: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
-    body: INSTRUCTION.clone(),
-    buttons: vec![HelpDialogResponse::close()],
+    body: DOCS.clone(),
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static INSTRUCTION: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new(
+        MsgLine::new(
             "remove the call to `motor_turn_right()`, so that everything the \
              robot does is just `motor_wait()` and `motor_step()`, then close \
              this message and upload the updated bot",
         ),
-        DialogLine::web(""),
-        DialogLine::web("!! don't forget to re-run `./build` !!"),
+        MsgLine::web(""),
+        MsgLine::web("!! don't forget to re-run `./build` !!"),
     ]
 });
 
-pub async fn run(ctxt: &mut StepCtxt) -> Result<()> {
-    ctxt.game.run_dialog(&DIALOG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    ctxt.game.show_msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
     ctxt.snapshots.wait_until_bot_is_spawned().await?;
     ctxt.game.set_help(None).await?;

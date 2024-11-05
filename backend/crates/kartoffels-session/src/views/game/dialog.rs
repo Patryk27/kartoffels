@@ -3,6 +3,7 @@ mod error;
 mod help;
 mod join_bot;
 mod leaving;
+mod spawn_prefab;
 mod upload_bot;
 
 pub use self::bots::*;
@@ -10,6 +11,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::leaving::*;
+pub use self::spawn_prefab::*;
 pub use self::upload_bot::*;
 use super::Event;
 use kartoffels_store::SessionId;
@@ -21,9 +23,10 @@ use termwiz::input::{KeyCode, Modifiers};
 pub enum Dialog {
     Bots(BotsDialog),
     Error(ErrorDialog),
-    Help(HelpDialogRef),
+    GoBack(GoBackDialog),
+    Help(HelpMsgRef),
     JoinBot(JoinBotDialog),
-    Leaving(LeavingDialog),
+    SpawnPrefab(SpawnPrefabDialog),
     UploadBot(UploadBotDialog),
 
     Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
@@ -45,10 +48,13 @@ impl Dialog {
             Dialog::Error(this) => {
                 this.render(ui);
             }
+            Dialog::GoBack(this) => {
+                this.render(ui);
+            }
             Dialog::JoinBot(this) => {
                 this.render(ui, world);
             }
-            Dialog::Leaving(this) => {
+            Dialog::SpawnPrefab(this) => {
                 this.render(ui);
             }
             Dialog::UploadBot(this) => {
@@ -62,12 +68,10 @@ impl Dialog {
 
                 if let Some(event) = event {
                     match event {
-                        HelpDialogResponse::Copy(payload) => {
-                            ui.throw(Event::CopyToClipboard(
-                                payload.to_owned(),
-                            ));
+                        HelpMsgResponse::Copy(payload) => {
+                            ui.copy(payload);
                         }
-                        HelpDialogResponse::Close => {
+                        HelpMsgResponse::Close => {
                             ui.throw(Event::CloseDialog);
                         }
                     }

@@ -94,17 +94,17 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("leaving").await;
+    ctxt.wait_for_modal("go back").await;
     ctxt.see_frame("game/smoke/go-back-1.txt").await;
 
     ctxt.press(KeyCode::Char('n')).await;
-    ctxt.wait_while_modal("leaving").await;
+    ctxt.wait_while_modal("go back").await;
     ctxt.see_frame("game/smoke/go-back-2.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("leaving").await;
+    ctxt.wait_for_modal("go back").await;
     ctxt.press(KeyCode::Char('y')).await;
-    ctxt.wait_while_modal("leaving").await;
+    ctxt.wait_while_modal("go back").await;
     ctxt.see_frame("game/smoke/go-back-3.txt").await;
 }
 

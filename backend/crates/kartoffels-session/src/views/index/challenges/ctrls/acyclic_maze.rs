@@ -1,11 +1,11 @@
 use super::Challenge;
-use crate::views::game::{GameCtrl, HelpDialog, HelpDialogResponse, Perms};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
 use crate::MapBroadcaster;
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
-use kartoffels_ui::{Dialog, DialogButton, DialogLine};
+use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
     BOT_DUMMY,
@@ -22,47 +22,47 @@ pub static CHALLENGE: Challenge = Challenge {
     run,
 };
 
-static DOCS: LazyLock<Vec<DialogLine>> = LazyLock::new(|| {
+static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        DialogLine::new(
+        MsgLine::new(
             "poor timmy-bot went for a walk and got attacked by a masked \
              perpetrator which took poor timmy-bot's wheels and ran away",
         ),
-        DialogLine::new(""),
-        DialogLine::new("*show mercy:*"),
-        DialogLine::new(""),
-        DialogLine::new(
+        MsgLine::new(""),
+        MsgLine::new("*show mercy:*"),
+        MsgLine::new(""),
+        MsgLine::new(
             "implement a robot that traverses the maze, locates timmy and \
              _kills it_ - you'll be starting in the bottom-right corner",
         ),
     ]
 });
 
-static INIT_MSG: LazyLock<Dialog<bool>> = LazyLock::new(|| Dialog {
+static INIT_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     title: Some(" acyclic-maze "),
     body: DOCS.clone(),
 
     buttons: vec![
-        DialogButton::abort("go back", false),
-        DialogButton::confirm("let's do it", true),
+        MsgButton::abort("go back", false),
+        MsgButton::confirm("let's do it", true),
     ],
 });
 
-static HELP_MSG: LazyLock<HelpDialog> = LazyLock::new(|| Dialog {
+static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
     body: DOCS.clone(),
-    buttons: vec![HelpDialogResponse::close()],
+    buttons: vec![HelpMsgResponse::close()],
 });
 
-static WIN_MSG: LazyLock<Dialog<()>> = LazyLock::new(|| Dialog {
+static WIN_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" acyclic-maze "),
 
-    body: vec![DialogLine::new(
+    body: vec![MsgLine::new(
         "congrats - poor timmy-bot is surely in a better place now, thanks to \
          you!",
     )],
 
-    buttons: vec![DialogButton::confirm("ok", ())],
+    buttons: vec![MsgButton::confirm("ok", ())],
 });
 
 const AREA: UVec2 = uvec2(37, 19);
@@ -74,7 +74,7 @@ const PLAYER_POS: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     Box::pin(async move {
-        if !game.run_dialog(&INIT_MSG).await? {
+        if !game.show_msg(&INIT_MSG).await? {
             return Ok(());
         }
 
@@ -82,7 +82,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         main(&world, timmy).await?;
 
-        game.run_dialog(&WIN_MSG).await?;
+        game.show_msg(&WIN_MSG).await?;
 
         Ok(())
     })

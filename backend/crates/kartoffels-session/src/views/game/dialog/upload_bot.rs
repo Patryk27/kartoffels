@@ -68,7 +68,7 @@ impl UploadBotDialog {
             text_height + 4
         };
 
-        ui.info_window(width, height, Some(" uploading a bot "), |ui| {
+        ui.info_window(width, height, Some(" upload bot "), |ui| {
             text.render_ref(ui.area(), ui.buf());
             ui.space(text_height + 1);
 
@@ -103,7 +103,7 @@ impl UploadBotDialog {
                     .render(ui)
                     .pressed
                 {
-                    ui.throw(Event::CopyToClipboard(sess.to_string()));
+                    ui.copy(sess.to_string());
                 }
             });
         });

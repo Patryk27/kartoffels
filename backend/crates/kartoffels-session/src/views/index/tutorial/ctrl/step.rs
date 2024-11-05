@@ -6,13 +6,13 @@ use kartoffels_world::prelude::{
     ArenaTheme, Config, Handle, Policy, SnapshotStream, Theme,
 };
 
-pub struct StepCtxt {
+pub struct TutorialCtxt {
     pub game: GameCtrl,
     pub world: Handle,
     pub snapshots: SnapshotStream,
 }
 
-impl StepCtxt {
+impl TutorialCtxt {
     pub async fn new(store: &Store, game: GameCtrl) -> Result<Self> {
         game.set_perms(Perms::TUTORIAL).await?;
 

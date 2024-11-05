@@ -12,7 +12,7 @@ pub struct JoinBotDialog {
 
 impl JoinBotDialog {
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
-        ui.info_window(26, 4, Some(" joining bot "), |ui| {
+        ui.info_window(26, 4, Some(" join bot "), |ui| {
             ui.line("enter bot id:");
 
             ui.line(Line::from_iter([

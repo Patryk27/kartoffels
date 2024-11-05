@@ -1,16 +1,16 @@
-use super::{Dialog, ErrorDialog, State, UploadBotDialog};
+use super::{Dialog, ErrorDialog, SpawnPrefabDialog, State, UploadBotDialog};
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::{BotId, ClockSpeed, BOT_ROBERTO};
+use kartoffels_world::prelude::{BotId, ClockSpeed};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
     CloseDialog,
-    GoBack,
+    GoBack(bool),
     JoinBot(BotId),
     MoveCamera(IVec2),
     TogglePause,
@@ -19,15 +19,13 @@ pub enum Event {
     ShowHelpDialog,
     ShowJoinBotDialog,
     ShowUploadBotDialog,
-    ShowBotHistoryDialog,
-    SpawnRoberto,
+    ShowSpawnPrefabDialog,
     UploadBot(Either<String, Vec<u8>>),
     LeaveBot,
     RestartBot,
     DestroyBot,
     FollowBot,
     Overclock(ClockSpeed),
-    CopyToClipboard(String),
 }
 
 impl Event {
@@ -43,11 +41,11 @@ impl Event {
                 state.dialog = None;
             }
 
-            Event::GoBack => {
-                if state.dialog.is_some() {
-                    return Ok(ControlFlow::Break(()));
+            Event::GoBack(needs_confirmation) => {
+                if needs_confirmation {
+                    state.dialog = Some(Dialog::GoBack(Default::default()));
                 } else {
-                    state.dialog = Some(Dialog::Leaving(Default::default()));
+                    return Ok(ControlFlow::Break(()));
                 }
             }
 
@@ -97,14 +95,9 @@ impl Event {
                     Some(Dialog::UploadBot(UploadBotDialog::new(store, sess)));
             }
 
-            Event::ShowBotHistoryDialog => {
-                // TODO
-            }
-
-            Event::SpawnRoberto => {
-                state
-                    .upload_bot(Either::Right(BOT_ROBERTO.to_vec()))
-                    .await?;
+            Event::ShowSpawnPrefabDialog => {
+                state.dialog =
+                    Some(Dialog::SpawnPrefab(SpawnPrefabDialog::default()));
             }
 
             Event::UploadBot(src) => {
@@ -142,10 +135,6 @@ impl Event {
             Event::Overclock(speed) => {
                 state.handle.as_ref().unwrap().overclock(speed).await?;
                 state.speed = speed;
-            }
-
-            Event::CopyToClipboard(payload) => {
-                term.copy_to_clipboard(payload).await?;
             }
         }
 
