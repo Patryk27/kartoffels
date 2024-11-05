@@ -66,8 +66,8 @@ impl Action {
             }
 
             Action::SpawnPrefab => {
-                Button::new(KeyCode::Char('S'), "spawn prefab")
-                    .throwing(Event::ShowSpawnPrefabDialog)
+                Button::new(KeyCode::Char('S'), "spawn prefab bot")
+                    .throwing(Event::ShowSpawnPrefabBotDialog)
                     .render(ui);
             }
         }

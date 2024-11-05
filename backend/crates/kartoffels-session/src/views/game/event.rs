@@ -1,4 +1,6 @@
-use super::{Dialog, ErrorDialog, SpawnPrefabDialog, State, UploadBotDialog};
+use super::{
+    Dialog, ErrorDialog, SpawnPrefabBotDialog, State, UploadBotDialog,
+};
 use anyhow::Result;
 use glam::IVec2;
 use itertools::Either;
@@ -19,7 +21,7 @@ pub enum Event {
     ShowHelpDialog,
     ShowJoinBotDialog,
     ShowUploadBotDialog,
-    ShowSpawnPrefabDialog,
+    ShowSpawnPrefabBotDialog,
     UploadBot(Either<String, Vec<u8>>),
     LeaveBot,
     RestartBot,
@@ -95,9 +97,10 @@ impl Event {
                     Some(Dialog::UploadBot(UploadBotDialog::new(store, sess)));
             }
 
-            Event::ShowSpawnPrefabDialog => {
-                state.dialog =
-                    Some(Dialog::SpawnPrefab(SpawnPrefabDialog::default()));
+            Event::ShowSpawnPrefabBotDialog => {
+                state.dialog = Some(Dialog::SpawnPrefabBot(
+                    SpawnPrefabBotDialog::default(),
+                ));
             }
 
             Event::UploadBot(src) => {

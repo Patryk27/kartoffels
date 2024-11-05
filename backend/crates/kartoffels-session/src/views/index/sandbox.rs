@@ -1,5 +1,9 @@
 mod ctrl;
+mod sandbox_size;
+mod sandbox_theme;
 
+use self::sandbox_size::*;
+use self::sandbox_theme::*;
 use crate::views::game;
 use crate::Background;
 use anyhow::Result;
@@ -7,7 +11,7 @@ use glam::uvec2;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, Render, Term, Ui};
 use kartoffels_world::prelude::{ArenaTheme, DungeonTheme, Theme};
-use std::fmt;
+use std::ops::ControlFlow;
 use termwiz::input::KeyCode;
 use tracing::debug;
 
@@ -48,46 +52,33 @@ async fn run_once(
 ) -> Result<Option<Theme>> {
     debug!("run()");
 
-    let mut fade_in = if fade_in && !store.testing() {
-        Some(Fade::new(FadeDir::In))
-    } else {
-        None
-    };
+    let mut view = {
+        let fade_in = if fade_in && !store.testing() {
+            Some(Fade::new(FadeDir::In))
+        } else {
+            None
+        };
 
-    let mut fade_out: Option<(Fade, Theme)> = None;
-    let mut focus = None;
+        View {
+            bg,
+            fade_in,
+            fade_out: None,
+            form: Form {
+                focus: None,
+                size,
+                theme,
+            },
+        }
+    };
 
     loop {
         let event = term
             .frame(|ui| {
-                let width = 40;
-
-                let height = match focus {
-                    Some(Focus::Size) => 4 + SandboxSize::all().count(),
-                    Some(Focus::Theme) => 4 + SandboxTheme::all().count(),
-                    None => 4,
-                } as u16;
-
-                bg.render(ui);
-
-                ui.info_window(width, height, Some(" sandbox "), |ui| {
-                    render_form(ui, focus.as_ref(), theme, size);
-                    render_footer(ui, focus.as_ref());
-                });
-
-                if let Some(fade) = &fade_in {
-                    if fade.render(ui).is_completed() {
-                        fade_in = None;
-                    }
-                }
-
-                if let Some((fade, _)) = &fade_out {
-                    fade.render(ui);
-                }
+                view.render(ui);
             })
             .await?;
 
-        if let Some((fade, theme)) = &fade_out {
+        if let Some((fade, theme)) = &view.fade_out {
             if fade.is_completed() {
                 return Ok(Some(theme.clone()));
             }
@@ -96,120 +87,163 @@ async fn run_once(
         }
 
         if let Some(event) = event {
-            match event {
-                Event::GoBack => {
-                    if focus.is_some() {
-                        focus = None;
-                    } else {
-                        return Ok(None);
-                    }
-                }
-
-                Event::CreateSandbox => {
-                    let fade = Fade::new(FadeDir::Out);
-                    let theme = create_theme(size, theme);
-
-                    fade_out = Some((fade, theme));
-                }
-
-                Event::SetFocus(val) => {
-                    focus = val;
-                }
-
-                Event::SetSize(val) => {
-                    *size = val;
-                    focus = None;
-                }
-
-                Event::SetTheme(val) => {
-                    *theme = val;
-                    focus = None;
-                }
+            if let ControlFlow::Break(_) = view.handle(event) {
+                return Ok(None);
             }
         }
     }
 }
 
-fn render_form(
-    ui: &mut Ui<Event>,
-    focus: Option<&Focus>,
-    theme: &SandboxTheme,
-    size: &SandboxSize,
-) {
-    match focus {
-        Some(Focus::Size) => {
-            ui.line("choose size:");
-            ui.space(1);
+#[derive(Debug)]
+struct View<'a> {
+    bg: &'a Background,
+    fade_in: Option<Fade>,
+    fade_out: Option<(Fade, Theme)>,
+    form: Form<'a>,
+}
 
-            for size in SandboxSize::all() {
-                Button::new(KeyCode::Char(size.key()), size.to_string())
-                    .throwing(Event::SetSize(size))
-                    .render(ui);
+impl View<'_> {
+    fn render(&mut self, ui: &mut Ui<Event>) {
+        self.bg.render(ui);
+        self.form.render(ui);
+
+        if let Some(fade) = &self.fade_in {
+            if fade.render(ui).is_completed() {
+                self.fade_in = None;
             }
         }
 
-        Some(Focus::Theme) => {
-            ui.line("choose theme:");
-            ui.space(1);
+        if let Some((fade, _)) = &self.fade_out {
+            fade.render(ui);
+        }
+    }
 
-            for ty in SandboxTheme::all() {
-                Button::new(KeyCode::Char(ty.key()), ty.to_string())
-                    .throwing(Event::SetTheme(ty))
-                    .render(ui);
+    fn handle(&mut self, event: Event) -> ControlFlow<()> {
+        match event {
+            Event::GoBack => {
+                if self.form.focus.is_some() {
+                    self.form.focus = None;
+                } else {
+                    return ControlFlow::Break(());
+                }
+            }
+
+            Event::Confirm => {
+                let fade = Fade::new(FadeDir::Out);
+                let theme = self.form.confirm();
+
+                self.fade_out = Some((fade, theme));
+            }
+
+            Event::FocusOn(val) => {
+                self.form.focus = val;
+            }
+
+            Event::SetSize(val) => {
+                *self.form.size = val;
+                self.form.focus = None;
+            }
+
+            Event::SetTheme(val) => {
+                *self.form.theme = val;
+                self.form.focus = None;
             }
         }
 
-        None => {
-            Button::new(KeyCode::Char('s'), format!("size: {size}"))
-                .throwing(Event::SetFocus(Some(Focus::Size)))
-                .render(ui);
-
-            Button::new(KeyCode::Char('t'), format!("theme: {theme}"))
-                .throwing(Event::SetFocus(Some(Focus::Theme)))
-                .render(ui);
-        }
+        ControlFlow::Continue(())
     }
 }
 
-fn render_footer(ui: &mut Ui<Event>, focus: Option<&Focus>) {
-    ui.space(1);
-
-    ui.row(|ui| {
-        Button::new(KeyCode::Escape, "go back")
-            .throwing(Event::GoBack)
-            .render(ui);
-
-        if focus.is_none() {
-            Button::new(KeyCode::Enter, "create sandbox")
-                .right_aligned()
-                .throwing(Event::CreateSandbox)
-                .render(ui);
-        }
-    });
+#[derive(Debug)]
+struct Form<'a> {
+    focus: Option<Focus>,
+    size: &'a mut SandboxSize,
+    theme: &'a mut SandboxTheme,
 }
 
-fn create_theme(size: &SandboxSize, theme: &SandboxTheme) -> Theme {
-    match theme {
-        SandboxTheme::Arena => {
-            let radius = match size {
-                SandboxSize::Tiny => 4,
-                SandboxSize::Small => 8,
-                SandboxSize::Medium => 16,
-                SandboxSize::Large => 24,
-            };
+impl Form<'_> {
+    fn render(&mut self, ui: &mut Ui<Event>) {
+        let width = 40;
+        let height = self.height();
+        let title = self.title();
 
-            Theme::Arena(ArenaTheme::new(radius))
+        ui.info_window(width, height, Some(title), |ui| {
+            self.render_body(ui);
+            self.render_footer(ui);
+        });
+    }
+
+    fn title(&self) -> &'static str {
+        match &self.focus {
+            Some(Focus::SandboxSize) => " sandbox › choose size ",
+            Some(Focus::SandboxTheme) => " sandbox › choose theme ",
+            None => " sandbox ",
         }
+    }
 
-        SandboxTheme::Dungeon => {
-            let size = match size {
-                SandboxSize::Tiny => uvec2(10, 10),
-                SandboxSize::Small => uvec2(20, 15),
-                SandboxSize::Medium => uvec2(60, 30),
-                SandboxSize::Large => uvec2(80, 50),
-            };
+    fn height(&self) -> u16 {
+        match &self.focus {
+            Some(Focus::SandboxSize) => SandboxSize::height() + 2,
+            Some(Focus::SandboxTheme) => SandboxTheme::height() + 2,
+            None => 4,
+        }
+    }
 
-            Theme::Dungeon(DungeonTheme::new(size))
+    fn render_body(&self, ui: &mut Ui<Event>) {
+        match &self.focus {
+            Some(Focus::SandboxSize) => {
+                SandboxSize::render_choice(ui);
+            }
+            Some(Focus::SandboxTheme) => {
+                SandboxTheme::render_choice(ui);
+            }
+            None => {
+                SandboxSize::render_focus(ui, self.size);
+                SandboxTheme::render_focus(ui, self.theme);
+            }
+        }
+    }
+
+    fn render_footer(&self, ui: &mut Ui<Event>) {
+        ui.space(1);
+
+        ui.row(|ui| {
+            Button::new(KeyCode::Escape, "go back")
+                .throwing(Event::GoBack)
+                .render(ui);
+
+            if self.focus.is_none() {
+                Button::new(KeyCode::Enter, "create sandbox")
+                    .right_aligned()
+                    .throwing(Event::Confirm)
+                    .render(ui);
+            }
+        });
+    }
+
+    fn confirm(&self) -> Theme {
+        match &self.theme {
+            SandboxTheme::Arena => {
+                let radius = match &self.size {
+                    SandboxSize::Tiny => 4,
+                    SandboxSize::Small => 8,
+                    SandboxSize::Medium => 16,
+                    SandboxSize::Large => 24,
+                };
+
+                Theme::Arena(ArenaTheme::new(radius))
+            }
+
+            SandboxTheme::Dungeon => {
+                let size = match &self.size {
+                    SandboxSize::Tiny => uvec2(10, 10),
+                    SandboxSize::Small => uvec2(20, 15),
+                    SandboxSize::Medium => uvec2(60, 30),
+                    SandboxSize::Large => uvec2(80, 50),
+                };
+
+                Theme::Dungeon(DungeonTheme::new(size))
+            }
         }
     }
 }
@@ -217,86 +251,14 @@ fn create_theme(size: &SandboxSize, theme: &SandboxTheme) -> Theme {
 #[derive(Debug)]
 enum Event {
     GoBack,
-    CreateSandbox,
-    SetFocus(Option<Focus>),
+    Confirm,
+    FocusOn(Option<Focus>),
     SetSize(SandboxSize),
     SetTheme(SandboxTheme),
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum Focus {
-    Size,
-    Theme,
-}
-
-#[derive(Clone, Debug)]
-enum SandboxSize {
-    Tiny,
-    Small,
-    Medium,
-    Large,
-}
-
-impl SandboxSize {
-    fn all() -> impl Iterator<Item = Self> {
-        [Self::Tiny, Self::Small, Self::Medium, Self::Large].into_iter()
-    }
-
-    fn key(&self) -> char {
-        match self {
-            Self::Tiny => 't',
-            Self::Small => 's',
-            Self::Medium => 'm',
-            Self::Large => 'l',
-        }
-    }
-}
-
-impl fmt::Display for SandboxSize {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Tiny => "tiny",
-                Self::Small => "small",
-                Self::Medium => "medium",
-                Self::Large => "large",
-            }
-        )
-    }
-}
-
-#[derive(Clone, Debug)]
-enum SandboxTheme {
-    Arena,
-    Dungeon,
-}
-
-impl SandboxTheme {
-    fn all() -> impl Iterator<Item = Self> {
-        [Self::Arena, Self::Dungeon].into_iter()
-    }
-}
-
-impl SandboxTheme {
-    fn key(&self) -> char {
-        match self {
-            Self::Arena => 'a',
-            Self::Dungeon => 'd',
-        }
-    }
-}
-
-impl fmt::Display for SandboxTheme {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Arena => "arena",
-                Self::Dungeon => "dungeon",
-            }
-        )
-    }
+    SandboxSize,
+    SandboxTheme,
 }

@@ -33,7 +33,7 @@ impl Snapshot {
 }
 
 impl fmt::Display for Snapshot {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "# map")?;
         writeln!(f)?;
         writeln!(f, "```")?;
@@ -87,7 +87,7 @@ impl SnapshotBots {
 }
 
 impl fmt::Display for SnapshotBots {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !self.alive.is_empty() {
             writeln!(f, "## alive")?;
             writeln!(f)?;
@@ -156,7 +156,7 @@ impl SnapshotAliveBots {
 }
 
 impl fmt::Display for SnapshotAliveBots {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut table = Table::init(vec![]);
 
         table.set_titles(row!["id", "pos", "dir", "age", "score"]);

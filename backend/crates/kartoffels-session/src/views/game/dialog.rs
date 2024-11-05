@@ -3,7 +3,7 @@ mod error;
 mod help;
 mod join_bot;
 mod leaving;
-mod spawn_prefab;
+mod spawn_prefab_bot;
 mod upload_bot;
 
 pub use self::bots::*;
@@ -11,7 +11,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::join_bot::*;
 pub use self::leaving::*;
-pub use self::spawn_prefab::*;
+pub use self::spawn_prefab_bot::*;
 pub use self::upload_bot::*;
 use super::Event;
 use kartoffels_store::SessionId;
@@ -26,7 +26,7 @@ pub enum Dialog {
     GoBack(GoBackDialog),
     Help(HelpMsgRef),
     JoinBot(JoinBotDialog),
-    SpawnPrefab(SpawnPrefabDialog),
+    SpawnPrefabBot(SpawnPrefabBotDialog),
     UploadBot(UploadBotDialog),
 
     Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
@@ -54,7 +54,7 @@ impl Dialog {
             Dialog::JoinBot(this) => {
                 this.render(ui, world);
             }
-            Dialog::SpawnPrefab(this) => {
+            Dialog::SpawnPrefabBot(this) => {
                 this.render(ui);
             }
             Dialog::UploadBot(this) => {

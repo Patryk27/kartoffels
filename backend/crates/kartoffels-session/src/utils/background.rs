@@ -9,6 +9,7 @@ use std::thread;
 use std::time::Duration;
 use tokio::sync::watch;
 
+#[derive(Debug)]
 pub struct Background {
     stream: watch::Receiver<Arc<Map>>,
     camera: IVec2,

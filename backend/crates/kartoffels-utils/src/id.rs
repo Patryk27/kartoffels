@@ -65,7 +65,7 @@ impl FromStr for Id {
 }
 
 impl fmt::Display for Id {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id = self
             .0
             .get()
@@ -79,7 +79,7 @@ impl fmt::Display for Id {
 }
 
 impl fmt::Debug for Id {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_string().fmt(f)
     }
 }

@@ -16,7 +16,7 @@ impl Abort {
 }
 
 impl fmt::Display for Abort {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.soft {
             write!(f, "got C-a, bailing out")
         } else {
