@@ -26,5 +26,5 @@
         â                                                              â
         â                                                  [esc] close â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-                                                        [u] upload bot
+                                                       [u] upload bot
 [esc] go back  [spc] pause  [h] help

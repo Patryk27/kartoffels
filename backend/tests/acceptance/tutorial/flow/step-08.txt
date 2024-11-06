@@ -26,5 +26,5 @@
         â                                                              â
         â                                               [enter] got it â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-                                                        [u] upload bot
+                                                       [u] upload bot
 [esc] go back  [spc] pause  [h] help

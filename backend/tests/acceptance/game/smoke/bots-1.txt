@@ -1,5 +1,5 @@
                ââââââââââââââââââââââ bots ââââââââââââââââââââââ
-               â nth  id                  age    score   action â-c380-d507
+               â nth  id                  age    score   action âc380-d507
                â                                                â
                â                                                â
                â                                                â
@@ -25,6 +25,6 @@
                â                                                â
                â                                                â
                â                                                â
-               â                                                âfollowing
+               â                                                âollowing
                â [w] scroll up  [s] scroll down  [esc] close    â
 [esc] go back  ââââââââââââââââââââââââââââââââââââââââââââââââââ

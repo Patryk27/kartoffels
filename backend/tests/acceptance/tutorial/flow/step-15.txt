@@ -26,5 +26,5 @@
         â                 [enter] scoooby doooby dooo, let's catch 'em â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
-                                                        [u] upload bot
+                                                       [u] upload bot
 [esc] go back  [spc] pause  [h] help

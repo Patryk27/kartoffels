@@ -1,5 +1,5 @@
-                                                        id
-                                                        61da-6f3d-c380-d507
+                                                       id
+                                                       61da-6f3d-c380-d507
 
 
 
@@ -25,6 +25,6 @@
 
 
 
-                                                        [f] follow
-                                                        [l] leave
+                                                       [f] follow
+                                                       [l] leave
 [esc] go back  [spc] pause  [h] help  [b] bots
