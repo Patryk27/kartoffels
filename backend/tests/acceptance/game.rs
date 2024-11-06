@@ -48,11 +48,11 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Char(' ')).await;
-    ctxt.wait_for("PAUSED").await;
+    ctxt.wait_for("paused").await;
     ctxt.see_frame("game/smoke/pause-1.txt").await;
 
     ctxt.press(KeyCode::Char(' ')).await;
-    ctxt.wait_while("PAUSED").await;
+    ctxt.wait_while("paused").await;
     ctxt.see_frame("game/smoke/pause-2.txt").await;
 
     // ---

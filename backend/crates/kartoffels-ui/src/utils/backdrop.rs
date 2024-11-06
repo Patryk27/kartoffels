@@ -5,12 +5,9 @@ pub struct Backdrop;
 
 impl Backdrop {
     pub fn render<T>(ui: &mut Ui<T>) {
-        let area = ui.area();
-        let buf = ui.buf();
-
-        for x in area.left()..area.right() {
-            for y in area.top()..area.bottom() {
-                buf[(x, y)].set_fg(theme::DARK_GRAY).set_bg(theme::BG);
+        for x in ui.area.left()..ui.area.right() {
+            for y in ui.area.top()..ui.area.bottom() {
+                ui.buf[(x, y)].set_fg(theme::DARK_GRAY).set_bg(theme::BG);
             }
         }
     }

@@ -19,9 +19,9 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
                 bg.render(ui);
 
                 ui.error_window(width, height, Some(" ouch "), |ui| {
-                    err.render_ref(ui.area(), ui.buf());
+                    err.render_ref(ui.area, ui.buf);
 
-                    ui.clamp(ui.area().footer(1), |ui| {
+                    ui.clamp(ui.area.footer(1), |ui| {
                         Button::new(KeyCode::Enter, "got it")
                             .throwing(())
                             .right_aligned()

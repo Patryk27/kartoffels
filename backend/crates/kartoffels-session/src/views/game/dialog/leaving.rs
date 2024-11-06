@@ -17,7 +17,7 @@ impl GoBackDialog {
                     .render(ui);
 
                 Button::new(KeyCode::Char('y'), "yes, leave game")
-                    .throwing(Event::GoBack(false))
+                    .throwing(Event::GoBack { confirm: false })
                     .right_aligned()
                     .render(ui);
             });

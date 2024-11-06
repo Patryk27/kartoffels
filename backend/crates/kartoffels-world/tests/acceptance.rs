@@ -41,7 +41,7 @@ async fn pause_and_resume() {
 
     for _ in 0..16 {
         world
-            .create_bot(CreateBotRequest::new(BOT_ROBERTO))
+            .create_bot(CreateBotRequest::new(prefabs::ROBERTO))
             .await
             .unwrap();
     }
@@ -91,17 +91,17 @@ async fn kill_bot() {
     let world = kartoffels_world::create(config());
 
     let bot1 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
     let bot2 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY).oneshot())
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY).oneshot())
         .await
         .unwrap();
 
     let bot3 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -134,17 +134,17 @@ async fn destroy_bot() {
     let world = kartoffels_world::create(config());
 
     let bot1 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
     let bot2 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
     let bot3 = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -203,7 +203,7 @@ async fn set_spawn() {
 
     // First bot gets spawned at a random place
     world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -211,7 +211,7 @@ async fn set_spawn() {
 
     // Second bot gets spawned at (10,9)
     world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY).at(ivec2(10, 9)))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY).at(ivec2(10, 9)))
         .await
         .unwrap();
 
@@ -221,7 +221,7 @@ async fn set_spawn() {
     world.set_spawn(ivec2(15, 19), Dir::W).await.unwrap();
 
     world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -230,7 +230,7 @@ async fn set_spawn() {
     // Fourth bot gets spawned at (16,1), since specifying a bot position
     // overrides the default spawn configuration
     world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY).at(ivec2(16, 1)))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY).at(ivec2(16, 1)))
         .await
         .unwrap();
 
@@ -238,7 +238,7 @@ async fn set_spawn() {
 
     // Fifth bot doesn't get spawned, because the spawn-point is taken
     world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY).at(ivec2(16, 1)))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY).at(ivec2(16, 1)))
         .await
         .unwrap();
 
@@ -274,7 +274,7 @@ async fn with_auto_respawn() {
     });
 
     let bot = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -296,7 +296,7 @@ async fn without_auto_respawn() {
     });
 
     let bot = world
-        .create_bot(CreateBotRequest::new(BOT_DUMMY))
+        .create_bot(CreateBotRequest::new(prefabs::DUMMY))
         .await
         .unwrap();
 
@@ -320,13 +320,13 @@ async fn err_too_many_robots_queued() {
 
     for _ in 0..20 {
         world
-            .create_bot(CreateBotRequest::new(BOT_ROBERTO))
+            .create_bot(CreateBotRequest::new(prefabs::ROBERTO))
             .await
             .unwrap();
     }
 
     let err = world
-        .create_bot(CreateBotRequest::new(BOT_ROBERTO))
+        .create_bot(CreateBotRequest::new(prefabs::ROBERTO))
         .await
         .unwrap_err()
         .to_string();

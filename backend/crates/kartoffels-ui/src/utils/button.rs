@@ -81,25 +81,24 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
-        let area = ui.area();
         let width = self.width();
 
         let x = match self.alignment {
-            Alignment::Left => area.x,
-            Alignment::Center => area.x + (area.width - width) / 2,
-            Alignment::Right => area.x + area.width - width,
+            Alignment::Left => ui.area.x,
+            Alignment::Center => ui.area.x + (ui.area.width - width) / 2,
+            Alignment::Right => ui.area.x + ui.area.width - width,
         };
 
         Rect {
             x,
-            y: area.y,
+            y: ui.area.y,
             width,
             height: 1,
         }
     }
 
     fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
-        if !ui.enabled() || !self.enabled {
+        if !ui.enabled || !self.enabled {
             return ButtonResponse {
                 hovered: false,
                 pressed: false,
@@ -139,7 +138,7 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn style(&self, ui: &Ui<T>, response: &ButtonResponse) -> (Style, Style) {
-        let key = if ui.enabled() && self.enabled {
+        let key = if ui.enabled && self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -149,7 +148,7 @@ impl<'a, T> Button<'a, T> {
             Style::new().fg(theme::DARK_GRAY)
         };
 
-        let label = if ui.enabled() && self.enabled {
+        let label = if ui.enabled && self.enabled {
             if response.pressed || response.hovered {
                 Style::new().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -209,7 +208,7 @@ impl<T> Render<T> for Button<'_, T> {
             });
         });
 
-        if ui.layout().is_row() {
+        if ui.layout.is_row() {
             ui.space(area.width);
         } else {
             ui.space(area.height);

@@ -118,7 +118,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
         .into_iter()
         .map(|pos| {
             ctxt.world
-                .create_bot(CreateBotRequest::new(BOT_DUMMY).at(pos))
+                .create_bot(CreateBotRequest::new(prefabs::DUMMY).at(pos))
         })
         .collect::<FuturesOrdered<_>>()
         .collect::<Result<_>>()

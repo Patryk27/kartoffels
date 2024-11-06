@@ -21,7 +21,7 @@ impl ErrorDialog {
         ui.error_window(width, height, Some(" ouch "), |ui| {
             text.render(ui);
 
-            ui.clamp(ui.area().footer(1), |ui| {
+            ui.clamp(ui.area.footer(1), |ui| {
                 Button::new(KeyCode::Enter, "got it")
                     .throwing(Event::CloseDialog)
                     .right_aligned()

@@ -29,11 +29,11 @@ where
             Paragraph::new(text).wrap(Default::default())
         };
 
-        let width = cmp::min(60, ui.area().width - 4);
+        let width = cmp::min(60, ui.area.width - 4);
         let height = body.line_count(width) as u16 + 2;
 
         ui.info_window(width, height, self.title, |ui| {
-            body.render_ref(ui.area(), ui.buf());
+            body.render_ref(ui.area, ui.buf);
             ui.space(height - 1);
 
             ui.row(|ui| {
@@ -85,8 +85,8 @@ impl MsgLine {
 
     fn matches<E>(&self, ui: &Ui<E>) -> bool {
         match self.cond {
-            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.ty().is_ssh(),
-            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.ty().is_web(),
+            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.ty.is_ssh(),
+            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.ty.is_web(),
             None => true,
         }
     }

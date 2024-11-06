@@ -14,7 +14,7 @@ impl IdleSidePanel {
             Constraint::Fill(1),
             Constraint::Length(actions.len() as u16),
         ])
-        .areas(ui.area());
+        .areas(ui.area);
 
         ui.clamp(area, |ui| {
             for action in actions {
@@ -54,20 +54,20 @@ impl Action {
         match self {
             Action::JoinBot => {
                 Button::new(KeyCode::Char('j'), "join bot")
-                    .throwing(Event::ShowJoinBotDialog)
+                    .throwing(Event::OpenJoinBotDialog)
                     .enabled(!state.snapshot.bots().is_empty())
                     .render(ui);
             }
 
             Action::UploadBot => {
                 Button::new(KeyCode::Char('u'), "upload bot")
-                    .throwing(Event::ShowUploadBotDialog)
+                    .throwing(Event::OpenUploadBotDialog)
                     .render(ui);
             }
 
             Action::SpawnPrefab => {
                 Button::new(KeyCode::Char('S'), "spawn prefab bot")
-                    .throwing(Event::ShowSpawnPrefabBotDialog)
+                    .throwing(Event::OpenSpawnPrefabBotDialog)
                     .render(ui);
             }
         }

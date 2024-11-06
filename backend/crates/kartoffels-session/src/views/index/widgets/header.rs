@@ -1,4 +1,4 @@
-use kartoffels_ui::{theme, Clear, FromMarkdown, Ui};
+use kartoffels_ui::{theme, FromMarkdown, Ui};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Padding, WidgetRef};
@@ -40,14 +40,12 @@ impl Header {
     }
 
     pub fn render<T>(ui: &mut Ui<T>) {
-        Clear::render(ui);
-
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            TEXT.render_ref(ui.area(), ui.buf());
-        })
+            TEXT.render_ref(ui.area, ui.buf);
+        });
     }
 }

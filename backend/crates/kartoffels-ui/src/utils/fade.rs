@@ -43,9 +43,9 @@ impl<T> Render<T> for &Fade {
             }
         };
 
-        for y in 0..ui.area().height {
-            for x in 0..ui.area().width {
-                let cell = &mut ui.buf()[(x, y)];
+        for y in 0..ui.area.height {
+            for x in 0..ui.area.width {
+                let cell = &mut ui.buf[(x, y)];
 
                 if let Color::Rgb(r, g, b) = &mut cell.fg {
                     *r = ((*r as f32) * alpha) as u8;

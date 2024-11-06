@@ -77,7 +77,7 @@ async fn run_once(
                     Constraint::Length(Header::width()),
                     Constraint::Fill(1),
                 ])
-                .areas(ui.area());
+                .areas(ui.area);
 
                 let [_, header_area, _, menu_area, _] = Layout::vertical([
                     Constraint::Fill(1),

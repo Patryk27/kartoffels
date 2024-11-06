@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] resume  [h] help                                     PAUSED
+[esc] go back  [spc] resume  [h] help                                     paused

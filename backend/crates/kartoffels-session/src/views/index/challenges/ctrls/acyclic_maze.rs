@@ -7,8 +7,8 @@ use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
-    BOT_DUMMY,
+    prefabs, BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy,
+    TileBase,
 };
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -116,7 +116,7 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
 
     let timmy = world
         .create_bot(
-            CreateBotRequest::new(BOT_DUMMY)
+            CreateBotRequest::new(prefabs::DUMMY)
                 .at(TIMMY_POS)
                 .facing(Dir::S),
         )

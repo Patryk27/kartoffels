@@ -60,7 +60,7 @@ async fn run_once(
             .frame(|ui| {
                 bg.render(ui);
 
-                let width = (ui.area().width - 2).min(60);
+                let width = (ui.area.width - 2).min(60);
 
                 // TODO ugh, doing manual layouting sometimes sucks
                 let height = {
@@ -88,8 +88,8 @@ async fn run_once(
                             .render(ui);
 
                         let desc_area = Rect {
-                            x: ui.area().x + 4,
-                            ..ui.area()
+                            x: ui.area.x + 4,
+                            ..ui.area
                         };
 
                         let desc_height = ui.clamp(desc_area, |ui| {

@@ -37,7 +37,7 @@ impl JoinedSidePanel {
             None => (),
         }
 
-        ui.clamp(ui.area().footer(footer_height), |ui| {
+        ui.clamp(ui.area.footer(footer_height), |ui| {
             Self::render_footer(ui, state, bot)
         });
     }
@@ -57,22 +57,18 @@ impl JoinedSidePanel {
 
         // ---
 
-        let area = {
-            let area = ui.area();
-
-            Rect {
-                x: area.x,
-                y: area.y,
-                width: area.width,
-                height: area.height - footer_height - 1,
-            }
+        let area = Rect {
+            x: ui.area.x,
+            y: ui.area.y,
+            width: ui.area.width,
+            height: ui.area.height - footer_height - 1,
         };
 
         ui.clamp(area, |ui| {
             ui.line("serial port".underlined());
 
             let serial = render_serial(&bot.serial);
-            let serial = reflow_serial(&serial, ui.area());
+            let serial = reflow_serial(&serial, ui.area);
 
             for line in serial {
                 ui.line(line);

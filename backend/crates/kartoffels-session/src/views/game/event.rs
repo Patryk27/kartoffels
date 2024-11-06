@@ -1,28 +1,48 @@
 use super::{
-    Dialog, ErrorDialog, SpawnPrefabBotDialog, State, UploadBotDialog,
+    BotCount, BotLocation, BotPrefab, Dialog, ErrorDialog, Mode,
+    SpawnPrefabBotDialog, State, UploadBotDialog,
 };
 use anyhow::Result;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use glam::IVec2;
 use itertools::Either;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::{BotId, ClockSpeed};
+use kartoffels_world::prelude::{BotId, ClockSpeed, CreateBotRequest};
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
     CloseDialog,
-    GoBack(bool),
-    JoinBot(BotId),
-    MoveCamera(IVec2),
+    GoBack {
+        confirm: bool,
+    },
+    JoinBot {
+        id: BotId,
+    },
+    MoveCamera {
+        delta: IVec2,
+    },
     TogglePause,
-    ShowBotsDialog,
-    ShowErrorDialog(String),
-    ShowHelpDialog,
-    ShowJoinBotDialog,
-    ShowUploadBotDialog,
-    ShowSpawnPrefabBotDialog,
-    UploadBot(Either<String, Vec<u8>>),
+    OpenBotsDialog,
+    OpenErrorDialog {
+        error: String,
+    },
+    OpenHelpDialog,
+    OpenJoinBotDialog,
+    OpenUploadBotDialog,
+    OpenSpawnPrefabBotDialog,
+    CreateBot {
+        src: Either<String, Vec<u8>>,
+        pos: Option<IVec2>,
+        follow: bool,
+    },
+    SpawnPrefabBot {
+        count: BotCount,
+        prefab: BotPrefab,
+        location: BotLocation,
+    },
     LeaveBot,
     RestartBot,
     DestroyBot,
@@ -43,21 +63,27 @@ impl Event {
                 state.dialog = None;
             }
 
-            Event::GoBack(needs_confirmation) => {
-                if needs_confirmation {
-                    state.dialog = Some(Dialog::GoBack(Default::default()));
-                } else {
-                    return Ok(ControlFlow::Break(()));
+            Event::GoBack { confirm } => match &state.mode {
+                Mode::Default => {
+                    if confirm {
+                        state.dialog = Some(Dialog::GoBack(Default::default()));
+                    } else {
+                        return Ok(ControlFlow::Break(()));
+                    }
                 }
-            }
 
-            Event::JoinBot(id) => {
-                state.join_bot(id);
+                Mode::SpawningPrefabBot { .. } => {
+                    state.mode = Mode::Default;
+                }
+            },
+
+            Event::JoinBot { id } => {
+                state.join_bot(id, true);
                 state.dialog = None;
             }
 
-            Event::MoveCamera(delta) => {
-                state.camera.animate_by(delta);
+            Event::MoveCamera { delta } => {
+                state.camera.move_by(delta);
 
                 if let Some(bot) = &mut state.bot {
                     bot.follow = false;
@@ -72,23 +98,23 @@ impl Event {
                 }
             }
 
-            Event::ShowBotsDialog => {
+            Event::OpenBotsDialog => {
                 state.dialog = Some(Dialog::Bots(Default::default()));
             }
 
-            Event::ShowHelpDialog => {
+            Event::OpenHelpDialog => {
                 state.dialog = Some(Dialog::Help(state.help.unwrap()));
             }
 
-            Event::ShowErrorDialog(error) => {
+            Event::OpenErrorDialog { error } => {
                 state.dialog = Some(Dialog::Error(ErrorDialog::new(error)));
             }
 
-            Event::ShowJoinBotDialog => {
+            Event::OpenJoinBotDialog => {
                 state.dialog = Some(Dialog::JoinBot(Default::default()));
             }
 
-            Event::ShowUploadBotDialog => {
+            Event::OpenUploadBotDialog => {
                 if term.ty().is_web() {
                     term.send(vec![0x04]).await?;
                 }
@@ -97,15 +123,28 @@ impl Event {
                     Some(Dialog::UploadBot(UploadBotDialog::new(store, sess)));
             }
 
-            Event::ShowSpawnPrefabBotDialog => {
+            Event::OpenSpawnPrefabBotDialog => {
                 state.dialog = Some(Dialog::SpawnPrefabBot(
                     SpawnPrefabBotDialog::default(),
                 ));
             }
 
-            Event::UploadBot(src) => {
+            Event::CreateBot {
+                src,
+                pos,
+                follow: join,
+            } => {
                 state.dialog = None;
-                state.upload_bot(src).await?;
+                state.create_bot(src, pos, join).await?;
+            }
+
+            Event::SpawnPrefabBot {
+                count,
+                prefab,
+                location,
+            } => {
+                state.dialog = None;
+                state.spawn_prefab_bot(count, prefab, location).await?;
             }
 
             Event::LeaveBot => {
@@ -142,5 +181,87 @@ impl Event {
         }
 
         Ok(ControlFlow::Continue(()))
+    }
+}
+
+impl State {
+    async fn create_bot(
+        &mut self,
+        src: Either<String, Vec<u8>>,
+        pos: Option<IVec2>,
+        follow: bool,
+    ) -> Result<()> {
+        let src = match src {
+            Either::Left(src) => {
+                let src = src.trim().replace('\r', "");
+                let src = src.trim().replace('\n', "");
+
+                match BASE64_STANDARD.decode(src) {
+                    Ok(src) => src,
+                    Err(err) => {
+                        self.dialog = Some(Dialog::Error(ErrorDialog::new(
+                            format!("couldn't decode pasted content:\n\n{err}"),
+                        )));
+
+                        return Ok(());
+                    }
+                }
+            }
+
+            Either::Right(src) => src,
+        };
+
+        let id = self
+            .handle
+            .as_ref()
+            .unwrap()
+            .create_bot(CreateBotRequest::new(src).at(pos))
+            .await;
+
+        let id = match id {
+            Ok(id) => id,
+
+            Err(err) => {
+                self.dialog =
+                    Some(Dialog::Error(ErrorDialog::new(format!("{err:?}"))));
+
+                return Ok(());
+            }
+        };
+
+        self.join_bot(id, follow);
+
+        Ok(())
+    }
+
+    async fn spawn_prefab_bot(
+        &mut self,
+        count: BotCount,
+        prefab: BotPrefab,
+        location: BotLocation,
+    ) -> Result<()> {
+        match location {
+            BotLocation::Manual => {
+                self.mode = Mode::SpawningPrefabBot {
+                    prefab,
+                    cursor_screen: None,
+                    cursor_world: None,
+                    cursor_valid: false,
+                };
+            }
+
+            BotLocation::Random => {
+                for _ in 0..count.get() {
+                    self.create_bot(
+                        Either::Right(prefab.src().to_vec()),
+                        None,
+                        true,
+                    )
+                    .await?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }

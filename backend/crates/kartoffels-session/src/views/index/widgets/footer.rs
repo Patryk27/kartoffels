@@ -16,9 +16,9 @@ impl Footer {
         };
 
         let area = Rect {
-            x: ui.area().width - text.len() as u16,
+            x: ui.area.width - text.len() as u16,
             width: text.len() as u16,
-            ..ui.area().footer(1)
+            ..ui.area.footer(1)
         };
 
         ui.clamp(area, |ui| {

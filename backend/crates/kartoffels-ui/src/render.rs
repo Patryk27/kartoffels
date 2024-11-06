@@ -14,6 +14,6 @@ where
     type Response = ();
 
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
-        W::render(self, ui.area(), ui.buf())
+        W::render(self, ui.area, ui.buf)
     }
 }

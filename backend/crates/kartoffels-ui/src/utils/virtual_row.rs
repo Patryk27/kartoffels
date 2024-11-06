@@ -22,15 +22,11 @@ impl<'a, 'b, T> VirtualRow<'a, 'b, T> {
     pub fn add(&mut self, widget: impl Render<T>) -> &mut Self {
         let width = self.widths[self.nth];
 
-        let area = {
-            let area = self.ui.area();
-
-            Rect {
-                x: area.x + self.offset,
-                y: area.y,
-                width,
-                height: area.height,
-            }
+        let area = Rect {
+            x: self.ui.area.x + self.offset,
+            y: self.ui.area.y,
+            width,
+            height: self.ui.area.height,
         };
 
         self.ui.clamp(area, |ui| {

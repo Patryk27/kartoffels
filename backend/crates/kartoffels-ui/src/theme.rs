@@ -4,6 +4,7 @@ use std::time::Duration;
 pub const BG: Color = Color::Rgb(9, 9, 9);
 pub const FG: Color = Color::Rgb(240, 240, 240);
 
+pub const DARKER_GRAY: Color = Color::Rgb(16, 16, 16);
 pub const DARK_GRAY: Color = Color::Rgb(64, 64, 64);
 pub const GRAY: Color = Color::Rgb(128, 128, 128);
 pub const GREEN: Color = Color::Rgb(0, 255, 128);

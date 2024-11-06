@@ -28,23 +28,31 @@ impl UploadBotDialog {
     }
 
     pub fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
-        if ui.ty().is_ssh() {
+        if ui.ty.is_ssh() {
             self.render_ssh(ui, sess);
         }
 
-        if let Some(InputEvent::Paste(src)) = ui.event() {
+        if let Some(InputEvent::Paste(src)) = ui.event {
             if src.is_empty() {
                 // A bit hacky, but that's the most sane way for the http
                 // frontend to inform us that user has cancelled the uploading
                 ui.throw(Event::CloseDialog);
             } else {
-                ui.throw(Event::UploadBot(Either::Left(src.to_owned())));
+                ui.throw(Event::CreateBot {
+                    src: Either::Left(src.to_owned()),
+                    pos: None,
+                    follow: true,
+                });
             }
         }
 
         if let Some(upload) = &mut self.upload {
             if let Some(src) = upload.try_recv() {
-                ui.throw(Event::UploadBot(Either::Right(src)));
+                ui.throw(Event::CreateBot {
+                    src: Either::Right(src),
+                    pos: None,
+                    follow: true,
+                });
             }
         }
     }
@@ -59,7 +67,7 @@ impl UploadBotDialog {
         // ---
 
         let text = Self::build_ssh_text(sess);
-        let width = cmp::min(ui.area().width - 10, 60);
+        let width = cmp::min(ui.area.width - 10, 60);
         let text_height = text.line_count(width) as u16;
 
         let height = if self.ctrlv_alert.is_some() {
@@ -69,7 +77,7 @@ impl UploadBotDialog {
         };
 
         ui.info_window(width, height, Some(" upload bot "), |ui| {
-            text.render_ref(ui.area(), ui.buf());
+            text.render_ref(ui.area, ui.buf);
             ui.space(text_height + 1);
 
             Line::from_iter([spinner.clone(), Span::raw(" waiting "), spinner])

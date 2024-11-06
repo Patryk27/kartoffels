@@ -25,7 +25,7 @@ impl BotsDialog {
 
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         let width = Self::WIDTHS.iter().copied().sum();
-        let height = ui.area().height - 2;
+        let height = ui.area.height - 2;
 
         ui.info_window(width, height, Some(" bots "), |ui| {
             VirtualRow::new(ui, Self::WIDTHS)
@@ -45,8 +45,8 @@ impl BotsDialog {
                 .map(|(nth, bot)| BotsDialogRow { nth, bot });
 
             let area = Rect {
-                height: ui.area().height - 2,
-                ..ui.area()
+                height: ui.area.height - 2,
+                ..ui.area
             };
 
             ui.clamp(area, |ui| {
@@ -55,7 +55,7 @@ impl BotsDialog {
 
             ui.space(2);
 
-            ui.clamp(ui.area().footer(1), |ui| {
+            ui.clamp(ui.area.footer(1), |ui| {
                 ui.row(|ui| {
                     if Button::new(KeyCode::Char('w'), "scroll up")
                         .render(ui)
@@ -97,8 +97,8 @@ impl Render<Event> for BotsDialogRow<'_> {
         let age = Span::raw(format!("{}s", self.bot.age));
         let score = Span::raw(self.bot.score.to_string());
 
-        let join =
-            Button::new(None, "join").throwing(Event::JoinBot(self.bot.id));
+        let join = Button::new(None, "join")
+            .throwing(Event::JoinBot { id: self.bot.id });
 
         VirtualRow::new(ui, BotsDialog::WIDTHS)
             .add(nth)

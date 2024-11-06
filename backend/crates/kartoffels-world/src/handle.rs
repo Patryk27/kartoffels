@@ -249,13 +249,13 @@ impl CreateBotRequest {
         }
     }
 
-    pub fn at(mut self, pos: IVec2) -> Self {
-        self.pos = Some(pos);
+    pub fn at(mut self, pos: impl Into<Option<IVec2>>) -> Self {
+        self.pos = pos.into();
         self
     }
 
-    pub fn facing(mut self, dir: Dir) -> Self {
-        self.dir = Some(dir);
+    pub fn facing(mut self, dir: impl Into<Option<Dir>>) -> Self {
+        self.dir = dir.into();
         self
     }
 

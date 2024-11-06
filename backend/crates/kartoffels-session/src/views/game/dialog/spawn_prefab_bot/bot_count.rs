@@ -3,29 +3,33 @@ use kartoffels_ui::{Button, Render, Ui};
 use std::fmt;
 use termwiz::input::KeyCode;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct BotCount(u8);
 
 impl BotCount {
-    pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
+    pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
         Button::new(KeyCode::Char('c'), format!("count: {val}"))
             .throwing(Event::FocusOn(Some(Focus::BotCount)))
             .render(ui);
     }
 
-    pub fn render_choice(ui: &mut Ui<Event>) {
-        for n in 1..=9 {
-            let key = KeyCode::Char((b'0' + n) as char);
-            let label = Self(n).to_string();
+    pub(super) fn render_choice(ui: &mut Ui<Event>) {
+        for n in 1..=10 {
+            let key = KeyCode::Char((b'0' + (n % 10)) as char);
+            let val = Self(n);
 
-            Button::new(key, label)
-                .throwing(Event::SetBotCount(Self(n)))
+            Button::new(key, val.to_string())
+                .throwing(Event::SetBotCount(val))
                 .render(ui);
         }
     }
 
-    pub fn height() -> u16 {
+    pub(super) fn height() -> u16 {
         9
+    }
+
+    pub fn get(&self) -> u8 {
+        self.0
     }
 }
 

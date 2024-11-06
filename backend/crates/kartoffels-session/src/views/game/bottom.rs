@@ -1,4 +1,4 @@
-use super::{Event, State};
+use super::{Event, Mode, State};
 use kartoffels_ui::{theme, Button, Render, Ui};
 use kartoffels_world::prelude::ClockSpeed;
 use ratatui::prelude::Rect;
@@ -11,29 +11,45 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
-        ui.row(|ui| {
-            Self::render_go_back_btn(ui);
+        match &state.mode {
+            Mode::Default => {
+                ui.row(|ui| {
+                    Self::render_go_back_btn(ui);
 
-            if state.handle.is_some() {
-                ui.enable(state.perms.ui_enabled, |ui| {
-                    Self::render_pause_btn(ui, state);
-                    Self::render_help_btn(ui, state);
-                    Self::render_bots_btn(ui, state);
-                    Self::render_speed_btn(ui, state);
+                    match &state.mode {
+                        Mode::Default => {
+                            if state.handle.is_some() {
+                                ui.enable(state.perms.ui_enabled, |ui| {
+                                    Self::render_pause_btn(ui, state);
+                                    Self::render_help_btn(ui, state);
+                                    Self::render_bots_btn(ui, state);
+                                    Self::render_speed_btn(ui, state);
+                                });
+                            }
+                        }
+
+                        Mode::SpawningPrefabBot { .. } => {
+                            //
+                        }
+                    }
                 });
-            }
-        });
 
-        if state.handle.is_some() {
-            ui.enable(state.perms.ui_enabled, |ui| {
-                Self::render_status(ui, state);
-            });
+                if state.handle.is_some() {
+                    ui.enable(state.perms.ui_enabled, |ui| {
+                        Self::render_status(ui, state);
+                    });
+                }
+            }
+
+            Mode::SpawningPrefabBot { .. } => {
+                Self::render_go_back_btn(ui);
+            }
         }
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go back")
-            .throwing(Event::GoBack(true))
+            .throwing(Event::GoBack { confirm: true })
             .render(ui);
     }
 
@@ -53,7 +69,7 @@ impl BottomPanel {
         ui.space(2);
 
         Button::new(KeyCode::Char('h'), "help")
-            .throwing(Event::ShowHelpDialog)
+            .throwing(Event::OpenHelpDialog)
             .enabled(state.help.is_some())
             .render(ui);
     }
@@ -63,7 +79,7 @@ impl BottomPanel {
             ui.space(2);
 
             Button::new(KeyCode::Char('b'), "bots")
-                .throwing(Event::ShowBotsDialog)
+                .throwing(Event::OpenBotsDialog)
                 .render(ui);
         }
     }
@@ -83,21 +99,21 @@ impl BottomPanel {
     fn render_status(ui: &mut Ui<Event>, state: &State) {
         if state.paused {
             let area = Rect {
-                x: ui.area().width - 6,
-                y: ui.area().y,
+                x: ui.area.width - 6,
+                y: ui.area.y,
                 width: 6,
                 height: 1,
             };
 
             ui.clamp(area, |ui| {
-                Span::raw("PAUSED").fg(theme::FG).bg(theme::RED).render(ui);
+                Span::raw("paused").fg(theme::FG).bg(theme::RED).render(ui);
             });
         } else if let Some((status, status_tt)) = &state.status {
             let width = status.len() as u16;
 
             let area = Rect {
-                x: ui.area().width - width,
-                y: ui.area().y,
+                x: ui.area.width - width,
+                y: ui.area.y,
                 width,
                 height: 1,
             };
@@ -125,8 +141,8 @@ impl BottomPanel {
                 let width = speed.len() as u16;
 
                 let area = Rect {
-                    x: ui.area().width - width,
-                    y: ui.area().y,
+                    x: ui.area.width - width,
+                    y: ui.area.y,
                     width,
                     height: 1,
                 };

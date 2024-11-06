@@ -46,13 +46,13 @@ impl Background {
     pub fn render<T>(&self, ui: &mut Ui<T>) {
         let map = self.stream.borrow().clone();
 
-        for x in 0..ui.area().width {
-            for y in 0..ui.area().height {
+        for x in 0..ui.area.width {
+            for y in 0..ui.area.height {
                 let pos = self.camera + ivec2(x as i32, y as i32);
 
-                ui.buf()[(x, y)].reset();
+                ui.buf[(x, y)].reset();
 
-                ui.buf()[(x, y)]
+                ui.buf[(x, y)]
                     .set_bg(theme::BG)
                     .set_fg(theme::DARK_GRAY)
                     .set_char(map.get(pos).base as char);

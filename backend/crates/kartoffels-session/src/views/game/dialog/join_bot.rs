@@ -23,9 +23,8 @@ impl JoinBotDialog {
 
             ui.space(1);
 
-            // TODO avoid cloning
-            if let Some(event) = ui.event().cloned() {
-                self.handle(ui, world, &event);
+            if let Some(event) = ui.event {
+                self.handle(ui, world, event);
             }
 
             ui.row(|ui| {
@@ -60,7 +59,7 @@ impl JoinBotDialog {
                     self.id.pop();
                 }
 
-                _ => (),
+                _ => {}
             },
 
             InputEvent::Paste(payload) => {
@@ -73,7 +72,7 @@ impl JoinBotDialog {
                 }
             }
 
-            _ => (),
+            _ => {}
         }
     }
 
@@ -91,22 +90,21 @@ impl JoinBotDialog {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {
-            ui.throw(Event::ShowErrorDialog(format!(
-                "`{}` is not a valid bot id",
-                self.id
-            )));
+            ui.throw(Event::OpenErrorDialog {
+                error: format!("`{}` is not a valid bot id", self.id),
+            });
 
             return;
         };
 
         if world.bots().by_id(id).is_none() {
-            ui.throw(Event::ShowErrorDialog(format!(
-                "bot `{id}` was not found\n\nmaybe it's dead?",
-            )));
+            ui.throw(Event::OpenErrorDialog {
+                error: format!("bot `{id}` was not found\n\nmaybe it's dead?",),
+            });
 
             return;
         }
 
-        ui.throw(Event::JoinBot(id));
+        ui.throw(Event::JoinBot { id });
     }
 }

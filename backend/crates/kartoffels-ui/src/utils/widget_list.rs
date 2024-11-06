@@ -26,13 +26,13 @@ where
         self.state.offset = self
             .state
             .offset
-            .min(self.items.len() - (ui.area().height as usize));
+            .min(self.items.len() - (ui.area.height as usize));
 
         for (widget, area) in self
             .items
             .into_iter()
             .skip(self.state.offset)
-            .zip(ui.area().rows())
+            .zip(ui.area.rows())
         {
             ui.clamp(area, |ui| {
                 widget.render(ui);

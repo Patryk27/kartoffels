@@ -7,7 +7,7 @@ pub struct Clear;
 
 impl Clear {
     pub fn render<T>(ui: &mut Ui<T>) {
-        Self::render_ex(ui.area(), ui.buf())
+        Self::render_ex(ui.area, ui.buf)
     }
 
     pub fn render_ex(area: Rect, buf: &mut Buffer) {

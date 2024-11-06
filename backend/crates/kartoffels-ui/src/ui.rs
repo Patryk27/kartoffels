@@ -9,43 +9,19 @@ use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct Ui<'a, T> {
-    pub(super) ty: TermType,
-    pub(super) buf: &'a mut Buffer,
-    pub(super) area: Rect,
+    pub ty: TermType,
+    pub buf: &'a mut Buffer,
+    pub area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
-    pub(super) event: Option<&'a InputEvent>,
+    pub event: Option<&'a InputEvent>,
     pub(super) clipboard: &'a mut Vec<String>,
-    pub(super) layout: UiLayout,
-    pub(super) enabled: bool,
+    pub layout: UiLayout,
+    pub enabled: bool,
     pub(super) thrown: &'a mut Option<T>,
 }
 
 impl<T> Ui<'_, T> {
-    pub fn ty(&self) -> TermType {
-        self.ty
-    }
-
-    pub fn buf(&mut self) -> &mut Buffer {
-        self.buf
-    }
-
-    pub fn area(&self) -> Rect {
-        self.area
-    }
-
-    pub fn event(&self) -> Option<&InputEvent> {
-        self.event
-    }
-
-    pub fn layout(&self) -> UiLayout {
-        self.layout
-    }
-
-    pub fn enabled(&self) -> bool {
-        self.enabled
-    }
-
-    fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+    pub fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         f(&mut Ui {
             ty: self.ty,
             buf: self.buf,
@@ -109,7 +85,7 @@ impl<T> Ui<'_, T> {
         let para = Paragraph::new(line).wrap(Wrap::default());
         let height = para.line_count(self.area.width) as u16;
 
-        para.render(self.area, self.buf());
+        para.render(self.area, self.buf);
         self.space(height);
 
         height
@@ -119,16 +95,16 @@ impl<T> Ui<'_, T> {
         let span = span.into();
         let width = span.width() as u16;
 
-        span.render(self.area, self.buf());
+        span.render(self.area, self.buf);
 
         self.space(width);
     }
 
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         Clear::render(self);
-        block.render_ref(self.area(), self.buf());
+        block.render_ref(self.area, self.buf);
 
-        self.clamp(block.inner(self.area()), f);
+        self.clamp(block.inner(self.area), f);
     }
 
     pub fn window(
@@ -145,7 +121,7 @@ impl<T> Ui<'_, T> {
                 Constraint::Length(width + 4),
                 Constraint::Fill(1),
             ])
-            .areas(self.area());
+            .areas(self.area);
 
             let [_, area, _] = Layout::vertical([
                 Constraint::Fill(1),
@@ -198,6 +174,10 @@ impl<T> Ui<'_, T> {
         }
 
         false
+    }
+
+    pub fn mouse_pos(&self) -> Option<UVec2> {
+        self.mouse.map(|(pos, _)| *pos)
     }
 
     pub fn mouse_over(&self, area: Rect) -> bool {

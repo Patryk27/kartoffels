@@ -2,9 +2,9 @@ mod bot_count;
 mod bot_location;
 mod bot_prefab;
 
-use self::bot_count::*;
-use self::bot_location::*;
-use self::bot_prefab::*;
+pub use self::bot_count::*;
+pub use self::bot_location::*;
+pub use self::bot_prefab::*;
 use super::Event as ParentEvent;
 use kartoffels_ui::{Button, Render, Ui};
 use termwiz::input::KeyCode;
@@ -19,11 +19,11 @@ pub struct SpawnPrefabBotDialog {
 
 impl SpawnPrefabBotDialog {
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
-        let width = 50;
-        let height = self.height();
-        let title = self.title();
-
         let event = ui.catch(|ui| {
+            let width = 50;
+            let height = self.height();
+            let title = self.title();
+
             ui.info_window(width, height, Some(title), |ui| {
                 self.render_body(ui);
                 self.render_footer(ui);
@@ -39,10 +39,10 @@ impl SpawnPrefabBotDialog {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            Some(Focus::BotCount) => " spawn bot › choose count ",
-            Some(Focus::BotPrefab) => " spawn bot › choose prefab ",
-            Some(Focus::BotLocation) => " spawn bot › choose location ",
-            None => " spawn bot ",
+            Some(Focus::BotCount) => " spawn prefab › choose count ",
+            Some(Focus::BotPrefab) => " spawn prefab › choose prefab ",
+            Some(Focus::BotLocation) => " spawn prefab › choose location ",
+            None => " spawn prefab ",
         }
     }
 
@@ -115,7 +115,11 @@ impl SpawnPrefabBotDialog {
             }
 
             Event::Confirm => {
-                todo!();
+                return Some(ParentEvent::SpawnPrefabBot {
+                    count: self.bot_count,
+                    prefab: self.bot_prefab,
+                    location: self.bot_location,
+                });
             }
 
             Event::FocusOn(val) => {
