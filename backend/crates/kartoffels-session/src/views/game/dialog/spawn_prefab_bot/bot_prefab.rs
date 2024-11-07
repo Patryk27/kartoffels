@@ -1,13 +1,16 @@
 use super::{Event, Focus};
-use itertools::Itertools;
-use kartoffels_ui::{Button, Render, Ui};
+use kartoffels_ui::{theme, Button, Render, Ui};
 use kartoffels_world::prelude::prefabs;
+use ratatui::style::Stylize;
+use ratatui::text::Text;
 use std::fmt;
 use termwiz::input::KeyCode;
 
-#[derive(Clone, Copy, Debug)]
-pub struct BotPrefab {
-    idx: usize,
+#[derive(Clone, Copy, Debug, Default)]
+pub enum BotPrefab {
+    Dummy,
+    #[default]
+    Roberto,
 }
 
 impl BotPrefab {
@@ -18,43 +21,64 @@ impl BotPrefab {
     }
 
     pub(super) fn render_choice(ui: &mut Ui<Event>) {
-        for (idx, prefab) in Self::all().enumerate() {
-            let key = KeyCode::Char((b'1' + (idx as u8)) as char);
-            let label = prefab.to_string();
+        for (idx, val) in Self::all().enumerate() {
+            if idx > 0 {
+                ui.space(1);
+            }
 
-            Button::new(key, label)
-                .throwing(Event::SetBotPrefab(prefab))
+            Button::new(val.key(), val.to_string())
+                .throwing(Event::SetBotPrefab(val))
                 .render(ui);
+
+            ui.row(|ui| {
+                ui.space(4);
+                ui.line(Text::raw(val.desc()).fg(theme::GRAY));
+            });
+
+            ui.space(1);
         }
     }
 
     pub(super) fn height() -> u16 {
-        Self::all().count() as u16
-    }
-
-    pub fn src(&self) -> &'static [u8] {
-        prefabs::ALL[self.idx].source
+        (Self::all().count() * 3 - 1) as u16
     }
 
     fn all() -> impl Iterator<Item = Self> {
-        prefabs::ALL.iter().enumerate().map(|(idx, _)| Self { idx })
+        [Self::Dummy, Self::Roberto].into_iter()
     }
-}
 
-impl Default for BotPrefab {
-    fn default() -> Self {
-        let idx = prefabs::ALL
-            .iter()
-            .find_position(|prefab| prefab.name == "roberto")
-            .unwrap()
-            .0;
+    fn key(&self) -> KeyCode {
+        KeyCode::Char(match self {
+            Self::Dummy => 'd',
+            Self::Roberto => 'r',
+        })
+    }
 
-        Self { idx }
+    fn desc(&self) -> &'static str {
+        match self {
+            Self::Dummy => "the most simplest bot, does literally nothing",
+            Self::Roberto => "moderately challenging bot - likes to stab",
+        }
+    }
+
+    pub fn source(&self) -> Vec<u8> {
+        match self {
+            Self::Dummy => prefabs::DUMMY,
+            Self::Roberto => prefabs::ROBERTO,
+        }
+        .to_vec()
     }
 }
 
 impl fmt::Display for BotPrefab {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", prefabs::ALL[self.idx].name)
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Dummy => "dummy",
+                Self::Roberto => "roberto",
+            }
+        )
     }
 }

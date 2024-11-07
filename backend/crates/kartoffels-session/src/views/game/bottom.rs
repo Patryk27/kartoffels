@@ -28,7 +28,7 @@ impl BottomPanel {
                             }
                         }
 
-                        Mode::SpawningPrefabBot { .. } => {
+                        Mode::SpawningBot { .. } => {
                             //
                         }
                     }
@@ -41,14 +41,14 @@ impl BottomPanel {
                 }
             }
 
-            Mode::SpawningPrefabBot { .. } => {
+            Mode::SpawningBot { .. } => {
                 Self::render_go_back_btn(ui);
             }
         }
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
-        Button::new(KeyCode::Escape, "go back")
+        Button::new(KeyCode::Escape, "go-back")
             .throwing(Event::GoBack { confirm: true })
             .render(ui);
     }
@@ -57,7 +57,7 @@ impl BottomPanel {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
-        let enabled = state.perms.user_can_pause;
+        let enabled = state.perms.can_user_pause;
 
         Button::new(KeyCode::Char(' '), label)
             .throwing(Event::TogglePause)
@@ -85,7 +85,7 @@ impl BottomPanel {
     }
 
     fn render_speed_btn(ui: &mut Ui<Event>, state: &State) {
-        if state.perms.user_can_set_speed {
+        if state.perms.can_user_set_speed {
             ui.space(2);
 
             Button::multi("speed")

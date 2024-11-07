@@ -30,12 +30,13 @@ impl IdleSidePanel {
             btns.push(Action::JoinBot);
         }
 
-        if state.perms.user_can_upload_bots {
+        if state.perms.can_user_upload_bots {
             btns.push(Action::UploadBot);
         }
 
-        if state.perms.user_can_spawn_prefabs {
-            btns.push(Action::SpawnPrefab);
+        if state.perms.can_user_spawn_prefabs {
+            btns.push(Action::UploadBotEx);
+            btns.push(Action::SpawnPrefabBot);
         }
 
         btns
@@ -46,7 +47,8 @@ impl IdleSidePanel {
 enum Action {
     JoinBot,
     UploadBot,
-    SpawnPrefab,
+    UploadBotEx,
+    SpawnPrefabBot,
 }
 
 impl Action {
@@ -65,7 +67,13 @@ impl Action {
                     .render(ui);
             }
 
-            Action::SpawnPrefab => {
+            Action::UploadBotEx => {
+                Button::new(KeyCode::Char('U'), "upload-bot-ex")
+                    .throwing(Event::OpenUploadBotDialog)
+                    .render(ui);
+            }
+
+            Action::SpawnPrefabBot => {
                 Button::new(KeyCode::Char('S'), "spawn-prefab-bot")
                     .throwing(Event::OpenSpawnPrefabBotDialog)
                     .render(ui);

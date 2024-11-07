@@ -16,12 +16,12 @@ pub struct Perms {
     pub sync_pause: bool,
 
     /// Whether the user can restart/destroy bots not uploaded by them.
-    pub user_can_manage_bots: bool,
+    pub can_user_manage_bots: bool,
 
-    pub user_can_pause: bool,
-    pub user_can_set_speed: bool,
-    pub user_can_spawn_prefabs: bool,
-    pub user_can_upload_bots: bool,
+    pub can_user_pause: bool,
+    pub can_user_set_speed: bool,
+    pub can_user_spawn_prefabs: bool,
+    pub can_user_upload_bots: bool,
 }
 
 impl Perms {
@@ -29,44 +29,44 @@ impl Perms {
         ui_enabled: true,
         hero_mode: false,
         sync_pause: false,
-        user_can_manage_bots: false,
-        user_can_pause: true,
-        user_can_set_speed: false,
-        user_can_spawn_prefabs: false,
-        user_can_upload_bots: true,
+        can_user_manage_bots: false,
+        can_user_pause: true,
+        can_user_set_speed: false,
+        can_user_spawn_prefabs: false,
+        can_user_upload_bots: true,
     };
 
     pub const SANDBOX: Self = Self {
         ui_enabled: true,
         hero_mode: false,
         sync_pause: true,
-        user_can_manage_bots: true,
-        user_can_pause: true,
-        user_can_set_speed: false,
-        user_can_spawn_prefabs: true,
-        user_can_upload_bots: true,
+        can_user_manage_bots: true,
+        can_user_pause: true,
+        can_user_set_speed: false,
+        can_user_spawn_prefabs: true,
+        can_user_upload_bots: true,
     };
 
     pub const TUTORIAL: Self = Self {
         ui_enabled: true,
         hero_mode: true,
         sync_pause: true,
-        user_can_manage_bots: false,
-        user_can_pause: false,
-        user_can_set_speed: false,
-        user_can_spawn_prefabs: false,
-        user_can_upload_bots: true,
+        can_user_manage_bots: false,
+        can_user_pause: false,
+        can_user_set_speed: false,
+        can_user_spawn_prefabs: false,
+        can_user_upload_bots: true,
     };
 
     pub const CHALLENGE: Self = Self {
         ui_enabled: true,
         hero_mode: true,
         sync_pause: true,
-        user_can_manage_bots: true,
-        user_can_pause: true,
-        user_can_set_speed: true,
-        user_can_spawn_prefabs: false,
-        user_can_upload_bots: true,
+        can_user_manage_bots: true,
+        can_user_pause: true,
+        can_user_set_speed: true,
+        can_user_spawn_prefabs: false,
+        can_user_upload_bots: true,
     };
 
     pub fn disabled(mut self) -> Self {

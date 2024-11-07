@@ -76,7 +76,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
     ctxt.game
         .update_perms(|perms| {
-            perms.user_can_manage_bots = true;
+            perms.can_user_manage_bots = true;
         })
         .await?;
 

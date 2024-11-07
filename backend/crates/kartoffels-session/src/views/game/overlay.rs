@@ -13,14 +13,12 @@ impl Overlay {
                 //
             }
 
-            Mode::SpawningPrefabBot { prefab, .. } => {
+            Mode::SpawningBot { .. } => {
                 ui.with(|ui| {
                     ui.line(
-                        Line::md(&format!(
-                            "*left mouse button*: spawn {prefab}"
-                        ))
-                        .fg(theme::FG)
-                        .bg(theme::BG),
+                        Line::md("*left mouse button*: spawn bot")
+                            .fg(theme::FG)
+                            .bg(theme::BG),
                     );
 
                     ui.line(

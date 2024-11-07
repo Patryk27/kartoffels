@@ -115,9 +115,9 @@ impl SpawnPrefabBotDialog {
             }
 
             Event::Confirm => {
-                return Some(ParentEvent::SpawnPrefabBot {
+                return Some(ParentEvent::SpawnBot {
                     count: self.bot_count,
-                    prefab: self.bot_prefab,
+                    source: self.bot_prefab.source(),
                     location: self.bot_location,
                 });
             }

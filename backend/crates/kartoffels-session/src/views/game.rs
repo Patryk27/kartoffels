@@ -143,8 +143,8 @@ impl State {
 
         // TODO extract it somewhere else - it's a bit awkward, since we need to
         //      know `map_area` in order to calculate world coordinates
-        if let Mode::SpawningPrefabBot {
-            prefab,
+        if let Mode::SpawningBot {
+            source,
             cursor_screen,
             cursor_world,
             cursor_valid,
@@ -163,7 +163,7 @@ impl State {
 
                 if ui.mouse_pressed() && *cursor_valid {
                     ui.throw(Event::CreateBot {
-                        src: Either::Right(prefab.src().to_owned()),
+                        src: Either::Right(source.clone()),
                         pos: Some(*pos),
                         follow: false,
                     });
@@ -284,8 +284,8 @@ enum Mode {
     #[default]
     Default,
 
-    SpawningPrefabBot {
-        prefab: BotPrefab,
+    SpawningBot {
+        source: Vec<u8>,
         cursor_screen: Option<UVec2>,
         cursor_world: Option<IVec2>,
         cursor_valid: bool,

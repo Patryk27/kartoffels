@@ -45,7 +45,7 @@ impl Map {
     }
 
     fn render_cursor(&self, ui: &mut Ui<Event>, state: &State) {
-        if let Mode::SpawningPrefabBot {
+        if let Mode::SpawningBot {
             cursor_screen: Some(cursor_screen),
             cursor_valid,
             ..

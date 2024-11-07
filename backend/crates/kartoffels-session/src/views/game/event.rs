@@ -1,6 +1,6 @@
 use super::{
-    BotCount, BotLocation, BotPrefab, Dialog, ErrorDialog, Mode,
-    SpawnPrefabBotDialog, State, UploadBotDialog,
+    BotCount, BotLocation, Dialog, ErrorDialog, Mode, SpawnPrefabBotDialog,
+    State, UploadBotDialog,
 };
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
@@ -38,9 +38,9 @@ pub enum Event {
         pos: Option<IVec2>,
         follow: bool,
     },
-    SpawnPrefabBot {
+    SpawnBot {
         count: BotCount,
-        prefab: BotPrefab,
+        source: Vec<u8>,
         location: BotLocation,
     },
     LeaveBot,
@@ -72,7 +72,7 @@ impl Event {
                     }
                 }
 
-                Mode::SpawningPrefabBot { .. } => {
+                Mode::SpawningBot { .. } => {
                     state.mode = Mode::Default;
                 }
             },
@@ -129,22 +129,18 @@ impl Event {
                 ));
             }
 
-            Event::CreateBot {
-                src,
-                pos,
-                follow: join,
-            } => {
+            Event::CreateBot { src, pos, follow } => {
                 state.dialog = None;
-                state.create_bot(src, pos, join).await?;
+                state.create_bot(src, pos, follow).await?;
             }
 
-            Event::SpawnPrefabBot {
+            Event::SpawnBot {
                 count,
-                prefab,
+                source,
                 location,
             } => {
                 state.dialog = None;
-                state.spawn_prefab_bot(count, prefab, location).await?;
+                state.spawn_bot(count, source, location).await?;
             }
 
             Event::LeaveBot => {
@@ -234,16 +230,16 @@ impl State {
         Ok(())
     }
 
-    async fn spawn_prefab_bot(
+    async fn spawn_bot(
         &mut self,
         count: BotCount,
-        prefab: BotPrefab,
+        source: Vec<u8>,
         location: BotLocation,
     ) -> Result<()> {
         match location {
             BotLocation::Manual => {
-                self.mode = Mode::SpawningPrefabBot {
-                    prefab,
+                self.mode = Mode::SpawningBot {
+                    source,
                     cursor_screen: None,
                     cursor_world: None,
                     cursor_valid: false,
@@ -252,12 +248,8 @@ impl State {
 
             BotLocation::Random => {
                 for _ in 0..count.get() {
-                    self.create_bot(
-                        Either::Right(prefab.src().to_vec()),
-                        None,
-                        true,
-                    )
-                    .await?;
+                    self.create_bot(Either::Right(source.clone()), None, true)
+                        .await?;
                 }
             }
         }
