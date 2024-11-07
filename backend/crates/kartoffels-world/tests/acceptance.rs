@@ -76,13 +76,13 @@ async fn pause_and_resume() {
 
     // ---
 
-    assert_ne!(snap1.map(), snap2.map());
+    assert_ne!(snap1.render(), snap2.render());
     assert_ne!(snap1.bots(), snap2.bots());
 
-    assert_eq!(snap2.map(), snap3.map());
+    assert_eq!(snap2.render(), snap3.render());
     assert_eq!(snap2.bots(), snap3.bots());
 
-    assert_ne!(snap3.map(), snap4.map());
+    assert_ne!(snap3.render(), snap4.render());
     assert_ne!(snap3.bots(), snap4.bots());
 }
 

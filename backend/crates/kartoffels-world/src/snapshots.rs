@@ -14,6 +14,7 @@ use std::sync::Arc;
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Snapshot {
     map: Map,
+    render: Map,
     bots: SnapshotBots,
     version: u64,
 }
@@ -21,6 +22,10 @@ pub struct Snapshot {
 impl Snapshot {
     pub fn map(&self) -> &Map {
         &self.map
+    }
+
+    pub fn render(&self) -> &Map {
+        &self.render
     }
 
     pub fn bots(&self) -> &SnapshotBots {
@@ -37,7 +42,7 @@ impl fmt::Display for Snapshot {
         writeln!(f, "# map")?;
         writeln!(f)?;
         writeln!(f, "```")?;
-        writeln!(f, "{}", self.map)?;
+        writeln!(f, "{}", self.render)?;
         writeln!(f, "```")?;
 
         if !self.bots.is_empty() {

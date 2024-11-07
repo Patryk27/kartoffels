@@ -35,7 +35,7 @@ impl Map {
                 ui.clamp(area, |ui| {
                     let tile = state
                         .snapshot
-                        .map()
+                        .render()
                         .get(offset + ivec2(dx as i32, dy as i32));
 
                     self.render_tile(ui, state, tile);

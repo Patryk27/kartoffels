@@ -28,10 +28,16 @@ pub fn run(world: &mut World, state: &mut State) {
 
     let snapshot = {
         let bots = prepare_bots(world);
-        let map = prepare_map(&bots, world);
+        let map = world.map.clone();
+        let render = prepare_render(&bots, world);
         let version = state.version;
 
-        Arc::new(Snapshot { map, bots, version })
+        Arc::new(Snapshot {
+            map,
+            render,
+            bots,
+            version,
+        })
     };
 
     world.snapshots.send_replace(snapshot);
@@ -114,7 +120,7 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
     SnapshotQueuedBots { entries }
 }
 
-fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
+fn prepare_render(bots: &SnapshotBots, world: &World) -> Map {
     let mut map = world.map.clone();
 
     for (idx, bot) in bots.alive().iter().enumerate() {
