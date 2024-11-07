@@ -38,8 +38,8 @@ static INIT_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go back", false),
-        MsgButton::confirm("let's do it", true),
+        MsgButton::abort("go-back", false),
+        MsgButton::confirm("start", true),
     ],
 });
 

@@ -29,7 +29,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("you know, like people in ancient rome did"),
     ],
 
-    buttons: vec![MsgButton::confirm("got it", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

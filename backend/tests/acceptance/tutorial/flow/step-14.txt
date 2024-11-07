@@ -13,7 +13,7 @@
         â                                                              â
         â                        ðª the knife ðª                       â
         â                                                              â
-        â                              [enter] let's take a stab at it â
+        â                               [enter] lets-take-a-stab-at-it â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 
@@ -26,5 +26,5 @@
 
 
 
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] pause  [h] help
+[esc] go-back  [spc] pause  [h] help

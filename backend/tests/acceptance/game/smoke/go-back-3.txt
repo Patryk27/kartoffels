@@ -7,11 +7,11 @@
 
 
                               âââââââ play âââââââ
-                              â [1] first world  â
-                              â [2] second world â
-                              â [3] third world  â
+                              â [1] first-world  â
+                              â [2] second-world â
+                              â [3] third-world  â
                               â                  â
-                              â [esc] go back    â
+                              â [esc] go-back    â
                               ââââââââââââââââââââ
 
 

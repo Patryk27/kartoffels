@@ -24,7 +24,7 @@
         â                                                              â
         â ... and serial_write() might come handy for debugging!       â
         â                                                              â
-        â                      [enter] let's implement a line-follower â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

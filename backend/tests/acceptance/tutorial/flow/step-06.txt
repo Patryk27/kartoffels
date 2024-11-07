@@ -11,7 +11,7 @@
         â you, [subject name here] must be the pride of [subject       â
         â hometown here]                                               â
         â                                                              â
-        â                                                 [enter] i am â
+        â                                                 [enter] i-am â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                .......................
                .......................
@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] resume  [h] help                                     paused
+[esc] go-back  [spc] resume  [h] help                                     paused

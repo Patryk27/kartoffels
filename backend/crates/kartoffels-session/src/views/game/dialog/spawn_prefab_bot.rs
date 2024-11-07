@@ -39,10 +39,10 @@ impl SpawnPrefabBotDialog {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            Some(Focus::BotCount) => " spawn prefab › choose count ",
-            Some(Focus::BotPrefab) => " spawn prefab › choose prefab ",
-            Some(Focus::BotLocation) => " spawn prefab › choose location ",
-            None => " spawn prefab ",
+            Some(Focus::BotCount) => " spawn-prefab › choose-count ",
+            Some(Focus::BotPrefab) => " spawn-prefab › choose-prefab ",
+            Some(Focus::BotLocation) => " spawn-prefab › choose-location ",
+            None => " spawn-prefab ",
         }
     }
 
@@ -91,12 +91,12 @@ impl SpawnPrefabBotDialog {
         ui.space(1);
 
         ui.row(|ui| {
-            Button::new(KeyCode::Escape, "go back")
+            Button::new(KeyCode::Escape, "go-back")
                 .throwing(Event::GoBack)
                 .render(ui);
 
             if self.focus.is_none() {
-                Button::new(KeyCode::Enter, "spawn prefab(s)")
+                Button::new(KeyCode::Enter, "spawn")
                     .right_aligned()
                     .throwing(Event::Confirm)
                     .render(ui);

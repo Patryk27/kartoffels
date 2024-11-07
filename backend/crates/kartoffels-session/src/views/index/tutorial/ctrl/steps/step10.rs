@@ -13,7 +13,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("let the hunger games begin", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
@@ -33,7 +33,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("let's try again", ())],
+    buttons: vec![MsgButton::confirm("try-again", ())],
 });
 
 static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {

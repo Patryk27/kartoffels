@@ -100,7 +100,7 @@ impl JoinedSidePanel {
             }
         } else {
             let follow_caption = if bot.follow {
-                "stop following"
+                "stop-following"
             } else {
                 "follow"
             };

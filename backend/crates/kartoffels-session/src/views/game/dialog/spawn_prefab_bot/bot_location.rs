@@ -12,7 +12,7 @@ pub enum BotLocation {
 
 impl BotLocation {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('l'), format!("location: {val}"))
+        Button::new(KeyCode::Char('l'), format!("location:{val}"))
             .throwing(Event::FocusOn(Some(Focus::BotLocation)))
             .render(ui);
     }

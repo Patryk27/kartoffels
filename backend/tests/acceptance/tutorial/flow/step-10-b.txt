@@ -13,7 +13,7 @@
         â make sure you've removed the call to motor_turn_right() and  â
         â upload the bot again                                         â
         â                                                              â
-        â                                      [enter] let's try again â
+        â                                            [enter] try-again â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                 .......................
                 .......................
@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] pause  [h] help
+[esc] go-back  [spc] pause  [h] help

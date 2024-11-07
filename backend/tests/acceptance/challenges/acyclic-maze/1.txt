@@ -13,7 +13,7 @@
         â implement a robot that traverses the maze, locates timmy and â
         â kills it - you'll be starting in the bottom-right corner     â
         â                                                              â
-        â [esc] go back                            [enter] let's do it â
+        â [esc] go-back                                  [enter] start â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 
@@ -27,4 +27,4 @@
 
 
 
-[esc] go back
+[esc] go-back

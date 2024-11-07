@@ -25,6 +25,6 @@
 
 
 
-                                                       [f] stop following
+                                                       [f] stop-following
                                                        [l] leave
-[esc] go back  [spc] pause  [h] help  [b] bots
+[esc] go-back  [spc] pause  [h] help  [b] bots

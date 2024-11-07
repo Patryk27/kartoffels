@@ -29,8 +29,8 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::abort("no, leave tutorial", false),
-        MsgButton::confirm("yes, start tutorial", true),
+        MsgButton::abort("no", false),
+        MsgButton::confirm("yes", true),
     ],
 });
 

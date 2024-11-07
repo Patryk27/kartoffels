@@ -15,7 +15,7 @@
         â        loss of sight, sudden feeling of the flight and fight â
         â     syndrome, wanting to do origami but being unable to etc. â
         â                                                              â
-        â [esc] no, leave tutorial         [enter] yes, start tutorial â
+        â [esc] no                                         [enter] yes â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                 .....................
                 .....................
@@ -26,5 +26,5 @@
                       .........
 
 
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

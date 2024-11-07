@@ -12,7 +12,7 @@
         â if everything goes correctly, we should see the robot        â
         â driving in squares, how exquisite!                           â
         â                                                              â
-        â          [enter] yes, let's see the robot driving in squares â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                .......................
                .......................
@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] resume  [h] help                                     paused
+[esc] go-back  [spc] resume  [h] help                                     paused

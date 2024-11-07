@@ -12,7 +12,7 @@ pub struct BotPrefab {
 
 impl BotPrefab {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('p'), format!("prefab: {val}"))
+        Button::new(KeyCode::Char('p'), format!("prefab:{val}"))
             .throwing(Event::FocusOn(Some(Focus::BotPrefab)))
             .render(ui);
     }

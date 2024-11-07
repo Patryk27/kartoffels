@@ -19,12 +19,12 @@
         â                                                              â
         â you know, like people in ancient rome did                    â
         â                                                              â
-        â                                               [enter] got it â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                    ...............
                     .............
                       .........
 
 
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

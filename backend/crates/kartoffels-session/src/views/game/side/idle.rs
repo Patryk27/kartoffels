@@ -53,20 +53,20 @@ impl Action {
     fn render(self, ui: &mut Ui<Event>, state: &State) {
         match self {
             Action::JoinBot => {
-                Button::new(KeyCode::Char('j'), "join bot")
+                Button::new(KeyCode::Char('j'), "join-bot")
                     .throwing(Event::OpenJoinBotDialog)
                     .enabled(!state.snapshot.bots().is_empty())
                     .render(ui);
             }
 
             Action::UploadBot => {
-                Button::new(KeyCode::Char('u'), "upload bot")
+                Button::new(KeyCode::Char('u'), "upload-bot")
                     .throwing(Event::OpenUploadBotDialog)
                     .render(ui);
             }
 
             Action::SpawnPrefab => {
-                Button::new(KeyCode::Char('S'), "spawn prefab bot")
+                Button::new(KeyCode::Char('S'), "spawn-prefab-bot")
                     .throwing(Event::OpenSpawnPrefabBotDialog)
                     .render(ui);
             }

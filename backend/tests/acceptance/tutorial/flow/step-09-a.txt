@@ -13,7 +13,7 @@
         â                                                              â
         â !! don't forget to re-run ./build !!                         â
         â                                                              â
-        â                                        [enter] i'm ready sir â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
               .......................
               .......................
@@ -26,5 +26,5 @@
                      .........
 
 
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

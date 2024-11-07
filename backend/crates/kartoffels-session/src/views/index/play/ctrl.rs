@@ -49,7 +49,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     buttons: vec![
         MsgButton::new(
             KeyCode::Char('c'),
-            "copy command",
+            "copy-command",
             HelpMsgResponse::Copy(CMD),
         ),
         HelpMsgResponse::close(),

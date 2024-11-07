@@ -76,7 +76,7 @@ impl UploadBotDialog {
             text_height + 4
         };
 
-        ui.info_window(width, height, Some(" upload bot "), |ui| {
+        ui.info_window(width, height, Some(" upload-bot "), |ui| {
             text.render_ref(ui.area, ui.buf);
             ui.space(text_height + 1);
 
@@ -106,7 +106,7 @@ impl UploadBotDialog {
                     .throwing(Event::CloseDialog)
                     .render(ui);
 
-                if Button::new(KeyCode::Char('c'), "copy session id")
+                if Button::new(KeyCode::Char('c'), "copy-session-id")
                     .right_aligned()
                     .render(ui)
                     .pressed

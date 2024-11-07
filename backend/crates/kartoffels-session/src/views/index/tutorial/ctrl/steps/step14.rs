@@ -15,7 +15,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("🔪 the knife 🔪").centered().fg(theme::YELLOW).bold(),
     ],
 
-    buttons: vec![MsgButton::confirm("let's take a stab at it", ())],
+    buttons: vec![MsgButton::confirm("lets-take-a-stab-at-it", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

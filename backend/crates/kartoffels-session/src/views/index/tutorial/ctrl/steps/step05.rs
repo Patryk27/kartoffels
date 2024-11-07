@@ -15,7 +15,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![MsgButton::confirm("i have done so", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -35,8 +35,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::ssh("    ./build.bat --copy"),
         MsgLine::new(""),
         MsgLine::new(
-            "... and having done so, press [`enter`] to close this message and \
-             then press [`u`] to upload the bot",
+            "... and having done so, close this message and press [`u`] to \
+             upload the bot",
         ),
         MsgLine::web(""),
         MsgLine::web(

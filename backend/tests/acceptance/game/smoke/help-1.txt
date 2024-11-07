@@ -25,6 +25,6 @@
         â run git clone https://github.com/Patryk27/kartoffel and      â
         â consult README.md for further instructions                   â
         â                                                              â
-        â [c] copy command                                 [esc] close âg
+        â [c] copy-command                                 [esc] close âg
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-[esc] go back  [spc] pause  [h] help  [b] bots
+[esc] go-back  [spc] pause  [h] help  [b] bots

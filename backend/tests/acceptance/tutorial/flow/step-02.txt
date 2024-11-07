@@ -17,7 +17,7 @@
         â lesson #4:                                                   â
         â - don't lick yellow snow                                     â
         â                                                              â
-        â                                                 [enter] sure â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                  ...................
                   .................
@@ -26,5 +26,5 @@
                       .........
 
 
-                                                       [u] upload bot
-[esc] go back  [spc] pause  [h] help
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help

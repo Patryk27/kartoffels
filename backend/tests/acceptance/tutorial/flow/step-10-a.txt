@@ -12,7 +12,7 @@
         â driving in squares, we should see the robot, well, moving    â
         â forward and unknowingly falling out of the map               â
         â                                                              â
-        â                           [enter] let the hunger games begin â
+        â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
               .......................
               .......................
@@ -27,4 +27,4 @@
 
 
 
-[esc] go back  [spc] resume  [h] help                                     paused
+[esc] go-back  [spc] resume  [h] help                                     paused

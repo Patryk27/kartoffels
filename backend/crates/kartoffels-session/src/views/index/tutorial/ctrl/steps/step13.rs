@@ -14,7 +14,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![MsgButton::confirm("let's implement a line-follower", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -67,7 +67,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
     body: vec![MsgLine::new("hmm, your robot seems to have died")],
-    buttons: vec![MsgButton::confirm("let's try again", ())],
+    buttons: vec![MsgButton::confirm("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

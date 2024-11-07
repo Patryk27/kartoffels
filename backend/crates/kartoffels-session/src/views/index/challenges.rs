@@ -62,7 +62,7 @@ async fn run_once(
 
                 let width = (ui.area.width - 2).min(60);
 
-                // TODO ugh, doing manual layouting sometimes sucks
+                // TODO doing manual layouting sucks sometimes
                 let height = {
                     let mut height = 0;
 
@@ -100,7 +100,7 @@ async fn run_once(
                         ui.space(1);
                     }
 
-                    Button::new(KeyCode::Escape, "go back")
+                    Button::new(KeyCode::Escape, "go-back")
                         .throwing(Event::GoBack)
                         .render(ui);
                 });

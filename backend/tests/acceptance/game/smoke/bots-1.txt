@@ -26,5 +26,5 @@
                â                                                â
                â                                                â
                â                                                âollowing
-               â [w] scroll up  [s] scroll down  [esc] close    â
-[esc] go back  ââââââââââââââââââââââââââââââââââââââââââââââââââ
+               â [w] scroll-up  [s] scroll-down     [esc] close â
+[esc] go-back  ââââââââââââââââââââââââââââââââââââââââââââââââââ

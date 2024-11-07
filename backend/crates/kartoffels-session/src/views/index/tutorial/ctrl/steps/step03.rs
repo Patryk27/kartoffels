@@ -15,8 +15,8 @@ static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::new(KeyCode::Char('c'), "copy command", "copy"),
-        MsgButton::confirm("i'm ready", "ready"),
+        MsgButton::new(KeyCode::Char('c'), "copy-command", "copy"),
+        MsgButton::confirm("next", "next"),
     ],
 });
 
@@ -27,7 +27,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
                 ctxt.game.copy_to_clipboard(CMD).await?;
             }
 
-            "ready" => {
+            "next" => {
                 break;
             }
 

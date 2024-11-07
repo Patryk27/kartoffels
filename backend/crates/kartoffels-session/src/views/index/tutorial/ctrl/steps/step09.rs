@@ -8,7 +8,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         .chain(DOCS.clone())
         .collect(),
 
-    buttons: vec![MsgButton::confirm("i'm ready sir", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {

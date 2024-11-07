@@ -78,7 +78,7 @@ async fn run_once<'a>(
 
                     ui.space(1);
 
-                    Button::new(KeyCode::Escape, "go back")
+                    Button::new(KeyCode::Escape, "go-back")
                         .throwing(Event::GoBack)
                         .render(ui);
                 });

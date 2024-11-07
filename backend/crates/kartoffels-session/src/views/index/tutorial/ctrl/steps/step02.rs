@@ -27,7 +27,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("- don't lick yellow snow"),
     ],
 
-    buttons: vec![MsgButton::confirm("sure", ())],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

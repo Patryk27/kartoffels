@@ -13,11 +13,11 @@ async fn acyclic_maze() {
     ctxt.wait_for("[1] acyclic-maze").await;
     ctxt.press(KeyCode::Char('1')).await;
 
-    ctxt.wait_for("[enter] let's do it").await;
+    ctxt.wait_for("[enter] start").await;
     ctxt.see_frame("challenges/acyclic-maze/1.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for("upload bot").await;
+    ctxt.wait_for("upload-bot").await;
     ctxt.wait_while("building world").await;
     ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
 

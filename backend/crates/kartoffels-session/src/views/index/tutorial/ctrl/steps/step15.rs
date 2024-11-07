@@ -5,11 +5,7 @@ use tokio_stream::StreamExt;
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
     body: DOCS.clone(),
-
-    buttons: vec![MsgButton::confirm(
-        "scoooby doooby dooo, let's catch 'em",
-        (),
-    )],
+    buttons: vec![MsgButton::confirm("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -55,7 +51,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
     body: vec![MsgLine::new("hmm, your robot seems to have died")],
-    buttons: vec![MsgButton::confirm("let's try again", ())],
+    buttons: vec![MsgButton::confirm("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

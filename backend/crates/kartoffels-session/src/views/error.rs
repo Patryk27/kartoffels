@@ -22,7 +22,7 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
                     err.render_ref(ui.area, ui.buf);
 
                     ui.clamp(ui.area.footer(1), |ui| {
-                        Button::new(KeyCode::Enter, "got it")
+                        Button::new(KeyCode::Enter, "close")
                             .throwing(())
                             .right_aligned()
                             .render(ui);

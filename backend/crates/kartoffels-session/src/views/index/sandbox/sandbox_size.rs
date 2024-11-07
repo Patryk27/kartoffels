@@ -13,7 +13,7 @@ pub enum SandboxSize {
 
 impl SandboxSize {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('s'), format!("size: {val}"))
+        Button::new(KeyCode::Char('s'), format!("size:{val}"))
             .throwing(Event::FocusOn(Some(Focus::SandboxSize)))
             .render(ui);
     }

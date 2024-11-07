@@ -6,12 +6,12 @@ use termwiz::input::KeyCode;
 async fn smoke() {
     let mut ctxt = {
         let first = kartoffels_world::create(Config {
-            name: "first world".into(),
+            name: "first-world".into(),
             ..Default::default()
         });
 
         let second = kartoffels_world::create(Config {
-            name: "second world".into(),
+            name: "second-world".into(),
             policy: Policy {
                 max_alive_bots: 1,
                 max_queued_bots: 1,
@@ -22,7 +22,7 @@ async fn smoke() {
         });
 
         let third = kartoffels_world::create(Config {
-            name: "third world".into(),
+            name: "third-world".into(),
             ..Default::default()
         });
 
@@ -33,11 +33,11 @@ async fn smoke() {
     ctxt.see_frame("game/smoke/home-1.txt").await;
 
     ctxt.press(KeyCode::Char('p')).await;
-    ctxt.wait_for("[1] first world").await;
+    ctxt.wait_for("[1] first-world").await;
     ctxt.see_frame("game/smoke/home-2.txt").await;
 
     ctxt.press(KeyCode::Char('2')).await;
-    ctxt.wait_for("[j] join bot").await;
+    ctxt.wait_for("[j] join-bot").await;
     ctxt.see_frame("game/smoke/game-1.txt").await;
 
     ctxt.press(KeyCode::Char('u')).await;
@@ -82,7 +82,7 @@ async fn smoke() {
     ctxt.see_frame("game/smoke/follow-1.txt").await;
 
     ctxt.press(KeyCode::Char('f')).await;
-    ctxt.wait_for("[f] stop following").await;
+    ctxt.wait_for("[f] stop-following").await;
     ctxt.see_frame("game/smoke/follow-2.txt").await;
 
     // ---
@@ -94,17 +94,17 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("go back").await;
+    ctxt.wait_for_modal("go-back").await;
     ctxt.see_frame("game/smoke/go-back-1.txt").await;
 
     ctxt.press(KeyCode::Char('n')).await;
-    ctxt.wait_while_modal("go back").await;
+    ctxt.wait_while_modal("go-back").await;
     ctxt.see_frame("game/smoke/go-back-2.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("go back").await;
+    ctxt.wait_for_modal("go-back").await;
     ctxt.press(KeyCode::Char('y')).await;
-    ctxt.wait_while_modal("go back").await;
+    ctxt.wait_while_modal("go-back").await;
     ctxt.see_frame("game/smoke/go-back-3.txt").await;
 }
 
@@ -131,7 +131,7 @@ async fn http_upload_ok() {
     ctxt.wait_for("[1] world").await;
     ctxt.press(KeyCode::Char('1')).await;
 
-    ctxt.wait_for("[j] join bot").await;
+    ctxt.wait_for("[j] join-bot").await;
     ctxt.press(KeyCode::Char('u')).await;
 
     let sess = ctxt.store().first_session_id();
@@ -158,7 +158,7 @@ async fn http_upload_err() {
     ctxt.wait_for("[1] world").await;
     ctxt.press(KeyCode::Char('1')).await;
 
-    ctxt.wait_for("[j] join bot").await;
+    ctxt.wait_for("[j] join-bot").await;
     ctxt.press(KeyCode::Char('u')).await;
 
     let sess = ctxt.store().first_session_id();

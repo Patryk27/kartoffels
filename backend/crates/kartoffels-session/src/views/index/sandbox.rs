@@ -175,8 +175,8 @@ impl Form<'_> {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            Some(Focus::SandboxSize) => " sandbox › choose size ",
-            Some(Focus::SandboxTheme) => " sandbox › choose theme ",
+            Some(Focus::SandboxSize) => " sandbox › choose-size ",
+            Some(Focus::SandboxTheme) => " sandbox › choose-theme ",
             None => " sandbox ",
         }
     }
@@ -208,12 +208,12 @@ impl Form<'_> {
         ui.space(1);
 
         ui.row(|ui| {
-            Button::new(KeyCode::Escape, "go back")
+            Button::new(KeyCode::Escape, "go-back")
                 .throwing(Event::GoBack)
                 .render(ui);
 
             if self.focus.is_none() {
-                Button::new(KeyCode::Enter, "create sandbox")
+                Button::new(KeyCode::Enter, "create")
                     .right_aligned()
                     .throwing(Event::Confirm)
                     .render(ui);
