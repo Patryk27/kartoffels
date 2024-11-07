@@ -25,6 +25,6 @@
 
 
 
-                                                       [f] follow
-                                                       [l] leave
+                                                       [f] follow-bot
+                                                       [l] leave-bot
 [esc] go-back  [spc] pause  [h] help  [b] bots

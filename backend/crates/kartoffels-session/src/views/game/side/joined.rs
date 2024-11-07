@@ -94,15 +94,15 @@ impl JoinedSidePanel {
     fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         if state.perms.hero_mode {
             if state.perms.can_user_manage_bots {
-                Button::new(KeyCode::Char('D'), "destroy")
+                Button::new(KeyCode::Char('D'), "destroy-bot")
                     .throwing(Event::DestroyBot)
                     .render(ui);
             }
         } else {
             let follow_caption = if bot.follow {
-                "stop-following"
+                "stop-following-bot"
             } else {
-                "follow"
+                "follow-bot"
             };
 
             Button::new(KeyCode::Char('f'), follow_caption)
@@ -111,11 +111,11 @@ impl JoinedSidePanel {
 
             if state.perms.can_user_manage_bots {
                 ui.enable(!state.paused, |ui| {
-                    Button::new(KeyCode::Char('R'), "restart")
+                    Button::new(KeyCode::Char('R'), "restart-bot")
                         .throwing(Event::RestartBot)
                         .render(ui);
 
-                    Button::new(KeyCode::Char('D'), "destroy")
+                    Button::new(KeyCode::Char('D'), "destroy-bot")
                         .throwing(Event::DestroyBot)
                         .render(ui);
                 });
@@ -123,7 +123,7 @@ impl JoinedSidePanel {
                 ui.space(2);
             }
 
-            Button::new(KeyCode::Char('l'), "leave")
+            Button::new(KeyCode::Char('l'), "leave-bot")
                 .throwing(Event::LeaveBot)
                 .render(ui);
         }

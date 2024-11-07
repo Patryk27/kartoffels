@@ -67,7 +67,7 @@ impl UploadBotDialog {
         // ---
 
         let text = Self::build_ssh_text(sess);
-        let width = cmp::min(ui.area.width - 10, 60);
+        let width = cmp::min(ui.area.width - 10, 70);
         let text_height = text.line_count(width) as u16;
 
         let height = if self.ctrlv_alert.is_some() {
@@ -122,12 +122,12 @@ impl UploadBotDialog {
             Line::md("run:"),
             Line::md(""),
             Line::md("    ./build --copy"),
-            Line::md("  or").fg(theme::GRAY),
+            Line::md("    # or").fg(theme::GRAY),
             Line::md("    ./build.bat --copy"),
             Line::md(""),
             Line::md(
-                "... and then paste your clipboard here ([`Ctrl+Shift+V`], \
-                 [`Cmd+V`] etc.) to upload the bot",
+                "... and then paste here (`Ctrl+Shift+V` etc.) to upload the \
+                 bot",
             ),
             Line::md(""),
             Line::md(
@@ -136,6 +136,8 @@ impl UploadBotDialog {
             ),
             Line::md(""),
             Line::md(&format!("    ./build --upload {sess}")),
+            Line::md("    # or").fg(theme::GRAY),
+            Line::md(&format!("    ./build.bat --upload {sess}")),
         ])
         .wrap(Wrap::default())
     }

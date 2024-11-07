@@ -25,6 +25,6 @@
                â                                                â
                â                                                â
                â                                                â
-               â                                                âollowing
-               â [w] scroll-up  [s] scroll-down     [esc] close â
+               â                                                âollowing-bot
+               â [w] scroll-up  [s] scroll-down     [esc] close âbot
 [esc] go-back  ââââââââââââââââââââââââââââââââââââââââââââââââââ
