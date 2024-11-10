@@ -1,4 +1,5 @@
 use crate::{rdi, wri, MEM_RADAR};
+use core::num::NonZeroU64;
 
 /// Returns whether the radar is ready and [`radar_scan_3x3()`] etc. can be
 /// invoked.
@@ -215,8 +216,8 @@ impl<const R: usize> RadarScan<R> {
         self.get_ex(dx, dy, 0) as u8 as char
     }
 
-    /// Returns id of the bot at given coordinates - if no bot is present there,
-    /// returns zero.
+    /// Returns id of the bot at given coordinates or `None` if there's no bot
+    /// there.
     ///
     /// Bot ids are random, unique, non-zero 64-bit numbers assigned to each bot
     /// during its upload; ids are preserved when a bot is auto-respawned after
@@ -227,11 +228,11 @@ impl<const R: usize> RadarScan<R> {
     /// This function uses bot-centric coordinates, i.e. `bot_at(0, -1)` points
     /// at the bot right in front of your bot - see [`RadarScan`] for details.
     #[inline(always)]
-    pub fn bot_at(&self, dx: i8, dy: i8) -> u64 {
+    pub fn bot_at(&self, dx: i8, dy: i8) -> Option<NonZeroU64> {
         let d1 = self.get_d1(dx, dy) as u64;
         let d2 = self.get_d2(dx, dy) as u64;
 
-        (d1 << 32) | d2
+        NonZeroU64::new((d1 << 32) | d2)
     }
 
     fn get_d1(&self, dx: i8, dy: i8) -> u32 {
