@@ -5,10 +5,7 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{theme, Button, Fade, FadeDir, Render, Term};
-use ratatui::layout::Rect;
-use ratatui::style::Stylize;
-use ratatui::text::Text;
+use kartoffels_ui::{Button, Fade, FadeDir, Render, Term};
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;
@@ -84,19 +81,10 @@ async fn run_once(
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
                         Button::new(key, challenge.name)
+                            .help(challenge.desc)
                             .throwing(Event::Play(challenge))
                             .render(ui);
 
-                        let desc_area = Rect {
-                            x: ui.area.x + 4,
-                            ..ui.area
-                        };
-
-                        let desc_height = ui.clamp(desc_area, |ui| {
-                            ui.line(Text::raw(challenge.desc).fg(theme::GRAY))
-                        });
-
-                        ui.space(desc_height);
                         ui.space(1);
                     }
 

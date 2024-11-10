@@ -21,7 +21,6 @@ use self::side::*;
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
-use itertools::Either;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Clear, Fade, FadeDir, Render, Term, Ui};
 use kartoffels_world::prelude::{
@@ -163,7 +162,7 @@ impl State {
 
                 if ui.mouse_pressed() && *cursor_valid {
                     ui.throw(Event::CreateBot {
-                        src: Either::Right(source.clone()),
+                        src: source.clone(),
                         pos: Some(*pos),
                         follow: false,
                     });
@@ -285,7 +284,7 @@ enum Mode {
     Default,
 
     SpawningBot {
-        source: Vec<u8>,
+        source: BotSource,
         cursor_screen: Option<UVec2>,
         cursor_world: Option<IVec2>,
         cursor_valid: bool,
@@ -297,4 +296,11 @@ struct JoinedBot {
     id: BotId,
     follow: bool,
     exists: bool,
+}
+
+#[derive(Clone, Debug)]
+enum BotSource {
+    Base64(String),
+    Binary(Vec<u8>),
+    BinaryRef(&'static [u8]),
 }

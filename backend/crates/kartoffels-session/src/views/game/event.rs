@@ -1,15 +1,15 @@
 use super::{
-    BotCount, BotLocation, Dialog, ErrorDialog, Mode, SpawnPrefabBotDialog,
-    State, UploadBotDialog,
+    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog, Mode,
+    SpawnBotDialog, State, UploadBotDialog, UploadBotRequest,
 };
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use glam::IVec2;
-use itertools::Either;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::{BotId, ClockSpeed, CreateBotRequest};
+use std::borrow::Cow;
 use std::ops::ControlFlow;
 
 #[derive(Debug)]
@@ -31,17 +31,17 @@ pub enum Event {
     },
     OpenHelpDialog,
     OpenJoinBotDialog,
-    OpenUploadBotDialog,
-    OpenSpawnPrefabBotDialog,
+    OpenUploadBotDialog {
+        request: UploadBotRequest<BotSourceType>,
+    },
+    OpenSpawnBotDialog,
+    UploadBot {
+        request: UploadBotRequest<BotSource>,
+    },
     CreateBot {
-        src: Either<String, Vec<u8>>,
+        src: BotSource,
         pos: Option<IVec2>,
         follow: bool,
-    },
-    SpawnBot {
-        count: BotCount,
-        source: Vec<u8>,
-        location: BotLocation,
     },
     LeaveBot,
     RestartBot,
@@ -114,33 +114,41 @@ impl Event {
                 state.dialog = Some(Dialog::JoinBot(Default::default()));
             }
 
-            Event::OpenUploadBotDialog => {
-                if term.ty().is_web() {
-                    term.send(vec![0x04]).await?;
-                }
-
+            Event::OpenSpawnBotDialog => {
                 state.dialog =
-                    Some(Dialog::UploadBot(UploadBotDialog::new(store, sess)));
+                    Some(Dialog::SpawnBot(SpawnBotDialog::default()));
             }
 
-            Event::OpenSpawnPrefabBotDialog => {
-                state.dialog = Some(Dialog::SpawnPrefabBot(
-                    SpawnPrefabBotDialog::default(),
-                ));
+            Event::OpenUploadBotDialog { request } => match request.source {
+                BotSourceType::Upload => {
+                    let request = request.with_source(());
+
+                    if term.endpoint().is_web() {
+                        term.send(vec![0x04]).await?;
+                    }
+
+                    state.dialog = Some(Dialog::UploadBot(
+                        UploadBotDialog::new(request, store, sess),
+                    ));
+                }
+
+                BotSourceType::Prefab(source) => {
+                    let request = request
+                        .with_source(BotSource::BinaryRef(source.source()));
+
+                    state.dialog = None;
+                    state.upload_bot(request).await?;
+                }
+            },
+
+            Event::UploadBot { request } => {
+                state.dialog = None;
+                state.upload_bot(request).await?;
             }
 
             Event::CreateBot { src, pos, follow } => {
                 state.dialog = None;
-                state.create_bot(src, pos, follow).await?;
-            }
-
-            Event::SpawnBot {
-                count,
-                source,
-                location,
-            } => {
-                state.dialog = None;
-                state.spawn_bot(count, source, location).await?;
+                state.create_bot(&src, pos, follow).await?;
             }
 
             Event::LeaveBot => {
@@ -181,19 +189,44 @@ impl Event {
 }
 
 impl State {
+    async fn upload_bot(
+        &mut self,
+        request: UploadBotRequest<BotSource>,
+    ) -> Result<()> {
+        match request.position {
+            BotPosition::Manual => {
+                self.mode = Mode::SpawningBot {
+                    source: request.source,
+                    cursor_screen: None,
+                    cursor_world: None,
+                    cursor_valid: false,
+                };
+            }
+
+            BotPosition::Random => {
+                for _ in 0..request.count.get() {
+                    self.create_bot(&request.source, None, true).await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     async fn create_bot(
         &mut self,
-        src: Either<String, Vec<u8>>,
+        src: &BotSource,
         pos: Option<IVec2>,
         follow: bool,
     ) -> Result<()> {
         let src = match src {
-            Either::Left(src) => {
+            BotSource::Base64(src) => {
                 let src = src.trim().replace('\r', "");
                 let src = src.trim().replace('\n', "");
 
                 match BASE64_STANDARD.decode(src) {
-                    Ok(src) => src,
+                    Ok(src) => Cow::Owned(src),
+
                     Err(err) => {
                         self.dialog = Some(Dialog::Error(ErrorDialog::new(
                             format!("couldn't decode pasted content:\n\n{err}"),
@@ -204,7 +237,8 @@ impl State {
                 }
             }
 
-            Either::Right(src) => src,
+            BotSource::Binary(src) => Cow::Owned(src.to_owned()),
+            BotSource::BinaryRef(src) => Cow::Borrowed(*src),
         };
 
         let id = self
@@ -226,33 +260,6 @@ impl State {
         };
 
         self.join_bot(id, follow);
-
-        Ok(())
-    }
-
-    async fn spawn_bot(
-        &mut self,
-        count: BotCount,
-        source: Vec<u8>,
-        location: BotLocation,
-    ) -> Result<()> {
-        match location {
-            BotLocation::Manual => {
-                self.mode = Mode::SpawningBot {
-                    source,
-                    cursor_screen: None,
-                    cursor_world: None,
-                    cursor_valid: false,
-                };
-            }
-
-            BotLocation::Random => {
-                for _ in 0..count.get() {
-                    self.create_bot(Either::Right(source.clone()), None, true)
-                        .await?;
-                }
-            }
-        }
 
         Ok(())
     }

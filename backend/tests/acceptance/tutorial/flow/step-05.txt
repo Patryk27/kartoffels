@@ -2,25 +2,25 @@
 
 
                       .........
+                    .............
         âââââââââââââââââââââââ tutorial (5/16) ââââââââââââââââââââââââ
         â as you can see, the code in main.rs just calls a couple of   â
         â functions in a loop - but before we jump into explanations,  â
         â let's see the robot in action!                               â
         â                                                              â
-        â if you're on linux, macos, freebsd etc., run this:           â
+        â run this:                                                    â
         â     ./build                                                  â
         â                                                              â
-        â if you're on windows, run this:                              â
-        â     ./build.bat                                              â
-        â                                                              â
-        â ... and having done so, close this message and press [u] to  â
-        â upload the bot                                               â
+        â ... then close this message and press [u] to upload the bot  â
         â                                                              â
         â when the file picker opens, choose a file called kartoffel - â
         â it should be located next to README.md etc.                  â
         â                                                              â
         â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+                .....................
+                 ...................
+                  .................
                    ...............
                     .............
                       .........

@@ -6,7 +6,7 @@ use axum::response::IntoResponse;
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Term, TermType};
+use kartoffels_ui::{Term, TermEndpoint};
 use serde::Deserialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -136,7 +136,7 @@ fn create_term(socket: WebSocket, hello: HelloMsg) -> Result<Term> {
     };
 
     let size = uvec2(hello.cols, hello.rows);
-    let term = Term::new(TermType::Web, stdin, stdout, size)?;
+    let term = Term::new(TermEndpoint::Web, stdin, stdout, size)?;
 
     Ok(term)
 }

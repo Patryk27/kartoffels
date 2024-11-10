@@ -11,9 +11,9 @@ async fn ctxt() -> TestContext {
     ctxt.see("[t] tutorial");
     ctxt.press(KeyCode::Char('t')).await;
 
-    ctxt.wait_for("ready?").await;
-    ctxt.see("[esc] no");
-    ctxt.see("[enter] yes");
+    ctxt.wait_for("hey there").await;
+    ctxt.see("[esc] go-back");
+    ctxt.see("[enter] start");
     ctxt
 }
 
@@ -42,9 +42,9 @@ async fn leave_and_start() {
     ctxt.wait_for(TestContext::HOME).await;
 
     ctxt.press(KeyCode::Char('t')).await;
-    ctxt.wait_for("ready?").await;
-    ctxt.see("[esc] no");
-    ctxt.see("[enter] yes");
+    ctxt.wait_for("hey there").await;
+    ctxt.see("[esc] go-back");
+    ctxt.see("[enter] start");
 }
 
 #[tokio::test]

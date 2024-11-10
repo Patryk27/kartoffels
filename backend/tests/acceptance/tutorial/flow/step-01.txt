@@ -3,20 +3,20 @@
 
                       .........
                     .............
+                   ...............
         âââââââââââââââââââââââ tutorial (1/16) ââââââââââââââââââââââââ
         â hey there and welcome to kartoffels ð                        â
         â                                                              â
         â in just a couple of minutes we're going to make a bots' boss â
         â out of you, so buckle up and let's get started! *            â
         â                                                              â
-        â                            ready?                            â
-        â                                                              â
         â     * kartoffels ltd is not responsible for loss of hearing, â
         â        loss of sight, sudden feeling of the flight and fight â
         â     syndrome, wanting to do origami but being unable to etc. â
         â                                                              â
-        â [esc] no                                         [enter] yes â
+        â [esc] go-back                                  [enter] start â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+               .......................
                 .....................
                 .....................
                  ...................

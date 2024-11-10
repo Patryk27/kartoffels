@@ -11,7 +11,7 @@ pub enum SandboxTheme {
 
 impl SandboxTheme {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('t'), format!("theme:{val}"))
+        Button::new(KeyCode::Char('t'), format!("theme: {val}"))
             .throwing(Event::FocusOn(Some(Focus::SandboxTheme)))
             .render(ui);
     }

@@ -18,27 +18,25 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
 
     body: vec![
-        MsgLine::new("hey there and welcome to kartoffels 🫡"),
+        MsgLine::new("welcome to the *sandbox*!"),
         MsgLine::new(""),
         MsgLine::new(
-            "you're in the *sandbox mode*, which means that you're playing in \
-             your own, private world - this is meant as a safe place for you \
-             to calmly play with, develop and debug bots",
+            "in here you're playing on your own, private world - it's a safe \
+             place for you to play with, develop and debug bots",
         ),
         MsgLine::new(""),
         MsgLine::new(
             "i'm assuming you've already went through the tutorial - if not, \
-             feel free to go back and press [`t`]",
+             feel free to go back to the main menu and press [`t`]",
         ),
         MsgLine::new(""),
         MsgLine::new("# rules"),
         MsgLine::new(""),
         MsgLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
+        MsgLine::new("- you're allowed to destroy bots and restart them"),
         MsgLine::new(
-            "- as compared to the online play, in here you're allowed to",
+            "- you've got some extra commands at hand, like `spawn-bot`",
         ),
-        MsgLine::new("  destroy bots, restart them etc."),
-        MsgLine::new("- you can also spawn prefabs, a couple of built-in bots"),
         MsgLine::new(
             "- a new world is generated every time you open the sandbox",
         ),

@@ -26,17 +26,12 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        MsgLine::new("if you're on linux, macos, freebsd etc., run this:"),
+        MsgLine::new("run this:"),
         MsgLine::web("    ./build"),
         MsgLine::ssh("    ./build --copy"),
         MsgLine::new(""),
-        MsgLine::new("if you're on windows, run this:"),
-        MsgLine::web("    ./build.bat"),
-        MsgLine::ssh("    ./build.bat --copy"),
-        MsgLine::new(""),
         MsgLine::new(
-            "... and having done so, close this message and press [`u`] to \
-             upload the bot",
+            "... then close this message and press [`u`] to upload the bot",
         ),
         MsgLine::web(""),
         MsgLine::web(

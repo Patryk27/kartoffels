@@ -1,4 +1,4 @@
-use crate::{theme, Clear, TermType};
+use crate::{theme, Clear, TermEndpoint};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
@@ -9,7 +9,7 @@ use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct Ui<'a, T> {
-    pub ty: TermType,
+    pub endpoint: TermEndpoint,
     pub buf: &'a mut Buffer,
     pub area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
@@ -23,7 +23,7 @@ pub struct Ui<'a, T> {
 impl<T> Ui<'_, T> {
     pub fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         f(&mut Ui {
-            ty: self.ty,
+            endpoint: self.endpoint,
             buf: self.buf,
             area: self.area,
             mouse: self.mouse,
@@ -211,7 +211,7 @@ impl<T> Ui<'_, T> {
         let mut thrown = None;
 
         f(&mut Ui {
-            ty: self.ty,
+            endpoint: self.endpoint,
             buf: self.buf,
             area: self.area,
             mouse: self.mouse,
@@ -235,5 +235,9 @@ pub enum UiLayout {
 impl UiLayout {
     pub fn is_row(&self) -> bool {
         matches!(self, UiLayout::Row)
+    }
+
+    pub fn is_col(&self) -> bool {
+        matches!(self, UiLayout::Col)
     }
 }

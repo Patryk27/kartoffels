@@ -14,8 +14,6 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
             Span::raw("*").fg(theme::RED),
         ]),
         MsgLine::new(""),
-        MsgLine::new("ready?").fg(theme::GREEN).bold().centered(),
-        MsgLine::new(""),
         MsgLine::from_iter([
             Span::raw("* ").fg(theme::RED),
             Span::raw(
@@ -29,8 +27,8 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::abort("no", false),
-        MsgButton::confirm("yes", true),
+        MsgButton::abort("go-back", false),
+        MsgButton::confirm("start", true),
     ],
 });
 

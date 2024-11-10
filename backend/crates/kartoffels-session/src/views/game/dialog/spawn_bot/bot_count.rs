@@ -8,7 +8,7 @@ pub struct BotCount(u8);
 
 impl BotCount {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('c'), format!("count:{val}"))
+        Button::new(KeyCode::Char('c'), format!("count: {val}"))
             .throwing(Event::FocusOn(Some(Focus::BotCount)))
             .render(ui);
     }
@@ -24,7 +24,7 @@ impl BotCount {
         }
     }
 
-    pub(super) fn height() -> u16 {
+    pub fn height() -> u16 {
         10
     }
 

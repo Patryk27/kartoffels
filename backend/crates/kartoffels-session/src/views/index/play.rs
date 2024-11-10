@@ -99,6 +99,8 @@ async fn run_once<'a>(
             if fade.is_completed() {
                 return Ok(resp.clone());
             }
+
+            continue;
         }
 
         if let Some(resp) = resp {

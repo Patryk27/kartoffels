@@ -1,7 +1,9 @@
-use crate::views::game::Event;
-use itertools::Either;
+use super::{BotCount, BotPosition};
+use crate::views::game::{BotSource, Event};
 use kartoffels_store::{SessionId, SessionUploadInterest, Store};
-use kartoffels_ui::{theme, Button, FromMarkdown, Render, Spinner, Ui};
+use kartoffels_ui::{
+    theme, Button, FromMarkdown, Render, Spinner, TermEndpoint, Ui,
+};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, WidgetRef, Wrap};
@@ -11,47 +13,58 @@ use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct UploadBotDialog {
+    request: UploadBotRequest<()>,
+    interest: Option<SessionUploadInterest>,
     spinner: Spinner,
-    ctrlv_alert: Option<Instant>,
-    upload: Option<SessionUploadInterest>,
+    alert: Option<Instant>,
 }
 
 impl UploadBotDialog {
-    pub fn new(store: &Store, sess: SessionId) -> Self {
-        let upload = store.with_session(sess, |sess| sess.request_upload());
+    pub fn new(
+        request: UploadBotRequest<()>,
+        store: &Store,
+        sess: SessionId,
+    ) -> Self {
+        let interest = store.with_session(sess, |sess| sess.request_upload());
 
         Self {
+            request,
+            interest,
             spinner: Default::default(),
-            ctrlv_alert: Default::default(),
-            upload,
+            alert: Default::default(),
         }
     }
 
     pub fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
-        if ui.ty.is_ssh() {
-            self.render_ssh(ui, sess);
+        match ui.endpoint {
+            TermEndpoint::Ssh => {
+                self.render_ssh(ui, sess);
+            }
+
+            TermEndpoint::Web => {
+                // We don't render anything for the web terminal, since it opens
+                // a file picker instead
+            }
         }
 
         if let Some(InputEvent::Paste(src)) = ui.event {
             if src.is_empty() {
-                // A bit hacky, but that's the most sane way for the http
-                // frontend to inform us that user has cancelled the uploading
+                // A bit hacky, but that's the most sane way for the web
+                // terminal to inform us that user has cancelled the file picker
                 ui.throw(Event::CloseDialog);
             } else {
-                ui.throw(Event::CreateBot {
-                    src: Either::Left(src.to_owned()),
-                    pos: None,
-                    follow: true,
+                ui.throw(Event::UploadBot {
+                    request: self
+                        .request
+                        .with_source(BotSource::Base64(src.to_owned())),
                 });
             }
         }
 
-        if let Some(upload) = &mut self.upload {
+        if let Some(upload) = &mut self.interest {
             if let Some(src) = upload.try_recv() {
-                ui.throw(Event::CreateBot {
-                    src: Either::Right(src),
-                    pos: None,
-                    follow: true,
+                ui.throw(Event::UploadBot {
+                    request: self.request.with_source(BotSource::Binary(src)),
                 });
             }
         }
@@ -61,32 +74,23 @@ impl UploadBotDialog {
         let spinner = self.spinner.as_span();
 
         if ui.key(KeyCode::Char('v'), Modifiers::CTRL) {
-            self.ctrlv_alert = Some(Instant::now());
+            self.alert = Some(Instant::now());
         }
 
         // ---
 
-        let text = Self::build_ssh_text(sess);
         let width = cmp::min(ui.area.width - 10, 70);
-        let text_height = text.line_count(width) as u16;
 
-        let height = if self.ctrlv_alert.is_some() {
-            text_height + 6
-        } else {
-            text_height + 4
-        };
+        let body = Self::body(sess);
+        let body_height = body.line_count(width) as u16;
+
+        let height = body_height + 4;
 
         ui.info_window(width, height, Some(" upload-bot "), |ui| {
-            text.render_ref(ui.area, ui.buf);
-            ui.space(text_height + 1);
+            body.render_ref(ui.area, ui.buf);
+            ui.space(body_height + 1);
 
-            Line::from_iter([spinner.clone(), Span::raw(" waiting "), spinner])
-                .centered()
-                .render(ui);
-
-            ui.space(2);
-
-            if let Some(alert) = &mut self.ctrlv_alert {
+            if let Some(alert) = &self.alert {
                 ui.line(
                     Line::raw("try using Ctrl+Shift+V instead of Ctrl+V")
                         .fg(theme::YELLOW)
@@ -97,8 +101,18 @@ impl UploadBotDialog {
                 ui.space(1);
 
                 if alert.elapsed().as_secs() >= 3 {
-                    self.ctrlv_alert = None;
+                    self.alert = None;
                 }
+            } else {
+                Line::from_iter([
+                    spinner.clone(),
+                    Span::raw(" waiting "),
+                    spinner,
+                ])
+                .centered()
+                .render(ui);
+
+                ui.space(2);
             }
 
             ui.row(|ui| {
@@ -117,28 +131,39 @@ impl UploadBotDialog {
         });
     }
 
-    fn build_ssh_text(sess: SessionId) -> Paragraph<'static> {
+    fn body(sess: SessionId) -> Paragraph<'static> {
         Paragraph::new(vec![
-            Line::md("run:"),
-            Line::md(""),
+            Line::md("run this:"),
             Line::md("    ./build --copy"),
-            Line::md("    # or").fg(theme::GRAY),
-            Line::md("    ./build.bat --copy"),
             Line::md(""),
             Line::md(
-                "... and then paste here (`Ctrl+Shift+V` etc.) to upload the \
-                 bot",
+                "... and then paste here (`Ctrl+Shift+V`, `Cmd+V` etc.) to \
+                 upload the bot",
             ),
             Line::md(""),
             Line::md(
                 "alternatively, if your terminal doesn't support bracketed \
                  paste, use:",
             ),
-            Line::md(""),
             Line::md(&format!("    ./build --upload {sess}")),
-            Line::md("    # or").fg(theme::GRAY),
-            Line::md(&format!("    ./build.bat --upload {sess}")),
         ])
         .wrap(Wrap::default())
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct UploadBotRequest<S> {
+    pub source: S,
+    pub position: BotPosition,
+    pub count: BotCount,
+}
+
+impl<S> UploadBotRequest<S> {
+    pub fn with_source<S2>(&self, source: S2) -> UploadBotRequest<S2> {
+        UploadBotRequest {
+            source,
+            position: self.position,
+            count: self.count,
+        }
     }
 }

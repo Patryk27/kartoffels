@@ -1,7 +1,7 @@
 use crate::{theme, Render, Ui};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Stylize};
-use ratatui::text::Span;
+use ratatui::text::{Span, Text};
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
 
@@ -9,6 +9,7 @@ use termwiz::input::{KeyCode, Modifiers};
 pub struct Button<'a, T> {
     label: Cow<'a, str>,
     options: Vec<(Option<KeyCode>, Option<T>)>,
+    help: Option<Cow<'a, str>>,
     alignment: Alignment,
     enabled: bool,
 }
@@ -21,6 +22,7 @@ impl<'a, T> Button<'a, T> {
         Self {
             label: label.into(),
             options: vec![(key.into(), None)],
+            help: None,
             alignment: Alignment::Left,
             enabled: true,
         }
@@ -30,12 +32,13 @@ impl<'a, T> Button<'a, T> {
         Self {
             label: label.into(),
             options: Default::default(),
+            help: None,
             alignment: Alignment::Left,
             enabled: true,
         }
     }
 
-    pub fn with(mut self, key: KeyCode, event: T) -> Self {
+    pub fn option(mut self, key: KeyCode, event: T) -> Self {
         self.options.push((Some(key), Some(event)));
         self
     }
@@ -52,6 +55,11 @@ impl<'a, T> Button<'a, T> {
 
     pub fn right_aligned(mut self) -> Self {
         self.alignment = Alignment::Right;
+        self
+    }
+
+    pub fn help(mut self, help: impl Into<Cow<'a, str>>) -> Self {
+        self.help = Some(help.into());
         self
     }
 
@@ -212,6 +220,17 @@ impl<T> Render<T> for Button<'_, T> {
             ui.space(area.width);
         } else {
             ui.space(area.height);
+        }
+
+        if let Some(help) = self.help {
+            assert!(ui.layout.is_col());
+
+            ui.row(|ui| {
+                ui.space(4);
+                ui.line(Text::raw(help).fg(theme::GRAY));
+            });
+
+            ui.space(1);
         }
 
         if resp.pressed {

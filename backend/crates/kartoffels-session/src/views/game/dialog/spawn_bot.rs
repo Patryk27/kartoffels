@@ -1,23 +1,23 @@
 mod bot_count;
-mod bot_location;
-mod bot_prefab;
+mod bot_position;
+mod bot_source;
 
 pub use self::bot_count::*;
-pub use self::bot_location::*;
-pub use self::bot_prefab::*;
-use super::Event as ParentEvent;
+pub use self::bot_position::*;
+pub use self::bot_source::*;
+use super::{Event as ParentEvent, UploadBotRequest};
 use kartoffels_ui::{Button, Render, Ui};
 use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
-pub struct SpawnPrefabBotDialog {
+pub struct SpawnBotDialog {
     focus: Option<Focus>,
+    bot_source: BotSourceType,
+    bot_position: BotPosition,
     bot_count: BotCount,
-    bot_prefab: BotPrefab,
-    bot_location: BotLocation,
 }
 
-impl SpawnPrefabBotDialog {
+impl SpawnBotDialog {
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
         let event = ui.catch(|ui| {
             let width = 50;
@@ -39,21 +39,21 @@ impl SpawnPrefabBotDialog {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            Some(Focus::BotCount) => " spawn-prefab › choose-count ",
-            Some(Focus::BotPrefab) => " spawn-prefab › choose-prefab ",
-            Some(Focus::BotLocation) => " spawn-prefab › choose-location ",
-            None => " spawn-prefab ",
+            Some(Focus::BotSource) => " spawn-bot › choose-source ",
+            Some(Focus::BotPosition) => " spawn-bot › choose-position ",
+            Some(Focus::BotCount) => " spawn-bot › choose-count ",
+            None => " spawn-bot ",
         }
     }
 
     fn height(&self) -> u16 {
         let body = match &self.focus {
+            Some(Focus::BotSource) => BotSourceType::height(),
+            Some(Focus::BotPosition) => BotPosition::height(),
             Some(Focus::BotCount) => BotCount::height(),
-            Some(Focus::BotPrefab) => BotPrefab::height(),
-            Some(Focus::BotLocation) => BotLocation::height(),
 
             None => {
-                if let BotLocation::Random = &self.bot_location {
+                if let BotPosition::Random = &self.bot_position {
                     3
                 } else {
                     2
@@ -66,23 +66,23 @@ impl SpawnPrefabBotDialog {
 
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
+            Some(Focus::BotSource) => {
+                BotSourceType::render_choice(ui);
+            }
+            Some(Focus::BotPosition) => {
+                BotPosition::render_choice(ui);
+            }
             Some(Focus::BotCount) => {
                 BotCount::render_choice(ui);
             }
-            Some(Focus::BotPrefab) => {
-                BotPrefab::render_choice(ui);
-            }
-            Some(Focus::BotLocation) => {
-                BotLocation::render_choice(ui);
-            }
 
             None => {
-                if let BotLocation::Random = &self.bot_location {
+                BotSourceType::render_focus(ui, &self.bot_source);
+                BotPosition::render_focus(ui, &self.bot_position);
+
+                if let BotPosition::Random = &self.bot_position {
                     BotCount::render_focus(ui, &self.bot_count);
                 }
-
-                BotPrefab::render_focus(ui, &self.bot_prefab);
-                BotLocation::render_focus(ui, &self.bot_location);
             }
         }
     }
@@ -96,7 +96,7 @@ impl SpawnPrefabBotDialog {
                 .render(ui);
 
             if self.focus.is_none() {
-                Button::new(KeyCode::Enter, "spawn")
+                Button::new(KeyCode::Enter, "confirm")
                     .right_aligned()
                     .throwing(Event::Confirm)
                     .render(ui);
@@ -115,10 +115,12 @@ impl SpawnPrefabBotDialog {
             }
 
             Event::Confirm => {
-                return Some(ParentEvent::SpawnBot {
-                    count: self.bot_count,
-                    source: self.bot_prefab.source(),
-                    location: self.bot_location,
+                return Some(ParentEvent::OpenUploadBotDialog {
+                    request: UploadBotRequest {
+                        source: self.bot_source,
+                        position: self.bot_position,
+                        count: self.bot_count,
+                    },
                 });
             }
 
@@ -126,18 +128,18 @@ impl SpawnPrefabBotDialog {
                 self.focus = val;
             }
 
+            Event::SetBotSource(val) => {
+                self.bot_source = val;
+                self.focus = None;
+            }
+
+            Event::SetBotPosition(val) => {
+                self.bot_position = val;
+                self.focus = None;
+            }
+
             Event::SetBotCount(val) => {
                 self.bot_count = val;
-                self.focus = None;
-            }
-
-            Event::SetBotPrefab(val) => {
-                self.bot_prefab = val;
-                self.focus = None;
-            }
-
-            Event::SetBotLocation(val) => {
-                self.bot_location = val;
                 self.focus = None;
             }
         }
@@ -151,15 +153,15 @@ enum Event {
     GoBack,
     Confirm,
     FocusOn(Option<Focus>),
+    SetBotSource(BotSourceType),
+    SetBotPosition(BotPosition),
     SetBotCount(BotCount),
-    SetBotPrefab(BotPrefab),
-    SetBotLocation(BotLocation),
 }
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 enum Focus {
+    BotSource,
+    BotPosition,
     BotCount,
-    BotPrefab,
-    BotLocation,
 }

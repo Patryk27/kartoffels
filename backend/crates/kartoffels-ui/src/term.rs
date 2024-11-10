@@ -27,7 +27,7 @@ pub type Stdout = mpsc::Sender<Vec<u8>>;
 
 #[derive(Debug)]
 pub struct Term {
-    ty: TermType,
+    endpoint: TermEndpoint,
     stdin: Stdin,
     stdin_parser: InputParser,
     stdout: Stdout,
@@ -42,7 +42,7 @@ impl Term {
     pub const CMD_RESIZE: u8 = 0x04;
 
     pub fn new(
-        ty: TermType,
+        endpoint: TermEndpoint,
         stdin: Stdin,
         stdout: Stdout,
         size: UVec2,
@@ -61,7 +61,7 @@ impl Term {
         term.clear()?;
 
         Ok(Self {
-            ty,
+            endpoint,
             stdin,
             stdin_parser: Default::default(),
             stdout,
@@ -73,8 +73,8 @@ impl Term {
         })
     }
 
-    pub fn ty(&self) -> TermType {
-        self.ty
+    pub fn endpoint(&self) -> TermEndpoint {
+        self.endpoint
     }
 
     pub fn size(&self) -> UVec2 {
@@ -97,15 +97,15 @@ impl Term {
     pub async fn finalize(&mut self) -> Result<()> {
         let mut cmds = String::new();
 
-        match self.ty {
-            TermType::Ssh => {
+        match self.endpoint {
+            TermEndpoint::Ssh => {
                 _ = DisableMouseCapture.write_ansi(&mut cmds);
                 _ = DisableBracketedPaste.write_ansi(&mut cmds);
                 _ = LeaveAlternateScreen.write_ansi(&mut cmds);
                 _ = cursor::Show.write_ansi(&mut cmds);
             }
 
-            TermType::Web => {
+            TermEndpoint::Web => {
                 _ = terminal::Clear(terminal::ClearType::All)
                     .write_ansi(&mut cmds);
 
@@ -157,7 +157,7 @@ impl Term {
                 let area = frame.area();
 
                 render(&mut Ui {
-                    ty: self.ty,
+                    endpoint: self.endpoint,
                     buf: frame.buffer_mut(),
                     area,
                     mouse: self.mouse.report().as_ref(),
@@ -228,7 +228,7 @@ impl Term {
                             return Err(Error::new(Abort { soft: true }));
                         }
 
-                        Abort::HARD_BINDING if self.ty.is_ssh() => {
+                        Abort::HARD_BINDING if self.endpoint.is_ssh() => {
                             return Err(Error::new(Abort { soft: false }));
                         }
 
@@ -284,18 +284,18 @@ impl Term {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum TermType {
+pub enum TermEndpoint {
     Ssh,
     Web,
 }
 
-impl TermType {
+impl TermEndpoint {
     pub fn is_ssh(&self) -> bool {
-        matches!(self, TermType::Ssh)
+        matches!(self, TermEndpoint::Ssh)
     }
 
     pub fn is_web(&self) -> bool {
-        matches!(self, TermType::Web)
+        matches!(self, TermEndpoint::Web)
     }
 }
 

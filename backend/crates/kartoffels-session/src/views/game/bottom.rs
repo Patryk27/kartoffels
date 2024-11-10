@@ -89,9 +89,18 @@ impl BottomPanel {
             ui.space(2);
 
             Button::multi("speed")
-                .with(KeyCode::Char('1'), Event::Overclock(ClockSpeed::Normal))
-                .with(KeyCode::Char('2'), Event::Overclock(ClockSpeed::Faster))
-                .with(KeyCode::Char('3'), Event::Overclock(ClockSpeed::Fastest))
+                .option(
+                    KeyCode::Char('1'),
+                    Event::Overclock(ClockSpeed::Normal),
+                )
+                .option(
+                    KeyCode::Char('2'),
+                    Event::Overclock(ClockSpeed::Faster),
+                )
+                .option(
+                    KeyCode::Char('3'),
+                    Event::Overclock(ClockSpeed::Fastest),
+                )
                 .render(ui);
         }
     }

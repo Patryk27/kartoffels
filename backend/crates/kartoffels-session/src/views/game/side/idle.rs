@@ -1,4 +1,4 @@
-use crate::views::game::{Event, State};
+use crate::views::game::{Event, Mode, State, UploadBotRequest};
 use kartoffels_ui::{Button, Render, Ui};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
@@ -26,29 +26,36 @@ impl IdleSidePanel {
     fn layout(state: &State) -> Vec<Action> {
         let mut btns = Vec::new();
 
-        if !state.perms.hero_mode {
-            btns.push(Action::JoinBot);
-        }
+        match state.mode {
+            Mode::Default => {
+                if !state.perms.hero_mode {
+                    btns.push(Action::JoinBot);
+                }
 
-        if state.perms.can_user_upload_bots {
-            btns.push(Action::UploadBot);
-        }
+                if state.perms.can_user_upload_bots {
+                    btns.push(Action::UploadBot);
+                }
 
-        if state.perms.can_user_spawn_prefabs {
-            btns.push(Action::UploadBotEx);
-            btns.push(Action::SpawnPrefabBot);
+                if state.perms.can_user_spawn_prefabs {
+                    btns.push(Action::SpawnBot);
+                }
+            }
+
+            Mode::SpawningBot { .. } => {
+                //
+            }
         }
 
         btns
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 enum Action {
     JoinBot,
     UploadBot,
-    UploadBotEx,
-    SpawnPrefabBot,
+    SpawnBot,
 }
 
 impl Action {
@@ -63,19 +70,15 @@ impl Action {
 
             Action::UploadBot => {
                 Button::new(KeyCode::Char('u'), "upload-bot")
-                    .throwing(Event::OpenUploadBotDialog)
+                    .throwing(Event::OpenUploadBotDialog {
+                        request: UploadBotRequest::default(),
+                    })
                     .render(ui);
             }
 
-            Action::UploadBotEx => {
-                Button::new(KeyCode::Char('U'), "upload-bot-ex")
-                    .throwing(Event::OpenUploadBotDialog)
-                    .render(ui);
-            }
-
-            Action::SpawnPrefabBot => {
-                Button::new(KeyCode::Char('S'), "spawn-prefab-bot")
-                    .throwing(Event::OpenSpawnPrefabBotDialog)
+            Action::SpawnBot => {
+                Button::new(KeyCode::Char('S'), "spawn-bot")
+                    .throwing(Event::OpenSpawnBotDialog)
                     .render(ui);
             }
         }
