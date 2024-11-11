@@ -73,6 +73,8 @@ const TIMMY_POS: IVec2 = ivec2(1, 1);
 const PLAYER_POS: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
+    debug!("run()");
+
     Box::pin(async move {
         if !game.show_msg(&INIT_MSG).await? {
             return Ok(());

@@ -81,6 +81,21 @@ impl Handle {
         rx.await.context(Self::ERR)?
     }
 
+    pub async fn create_bots(
+        &self,
+        reqs: impl IntoIterator<Item = CreateBotRequest>,
+    ) -> Result<Vec<BotId>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::CreateBots {
+            reqs: reqs.into_iter().collect(),
+            tx,
+        })
+        .await?;
+
+        rx.await.context(Self::ERR)?.into_iter().collect()
+    }
+
     pub async fn kill_bot(
         &self,
         id: BotId,
@@ -191,6 +206,13 @@ pub enum Request {
         tx: oneshot::Sender<Result<BotId>>,
     },
 
+    CreateBots {
+        reqs: Vec<CreateBotRequest>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<Vec<Result<BotId>>>,
+    },
+
     KillBot {
         id: BotId,
         reason: String,
@@ -236,6 +258,7 @@ pub struct CreateBotRequest {
     pub src: Cow<'static, [u8]>,
     pub pos: Option<IVec2>,
     pub dir: Option<Dir>,
+    pub instant: bool,
     pub oneshot: bool,
 }
 
@@ -245,6 +268,7 @@ impl CreateBotRequest {
             src: src.into(),
             pos: None,
             dir: None,
+            instant: false,
             oneshot: false,
         }
     }
@@ -256,6 +280,11 @@ impl CreateBotRequest {
 
     pub fn facing(mut self, dir: impl Into<Option<Dir>>) -> Self {
         self.dir = dir.into();
+        self
+    }
+
+    pub fn spawn_at_once(mut self) -> Self {
+        self.instant = true;
         self
     }
 

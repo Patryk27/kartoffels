@@ -69,6 +69,17 @@ impl Perms {
         can_user_upload_bots: true,
     };
 
+    pub const DEBUG: Self = Self {
+        ui_enabled: true,
+        hero_mode: false,
+        sync_pause: true,
+        can_user_manage_bots: true,
+        can_user_pause: true,
+        can_user_set_speed: true,
+        can_user_spawn_prefabs: true,
+        can_user_upload_bots: true,
+    };
+
     pub fn disabled(mut self) -> Self {
         self.ui_enabled = false;
         self

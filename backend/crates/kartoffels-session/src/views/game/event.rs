@@ -1,5 +1,5 @@
 use super::{
-    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog, Mode,
+    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog, Mode, Perms,
     SpawnBotDialog, State, UploadBotDialog, UploadBotRequest,
 };
 use anyhow::Result;
@@ -48,6 +48,7 @@ pub enum Event {
     DestroyBot,
     FollowBot,
     Overclock(ClockSpeed),
+    EnableDebugMode,
 }
 
 impl Event {
@@ -181,6 +182,10 @@ impl Event {
             Event::Overclock(speed) => {
                 state.handle.as_ref().unwrap().overclock(speed).await?;
                 state.speed = speed;
+            }
+
+            Event::EnableDebugMode => {
+                state.perms = Perms::DEBUG;
             }
         }
 

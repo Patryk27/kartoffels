@@ -47,6 +47,16 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(bots::create::run(world, req));
             }
 
+            Ok(Request::CreateBots { reqs, tx }) => {
+                let mut ids = Vec::new();
+
+                for req in reqs {
+                    ids.push(bots::create::run(world, req));
+                }
+
+                _ = tx.send(ids);
+            }
+
             Ok(Request::KillBot { id, reason, tx }) => {
                 bots::kill::run(
                     world,

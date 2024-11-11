@@ -4,18 +4,33 @@ use kartoffels_cpu::Firmware;
 use rand::Rng;
 use tracing::info;
 
-pub fn run(
-    world: &mut World,
-    CreateBotRequest {
+pub fn run(world: &mut World, req: CreateBotRequest) -> Result<BotId> {
+    let CreateBotRequest {
         src,
         pos,
         dir,
+        instant,
         oneshot,
-    }: CreateBotRequest,
-) -> Result<BotId> {
-    info!(src = ?sha256::digest(&src[..])[0..8], "creating bot");
+    } = req;
 
-    let fw = Firmware::from_elf(&src).context("couldn't parse firmware")?;
+    info!(
+        src = ?sha256::digest(&src[..])[0..8],
+        ?pos,
+        ?dir,
+        ?instant,
+        ?oneshot,
+        "creating bot",
+    );
+
+    let events = {
+        let mut events = BotEvents::default();
+
+        if !req.instant {
+            events.add("uploaded and queued");
+        }
+
+        events
+    };
 
     let id = loop {
         let id = world.rng.gen();
@@ -25,27 +40,30 @@ pub fn run(
         }
     };
 
-    if world.bots.queued.len() < world.policy.max_queued_bots {
-        let events = {
-            let mut events = BotEvents::default();
+    let fw = Firmware::from_elf(&src).context("couldn't parse firmware")?;
 
-            events.add("uploaded and queued");
-            events
-        };
+    let bot = QueuedBot {
+        dir,
+        events,
+        fw,
+        id,
+        oneshot,
+        pos,
+        requeued: false,
+        serial: Default::default(),
+    };
 
-        world.bots.queued.push(QueuedBot {
-            dir,
-            events,
-            fw,
-            id,
-            oneshot,
-            pos,
-            requeued: false,
-            serial: Default::default(),
-        });
-
-        Ok(id)
+    if instant {
+        super::spawn::run_now(world, bot)?;
     } else {
-        Err(anyhow!("too many robots queued, try again in a moment"))
+        if world.bots.queued.len() >= world.policy.max_queued_bots {
+            return Err(anyhow!(
+                "too many robots queued, try again in a moment"
+            ));
+        }
+
+        world.bots.queued.push(bot);
     }
+
+    Ok(id)
 }

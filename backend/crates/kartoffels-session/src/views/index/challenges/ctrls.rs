@@ -1,5 +1,5 @@
 mod acyclic_maze;
-mod flight_syndrome;
+mod hostage_situation;
 
 use crate::views::game::GameCtrl;
 use anyhow::Result;
@@ -13,4 +13,5 @@ pub struct Challenge {
     pub run: fn(&Store, GameCtrl) -> BoxFuture<Result<()>>,
 }
 
-pub static CHALLENGES: &[&Challenge] = &[&acyclic_maze::CHALLENGE];
+pub static CHALLENGES: &[&Challenge] =
+    &[&acyclic_maze::CHALLENGE, &hostage_situation::CHALLENGE];

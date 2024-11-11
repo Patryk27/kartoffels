@@ -1,6 +1,6 @@
 bin = [
     { name = "chl-acyclic-maze", path = "src/chl-acyclic-maze.rs" },
-    { name = "chl-flight-syndrome-enemy", path = "src/chl-flight-syndrome-enemy.rs" },
+    { name = "chl-hostage-situation-guard", path = "src/chl-hostage-situation-guard.rs" },
     { name = "dummy", path = "src/dummy.rs" },
     { name = "roberto", path = "src/roberto.rs" },
     { name = "tut-01", path = "src/tut-01.rs" },

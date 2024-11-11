@@ -9,6 +9,7 @@ base64.workspace = true
 futures-util.workspace = true
 futures.workspace = true
 glam.workspace = true
+indoc.workspace = true
 itertools.workspace = true
 kartoffels-bots = { path = "../kartoffels-bots" }
 kartoffels-store = { path = "../kartoffels-store" }

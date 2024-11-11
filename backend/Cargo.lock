@@ -1520,6 +1520,7 @@ dependencies = [
  "futures",
  "futures-util",
  "glam",
+ "indoc",
  "itertools 0.12.1",
  "kartoffels-bots",
  "kartoffels-store",

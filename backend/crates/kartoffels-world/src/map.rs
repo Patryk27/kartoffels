@@ -1,3 +1,4 @@
+use ahash::HashMap;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -17,6 +18,36 @@ impl Map {
             tiles: vec![Tile::new(TileBase::VOID); (size.x * size.y) as usize]
                 .into_boxed_slice(),
         }
+    }
+
+    pub fn parse(s: &str) -> (Self, Anchors) {
+        let lines: Vec<_> = s.split('\n').collect();
+
+        let size = {
+            let width =
+                lines.iter().map(|line| line.len()).max().unwrap() as u32;
+
+            let height = lines.len() as u32;
+
+            uvec2(width, height)
+        };
+
+        let mut map = Self::new(size);
+        let mut anchors = Anchors::default();
+
+        for (y, line) in lines.into_iter().enumerate() {
+            for (x, tile) in line.bytes().enumerate() {
+                let pos = ivec2(x as i32, y as i32);
+
+                if tile.is_ascii_alphabetic() {
+                    anchors.set(tile as char, pos);
+                } else {
+                    map.set(pos, tile);
+                }
+            }
+        }
+
+        (map, anchors)
     }
 
     pub fn get(&self, pos: IVec2) -> Tile {
@@ -183,6 +214,29 @@ impl fmt::Display for Map {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Anchors {
+    anchors: HashMap<char, IVec2>,
+}
+
+impl Anchors {
+    fn set(&mut self, id: char, pos: IVec2) {
+        self.anchors.insert(id, pos);
+    }
+
+    pub fn get(&self, id: char) -> IVec2 {
+        self.anchors[&id]
+    }
+
+    pub fn fill(&self, map: &mut Map, tile: impl Into<Tile>) {
+        let tile = tile.into();
+
+        for pos in self.anchors.values() {
+            map.set(*pos, tile);
+        }
     }
 }
 

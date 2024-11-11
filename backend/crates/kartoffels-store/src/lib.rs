@@ -23,10 +23,15 @@ pub struct Store {
     private_worlds_sem: Arc<Semaphore>,
     sessions: Arc<Mutex<AHashMap<SessionId, Session>>>,
     testing: bool,
+    debugging: bool,
 }
 
 impl Store {
-    pub async fn open(dir: Option<&Path>, bench: bool) -> Result<Self> {
+    pub async fn open(
+        dir: Option<&Path>,
+        bench: bool,
+        debug: bool,
+    ) -> Result<Self> {
         info!("opening");
 
         let public_worlds = open::load_worlds(dir, bench).await?;
@@ -40,11 +45,12 @@ impl Store {
             private_worlds_sem: Arc::new(Semaphore::new(128)), // TODO make configurable
             sessions: Default::default(),
             testing: false,
+            debugging: debug,
         })
     }
 
     pub async fn test(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
-        let mut this = Self::open(None, false).await.unwrap();
+        let mut this = Self::open(None, false, false).await.unwrap();
 
         this.public_worlds = worlds.into_iter().collect();
         this.testing = true;
@@ -118,6 +124,10 @@ impl Store {
 
     pub fn testing(&self) -> bool {
         self.testing
+    }
+
+    pub fn debugging(&self) -> bool {
+        self.debugging
     }
 
     pub async fn close(&self) -> Result<()> {

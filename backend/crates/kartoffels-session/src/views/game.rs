@@ -71,7 +71,7 @@ async fn run_once(
         let event = term
             .frame(|ui| {
                 state.tick(tick.elapsed().as_secs_f32(), store);
-                state.render(ui, sess);
+                state.render(ui, sess, store);
 
                 if let Some(fade) = &fade {
                     fade.render(ui);
@@ -129,7 +129,7 @@ impl State {
         self.camera.tick(dt, store);
     }
 
-    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
+    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId, store: &Store) {
         let [main_area, bottom_area] =
             Layout::vertical([Constraint::Fill(1), Constraint::Length(1)])
                 .areas(ui.area);
@@ -174,7 +174,7 @@ impl State {
 
         ui.enable(self.dialog.is_none(), |ui| {
             ui.clamp(bottom_area, |ui| {
-                BottomPanel::render(ui, self);
+                BottomPanel::render(ui, self, store);
             });
 
             if self.handle.is_some() {

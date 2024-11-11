@@ -173,6 +173,7 @@ impl<'a, T> Button<'a, T> {
         match key {
             KeyCode::Char(' ') => "spc".into(),
             KeyCode::Char(ch) => ch.to_string(),
+            KeyCode::Tab => "tab".into(),
             KeyCode::Enter => "enter".into(),
             KeyCode::Escape => "esc".into(),
 

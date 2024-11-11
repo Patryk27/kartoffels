@@ -1,4 +1,5 @@
 use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
+use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use rand::{Rng, RngCore};
 
@@ -27,6 +28,29 @@ pub fn run(world: &mut World) {
     let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
 
     world.bots.alive.add(id, bot);
+}
+
+// TODO parts of logic are duplicated with `run()`
+pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
+    if world.bots.alive.len() >= world.policy.max_alive_bots {
+        return Err(anyhow!("too many alive bots"));
+    }
+
+    let (pos, dir) = determine_spawn_point(
+        &mut world.rng,
+        &world.map,
+        &world.bots,
+        world.spawn,
+        &bot,
+    )
+    .context("couldn't determine spawn point")?;
+
+    let id = bot.id;
+    let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
+
+    world.bots.alive.add(id, bot);
+
+    Ok(())
 }
 
 fn determine_spawn_point(
