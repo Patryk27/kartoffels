@@ -1,6 +1,9 @@
 use crate::TestContext;
+use kartoffels_bots::DUMMY;
 use kartoffels_world::prelude::{Config, Policy};
+use std::time::Duration;
 use termwiz::input::KeyCode;
+use tokio::time;
 
 #[tokio::test]
 async fn smoke() {
@@ -41,7 +44,7 @@ async fn smoke() {
     ctxt.see_frame("game/smoke/game-1.txt").await;
 
     ctxt.press(KeyCode::Char('u')).await;
-    ctxt.upload_bot("dummy").await;
+    ctxt.upload_bot(DUMMY).await;
     ctxt.wait_for("[l] leave").await;
     ctxt.see_frame("game/smoke/game-2.txt").await;
 
@@ -134,9 +137,12 @@ async fn http_upload_ok() {
     ctxt.wait_for("[j] join-bot").await;
     ctxt.press(KeyCode::Char('u')).await;
 
+    // Wait until session gets created
+    time::sleep(Duration::from_millis(250)).await;
+
     let sess = ctxt.store().first_session_id();
 
-    ctxt.upload_bot_http(sess, "dummy").await;
+    ctxt.upload_bot_http(sess, DUMMY).await;
     ctxt.wait_for("[l] leave").await;
     ctxt.see_frame("game/http-upload-ok/1.txt").await;
 }
@@ -161,9 +167,12 @@ async fn http_upload_err() {
     ctxt.wait_for("[j] join-bot").await;
     ctxt.press(KeyCode::Char('u')).await;
 
+    // Wait until session gets created
+    time::sleep(Duration::from_millis(250)).await;
+
     let sess = ctxt.store().first_session_id();
 
-    ctxt.upload_bot_http(sess, "dummy").await;
+    ctxt.upload_bot_http(sess, DUMMY).await;
     ctxt.wait_for_modal("ouch").await;
     ctxt.see_frame("game/http-upload-err/1.txt").await;
 

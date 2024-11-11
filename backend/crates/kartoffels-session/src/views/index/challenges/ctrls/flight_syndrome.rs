@@ -4,10 +4,11 @@ use super::Challenge;
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
 use anyhow::Result;
 use futures::future::BoxFuture;
+use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    ArenaTheme, BotId, Config, Handle, Policy, Theme,
+    ArenaTheme, BotId, Config, CreateBotRequest, Handle, Policy, Theme,
 };
 use std::sync::LazyLock;
 
@@ -20,15 +21,15 @@ pub static CHALLENGE: Challenge = Challenge {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "one blink of an eye and you got surrounded by a gang of \
-             mischievous bots, ready to take your battery away",
+            "one blink of an eye and you got surrounded by a gang of bots, \
+             ready to take your battery away",
         ),
         MsgLine::new(""),
         MsgLine::new("*save yourself:*"),
         MsgLine::new(""),
         MsgLine::new(
             "implement a robot that runs away - keep yourself alive for at \
-             least 30 seconds, and don't fall down",
+             least 15 seconds, and don't fall down",
         ),
     ]
 });
@@ -82,15 +83,16 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, Vec<BotId>)> {
         ..Default::default()
     })?;
 
-    let enemies = vec![];
+    // let enemies = vec![ivec2(16, 16)];
 
     // let enemies = world
-    //     .create_bots(
-    //         enemies
-    //             .into_iter()
-    //             .map(|pos| CreateBotRequest::new(src).at(pos)),
-    //     )
+    //     .create_bots(enemies.into_iter().map(|pos| {
+    //         CreateBotRequest::new(kartoffels_bots::CHL_FLIGHT_SYNDROME_ENEMY)
+    //             .at(pos)
+    //     }))
     //     .await?;
+
+    let enemies = vec![];
 
     Ok((world, enemies))
 }

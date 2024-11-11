@@ -12,7 +12,6 @@ mod handle;
 mod map;
 mod mode;
 mod policy;
-mod prefabs;
 mod snapshots;
 mod stats;
 mod storage;
@@ -39,10 +38,6 @@ pub mod prelude {
     };
     pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
-
-    pub mod prefabs {
-        pub use crate::prefabs::*;
-    }
 }
 
 pub(crate) use self::bot::*;

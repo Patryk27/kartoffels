@@ -2,15 +2,8 @@
 resolver = "2"
 
 members = [
-    "bots/chl-acyclic-maze",
-    "bots/chl-flight-syndrome-enemy",
-    "bots/dummy",
-    "bots/roberto",
-    "bots/tut-01",
-    "bots/tut-02",
-    "bots/tut-03",
-    "bots/tut-04",
     "crates/kartoffel",
+    "crates/kartoffels-bots",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
     "crates/kartoffels-server",
@@ -89,6 +82,7 @@ kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
 avt.workspace = true
 base64.workspace = true
 futures-util.workspace = true
+kartoffels-bots = { path = "./crates/kartoffels-bots" }
 kartoffels-store = { path = "./crates/kartoffels-store" }
 kartoffels-world = { path = "./crates/kartoffels-world" }
 reqwest.workspace = true

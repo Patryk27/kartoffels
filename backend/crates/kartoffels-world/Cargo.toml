@@ -28,6 +28,7 @@ tracing.workspace = true
 [dev-dependencies]
 indoc.workspace = true
 itertools.workspace = true
+kartoffels-bots = { path = "../kartoffels-bots" }
 pretty_assertions.workspace = true
 rand_chacha.workspace = true
 test-case.workspace = true

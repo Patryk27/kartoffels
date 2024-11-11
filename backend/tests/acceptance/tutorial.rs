@@ -1,4 +1,5 @@
 use crate::TestContext;
+use kartoffels_bots::{TUT_01, TUT_02, TUT_03, TUT_04};
 use kartoffels_world::prelude::ClockSpeed;
 use std::time::Duration;
 use termwiz::input::{KeyCode, Modifiers};
@@ -102,7 +103,7 @@ async fn flow() {
 
     // ---
 
-    ctxt.upload_bot("tut-01").await;
+    ctxt.upload_bot(TUT_01).await;
     ctxt.wait_for_modal("tutorial (6/16)").await;
     ctxt.see_frame("tutorial/flow/step-06.txt").await;
 
@@ -145,7 +146,7 @@ async fn flow() {
 
     // ---
 
-    ctxt.upload_bot("tut-01").await;
+    ctxt.upload_bot(TUT_01).await;
     ctxt.wait_for_modal("tutorial (10/16)").await;
     ctxt.see_frame("tutorial/flow/step-10-a.txt").await;
 
@@ -164,7 +165,7 @@ async fn flow() {
     ctxt.wait_while("0543-c377-57f0-8d9a").await;
     ctxt.see_frame("tutorial/flow/step-10-c.txt").await;
 
-    ctxt.upload_bot("tut-02").await;
+    ctxt.upload_bot(TUT_02).await;
 
     ctxt.store()
         .first_private_world()
@@ -202,7 +203,7 @@ async fn flow() {
     ctxt.wait_while_modal("help").await;
     ctxt.see_frame("tutorial/flow/step-13-d.txt").await;
 
-    ctxt.upload_bot("tut-02").await;
+    ctxt.upload_bot(TUT_02).await;
     ctxt.wait_for_modal("tutorial (13/16)").await;
     ctxt.see_frame("tutorial/flow/step-13-e.txt").await;
 
@@ -210,7 +211,7 @@ async fn flow() {
     ctxt.wait_while_modal("tutorial (13/16)").await;
     ctxt.see_frame("tutorial/flow/step-13-f.txt").await;
 
-    ctxt.upload_bot("tut-03").await;
+    ctxt.upload_bot(TUT_03).await;
 
     ctxt.store()
         .first_private_world()
@@ -241,6 +242,8 @@ async fn flow() {
         }
     }
 
-    ctxt.upload_bot("tut-04").await;
+    time::sleep(Duration::from_millis(250)).await;
+
+    ctxt.upload_bot(TUT_04).await;
     ctxt.wait_for_modal("tutorial (16/16)").await;
 }

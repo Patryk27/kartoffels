@@ -6,34 +6,37 @@ nixpkgs.lib.nixosSystem {
   modules = [
     self.nixosModules.default
 
-    ({ pkgs, ... }: {
-      boot = {
-        isContainer = true;
-      };
-
-      networking = {
-        firewall = {
-          enable = false;
+    (
+      { pkgs, ... }:
+      {
+        boot = {
+          isContainer = true;
         };
-      };
 
-      services = {
-        kartoffels = {
-          enable = true;
-
-          backend = {
-            debug = true;
+        networking = {
+          firewall = {
+            enable = false;
           };
+        };
 
-          nginx = {
+        services = {
+          kartoffels = {
             enable = true;
+
+            backend = {
+              debug = true;
+            };
+
+            nginx = {
+              enable = true;
+            };
           };
         };
-      };
 
-      system = {
-        stateVersion = "24.05";
-      };
-    })
+        system = {
+          stateVersion = "24.05";
+        };
+      }
+    )
   ];
 }

@@ -364,62 +364,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bot-chl-acyclic-maze"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-chl-flight-syndrome-enemy"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-dummy"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-roberto"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-tut-01"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-tut-02"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-tut-03"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
-name = "bot-tut-04"
-version = "0.5.0"
-dependencies = [
- "kartoffel",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1495,6 +1439,7 @@ dependencies = [
  "base64 0.22.1",
  "clap",
  "futures-util",
+ "kartoffels-bots",
  "kartoffels-server",
  "kartoffels-store",
  "kartoffels-toolbox",
@@ -1506,6 +1451,13 @@ dependencies = [
  "tokio-util",
  "tracing-subscriber",
  "tungstenite 0.21.0",
+]
+
+[[package]]
+name = "kartoffels-bots"
+version = "0.5.0"
+dependencies = [
+ "kartoffel",
 ]
 
 [[package]]
@@ -1569,6 +1521,7 @@ dependencies = [
  "futures-util",
  "glam",
  "itertools 0.12.1",
+ "kartoffels-bots",
  "kartoffels-store",
  "kartoffels-ui",
  "kartoffels-utils",
@@ -1649,6 +1602,7 @@ dependencies = [
  "glam",
  "indoc",
  "itertools 0.12.1",
+ "kartoffels-bots",
  "kartoffels-cpu",
  "kartoffels-utils",
  "lru",

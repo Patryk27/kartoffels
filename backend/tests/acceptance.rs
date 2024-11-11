@@ -14,14 +14,12 @@ use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use kartoffels_store::{SessionId, Store};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::net::SocketAddr;
-use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use termwiz::input::{
     KeyCode, KeyCodeEncodeModes, KeyboardEncoding, Modifiers,
 };
 use tokio::net::TcpListener;
-use tokio::process::Command;
 use tokio::task::{self, JoinHandle};
 use tokio::{fs, time};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
@@ -50,6 +48,8 @@ impl TestContext {
         rows: usize,
         worlds: impl IntoIterator<Item = WorldHandle>,
     ) -> Self {
+        _ = tracing_subscriber::fmt().with_test_writer().try_init();
+
         let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
         let store = Arc::new(Store::test(worlds).await);
         let shutdown = CancellationToken::new();
@@ -209,16 +209,15 @@ impl TestContext {
         }
     }
 
-    pub async fn upload_bot(&mut self, name: &str) {
-        let payload = Self::build_bot(name).await;
-        let payload = base64::engine::general_purpose::STANDARD.encode(payload);
+    pub async fn upload_bot(&mut self, payload: &[u8]) {
+        let src = base64::engine::general_purpose::STANDARD.encode(payload);
 
         let bracketed_paste_beg = "\x1b[200~";
         let bracketed_paste_end = "\x1b[201~";
 
         let payload = bracketed_paste_beg
             .bytes()
-            .chain(payload.bytes())
+            .chain(src.bytes())
             .chain(bracketed_paste_end.bytes())
             .collect();
 
@@ -226,13 +225,12 @@ impl TestContext {
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
     }
 
-    pub async fn upload_bot_http(&mut self, sess: SessionId, name: &str) {
+    pub async fn upload_bot_http(&mut self, sess: SessionId, src: &[u8]) {
         let url = format!("http://{}/sessions/{sess}/bots", self.addr);
-        let body = Self::build_bot(name).await;
 
         reqwest::Client::new()
             .post(url)
-            .body(body)
+            .body(src.to_owned())
             .send()
             .await
             .unwrap()
@@ -246,28 +244,6 @@ impl TestContext {
 
     pub fn stdout(&self) -> String {
         self.term.text().join("\n")
-    }
-
-    async fn build_bot(name: &str) -> Vec<u8> {
-        let status = Command::new("just")
-            .arg("bot")
-            .arg(name)
-            .status()
-            .await
-            .unwrap();
-
-        if !status.success() {
-            panic!("upload_bot(\"{name}\") failed");
-        }
-
-        fs::read(
-            Path::new("target.riscv")
-                .join("riscv64-kartoffel-bot")
-                .join("release")
-                .join(format!("bot-{name}")),
-        )
-        .await
-        .unwrap()
     }
 }
 

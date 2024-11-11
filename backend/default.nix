@@ -1,9 +1,15 @@
-{ crane, pkgs, rev }:
+{
+  crane,
+  pkgs,
+  rev,
+}:
 
 let
   toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
   crane' = (crane.mkLib pkgs).overrideToolchain toolchain;
 
+in
+crane'.buildPackage {
   src = ./.;
 
   cargoVendorDir = crane'.vendorMultipleCargoDeps {
@@ -15,39 +21,6 @@ let
     ];
   };
 
-  mkBot = name:
-    let
-      pkg = crane'.buildPackage {
-        inherit src cargoVendorDir;
-
-        # N.B. this is already defined in `.cargo/config.toml`, but Crane's
-        #      mkDummySrc accidentally gets rid of it
-        RUSTFLAGS = "-C link-arg=-T${./crates/kartoffel/kartoffel.ld}";
-
-        cargoCheckCommand = ":";
-        cargoTestCommand = ":";
-
-        cargoExtraArgs = builtins.concatStringsSep " " [
-          "-p bot-${name}"
-          "-Z build-std=alloc,core"
-          "-Z build-std-features=compiler-builtins-mem"
-          "--target ${./riscv64-kartoffel-bot.json}"
-        ];
-
-        postInstall = ''
-          ${pkgs.removeReferencesTo}/bin/remove-references-to \
-            -t ${toolchain} \
-            $out/bin/bot-${name}
-        '';
-      };
-
-    in
-    "${pkg}/bin/bot-${name}";
-
-in
-crane'.buildPackage {
-  inherit src cargoVendorDir;
-
   nativeBuildInputs = with pkgs; [
     just
   ];
@@ -55,6 +28,4 @@ crane'.buildPackage {
   cargoExtraArgs = "-p kartoffels";
   CARGO_PROFILE = "dist";
   KARTOFFELS_REV = rev;
-  KARTOFFELS_BOT_DUMMY = mkBot "dummy";
-  KARTOFFELS_BOT_ROBERTO = mkBot "roberto";
 }

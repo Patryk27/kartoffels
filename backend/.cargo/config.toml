@@ -1,12 +1,6 @@
 [alias]
 build-cpu-tests = "build -p kartoffels-cpu-tests --release --target ../../riscv64-kartoffel-bot.json --target-dir ../../target.riscv -Z build-std=alloc,core -Z build-std-features=compiler-builtins-mem"
 
-[env]
-KARTOFFELS_BOT_CHL_ACYCLIC_MAZE = "../../../target.riscv/riscv64-kartoffel-bot/release/bot-chl-acyclic-maze"
-KARTOFFELS_BOT_CHL_FLIGHT_SYNDROME_ENEMY = "../../../target.riscv/riscv64-kartoffel-bot/release/bot-chl-flight-syndrome-enemy"
-KARTOFFELS_BOT_DUMMY = "../../../target.riscv/riscv64-kartoffel-bot/release/bot-dummy"
-KARTOFFELS_BOT_ROBERTO = "../../../target.riscv/riscv64-kartoffel-bot/release/bot-roberto"
-
 [target.riscv64-kartoffel-bot]
 rustflags = [
     "-C", "link-arg=-Triscv64-kartoffel-bot.ld",

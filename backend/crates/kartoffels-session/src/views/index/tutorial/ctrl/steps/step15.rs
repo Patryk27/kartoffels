@@ -1,5 +1,6 @@
 use super::prelude::*;
 use futures::stream::FuturesOrdered;
+use kartoffels_bots::DUMMY;
 use tokio_stream::StreamExt;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
@@ -112,10 +113,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
 
     let dummies: Vec<_> = dummies
         .into_iter()
-        .map(|pos| {
-            ctxt.world
-                .create_bot(CreateBotRequest::new(prefabs::DUMMY).at(pos))
-        })
+        .map(|pos| ctxt.world.create_bot(CreateBotRequest::new(DUMMY).at(pos)))
         .collect::<FuturesOrdered<_>>()
         .collect::<Result<_>>()
         .await?;

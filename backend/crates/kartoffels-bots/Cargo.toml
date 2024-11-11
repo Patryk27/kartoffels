@@ -1,0 +1,18 @@
+bin = [
+    { name = "chl-acyclic-maze", path = "src/chl-acyclic-maze.rs" },
+    { name = "chl-flight-syndrome-enemy", path = "src/chl-flight-syndrome-enemy.rs" },
+    { name = "dummy", path = "src/dummy.rs" },
+    { name = "roberto", path = "src/roberto.rs" },
+    { name = "tut-01", path = "src/tut-01.rs" },
+    { name = "tut-02", path = "src/tut-02.rs" },
+    { name = "tut-03", path = "src/tut-03.rs" },
+    { name = "tut-04", path = "src/tut-04.rs" },
+]
+
+[package]
+name = "kartoffels-bots"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+kartoffel = { path = "../../crates/kartoffel" }

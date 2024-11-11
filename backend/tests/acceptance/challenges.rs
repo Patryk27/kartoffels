@@ -1,4 +1,5 @@
 use crate::TestContext;
+use kartoffels_bots::CHL_ACYCLIC_MAZE;
 use kartoffels_world::prelude::ClockSpeed;
 use termwiz::input::KeyCode;
 
@@ -27,7 +28,7 @@ async fn acyclic_maze() {
         .await
         .unwrap();
 
-    ctxt.upload_bot("chl-acyclic-maze").await;
+    ctxt.upload_bot(CHL_ACYCLIC_MAZE).await;
 
     ctxt.wait_for("congrats").await;
     ctxt.press(KeyCode::Enter).await;

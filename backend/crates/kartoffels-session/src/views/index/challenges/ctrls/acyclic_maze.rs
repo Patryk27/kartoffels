@@ -4,11 +4,11 @@ use crate::MapBroadcaster;
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
+use kartoffels_bots::DUMMY;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    prefabs, BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy,
-    TileBase,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
 };
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -115,11 +115,7 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     world.set_spawn(PLAYER_POS, Dir::W).await?;
 
     let timmy = world
-        .create_bot(
-            CreateBotRequest::new(prefabs::DUMMY)
-                .at(TIMMY_POS)
-                .facing(Dir::S),
-        )
+        .create_bot(CreateBotRequest::new(DUMMY).at(TIMMY_POS).facing(Dir::S))
         .await?;
 
     game.join(world.clone()).await?;

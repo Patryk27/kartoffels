@@ -33,9 +33,18 @@
     };
   };
 
-  outputs = { self, crane, napalm, nixpkgs, rust-overlay, utils }:
+  outputs =
+    {
+      self,
+      crane,
+      napalm,
+      nixpkgs,
+      rust-overlay,
+      utils,
+    }:
     let
-      packages = utils.lib.eachDefaultSystem (system:
+      packages = utils.lib.eachDefaultSystem (
+        system:
         let
           pkgs = import nixpkgs {
             inherit system;

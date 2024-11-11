@@ -1,6 +1,6 @@
 use super::{Event, Focus};
+use kartoffels_bots::{DUMMY, ROBERTO};
 use kartoffels_ui::{Button, Render, Ui};
-use kartoffels_world::prelude::prefabs;
 use std::fmt;
 use termwiz::input::KeyCode;
 
@@ -92,8 +92,8 @@ impl fmt::Display for BotPrefabType {
 impl BotPrefabType {
     pub fn source(&self) -> &'static [u8] {
         match self {
-            Self::Dummy => prefabs::DUMMY,
-            Self::Roberto => prefabs::ROBERTO,
+            Self::Dummy => DUMMY,
+            Self::Roberto => ROBERTO,
         }
     }
 }

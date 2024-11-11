@@ -10,6 +10,7 @@ futures-util.workspace = true
 futures.workspace = true
 glam.workspace = true
 itertools.workspace = true
+kartoffels-bots = { path = "../kartoffels-bots" }
 kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-ui = { path = "../kartoffels-ui" }
 kartoffels-utils = { path = "../kartoffels-utils" }

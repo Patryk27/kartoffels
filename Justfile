@@ -46,10 +46,6 @@ test:
 bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
 
-bots:
-    cd backend \
-    && just bots
-
 # ---
 
 start-demo:
