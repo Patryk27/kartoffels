@@ -1,3 +1,5 @@
+//! Guard used for the `hostage-situation` challenge.
+
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 extern crate alloc;

@@ -1,3 +1,5 @@
+//! Solution for the `acyclic-maze` challenge.
+
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 extern crate kartoffel;

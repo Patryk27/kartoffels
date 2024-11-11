@@ -1,3 +1,5 @@
+//! Roberto - a moderately challenging bot that likes to stab.
+
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 extern crate alloc;
