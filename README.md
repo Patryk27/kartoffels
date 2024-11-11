@@ -1,4 +1,4 @@
-# 🥔 kartoffels 🥔
+# kartoffels 🥔
 
 [kartoffels](https://kartoffels.pwy.io) is a game where you're given a potato
 and your job is to implement [a firmware](https://github.com/patryk27/kartoffel)
