@@ -124,12 +124,12 @@ struct TestMmio {
     mem: HashMap<u32, u32>,
 }
 
-impl Mmio for TestMmio {
-    fn load(&self, addr: u32) -> Result<u32, ()> {
+impl Mmio for &mut TestMmio {
+    fn load(self, addr: u32) -> Result<u32, ()> {
         self.mem.get(&addr).copied().ok_or(())
     }
 
-    fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    fn store(self, addr: u32, val: u32) -> Result<(), ()> {
         self.mem.insert(addr, val * val);
 
         Ok(())

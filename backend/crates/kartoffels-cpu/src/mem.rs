@@ -3,10 +3,10 @@ use super::{Cpu, Mmio};
 impl Cpu {
     pub(super) fn mem_load<const SIZE: usize>(
         &self,
-        mmio: &mut dyn Mmio,
+        mmio: impl Mmio,
         addr: u64,
     ) -> Result<i64, Box<str>> {
-        let addr = Self::mem_translate(addr, SIZE)?;
+        let addr = addr as u32;
 
         if addr >= Self::MMIO_BASE {
             self.mem_load_mmio::<SIZE>(mmio, addr)
@@ -19,9 +19,9 @@ impl Cpu {
         }
     }
 
-    fn mem_load_mmio<const SIZE: usize>(
+    pub(super) fn mem_load_mmio<const SIZE: usize>(
         &self,
-        mmio: &mut dyn Mmio,
+        mmio: impl Mmio,
         addr: u32,
     ) -> Result<i64, Box<str>> {
         if SIZE == 4 {
@@ -41,7 +41,7 @@ impl Cpu {
         }
     }
 
-    fn mem_load_ram<const SIZE: usize>(
+    pub(super) fn mem_load_ram<const SIZE: usize>(
         &self,
         addr: u32,
     ) -> Result<i64, Box<str>> {
@@ -62,11 +62,11 @@ impl Cpu {
 
     pub(super) fn mem_store<const SIZE: usize>(
         &mut self,
-        mmio: &mut dyn Mmio,
+        mmio: impl Mmio,
         addr: u64,
         val: i64,
     ) -> Result<(), Box<str>> {
-        let addr = Self::mem_translate(addr, SIZE)?;
+        let addr = addr as u32;
         let val = val as u64;
 
         if addr >= Self::MMIO_BASE {
@@ -80,9 +80,9 @@ impl Cpu {
         }
     }
 
-    fn mem_store_mmio<const SIZE: usize>(
+    pub(super) fn mem_store_mmio<const SIZE: usize>(
         &mut self,
-        mmio: &mut dyn Mmio,
+        mmio: impl Mmio,
         addr: u32,
         val: u64,
     ) -> Result<(), Box<str>> {
@@ -106,7 +106,7 @@ impl Cpu {
         }
     }
 
-    fn mem_store_ram<const SIZE: usize>(
+    pub(super) fn mem_store_ram<const SIZE: usize>(
         &mut self,
         addr: u32,
         val: u64,
@@ -122,16 +122,6 @@ impl Cpu {
         }
 
         Ok(())
-    }
-
-    pub(super) fn mem_translate(
-        addr: u64,
-        size: usize,
-    ) -> Result<u32, Box<str>> {
-        u32::try_from(addr).map_err(|_| {
-            format!("cannot translate 0x{addr:16x}+{size} to a 32-bit address")
-                .into()
-        })
     }
 
     pub(super) fn mem_fault(msg: &str, addr: u32, size: usize) -> Box<str> {

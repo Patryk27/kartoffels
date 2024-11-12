@@ -15,7 +15,7 @@ pub struct BotMmio<'a, 'b> {
 }
 
 impl Mmio for BotMmio<'_, '_> {
-    fn load(&self, addr: u32) -> Result<u32, ()> {
+    fn load(self, addr: u32) -> Result<u32, ()> {
         self.timer
             .mmio_load(addr)
             .or_else(|_| self.battery.mmio_load(addr))
@@ -25,7 +25,7 @@ impl Mmio for BotMmio<'_, '_> {
             .or_else(|_| self.radar.mmio_load(addr))
     }
 
-    fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    fn store(mut self, addr: u32, val: u32) -> Result<(), ()> {
         self.timer
             .mmio_store(addr, val)
             .or_else(|_| self.battery.mmio_store(addr, val))

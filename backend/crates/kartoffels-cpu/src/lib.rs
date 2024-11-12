@@ -43,11 +43,11 @@ impl Cpu {
         Self { pc, ram, regs }
     }
 
-    pub fn tick(&mut self, mmio: &mut dyn Mmio) -> Result<(), Box<str>> {
+    pub fn tick(&mut self, mmio: impl Mmio) -> Result<(), Box<str>> {
         self.do_tick(mmio)
     }
 
-    pub fn try_tick(&mut self, mmio: &mut dyn Mmio) -> Result<bool, Box<str>> {
+    pub fn try_tick(&mut self, mmio: impl Mmio) -> Result<bool, Box<str>> {
         match self.tick(mmio) {
             Ok(()) => Ok(true),
             Err(err) if err.contains("got `ebreak`") => Ok(false),

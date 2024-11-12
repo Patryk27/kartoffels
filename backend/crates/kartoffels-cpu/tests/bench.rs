@@ -24,7 +24,7 @@ fn bench(b: &mut Bencher) {
     let mut cpu = Cpu::new(&fw);
 
     b.iter(|| {
-        while cpu.try_tick(&mut TestMmio).unwrap() {
+        while cpu.try_tick(TestMmio).unwrap() {
             //
         }
 
@@ -49,11 +49,11 @@ fn build_tests() {
 struct TestMmio;
 
 impl Mmio for TestMmio {
-    fn load(&self, _: u32) -> Result<u32, ()> {
+    fn load(self, _: u32) -> Result<u32, ()> {
         Err(())
     }
 
-    fn store(&mut self, _: u32, _: u32) -> Result<(), ()> {
+    fn store(self, _: u32, _: u32) -> Result<(), ()> {
         Err(())
     }
 }

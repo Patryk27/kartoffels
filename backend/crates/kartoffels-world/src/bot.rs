@@ -92,7 +92,7 @@ impl AliveBot {
         self.motor.tick();
         self.radar.tick();
 
-        self.cpu.tick(&mut BotMmio {
+        self.cpu.tick(BotMmio {
             timer: &mut self.timer,
             battery: &mut self.battery,
             serial: &mut self.serial,
