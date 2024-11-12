@@ -13,11 +13,10 @@ pub struct Map {
 
 impl Map {
     pub fn new(size: UVec2) -> Self {
-        Self {
-            size,
-            tiles: vec![Tile::new(TileBase::VOID); (size.x * size.y) as usize]
-                .into_boxed_slice(),
-        }
+        let tiles = vec![Tile::new(TileKind::VOID); (size.x * size.y) as usize]
+            .into_boxed_slice();
+
+        Self { size, tiles }
     }
 
     pub fn parse(s: &str) -> (Self, Anchors) {
@@ -54,7 +53,7 @@ impl Map {
         if let Some(idx) = self.pos_to_idx(pos) {
             self.tiles[idx]
         } else {
-            Tile::new(TileBase::VOID)
+            Tile::new(TileKind::VOID)
         }
     }
 
@@ -207,7 +206,7 @@ impl fmt::Display for Map {
             for x in 0..self.size.x {
                 let idx = self.pos_to_idx(uvec2(x, y).as_ivec2()).unwrap();
 
-                _ = write!(line, "{}", self.tiles[idx].base as char);
+                _ = write!(line, "{}", self.tiles[idx].kind as char);
             }
 
             write!(f, "{}", line.trim_end())?;
@@ -243,38 +242,38 @@ impl Anchors {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(packed)]
 pub struct Tile {
-    pub base: u8,
+    pub kind: u8,
     pub meta: [u8; 3],
 }
 
 impl Tile {
-    pub fn new(base: u8) -> Self {
+    pub fn new(ty: u8) -> Self {
         Self {
-            base,
+            kind: ty,
             meta: [0, 0, 0],
         }
     }
 
     pub fn is_void(&self) -> bool {
-        self.base == TileBase::VOID
+        self.kind == TileKind::VOID
     }
 
     pub fn is_floor(&self) -> bool {
-        self.base == TileBase::FLOOR
+        self.kind == TileKind::FLOOR
     }
 
     pub fn is_wall(&self) -> bool {
-        self.base == TileBase::WALL_H || self.base == TileBase::WALL_V
+        self.kind == TileKind::WALL_H || self.kind == TileKind::WALL_V
     }
 
     pub fn is_bot(&self) -> bool {
-        self.base == TileBase::BOT
+        self.kind == TileKind::BOT
     }
 }
 
 impl From<u8> for Tile {
-    fn from(base: u8) -> Self {
-        Tile::new(base)
+    fn from(ty: u8) -> Self {
+        Self::new(ty)
     }
 }
 
@@ -284,7 +283,7 @@ impl Serialize for Tile {
         S: Serializer,
     {
         u32::from_be_bytes([
-            self.base,
+            self.kind,
             self.meta[0],
             self.meta[1],
             self.meta[2],
@@ -301,15 +300,15 @@ impl<'de> Deserialize<'de> for Tile {
         let [b0, b1, b2, b3] = u32::deserialize(deserializer)?.to_be_bytes();
 
         Ok(Self {
-            base: b0,
+            kind: b0,
             meta: [b1, b2, b3],
         })
     }
 }
 
-pub struct TileBase;
+pub struct TileKind;
 
-impl TileBase {
+impl TileKind {
     pub const BOT: u8 = b'@';
     pub const BOT_CHEVRON: u8 = b'~';
     pub const FLAG: u8 = b'=';

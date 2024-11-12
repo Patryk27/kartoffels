@@ -58,5 +58,17 @@ pub fn arm_wait() {
 /// ```
 #[inline(always)]
 pub fn arm_stab() {
-    wri(MEM_ARM, 0, 1)
+    wri(MEM_ARM, 0, 1);
+}
+
+// TODO
+#[inline(always)]
+pub fn arm_pick() {
+    wri(MEM_ARM, 0, 2);
+}
+
+// TODO
+#[inline(always)]
+pub fn arm_drop(nth: u8) {
+    wri(MEM_ARM, 0, u32::from_be_bytes([0, 0, nth, 3]));
 }

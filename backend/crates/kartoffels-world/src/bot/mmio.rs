@@ -1,4 +1,6 @@
-use super::{BotArm, BotBattery, BotMotor, BotRadar, BotSerial, BotTimer};
+use super::{
+    BotAction, BotArm, BotBattery, BotMotor, BotRadar, BotSerial, BotTimer,
+};
 use crate::{AliveBotsLocator, Dir, Map};
 use glam::IVec2;
 use kartoffels_cpu::Mmio;
@@ -37,6 +39,7 @@ impl Mmio for BotMmio<'_, '_> {
 }
 
 pub struct BotMmioContext<'a, 'b> {
+    pub action: &'a mut Option<BotAction>,
     pub bots: &'a AliveBotsLocator<'b>,
     pub dir: &'a mut Dir,
     pub map: &'a Map,

@@ -3,7 +3,7 @@ mod room;
 
 use self::corridor::*;
 use self::room::*;
-use crate::{Dir, Map, Tile, TileBase};
+use crate::{Dir, Map, Tile, TileKind};
 use anyhow::{anyhow, Context, Result};
 use glam::{ivec2, UVec2};
 use rand::{Rng, RngCore};
@@ -132,7 +132,7 @@ impl DungeonTheme {
         map.set(
             room_pos,
             Tile {
-                base: TileBase::FLOOR,
+                kind: TileKind::FLOOR,
                 meta: [VISITED, 0, 0],
             },
         );
@@ -148,7 +148,7 @@ impl DungeonTheme {
                     map.set(
                         pos,
                         Tile {
-                            base: TileBase::FLOOR,
+                            kind: TileKind::FLOOR,
                             meta: [VISITED, 0, 0],
                         },
                     );
@@ -162,7 +162,7 @@ impl DungeonTheme {
 
         map.for_each_mut(|_, tile| {
             if tile.is_floor() && tile.meta[0] == NOT_VISITED {
-                *tile = TileBase::VOID.into();
+                *tile = TileKind::VOID.into();
             }
         });
 
@@ -182,7 +182,7 @@ impl DungeonTheme {
                     }
 
                     if !has_floor_nearby {
-                        map.set(pos, TileBase::VOID);
+                        map.set(pos, TileKind::VOID);
                     }
                 }
             }

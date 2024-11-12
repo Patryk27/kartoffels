@@ -1,7 +1,7 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Term, Ui};
-use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileBase};
+use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileKind};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
@@ -55,7 +55,7 @@ impl Background {
                 ui.buf[(x, y)]
                     .set_bg(theme::BG)
                     .set_fg(theme::DARK_GRAY)
-                    .set_char(map.get(pos).base as char);
+                    .set_char(map.get(pos).kind as char);
             }
         }
     }
@@ -84,7 +84,7 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
 
     map.for_each_mut(|_, tile| {
         if tile.is_floor() && rng.gen_bool(0.05) {
-            *tile = TileBase::BOT.into();
+            *tile = TileKind::BOT.into();
         }
     });
 
@@ -98,19 +98,19 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
                 let src = ivec2(x as i32, y as i32);
                 let src_tile = map.get(src);
 
-                if src_tile.base == TileBase::BOT
+                if src_tile.kind == TileKind::BOT
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
                     let dst = src + rng.gen::<Dir>();
 
-                    if map.get(dst).base == TileBase::FLOOR {
-                        map.set(src, TileBase::FLOOR);
+                    if map.get(dst).kind == TileKind::FLOOR {
+                        map.set(src, TileKind::FLOOR);
 
                         map.set(
                             dst,
                             Tile {
-                                base: TileBase::BOT,
+                                kind: TileKind::BOT,
                                 meta: [frame, 0, 0],
                             },
                         );

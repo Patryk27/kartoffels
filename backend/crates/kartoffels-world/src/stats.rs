@@ -17,11 +17,11 @@ impl Default for State {
 }
 
 pub fn run(world: &mut World, state: &mut State) {
-    let Clock::Auto { steps, .. } = world.clock else {
+    let Clock::Auto = world.clock else {
         return;
     };
 
-    state.ticks += steps;
+    state.ticks += Clock::STEPS;
 
     if Instant::now() < state.next_run_at {
         return;

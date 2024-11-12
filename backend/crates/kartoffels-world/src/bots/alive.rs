@@ -4,8 +4,6 @@ use anyhow::Result;
 use glam::IVec2;
 use kartoffels_utils::DummyHasher;
 use maybe_owned::MaybeOwned;
-use rand::prelude::SliceRandom;
-use rand::RngCore;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 
@@ -68,11 +66,8 @@ impl AliveBots {
         self.entries.len()
     }
 
-    pub fn pick_ids(&self, rng: &mut impl RngCore) -> Vec<BotId> {
-        let mut ids: Vec<_> = self.entries.keys().copied().collect();
-
-        ids.shuffle(rng);
-        ids
+    pub fn ids(&self) -> Vec<BotId> {
+        self.entries.keys().copied().collect()
     }
 
     #[cfg(test)]

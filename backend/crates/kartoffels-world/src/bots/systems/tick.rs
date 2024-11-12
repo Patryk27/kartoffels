@@ -1,39 +1,82 @@
-use crate::{AliveBotEntryMut, BotId, Clock, KillBot, World};
+use crate::{AliveBotEntryMut, BotAction, BotId, KillBot, TileKind, World};
 
 pub fn run(world: &mut World) {
-    let ids = world.bots.alive.pick_ids(&mut world.rng);
-
-    let steps = match world.clock {
-        Clock::Auto { steps, .. } => steps,
-        Clock::Manual { steps } => steps,
-    };
+    let ids = world.bots.alive.ids();
+    let steps = world.clock.steps();
 
     for _ in 0..steps {
-        tick(world, &ids);
+        for id in &ids {
+            tick(world, *id);
+        }
     }
 }
 
-fn tick(world: &mut World, ids: &[BotId]) {
-    for &id in ids {
-        let Some(AliveBotEntryMut { bot, locator }) =
-            world.bots.alive.get_mut(id)
-        else {
-            // Our bot got killed in the meantime, happens
-            continue;
-        };
+fn tick(world: &mut World, id: BotId) {
+    let Some(AliveBotEntryMut { bot, locator }) = world.bots.alive.get_mut(id)
+    else {
+        // Our bot got killed in the meantime, happens
+        return;
+    };
 
-        let kill = match bot.tick(&mut world.rng, &world.map, &locator) {
-            Ok(state) => state.apply(world, id),
+    match bot.tick(&mut world.rng, &world.map, &locator) {
+        Ok(Some(BotAction::ArmDrop { at, idx })) => {
+            if let Some(object) = bot.inventory.take(idx) {
+                world.objects.put(at, object);
+            }
+        }
 
-            Err(err) => Some(KillBot {
+        Ok(Some(BotAction::ArmPick { at })) => {
+            if let Some(object) = world.objects.take(at) {
+                if let Err(object) = bot.inventory.add(object) {
+                    world.objects.put(at, object);
+                }
+            }
+        }
+
+        Ok(Some(BotAction::ArmStab { at })) => {
+            if let Some(killed_id) = world.bots.alive.get_by_pos(at) {
+                let kill = KillBot {
+                    id: killed_id,
+                    reason: format!("stabbed out of existence by {id}"),
+                    killer: Some(id),
+                };
+
+                super::kill::run(world, kill);
+            }
+        }
+
+        Ok(Some(BotAction::MotorMove { at })) => match world.map.get(at).kind {
+            TileKind::VOID => {
+                let kill = KillBot {
+                    id,
+                    reason: "fell into the void".into(),
+                    killer: None,
+                };
+
+                super::kill::run(world, kill);
+            }
+
+            TileKind::FLOOR => {
+                if world.bots.alive.get_by_pos(at).is_none() {
+                    world.bots.alive.relocate(id, at);
+                }
+            }
+
+            _ => (),
+        },
+
+        Ok(None) => {
+            //
+        }
+
+        Err(err) => {
+            let kill = KillBot {
                 id,
                 reason: format!("firmware crashed: {err}"),
                 killer: None,
-            }),
-        };
+            };
 
-        if let Some(kill) = kill {
             super::kill::run(world, kill);
         }
-    }
+    };
 }

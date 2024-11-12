@@ -1,4 +1,4 @@
-use crate::{Map, TileBase};
+use crate::{Map, TileKind};
 use glam::uvec2;
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +19,7 @@ impl ArenaTheme {
 
         map.map(|pos, tile| {
             if center.as_vec2().distance(pos.as_vec2()) < radius {
-                TileBase::FLOOR.into()
+                TileKind::FLOOR.into()
             } else {
                 tile
             }

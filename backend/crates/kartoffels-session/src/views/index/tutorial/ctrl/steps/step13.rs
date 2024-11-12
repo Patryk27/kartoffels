@@ -125,7 +125,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
                     ivec2(10, 13),
                     ivec2(10, 12),
                 ],
-                TileBase::FLOOR,
+                TileKind::FLOOR,
             );
 
             map

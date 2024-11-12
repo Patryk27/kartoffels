@@ -11,6 +11,7 @@ mod config;
 mod handle;
 mod map;
 mod mode;
+mod objects;
 mod policy;
 mod snapshots;
 mod stats;
@@ -29,8 +30,9 @@ pub mod prelude {
     pub use crate::handle::{
         CreateBotRequest, Handle, Request, SnapshotStream,
     };
-    pub use crate::map::{Map, Tile, TileBase};
+    pub use crate::map::{Map, Tile, TileKind};
     pub use crate::mode::{DeathmatchMode, Mode};
+    pub use crate::objects::{Object, ObjectKind};
     pub use crate::policy::Policy;
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
@@ -47,6 +49,7 @@ pub(crate) use self::config::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
+pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::snapshots::*;
 pub(crate) use self::storage::*;
@@ -79,13 +82,12 @@ pub fn create(config: Config) -> Handle {
         .unwrap_or_else(SmallRng::from_entropy);
 
     let clock = config.clock;
+    let id = rng.gen();
     let mode = config.mode;
     let name = Arc::new(config.name);
     let path = config.path;
     let policy = config.policy;
     let theme = config.theme;
-
-    let id = rng.gen();
 
     let map = theme
         .as_ref()
@@ -98,9 +100,10 @@ pub fn create(config: Config) -> Handle {
         bots: Default::default(),
         clock,
         map,
-        metronome: clock.metronome(false),
+        metronome: clock.metronome(),
         mode,
         name,
+        objects: Default::default(),
         path,
         paused: false,
         policy,
@@ -121,8 +124,9 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     let world = SerializedWorld::load(&path)?;
 
     let bots = world.bots.into_owned();
-    let clock = world.clock.into_owned();
+    let clock = Clock::default();
     let map = world.map.into_owned();
+    let metronome = if bench { None } else { clock.metronome() };
     let mode = world.mode.into_owned();
     let name = Arc::new(world.name.into_owned());
     let policy = world.policy.into_owned();
@@ -134,9 +138,10 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
         bots,
         clock,
         map,
-        metronome: clock.metronome(bench),
+        metronome,
         mode,
         name,
+        objects: Default::default(),
         path: Some(path),
         paused: false,
         policy,
@@ -170,6 +175,7 @@ fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
 
 struct World {
     bots: Bots,
+    objects: Objects,
     clock: Clock,
     map: Map,
     metronome: Option<Metronome>,

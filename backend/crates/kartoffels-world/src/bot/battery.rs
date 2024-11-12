@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotBattery {
-    pub energy: u32,
+    energy: u32,
 }
 
 impl BotBattery {

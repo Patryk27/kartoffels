@@ -3,17 +3,17 @@ use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use indoc::indoc;
-use kartoffels_bots::{CHL_HOSTAGE_SITUATION_GUARD, DUMMY};
+use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileKind,
 };
 use std::sync::LazyLock;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
-    name: "hostage-situation",
+    name: "diamond-heist",
     desc: "TODO",
     run,
 };
@@ -22,7 +22,7 @@ static DOCS: LazyLock<Vec<MsgLine>> =
     LazyLock::new(|| vec![MsgLine::new("TODO")]);
 
 static INIT_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" hostage-situation "),
+    title: Some(" diamond-heist "),
     body: DOCS.clone(),
 
     buttons: vec![
@@ -38,7 +38,7 @@ static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 });
 
 static _WIN_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" hostage-situation "),
+    title: Some(" diamond-heist "),
     body: vec![MsgLine::new("TODO")],
     buttons: vec![MsgButton::confirm("ok", ())],
 });
@@ -51,7 +51,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
             return Ok(());
         }
 
-        let (world, _hostage, _guards) = setup(store, &game).await?;
+        let (world, _guards) = setup(store, &game).await?;
 
         game.join(world).await?;
 
@@ -59,15 +59,12 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn setup(
-    store: &Store,
-    game: &GameCtrl,
-) -> Result<(Handle, BotId, Vec<BotId>)> {
+async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, Vec<BotId>)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_perms(Perms::CHALLENGE).await?;
 
     let world = store.create_private_world(Config {
-        name: "challenge:hostage-situation".into(),
+        name: "challenge:diamond-heist".into(),
         policy: Policy {
             auto_respawn: false,
             max_alive_bots: 16,
@@ -78,28 +75,20 @@ async fn setup(
 
     let (mut map, anchors) = Map::parse(indoc! {r#"
                   ---------
-                  |.......|----------|
-                  |..................|
-                  |...d...|---------.|
-                  |..cbe..|        |.|
-       |----------|...f...|        |.|
-       |a.................|        |.|
-       |----------|.......|        |g|
-                  ---------        |.|
+        ----------|.......|
+        ..................|
+        ----------|...d...|
+                  |..cbe..|
+        ----------|...f...|
+        a.................|
+        ----------|.......|
+                  ---------
     "#});
 
-    anchors.fill(&mut map, TileBase::FLOOR);
+    anchors.fill(&mut map, TileKind::FLOOR);
 
     world.set_map(map).await?;
-    world.set_spawn(anchors.get('a'), Dir::W).await?;
-
-    let hostage = world
-        .create_bot(
-            CreateBotRequest::new(DUMMY)
-                .at(anchors.get('b'))
-                .spawn_at_once(),
-        )
-        .await?;
+    world.set_spawn(anchors.get('a'), Dir::E).await?;
 
     let guards = [
         (anchors.get('c'), Dir::N),
@@ -110,12 +99,12 @@ async fn setup(
 
     let guards = world
         .create_bots(guards.into_iter().map(|(pos, dir)| {
-            CreateBotRequest::new(CHL_HOSTAGE_SITUATION_GUARD)
+            CreateBotRequest::new(CHL_DIAMOND_HEIST_GUARD)
                 .at(pos)
                 .facing(dir)
                 .spawn_at_once()
         }))
         .await?;
 
-    Ok((world, hostage, guards))
+    Ok((world, guards))
 }

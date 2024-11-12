@@ -1,10 +1,10 @@
+use super::BotAction;
 use crate::{AliveBot, BotMmioContext};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotMotor {
-    pub vel: u8,
-    pub cooldown: u32,
+    cooldown: u32,
 }
 
 impl BotMotor {
@@ -29,7 +29,10 @@ impl BotMotor {
         match addr {
             AliveBot::MEM_MOTOR => {
                 if self.cooldown == 0 && val > 0 {
-                    self.vel = 1;
+                    *ctxt.action = Some(BotAction::MotorMove {
+                        at: ctxt.pos + *ctxt.dir,
+                    });
+
                     self.cooldown = ctxt.cooldown(20_000, 15);
                 }
 

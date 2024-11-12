@@ -1,4 +1,4 @@
-//! Guard used for the `hostage-situation` challenge.
+//! Guard used for the `diamond-heist` challenge.
 
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
@@ -11,7 +11,7 @@ use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
-    let guards = scan_env();
+    let guards = find_guards();
 
     for _ in 0..2 {
         motor_wait();
@@ -45,7 +45,7 @@ fn main() {
     }
 }
 
-fn scan_env() -> Vec<NonZeroU64> {
+fn find_guards() -> Vec<NonZeroU64> {
     let scan = radar_scan_5x5();
     let mut guards = Vec::new();
 

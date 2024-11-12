@@ -1,5 +1,5 @@
 mod acyclic_maze;
-mod hostage_situation;
+mod diamond_heist;
 
 use crate::views::game::GameCtrl;
 use anyhow::Result;
@@ -14,4 +14,4 @@ pub struct Challenge {
 }
 
 pub static CHALLENGES: &[&Challenge] =
-    &[&acyclic_maze::CHALLENGE, &hostage_situation::CHALLENGE];
+    &[&acyclic_maze::CHALLENGE, &diamond_heist::CHALLENGE];

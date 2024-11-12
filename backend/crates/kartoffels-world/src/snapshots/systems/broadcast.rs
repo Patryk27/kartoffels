@@ -1,6 +1,6 @@
 use crate::{
     Clock, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
-    SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileBase, World,
+    SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileKind, World,
 };
 use ahash::AHashMap;
 use std::cmp::Reverse;
@@ -29,12 +29,12 @@ pub fn run(world: &mut World, state: &mut State) {
     let snapshot = {
         let bots = prepare_bots(world);
         let map = world.map.clone();
-        let render = prepare_render(&bots, world);
+        let display = prepare_display(&bots, world);
         let version = state.version;
 
         Arc::new(Snapshot {
             map,
-            render,
+            display,
             bots,
             version,
         })
@@ -70,7 +70,7 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
             dir: entry.bot.dir,
             age: entry.bot.timer.age(&world.clock),
             score: scores.get(&entry.id).copied().unwrap_or_default(),
-            serial: Arc::new(entry.bot.serial.buffer.clone()),
+            serial: Arc::new(entry.bot.serial.buffer().clone()),
             events: Default::default(), // TODO
         })
         .collect();
@@ -107,7 +107,7 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
         .iter()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
-                serial: Arc::new(entry.bot.serial.buffer.clone()),
+                serial: Arc::new(entry.bot.serial.buffer().clone()),
                 events: Default::default(), // TODO
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
@@ -120,19 +120,19 @@ fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
     SnapshotQueuedBots { entries }
 }
 
-fn prepare_render(bots: &SnapshotBots, world: &World) -> Map {
+fn prepare_display(bots: &SnapshotBots, world: &World) -> Map {
     let mut map = world.map.clone();
 
     for (idx, bot) in bots.alive().iter().enumerate() {
         let tile = Tile {
-            base: TileBase::BOT,
+            kind: TileKind::BOT,
             meta: [idx as u8, 0, 0],
         };
 
         let chevron_pos = bot.pos + bot.dir;
 
         let chevron_tile = Tile {
-            base: TileBase::BOT_CHEVRON,
+            kind: TileKind::BOT_CHEVRON,
             meta: [idx as u8, u8::from(bot.dir), 0],
         };
 

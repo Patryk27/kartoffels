@@ -2,7 +2,7 @@ use super::{Event, Mode, State};
 use crate::BotIdExt;
 use glam::ivec2;
 use kartoffels_ui::{theme, Ui};
-use kartoffels_world::prelude::{Dir, Tile, TileBase};
+use kartoffels_world::prelude::{Dir, Tile, TileKind};
 use ratatui::layout::Rect;
 use std::time::Instant;
 use termwiz::input::{KeyCode, Modifiers};
@@ -35,7 +35,7 @@ impl Map {
                 ui.clamp(area, |ui| {
                     let tile = state
                         .snapshot
-                        .render()
+                        .display()
                         .get(offset + ivec2(dx as i32, dy as i32));
 
                     self.render_tile(ui, state, tile);
@@ -81,8 +81,8 @@ impl Map {
         let mut fg;
         let mut bg;
 
-        match tile.base {
-            TileBase::BOT => {
+        match tile.kind {
+            TileKind::BOT => {
                 ch = '@';
 
                 fg = state
@@ -96,7 +96,7 @@ impl Map {
                 bg = theme::BG;
             }
 
-            TileBase::BOT_CHEVRON => {
+            TileKind::BOT_CHEVRON => {
                 ch = match Dir::from(tile.meta[1]) {
                     Dir::N => '↑',
                     Dir::E => '→',
@@ -115,19 +115,19 @@ impl Map {
                 bg = theme::BG;
             }
 
-            TileBase::FLOOR => {
+            TileKind::FLOOR => {
                 ch = '.';
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
 
-            TileBase::WALL_H => {
+            TileKind::WALL_H => {
                 ch = '-';
                 fg = theme::GRAY;
                 bg = theme::BG;
             }
 
-            TileBase::WALL_V => {
+            TileKind::WALL_V => {
                 ch = '|';
                 fg = theme::GRAY;
                 bg = theme::BG;
@@ -141,12 +141,12 @@ impl Map {
         };
 
         if ui.enabled {
-            if state.paused && tile.base != TileBase::BOT {
+            if state.paused && tile.kind != TileKind::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
 
-            if tile.base == TileBase::BOT {
+            if tile.kind == TileKind::BOT {
                 let id = state
                     .snapshot
                     .bots()

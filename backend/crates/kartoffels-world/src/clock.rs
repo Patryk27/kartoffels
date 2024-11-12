@@ -1,38 +1,31 @@
 mod metronome;
 
 pub use self::metronome::*;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum Clock {
-    #[serde(rename = "auto")]
-    Auto { hz: u32, steps: u32 },
-
-    #[serde(rename = "manual")]
-    Manual { steps: u32 },
+    #[default]
+    Auto,
+    Manual {
+        steps: u32,
+    },
 }
 
 impl Clock {
-    pub(crate) fn metronome(&self, bench: bool) -> Option<Metronome> {
+    pub(crate) const HZ: u32 = 64_000;
+    pub(crate) const STEPS: u32 = 256;
+
+    pub(crate) fn metronome(&self) -> Option<Metronome> {
         match self {
-            Clock::Auto { hz, steps } => {
-                if bench {
-                    None
-                } else {
-                    Some(Metronome::new(*hz, *steps))
-                }
-            }
+            Clock::Auto => Some(Metronome::new(Self::HZ, Self::STEPS)),
             Clock::Manual { .. } => None,
         }
     }
-}
 
-impl Default for Clock {
-    fn default() -> Self {
-        Clock::Auto {
-            hz: 64_000,
-            steps: 1_000,
+    pub(crate) fn steps(&self) -> u32 {
+        match self {
+            Clock::Auto => Self::STEPS,
+            Clock::Manual { steps } => *steps,
         }
     }
 }

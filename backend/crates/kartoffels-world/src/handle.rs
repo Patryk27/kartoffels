@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClockSpeed, Dir, Map, Snapshot};
+use crate::{BotId, ClockSpeed, Dir, Map, Object, Snapshot};
 use ahash::HashSet;
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
@@ -127,6 +127,10 @@ impl Handle {
         self.send(Request::SetMap { map, tx }).await?;
 
         rx.await.context(Self::ERR)
+    }
+
+    pub async fn put_object(&self, _pos: IVec2, _obj: Object) -> Result<()> {
+        todo!();
     }
 
     pub async fn set_spawn(

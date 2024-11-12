@@ -1,5 +1,5 @@
 use super::{Corridor, CorridorDir};
-use crate::{Map, TileBase};
+use crate::{Map, TileKind};
 use glam::{ivec2, IVec2};
 use std::cmp;
 
@@ -14,11 +14,11 @@ impl Room {
         for y in self.min.y..=self.max.y {
             for x in self.min.x..=self.max.x {
                 let tile = if x == self.min.x || x == self.max.x {
-                    TileBase::WALL_V
+                    TileKind::WALL_V
                 } else if y == self.min.y || y == self.max.y {
-                    TileBase::WALL_H
+                    TileKind::WALL_H
                 } else {
-                    TileBase::FLOOR
+                    TileKind::FLOOR
                 };
 
                 map.set(ivec2(x, y), tile);

@@ -1,11 +1,11 @@
+use super::BotAction;
 use crate::{AliveBot, BotMmioContext};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotArm {
-    pub cooldown: u32,
-    pub is_stabbing: bool,
+    cooldown: u32,
 }
 
 impl BotArm {
@@ -29,9 +29,35 @@ impl BotArm {
     ) -> Result<(), ()> {
         match addr {
             AliveBot::MEM_ARM => {
-                if self.cooldown == 0 && val > 0 {
-                    self.is_stabbing = true;
-                    self.cooldown = ctxt.cooldown(60_000, 15);
+                if self.cooldown == 0 {
+                    match val.to_be_bytes() {
+                        [0, 0, 0, 1] => {
+                            *ctxt.action = Some(BotAction::ArmStab {
+                                at: ctxt.pos + *ctxt.dir,
+                            });
+
+                            self.cooldown = ctxt.cooldown(60_000, 15);
+                        }
+
+                        [0, 0, 0, 2] => {
+                            *ctxt.action = Some(BotAction::ArmPick {
+                                at: ctxt.pos + *ctxt.dir,
+                            });
+
+                            self.cooldown = ctxt.cooldown(60_000, 15);
+                        }
+
+                        [0, 0, idx, 3] => {
+                            *ctxt.action = Some(BotAction::ArmDrop {
+                                at: ctxt.pos + *ctxt.dir,
+                                idx,
+                            });
+
+                            self.cooldown = ctxt.cooldown(60_000, 15);
+                        }
+
+                        _ => (),
+                    }
                 }
 
                 Ok(())

@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
 pub struct BotTimer {
-    pub seed: u32,
-    pub ticks: u32, // TOOD overflows after ~18h
+    seed: u32,
+    ticks: u32, // TOOD overflows after ~18h
 }
 
 impl BotTimer {
@@ -23,7 +23,7 @@ impl BotTimer {
 
     pub fn age(&self, clock: &Clock) -> u32 {
         match clock {
-            Clock::Auto { hz, .. } => self.ticks / hz,
+            Clock::Auto => self.ticks / Clock::HZ,
             Clock::Manual { steps } => self.ticks / steps,
         }
     }

@@ -8,7 +8,7 @@ use kartoffels_bots::DUMMY;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileBase,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileKind,
 };
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -109,7 +109,7 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
         .set_map({
             let mut map = Map::new(SIZE);
 
-            map.set(TIMMY_POS, TileBase::FLOOR);
+            map.set(TIMMY_POS, TileKind::FLOOR);
             map
         })
         .await?;
@@ -154,23 +154,23 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     let mut rng = ChaCha8Rng::from_seed(seed);
 
     // Draw top border
-    map.line(ivec2(0, 0), ivec2(AREA.x as i32 - 1, 0), TileBase::WALL_H);
+    map.line(ivec2(0, 0), ivec2(AREA.x as i32 - 1, 0), TileKind::WALL_H);
 
     // Draw left border
-    map.line(ivec2(0, 1), ivec2(0, AREA.y as i32 - 2), TileBase::WALL_V);
+    map.line(ivec2(0, 1), ivec2(0, AREA.y as i32 - 2), TileKind::WALL_V);
 
     // Draw bottom border
     map.line(
         ivec2(0, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
-        TileBase::WALL_H,
+        TileKind::WALL_H,
     );
 
     // Draw right border
     map.line(
         ivec2(AREA.x as i32 - 1, 1),
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
-        TileBase::WALL_V,
+        TileKind::WALL_V,
     );
 
     // ---
@@ -191,11 +191,11 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
         let dst_pos = mid_pos + dir;
 
         if map.get(src_pos).is_void() {
-            map.get_mut(src_pos).base = TileBase::FLOOR;
-            map.set_if_void(src_pos - ivec2(1, 0), TileBase::WALL_V);
-            map.set_if_void(src_pos + ivec2(1, 0), TileBase::WALL_V);
-            map.set_if_void(src_pos - ivec2(0, 1), TileBase::WALL_H);
-            map.set_if_void(src_pos + ivec2(0, 1), TileBase::WALL_H);
+            map.get_mut(src_pos).kind = TileKind::FLOOR;
+            map.set_if_void(src_pos - ivec2(1, 0), TileKind::WALL_V);
+            map.set_if_void(src_pos + ivec2(1, 0), TileKind::WALL_V);
+            map.set_if_void(src_pos - ivec2(0, 1), TileKind::WALL_H);
+            map.set_if_void(src_pos + ivec2(0, 1), TileKind::WALL_H);
         }
 
         if dst_pos.x >= 0
@@ -205,17 +205,17 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
             && map.get(dst_pos).meta[0] == NOT_VISITED
         {
             map.get_mut(dst_pos).meta[0] = VISITED;
-            map.set(mid_pos, TileBase::FLOOR);
+            map.set(mid_pos, TileKind::FLOOR);
 
             match dir {
                 Dir::N | Dir::S => {
-                    map.set(mid_pos - ivec2(1, 0), TileBase::WALL_V);
-                    map.set(mid_pos + ivec2(1, 0), TileBase::WALL_V);
+                    map.set(mid_pos - ivec2(1, 0), TileKind::WALL_V);
+                    map.set(mid_pos + ivec2(1, 0), TileKind::WALL_V);
                 }
 
                 Dir::E | Dir::W => {
-                    map.set(mid_pos - ivec2(0, 1), TileBase::WALL_H);
-                    map.set(mid_pos + ivec2(0, 1), TileBase::WALL_H);
+                    map.set(mid_pos - ivec2(0, 1), TileKind::WALL_H);
+                    map.set(mid_pos + ivec2(0, 1), TileKind::WALL_H);
                 }
             }
 
@@ -241,25 +241,25 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 2),
-        TileBase::FLOOR,
+        TileKind::FLOOR,
     );
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
-        TileBase::WALL_H,
+        TileKind::WALL_H,
     );
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
-        TileBase::WALL_H,
+        TileKind::WALL_H,
     );
 
     map.line(
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
-        TileBase::WALL_V,
+        TileKind::WALL_V,
     );
 
     map

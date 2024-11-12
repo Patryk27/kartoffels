@@ -1,11 +1,11 @@
-use crate::{AliveBot, BotMmioContext, TileBase};
+use crate::{AliveBot, BotMmioContext, TileKind};
 use glam::{ivec2, IVec2};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotRadar {
-    pub scan: Vec<u32>,
-    pub cooldown: u32,
+    scan: Vec<u32>,
+    cooldown: u32,
 }
 
 impl BotRadar {
@@ -65,11 +65,11 @@ impl BotRadar {
                 if let Some(bot_id) = ctxt.bots.at(pos) {
                     let bot_id = bot_id.get().get();
 
-                    out_d0 = TileBase::BOT as u32;
+                    out_d0 = TileKind::BOT as u32;
                     out_d1 = (bot_id >> 32) as u32;
                     out_d2 = bot_id as u32;
                 } else {
-                    out_d0 = ctxt.map.get(pos).base as u32;
+                    out_d0 = ctxt.map.get(pos).kind as u32;
                     out_d1 = 0;
                     out_d2 = 0;
                 }
@@ -318,9 +318,9 @@ mod tests {
         let map = {
             let mut map = Map::new(uvec2(7, 7));
 
-            map.rect(ivec2(0, 0), ivec2(6, 6), TileBase::FLOOR);
-            map.set(ivec2(3, 1), TileBase::FLAG);
-            map.set(ivec2(3, 2), TileBase::BOT);
+            map.rect(ivec2(0, 0), ivec2(6, 6), TileKind::FLOOR);
+            map.set(ivec2(3, 1), TileKind::FLAG);
+            map.set(ivec2(3, 2), TileKind::BOT);
             map
         };
 
@@ -343,6 +343,7 @@ mod tests {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
         let mut ctxt = BotMmioContext {
+            action: &mut None,
             bots: &bots,
             dir: &mut case.dir,
             map: &map,

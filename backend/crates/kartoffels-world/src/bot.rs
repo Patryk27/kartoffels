@@ -1,30 +1,31 @@
+mod action;
 mod arm;
 mod battery;
 mod events;
 mod id;
+mod inventory;
 mod mmio;
 mod motor;
 mod radar;
 mod serial;
-mod tick;
 mod timer;
 
+pub use self::action::*;
 pub use self::arm::*;
 pub use self::battery::*;
 pub use self::events::*;
 pub use self::id::*;
+pub use self::inventory::*;
 pub use self::mmio::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
-pub use self::tick::*;
 pub use self::timer::*;
 use crate::{AliveBotsLocator, Dir, Map};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::mem;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -35,6 +36,7 @@ pub struct AliveBot {
     pub dir: Dir,
     pub events: BotEvents,
     pub fw: Firmware,
+    pub inventory: BotInventory,
     pub motor: BotMotor,
     pub oneshot: bool,
     pub pos: IVec2,
@@ -67,6 +69,7 @@ impl AliveBot {
             dir,
             events: bot.events,
             fw: bot.fw,
+            inventory: Default::default(),
             motor: Default::default(),
             oneshot: bot.oneshot,
             pos,
@@ -85,7 +88,9 @@ impl AliveBot {
         rng: &mut impl RngCore,
         map: &Map,
         bots: &AliveBotsLocator,
-    ) -> Result<AliveBotTick, String> {
+    ) -> Result<Option<BotAction>, Box<str>> {
+        let mut action = None;
+
         self.timer.tick();
         self.serial.tick();
         self.arm.tick();
@@ -100,6 +105,7 @@ impl AliveBot {
             arm: &mut self.arm,
             radar: &mut self.radar,
             ctxt: BotMmioContext {
+                action: &mut action,
                 bots,
                 dir: &mut self.dir,
                 map,
@@ -108,25 +114,7 @@ impl AliveBot {
             },
         })?;
 
-        // ---
-
-        let stab_dir = if mem::take(&mut self.arm.is_stabbing) {
-            Some(self.dir)
-        } else {
-            None
-        };
-
-        let move_dir = if mem::take(&mut self.motor.vel) == 1 {
-            Some(self.dir)
-        } else {
-            None
-        };
-
-        Ok(AliveBotTick {
-            pos: self.pos,
-            stab_dir,
-            move_dir,
-        })
+        Ok(action)
     }
 }
 

@@ -8,6 +8,7 @@ extern crate alloc;
 mod allocator;
 mod arm;
 mod battery;
+mod inventory;
 mod motor;
 mod panic;
 mod radar;
@@ -16,6 +17,7 @@ mod timer;
 
 pub use self::arm::*;
 pub use self::battery::*;
+pub use self::inventory::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;

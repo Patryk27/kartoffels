@@ -15,7 +15,7 @@ macro_rules! bots {
 
 bots!([
     static CHL_ACYCLIC_MAZE = "chl-acyclic-maze";
-    static CHL_HOSTAGE_SITUATION_GUARD = "chl-hostage-situation-guard";
+    static CHL_DIAMOND_HEIST_GUARD = "chl-diamond-heist-guard";
     static DUMMY = "dummy";
     static ROBERTO = "roberto";
     static TUT_01 = "tut-01";

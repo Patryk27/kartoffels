@@ -4,7 +4,7 @@ use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
 use kartoffels_world::prelude::{
-    Config, Dir, Handle, Map, Policy, Theme, TileBase,
+    Config, Dir, Handle, Map, Policy, Theme, TileKind,
 };
 use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -133,7 +133,7 @@ async fn create_map_ex(
             if nth % 64 == 0 {
                 let map = map.clone().map(|_, tile| {
                     if tile.meta[0] == NOT_VISITED {
-                        TileBase::VOID.into()
+                        TileKind::VOID.into()
                     } else {
                         tile
                     }

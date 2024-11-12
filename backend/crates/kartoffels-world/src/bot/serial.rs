@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotSerial {
-    pub buffer: VecDeque<u32>,
+    buffer: VecDeque<u32>,
 }
 
 impl BotSerial {
@@ -12,6 +12,10 @@ impl BotSerial {
 
     pub fn tick(&mut self) {
         // no-op
+    }
+
+    pub fn buffer(&self) -> &VecDeque<u32> {
+        &self.buffer
     }
 
     pub fn mmio_load(&self, _addr: u32) -> Result<u32, ()> {
