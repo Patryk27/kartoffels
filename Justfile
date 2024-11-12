@@ -46,6 +46,17 @@ test:
 bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
 
+perf:
+    cd backend \
+    && cargo build --release \
+    && perf record --call-graph dwarf \
+           ./target/release/kartoffels \
+               serve \
+               ../data \
+               --debug \
+               --bench \
+               --ssh 127.0.0.1:1314
+
 # ---
 
 start-demo:
