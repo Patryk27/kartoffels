@@ -11,7 +11,9 @@ use itertools::Either;
 use kartoffels_store::Store;
 use rand::rngs::OsRng;
 use russh::server::{Config, Server as _};
+use russh::{compression, Preferred};
 use russh_keys::key::KeyPair;
+use std::borrow::Cow;
 use std::pin::pin;
 use std::sync::Arc;
 use std::time::Duration;
@@ -34,6 +36,13 @@ pub async fn start(
         auth_banner: Some("kartoffels"),
         auth_rejection_time: Duration::from_secs(3),
         auth_rejection_time_initial: Some(Duration::from_secs(0)),
+        preferred: Preferred {
+            compression: Cow::Owned(vec![
+                compression::ZLIB,
+                compression::ZLIB_LEGACY,
+            ]),
+            ..Default::default()
+        },
         keys: vec![key],
         ..Default::default()
     });
