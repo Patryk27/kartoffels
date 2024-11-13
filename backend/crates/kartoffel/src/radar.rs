@@ -37,7 +37,7 @@ pub fn radar_wait() {
 ///
 /// let scan = radar_scan_3x3();
 ///
-/// if scan.tile_at(0, -1) == '@' && is_arm_ready() {
+/// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -63,7 +63,7 @@ pub fn radar_scan_3x3() -> RadarScan<3> {
 ///
 /// let scan = radar_scan_5x5();
 ///
-/// if scan.tile_at(0, -1) == '@' && is_arm_ready() {
+/// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -89,7 +89,7 @@ pub fn radar_scan_5x5() -> RadarScan<5> {
 ///
 /// let scan = radar_scan_7x7();
 ///
-/// if scan.tile_at(0, -1) == '@' && is_arm_ready() {
+/// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -115,7 +115,7 @@ pub fn radar_scan_7x7() -> RadarScan<7> {
 ///
 /// let scan = radar_scan_9x9();
 ///
-/// if scan.tile_at(0, -1) == '@' && is_arm_ready() {
+/// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -135,84 +135,63 @@ fn radar_scan<const R: usize>() -> RadarScan<R> {
 ///
 /// # Coordinate system
 ///
-/// [`Self::tile_at()`] and [`Self::bot_at()`] work in bot-centric coordinate
+/// [`Self::at()`] and [`Self::bot_at()`] work in bot-centric coordinate
 /// system, that is:
 ///
-/// - `tile_at(0, 0)` returns the bot itself (`'@'`),
-/// - `tile_at(-1, 0)` returns tile to the left of the bot,
-/// - `tile_at(1, 0)` returns tile to the right of the bot,
-/// - `tile_at(0, -1)` returns tile in the front of the bot,
-/// - `tile_at(0, 1)` returns tile in the back of the bot,
+/// - `.at(0, 0)` returns the bot itself (`'@'`),
+/// - `.at(-1, 0)` returns tile to the left of the bot,
+/// - `.at(1, 0)` returns tile to the right of the bot,
+/// - `.at(0, -1)` returns tile in the front of the bot,
+/// - `.at(0, 1)` returns tile in the back of the bot,
 /// - etc.
 ///
-/// This also means that the 3x3 scan allows you to access `tile_at(-1..=1)`,
-/// 5x5 yields `tile_at(-2..=2)` etc.
+/// This also means that the 3x3 scan allows you to access `at(-1..=1)`, 5x5
+/// yields `at(-2..=2)` etc.
 ///
-/// The same rules apply to [`Self::bot_at()`].
+/// The same applies to [`Self::bot_at()`].
 ///
 /// # Lazyness
 ///
 /// For performance reasons, this structure doesn't copy the scanned area into
 /// your robot's RAM - rather, the data is kept inside the radar's memory and
-/// transparently accessed each time you call [`Self::tile_at()`] etc.
+/// transparently accessed each time you call [`Self::at()`] etc.
 ///
-/// This doesn't have any negative impact on performance, but this does mean
-/// that consecutive scans *overwrite* previous results, like:
-///
-/// ```no_run
-/// # use kartoffel::*;
-/// #
-/// let scan1 = {
-///     radar_wait();
-///     radar_scan_3x3()
-/// };
-///
-/// let scan2 = {
-///     radar_wait();
-///     radar_scan_5x5()
-/// };
-///
-/// // whoopsie, scan1 will return bogus data here!
-/// ```
-///
-/// ... or:
+/// In practice, this means that consecutive scans *overwrite* previous results,
+/// like:
 ///
 /// ```no_run
 /// # use kartoffel::*;
 /// #
-/// let scan1 = {
-///     radar_wait();
-///     radar_scan_3x3()
-/// };
+/// radar_wait();
+///
+/// let scan1 = radar_scan_5x5();
 ///
 /// motor_wait();
 /// motor_step();
+/// radar_wait();
 ///
-/// let scan2 = {
-///     radar_wait();
-///     radar_scan_3x3()
-/// };
+/// let scan2 = radar_scan_5x5();
 ///
 /// // whoopsie, scan1 will return the same data as scan2!
 /// // (i.e. it will return the newest scan)
 /// ```
 ///
-/// If you need to preserve an older scan, you should call [`Self::tile_at()`]
-/// etc. and save all the information you need elsewhere.
+/// If you need to preserve an older scan, you should call [`Self::at()`] etc.
+/// and store all the information you need elsewhere.
 #[derive(Debug)]
 pub struct RadarScan<const R: usize> {
     _priv: (),
 }
 
 impl<const R: usize> RadarScan<R> {
-    /// Returns tile visible at given coordinates.
+    /// Returns what's visible at given coordinates.
     ///
     /// # Coordinate system
     ///
-    /// This function uses bot-centric coordinates, i.e. `tile_at(0, -1)` points
-    /// at the tile right in front of your bot - see [`RadarScan`] for details.
+    /// This function uses bot-centric coordinates, i.e. `at(0, -1)` points at
+    /// the tile right in front of you - see [`RadarScan`] for details.
     #[inline(always)]
-    pub fn tile_at(&self, dx: i8, dy: i8) -> char {
+    pub fn at(&self, dx: i8, dy: i8) -> char {
         self.get_ex(dx, dy, 0) as u8 as char
     }
 
@@ -226,7 +205,7 @@ impl<const R: usize> RadarScan<R> {
     /// # Coordinate system
     ///
     /// This function uses bot-centric coordinates, i.e. `bot_at(0, -1)` points
-    /// at the bot right in front of your bot - see [`RadarScan`] for details.
+    /// at the bot right in front of you - see [`RadarScan`] for details.
     #[inline(always)]
     pub fn bot_at(&self, dx: i8, dy: i8) -> Option<NonZeroU64> {
         let d1 = self.get_d1(dx, dy) as u64;

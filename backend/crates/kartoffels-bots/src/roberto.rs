@@ -23,7 +23,7 @@ fn main() {
         };
 
         // If there's an enemy right in front of us, attack, attack, attack!
-        if scan.tile_at(0, -1) == '@' {
+        if scan.at(0, -1) == '@' {
             display.log('!');
             arm_wait();
             arm_stab();
@@ -31,7 +31,7 @@ fn main() {
         }
 
         // If there's an enemy somewhere in front of us, move forward
-        if scan.tile_at(0, -1) == '.' && got_enemy_in(&scan, -2..=2, -2..=1) {
+        if scan.at(0, -1) == '.' && got_enemy_in(&scan, -2..=2, -2..=1) {
             display.log('^');
             motor_wait();
             motor_step();
@@ -65,7 +65,7 @@ fn main() {
 
         // If the direction we're moving towards will cause us to fall outside
         // the map, change direction
-        if timer_ticks() < sample_dir_at && scan.tile_at(0, -1) != '.' {
+        if timer_ticks() < sample_dir_at && scan.at(0, -1) != '.' {
             sample_dir_at = 0;
         }
 
@@ -77,25 +77,25 @@ fn main() {
 
             let can_step = loop {
                 match rng.u32() % 4 {
-                    0 if scan.tile_at(-1, 0) == '.' => {
+                    0 if scan.at(-1, 0) == '.' => {
                         motor_wait();
                         motor_turn_left();
 
                         break true;
                     }
 
-                    1 if scan.tile_at(0, -1) == '.' => {
+                    1 if scan.at(0, -1) == '.' => {
                         break true;
                     }
 
-                    2 if scan.tile_at(1, 0) == '.' => {
+                    2 if scan.at(1, 0) == '.' => {
                         motor_wait();
                         motor_turn_right();
 
                         break true;
                     }
 
-                    3 if scan.tile_at(0, 1) == '.' => {
+                    3 if scan.at(0, 1) == '.' => {
                         motor_wait();
                         motor_turn(if rng.bool() { -1 } else { 1 });
 
@@ -123,7 +123,7 @@ fn got_enemy_in<const D: usize>(
 ) -> bool {
     for x in xs {
         for y in ys.clone() {
-            if scan.tile_at(x, y) == '@' {
+            if scan.at(x, y) == '@' {
                 return true;
             }
         }

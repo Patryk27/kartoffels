@@ -14,13 +14,13 @@ fn main() {
             radar_scan_3x3()
         };
 
-        if scan.tile_at(0, -1) == '@' {
+        if scan.at(0, -1) == '@' {
             arm_stab();
             break;
         }
 
-        if scan.tile_at(0, -1) == '.' {
-            if scan.tile_at(1, -1) == '-' || scan.tile_at(1, -1) == '|' {
+        if scan.at(0, -1) == '.' {
+            if scan.at(1, -1) == '-' || scan.at(1, -1) == '|' {
                 motor_wait();
                 motor_step();
             } else {

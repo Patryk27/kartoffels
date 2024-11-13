@@ -1,4 +1,5 @@
 
+
         âââââââââââââââââââââââââââââ help âââââââââââââââââââââââââââââ
         â a line following robot does what its name says - it uses     â
         â radar to check where to go next and then goes there, like:   â
@@ -21,10 +22,9 @@
         â                                                              â
         â ... and serial_write() might come handy for debugging!       â
         â                                                              â
-        â also, feel free to consult scan.tile_at()'s documentation to â
-        â see example usage of the radar                               â
-        â                                                              â
         â                                                  [esc] close â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
+
                                                        [u] upload-bot
 [esc] go-back  [spc] pause  [h] help

@@ -29,7 +29,7 @@ fn main() {
             continue;
         }
 
-        match scan.tile_at(0, -1) {
+        match scan.at(0, -1) {
             '.' => {
                 motor_wait();
                 motor_step();

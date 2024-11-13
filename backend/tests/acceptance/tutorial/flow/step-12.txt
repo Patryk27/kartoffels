@@ -13,10 +13,10 @@
     ....â your bot, allowing you to see tiles and other bots:          â
     ....â                                                              â
     ....â     let scan = radar_scan_3x3();                             â
-    ....â     let tile_in_front = scan.tile_at(0, -1);                 â
-    ....â     let tile_in_back = scan.tile_at(0, 1);                   â
-    ....â     let tile_to_left = scan.tile_at(-1, 0);                  â
-    ....â     let tile_to_right = scan.tile_at(1, 0);                  â
+    ....â     let tile_in_front = scan.at(0, -1);                      â
+    ....â     let tile_in_back = scan.at(0, 1);                        â
+    ....â     let tile_to_left = scan.at(-1, 0);                       â
+    ....â     let tile_to_right = scan.at(1, 0);                       â
      ...â                                                              â
      ...â     if tile_in_front == '.' {                                â
       ..â         // do something                                      â

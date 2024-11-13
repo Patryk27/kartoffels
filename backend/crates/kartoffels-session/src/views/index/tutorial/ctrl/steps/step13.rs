@@ -19,19 +19,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
-
-    body: DOCS
-        .clone()
-        .into_iter()
-        .chain([
-            MsgLine::new(""),
-            MsgLine::new(
-                "also, feel free to consult `scan.tile_at()`'s documentation \
-                 to see example usage of the radar",
-            ),
-        ])
-        .collect(),
-
+    body: DOCS.clone(),
     buttons: vec![HelpMsgResponse::close()],
 });
 

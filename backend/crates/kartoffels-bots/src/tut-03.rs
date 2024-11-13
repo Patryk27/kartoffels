@@ -11,13 +11,13 @@ fn main() {
 
         let scan = radar_scan_3x3();
 
-        if scan.tile_at(0, -1) == '.' {
+        if scan.at(0, -1) == '.' {
             motor_wait();
             motor_step();
-        } else if scan.tile_at(-1, 0) == '.' {
+        } else if scan.at(-1, 0) == '.' {
             motor_wait();
             motor_turn_left();
-        } else if scan.tile_at(1, 0) == '.' {
+        } else if scan.at(1, 0) == '.' {
             motor_wait();
             motor_turn_right();
         }
