@@ -169,7 +169,7 @@ impl GameCtrlEvent {
 
                 state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
-                state.camera.set_at(state.snapshot.map().center());
+                state.camera.set_at(state.snapshot.raw_map().center());
                 state.handle = Some(handle);
                 state.bot = None;
             }

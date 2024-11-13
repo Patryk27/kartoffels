@@ -13,19 +13,19 @@ use std::sync::Arc;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Snapshot {
+    raw_map: Map,
     map: Map,
-    display: Map,
     bots: SnapshotBots,
     version: u64,
 }
 
 impl Snapshot {
-    pub fn map(&self) -> &Map {
-        &self.map
+    pub fn raw_map(&self) -> &Map {
+        &self.raw_map
     }
 
-    pub fn display(&self) -> &Map {
-        &self.display
+    pub fn map(&self) -> &Map {
+        &self.map
     }
 
     pub fn bots(&self) -> &SnapshotBots {
@@ -42,7 +42,7 @@ impl fmt::Display for Snapshot {
         writeln!(f, "# map")?;
         writeln!(f)?;
         writeln!(f, "```")?;
-        writeln!(f, "{}", self.display)?;
+        writeln!(f, "{}", self.map)?;
         writeln!(f, "```")?;
 
         if !self.bots.is_empty() {

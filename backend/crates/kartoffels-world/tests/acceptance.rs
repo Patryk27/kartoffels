@@ -77,13 +77,13 @@ async fn pause_and_resume() {
 
     // ---
 
-    assert_ne!(snap1.display(), snap2.display());
+    assert_ne!(snap1.map(), snap2.map());
     assert_ne!(snap1.bots(), snap2.bots());
 
-    assert_eq!(snap2.display(), snap3.display());
+    assert_eq!(snap2.map(), snap3.map());
     assert_eq!(snap2.bots(), snap3.bots());
 
-    assert_ne!(snap3.display(), snap4.display());
+    assert_ne!(snap3.map(), snap4.map());
     assert_ne!(snap3.bots(), snap4.bots());
 }
 
@@ -175,27 +175,27 @@ async fn destroy_bot() {
 async fn set_map() {
     let world = kartoffels_world::create(config());
 
-    assert_eq!(uvec2(0, 0), world.snapshot().await.map().size());
+    assert_eq!(uvec2(0, 0), world.snapshot().await.raw_map().size());
 
     // ---
 
     world.tick().await.unwrap();
 
-    assert_eq!(uvec2(25, 25), world.snapshot().await.map().size());
+    assert_eq!(uvec2(25, 25), world.snapshot().await.raw_map().size());
 
     // ---
 
     world.set_map(Map::new(uvec2(11, 22))).await.unwrap();
     world.tick().await.unwrap();
 
-    assert_eq!(uvec2(11, 22), world.snapshot().await.map().size());
+    assert_eq!(uvec2(11, 22), world.snapshot().await.raw_map().size());
 
     // ---
 
     world.set_map(Map::new(uvec2(22, 11))).await.unwrap();
     world.tick().await.unwrap();
 
-    assert_eq!(uvec2(22, 11), world.snapshot().await.map().size());
+    assert_eq!(uvec2(22, 11), world.snapshot().await.raw_map().size());
 }
 
 #[tokio::test]

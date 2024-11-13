@@ -158,7 +158,7 @@ impl State {
             }
 
             if let Some(pos) = cursor_world {
-                *cursor_valid = self.snapshot.map().get(*pos).is_floor();
+                *cursor_valid = self.snapshot.raw_map().get(*pos).is_floor();
 
                 if ui.mouse_pressed() && *cursor_valid {
                     ui.throw(Event::CreateBot {
@@ -218,8 +218,8 @@ impl State {
     fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
         // If map size's changed, recenter the camera - this comes handy for
         // controllers which call `world.set_map()`, e.g. the tutorial
-        if snapshot.map().size() != self.snapshot.map().size() {
-            self.camera.set_at(snapshot.map().center());
+        if snapshot.raw_map().size() != self.snapshot.raw_map().size() {
+            self.camera.set_at(snapshot.raw_map().center());
         }
 
         self.snapshot = snapshot;
