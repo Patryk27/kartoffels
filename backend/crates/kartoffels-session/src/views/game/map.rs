@@ -2,7 +2,7 @@ use super::{Event, Mode, State};
 use crate::BotIdExt;
 use glam::ivec2;
 use kartoffels_ui::{theme, Ui};
-use kartoffels_world::prelude::{Dir, Tile, TileKind};
+use kartoffels_world::prelude::{Dir, ObjectKind, Tile, TileKind};
 use ratatui::layout::Rect;
 use std::time::Instant;
 use termwiz::input::{KeyCode, Modifiers};
@@ -130,6 +130,12 @@ impl Map {
             TileKind::WALL_V => {
                 ch = '|';
                 fg = theme::GRAY;
+                bg = theme::BG;
+            }
+
+            ObjectKind::GEM => {
+                ch = '*';
+                fg = theme::BLUE;
                 bg = theme::BG;
             }
 

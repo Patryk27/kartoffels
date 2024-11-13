@@ -129,10 +129,6 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn put_object(&self, _pos: IVec2, _obj: Object) -> Result<()> {
-        todo!();
-    }
-
     pub async fn set_spawn(
         &self,
         point: impl Into<Option<IVec2>>,
@@ -143,6 +139,23 @@ impl Handle {
         self.send(Request::SetSpawn {
             point: point.into(),
             dir: dir.into(),
+            tx,
+        })
+        .await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn put_object(
+        &self,
+        pos: IVec2,
+        obj: impl Into<Object>,
+    ) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::PutObject {
+            pos,
+            obj: obj.into(),
             tx,
         })
         .await?;
@@ -242,6 +255,14 @@ pub enum Request {
     SetSpawn {
         point: Option<IVec2>,
         dir: Option<Dir>,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
+    PutObject {
+        pos: IVec2,
+        obj: Object,
 
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,

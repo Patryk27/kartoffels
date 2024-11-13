@@ -12,12 +12,16 @@ impl Objects {
         self.objects.insert(pos, obj.into());
     }
 
-    // pub fn get(&self, pos: IVec2) -> Option<Object> {
-    //     self.objects.get(&pos).copied()
-    // }
+    pub fn get(&self, pos: IVec2) -> Option<Object> {
+        self.objects.get(&pos).copied()
+    }
 
     pub fn take(&mut self, pos: IVec2) -> Option<Object> {
         self.objects.remove(&pos)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (IVec2, Object)> + '_ {
+        self.objects.iter().map(|(pos, obj)| (*pos, *obj))
     }
 }
 
@@ -75,5 +79,6 @@ impl<'de> Deserialize<'de> for Object {
 pub struct ObjectKind;
 
 impl ObjectKind {
-    pub const DIAMOND: u8 = b'^';
+    pub const FLAG: u8 = b'=';
+    pub const GEM: u8 = b'*';
 }

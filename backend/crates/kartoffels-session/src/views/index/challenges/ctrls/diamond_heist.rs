@@ -7,7 +7,8 @@ use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileKind,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, ObjectKind, Policy,
+    TileKind,
 };
 use std::sync::LazyLock;
 use tracing::debug;
@@ -89,6 +90,7 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, Vec<BotId>)> {
 
     world.set_map(map).await?;
     world.set_spawn(anchors.get('a'), Dir::E).await?;
+    world.put_object(anchors.get('b'), ObjectKind::GEM).await?;
 
     let guards = [
         (anchors.get('c'), Dir::N),

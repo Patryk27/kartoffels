@@ -88,6 +88,12 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(());
             }
 
+            Ok(Request::PutObject { pos, obj, tx }) => {
+                world.objects.put(pos, obj);
+
+                _ = tx.send(());
+            }
+
             Ok(Request::Overclock { speed, tx }) => {
                 if let Some(metronome) = &mut world.metronome {
                     metronome.overclock(speed);
