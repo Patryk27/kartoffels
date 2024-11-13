@@ -13,7 +13,7 @@ pub struct GameCtrl {
 }
 
 impl GameCtrl {
-    const ERR: &'static str = "lost connection to the game";
+    const ERR: &'static str = "game has crashed";
 
     pub(super) fn new() -> (Self, GameCtrlRx) {
         let (tx, rx) = mpsc::channel(4);

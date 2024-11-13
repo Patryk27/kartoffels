@@ -36,7 +36,8 @@ pub mod prelude {
     pub use crate::policy::Policy;
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
-        SnapshotQueuedBot, SnapshotQueuedBots,
+        SnapshotDeadBot, SnapshotDeadBots, SnapshotQueuedBot,
+        SnapshotQueuedBots,
     };
     pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;

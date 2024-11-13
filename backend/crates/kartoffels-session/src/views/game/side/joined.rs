@@ -1,12 +1,12 @@
 use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
-use itertools::Either;
 use kartoffels_ui::{theme, Button, RectExt, Render, Ui};
-use kartoffels_world::prelude::{SnapshotAliveBot, SnapshotQueuedBot};
+use kartoffels_world::prelude::{
+    SnapshotAliveBot, SnapshotDeadBot, SnapshotQueuedBot,
+};
 use ordinal::Ordinal;
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
-use ratatui::text::Line;
 use std::collections::VecDeque;
 use termwiz::input::KeyCode;
 
@@ -20,87 +20,104 @@ impl JoinedSidePanel {
         ui.space(1);
 
         let footer_height = if state.perms.hero_mode {
-            1
-        } else if state.perms.can_user_manage_bots {
-            4
-        } else {
             2
+        } else if state.perms.can_user_manage_bots {
+            5
+        } else {
+            3
         };
 
-        match state.snapshot.bots().by_id(bot.id) {
-            Some(Either::Left(bot)) => {
-                Self::render_alive_bot(ui, bot, footer_height);
-            }
-            Some(Either::Right(bot)) => {
-                Self::render_queued_bot(ui, bot);
-            }
-            None => (),
-        }
-
-        ui.clamp(ui.area.footer(footer_height), |ui| {
-            Self::render_footer(ui, state, bot)
-        });
-    }
-
-    fn render_alive_bot(
-        ui: &mut Ui<Event>,
-        bot: &SnapshotAliveBot,
-        footer_height: u16,
-    ) {
-        ui.line("status".underlined());
-        ui.line(Line::from_iter([
-            "alive ".fg(theme::GREEN),
-            format!("({}s)", bot.age).into(),
-        ]));
-        ui.line(format!("> pos: {}", bot.pos).fg(theme::GRAY));
-        ui.line(format!("> dir: {}", bot.dir).fg(theme::GRAY));
-        ui.line(format!("> score: {}", bot.score).fg(theme::GRAY));
-        ui.space(1);
-
-        // ---
-
-        let area = Rect {
+        let bot_area = Rect {
             x: ui.area.x,
             y: ui.area.y,
             width: ui.area.width,
             height: ui.area.height - footer_height - 1,
         };
 
-        ui.clamp(area, |ui| {
-            ui.line("serial port".underlined());
+        ui.clamp(bot_area, |ui| {
+            if let Some(bot) = state.snapshot.bots().alive().get(bot.id) {
+                Self::render_alive_bot(ui, bot);
+                return;
+            }
 
-            let serial = render_serial(&bot.serial);
-            let serial = reflow_serial(&serial, ui.area);
+            if let Some(bot) = state.snapshot.bots().dead().get(bot.id) {
+                Self::render_dead_bot(ui, bot);
+                return;
+            }
 
-            for line in serial {
-                ui.line(line);
+            if let Some(bot) = state.snapshot.bots().queued().get(bot.id) {
+                Self::render_queued_bot(ui, bot);
             }
         });
+
+        ui.clamp(ui.area.footer(footer_height), |ui| {
+            Self::render_footer(ui, state, bot)
+        });
+    }
+
+    fn render_alive_bot(ui: &mut Ui<Event>, bot: &SnapshotAliveBot) {
+        ui.line("status".underlined());
+        ui.line("alive".fg(theme::GREEN));
+        ui.line(format!("> age: {}s", bot.age).fg(theme::GRAY));
+        ui.line(format!("> pos: {}", bot.pos).fg(theme::GRAY));
+        ui.line(format!("> dir: {}", bot.dir).fg(theme::GRAY));
+        ui.line(format!("> score: {}", bot.score).fg(theme::GRAY));
+        ui.space(1);
+
+        Self::render_bot_serial(ui, &bot.serial);
+    }
+
+    fn render_dead_bot(ui: &mut Ui<Event>, bot: &SnapshotDeadBot) {
+        ui.line("status".underlined());
+        ui.line("killed, discarded".fg(theme::RED));
+        ui.space(1);
+
+        Self::render_bot_serial(ui, &bot.serial);
     }
 
     fn render_queued_bot(ui: &mut Ui<Event>, bot: &SnapshotQueuedBot) {
         ui.line("status".underlined());
 
-        ui.row(|ui| {
-            let status = if bot.requeued {
-                "killed, requeued"
-            } else {
-                "queued"
-            };
-
-            ui.span(status.fg(theme::PINK));
-            ui.span(format!(" ({})", Ordinal(bot.place)));
+        ui.line(if bot.requeued {
+            "killed, requeued".fg(theme::PINK)
+        } else {
+            "queued".fg(theme::PINK)
         });
+
+        ui.line(format!("> place: {}", Ordinal(bot.place)).fg(theme::GRAY));
+        ui.space(1);
+
+        Self::render_bot_serial(ui, &bot.serial);
     }
 
+    fn render_bot_serial(ui: &mut Ui<Event>, serial: &VecDeque<u32>) {
+        ui.line("serial port".underlined());
+
+        let serial = render_serial(serial);
+        let serial = reflow_serial(&serial, ui.area);
+
+        for line in serial {
+            ui.line(line);
+        }
+    }
+
+    // TODO refactor
     fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         if state.perms.hero_mode {
+            Button::new(KeyCode::Char('i'), "inspect-bot")
+                .throwing(Event::InspectBot)
+                .render(ui);
+
             if state.perms.can_user_manage_bots {
                 Button::new(KeyCode::Char('D'), "delete-bot")
                     .throwing(Event::DeleteBot)
                     .render(ui);
             }
         } else {
+            Button::new(KeyCode::Char('i'), "inspect-bot")
+                .throwing(Event::InspectBot)
+                .render(ui);
+
             let follow_caption = if bot.follow {
                 "stop-following-bot"
             } else {

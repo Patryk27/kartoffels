@@ -2,7 +2,7 @@ use crate::{BotEvents, BotId, CreateBotRequest, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use kartoffels_cpu::Firmware;
 use rand::Rng;
-use tracing::info;
+use tracing::debug;
 
 pub fn run(world: &mut World, req: CreateBotRequest) -> Result<BotId> {
     let CreateBotRequest {
@@ -13,7 +13,7 @@ pub fn run(world: &mut World, req: CreateBotRequest) -> Result<BotId> {
         oneshot,
     } = req;
 
-    info!(
+    debug!(
         src = ?sha256::digest(&src[..])[0..8],
         ?pos,
         ?dir,

@@ -125,9 +125,9 @@ async fn kill_bot() {
 
     let snap = world.snapshot().await;
 
-    assert!(snap.bots().alive().by_id(bot1).is_some());
-    assert!(snap.bots().alive().by_id(bot2).is_none());
-    assert!(snap.bots().alive().by_id(bot3).is_some());
+    assert!(snap.bots().alive().get(bot1).is_some());
+    assert!(snap.bots().alive().get(bot2).is_none());
+    assert!(snap.bots().alive().get(bot3).is_some());
 }
 
 #[tokio::test]
@@ -162,13 +162,13 @@ async fn delete_bot() {
 
     // ---
 
-    assert!(snap1.bots().alive().by_id(bot1).is_some());
-    assert!(snap1.bots().alive().by_id(bot2).is_some());
-    assert!(snap1.bots().alive().by_id(bot3).is_some());
+    assert!(snap1.bots().alive().get(bot1).is_some());
+    assert!(snap1.bots().alive().get(bot2).is_some());
+    assert!(snap1.bots().alive().get(bot3).is_some());
 
-    assert!(snap2.bots().alive().by_id(bot1).is_some());
-    assert!(snap2.bots().alive().by_id(bot2).is_none());
-    assert!(snap2.bots().alive().by_id(bot3).is_some());
+    assert!(snap2.bots().alive().get(bot1).is_some());
+    assert!(snap2.bots().alive().get(bot2).is_none());
+    assert!(snap2.bots().alive().get(bot3).is_some());
 }
 
 #[tokio::test]
@@ -283,7 +283,7 @@ async fn with_auto_respawn() {
     world.kill_bot(bot, "because i say so").await.unwrap();
     world.tick().await.unwrap();
 
-    assert!(world.snapshot().await.bots().alive().by_id(bot).is_some());
+    assert!(world.snapshot().await.bots().alive().get(bot).is_some());
 }
 
 #[tokio::test]
@@ -305,7 +305,7 @@ async fn without_auto_respawn() {
     world.kill_bot(bot, "because i say so").await.unwrap();
     world.tick().await.unwrap();
 
-    assert!(world.snapshot().await.bots().alive().by_id(bot).is_none());
+    assert!(world.snapshot().await.bots().alive().get(bot).is_none());
 }
 
 #[tokio::test]

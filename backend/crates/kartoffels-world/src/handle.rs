@@ -20,7 +20,7 @@ pub struct Handle {
 }
 
 impl Handle {
-    const ERR: &'static str = "lost connection to the world";
+    const ERR: &'static str = "world has crashed";
 
     pub fn id(&self) -> Id {
         self.inner.id

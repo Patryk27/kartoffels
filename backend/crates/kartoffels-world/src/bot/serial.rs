@@ -9,7 +9,7 @@ pub struct BotSerial {
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
-    cached_arc_buffer: Option<Arc<VecDeque<u32>>>,
+    snapshot: Option<Arc<VecDeque<u32>>>,
 }
 
 impl BotSerial {
@@ -19,8 +19,8 @@ impl BotSerial {
         // no-op
     }
 
-    pub fn buffer(&mut self) -> Arc<VecDeque<u32>> {
-        self.cached_arc_buffer
+    pub fn snapshot(&mut self) -> Arc<VecDeque<u32>> {
+        self.snapshot
             .get_or_insert_with(|| Arc::new(self.buffer.clone()))
             .clone()
     }
@@ -37,7 +37,7 @@ impl BotSerial {
                 }
 
                 self.buffer.push_back(val);
-                self.cached_arc_buffer = None;
+                self.snapshot = None;
 
                 Ok(())
             }

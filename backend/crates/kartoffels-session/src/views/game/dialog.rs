@@ -1,6 +1,7 @@
 mod bots;
 mod error;
 mod help;
+mod inspect_bot;
 mod join_bot;
 mod leaving;
 mod spawn_bot;
@@ -9,6 +10,7 @@ mod upload_bot;
 pub use self::bots::*;
 pub use self::error::*;
 pub use self::help::*;
+pub use self::inspect_bot::*;
 pub use self::join_bot::*;
 pub use self::leaving::*;
 pub use self::spawn_bot::*;
@@ -24,11 +26,12 @@ pub enum Dialog {
     Bots(BotsDialog),
     Error(ErrorDialog),
     GoBack(GoBackDialog),
-    Help(HelpMsgRef),
+    InspectBot(InspectBotDialog),
     JoinBot(JoinBotDialog),
     SpawnBot(SpawnBotDialog),
     UploadBot(UploadBotDialog),
 
+    Help(HelpMsgRef),
     Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
 }
 
@@ -50,6 +53,9 @@ impl Dialog {
             }
             Dialog::GoBack(this) => {
                 this.render(ui);
+            }
+            Dialog::InspectBot(this) => {
+                this.render(ui, world);
             }
             Dialog::JoinBot(this) => {
                 this.render(ui, world);

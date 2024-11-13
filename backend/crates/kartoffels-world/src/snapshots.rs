@@ -1,10 +1,10 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, Dir, Map};
+use crate::{BotEvent, BotId, Dir, Map};
 use ahash::AHashMap;
 use glam::IVec2;
-use itertools::{Either, Itertools};
+use itertools::Itertools;
 use prettytable::{row, Table};
 use std::cmp::Reverse;
 use std::collections::VecDeque;
@@ -76,19 +76,10 @@ impl SnapshotBots {
         &self.queued
     }
 
-    pub fn by_id(
-        &self,
-        id: BotId,
-    ) -> Option<Either<&SnapshotAliveBot, &SnapshotQueuedBot>> {
-        if let Some(bot) = self.alive.by_id(id) {
-            return Some(Either::Left(bot));
-        }
-
-        if let Some(bot) = self.queued.by_id(id) {
-            return Some(Either::Right(bot));
-        }
-
-        None
+    pub fn has(&self, id: BotId) -> bool {
+        self.alive.get(id).is_some()
+            || self.dead.get(id).is_some()
+            || self.queued.get(id).is_some()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -116,12 +107,24 @@ pub struct SnapshotAliveBots {
 }
 
 impl SnapshotAliveBots {
-    pub fn by_id(&self, id: BotId) -> Option<&SnapshotAliveBot> {
-        self.by_idx(*self.id_to_idx.get(&id)?)
+    pub fn get(&self, id: BotId) -> Option<&SnapshotAliveBot> {
+        self.get_by_idx(*self.id_to_idx.get(&id)?)
     }
 
-    pub fn by_idx(&self, idx: u8) -> Option<&SnapshotAliveBot> {
+    pub fn get_by_idx(&self, idx: u8) -> Option<&SnapshotAliveBot> {
         self.entries.get(idx as usize)
+    }
+
+    pub fn has(&self, id: BotId) -> bool {
+        self.get(id).is_some()
+    }
+
+    pub fn has_all_of(&self, ids: &[BotId]) -> bool {
+        ids.iter().all(|id| self.has(*id))
+    }
+
+    pub fn has_any_of(&self, ids: &[BotId]) -> bool {
+        ids.iter().any(|id| self.has(*id))
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &SnapshotAliveBot> {
@@ -141,7 +144,7 @@ impl SnapshotAliveBots {
     ) -> impl Iterator<Item = &SnapshotAliveBot> + '_ {
         self.idx_by_scores
             .iter()
-            .filter_map(|idx| self.by_idx(*idx))
+            .filter_map(|idx| self.get_by_idx(*idx))
     }
 
     pub fn len(&self) -> usize {
@@ -150,18 +153,6 @@ impl SnapshotAliveBots {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
-    }
-
-    pub fn has(&self, id: BotId) -> bool {
-        self.by_id(id).is_some()
-    }
-
-    pub fn has_all_of(&self, ids: &[BotId]) -> bool {
-        ids.iter().all(|id| self.has(*id))
-    }
-
-    pub fn has_any_of(&self, ids: &[BotId]) -> bool {
-        ids.iter().any(|id| self.has(*id))
     }
 }
 
@@ -181,10 +172,11 @@ impl fmt::Display for SnapshotAliveBots {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotAliveBot {
+    pub age: u32,
+    pub dir: Dir,
+    pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub id: BotId,
     pub pos: IVec2,
-    pub dir: Dir,
-    pub age: u32,
     pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
 }
@@ -195,7 +187,7 @@ pub struct SnapshotDeadBots {
 }
 
 impl SnapshotDeadBots {
-    pub fn by_id(&self, id: BotId) -> Option<&SnapshotDeadBot> {
+    pub fn get(&self, id: BotId) -> Option<&SnapshotDeadBot> {
         self.entries.get(&id)
     }
 
@@ -206,6 +198,7 @@ impl SnapshotDeadBots {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotDeadBot {
+    pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub serial: Arc<VecDeque<u32>>,
 }
 
@@ -215,7 +208,7 @@ pub struct SnapshotQueuedBots {
 }
 
 impl SnapshotQueuedBots {
-    pub fn by_id(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
+    pub fn get(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
         self.entries.get(&id)
     }
 
@@ -226,7 +219,8 @@ impl SnapshotQueuedBots {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotQueuedBot {
-    pub serial: Arc<VecDeque<u32>>,
+    pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub place: u8,
     pub requeued: bool,
+    pub serial: Arc<VecDeque<u32>>,
 }

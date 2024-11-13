@@ -33,7 +33,6 @@ pub async fn start(
 
     let config = Arc::new(Config {
         inactivity_timeout: Some(Duration::from_secs(3600)),
-        auth_banner: Some("kartoffels"),
         auth_rejection_time: Duration::from_secs(3),
         auth_rejection_time_initial: Some(Duration::from_secs(0)),
         preferred: Preferred {

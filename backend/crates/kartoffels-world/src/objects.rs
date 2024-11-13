@@ -39,6 +39,14 @@ impl Object {
             meta: [0, 0, 0],
         }
     }
+
+    pub fn name(&self) -> &'static str {
+        match self.kind {
+            ObjectKind::FLAG => "flag",
+            ObjectKind::GEM => "gem",
+            _ => "unknown object",
+        }
+    }
 }
 
 impl From<u8> for Object {

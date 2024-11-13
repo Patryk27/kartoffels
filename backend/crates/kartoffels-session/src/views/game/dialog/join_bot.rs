@@ -97,9 +97,9 @@ impl JoinBotDialog {
             return;
         };
 
-        if world.bots().by_id(id).is_none() {
+        if !world.bots().has(id) {
             ui.throw(Event::OpenErrorDialog {
-                error: format!("bot `{id}` was not found\n\nmaybe it's dead?",),
+                error: format!("bot `{id}` was not found"),
             });
 
             return;

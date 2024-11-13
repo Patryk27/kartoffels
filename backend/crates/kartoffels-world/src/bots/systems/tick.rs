@@ -33,14 +33,39 @@ fn bot_tick(
     match bot.tick(world) {
         Ok(Some(BotAction::ArmDrop { at, idx })) => {
             if let Some(object) = bot.inventory.take(idx) {
+                bot.log(format!(
+                    "dropped {} at {},{}",
+                    object.name(),
+                    at.x,
+                    at.y
+                ));
+
                 world.objects.put(at, object);
             }
         }
 
         Ok(Some(BotAction::ArmPick { at })) => {
             if let Some(object) = world.objects.take(at) {
-                if let Err(object) = bot.inventory.add(object) {
-                    world.objects.put(at, object);
+                match bot.inventory.add(object) {
+                    Ok(_) => {
+                        bot.log(format!(
+                            "picked {} from {},{}",
+                            object.name(),
+                            at.x,
+                            at.y
+                        ));
+                    }
+
+                    Err(object) => {
+                        bot.log(format!(
+                            "failed to pick {} from {},{} (inventory full)",
+                            object.name(),
+                            at.x,
+                            at.y
+                        ));
+
+                        world.objects.put(at, object);
+                    }
                 }
             }
         }

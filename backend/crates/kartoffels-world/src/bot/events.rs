@@ -7,6 +7,10 @@ use std::sync::Arc;
 #[serde(transparent)]
 pub struct BotEvents {
     entries: VecDeque<Arc<BotEvent>>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    snapshot: Option<Arc<VecDeque<Arc<BotEvent>>>>,
 }
 
 impl BotEvents {
@@ -14,17 +18,21 @@ impl BotEvents {
 
     pub fn add(&mut self, msg: impl Into<String>) {
         while self.entries.len() >= Self::LENGTH {
-            self.entries.pop_front();
+            self.entries.pop_back();
         }
 
-        self.entries.push_back(Arc::new(BotEvent {
+        self.entries.push_front(Arc::new(BotEvent {
             at: Utc::now(),
             msg: msg.into(),
         }));
+
+        self.snapshot = None;
     }
 
-    pub fn into_entries(self) -> VecDeque<Arc<BotEvent>> {
-        self.entries
+    pub fn snapshot(&mut self) -> Arc<VecDeque<Arc<BotEvent>>> {
+        self.snapshot
+            .get_or_insert_with(|| Arc::new(self.entries.clone()))
+            .clone()
     }
 }
 

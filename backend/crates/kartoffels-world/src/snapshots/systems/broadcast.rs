@@ -67,12 +67,13 @@ fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
         .alive
         .iter_mut()
         .map(|bot| SnapshotAliveBot {
+            age: bot.timer.age(&world.clock),
+            dir: bot.dir,
+            events: bot.events.snapshot(),
             id: bot.id,
             pos: bot.pos,
-            dir: bot.dir,
-            age: bot.timer.age(&world.clock),
             score: scores.get(&bot.id).copied().unwrap_or_default(),
-            serial: bot.serial.buffer(),
+            serial: bot.serial.snapshot(),
         })
         .collect();
 
@@ -108,6 +109,7 @@ fn prepare_dead_bots(world: &mut World) -> SnapshotDeadBots {
         .iter_mut()
         .map(|entry| {
             let bot = SnapshotDeadBot {
+                events: entry.events.clone(),
                 serial: entry.serial.clone(),
             };
 
@@ -125,9 +127,10 @@ fn prepare_queued_bots(world: &mut World) -> SnapshotQueuedBots {
         .iter_mut()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
-                serial: entry.bot.serial.buffer(),
+                events: entry.bot.events.snapshot(),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
+                serial: entry.bot.serial.snapshot(),
             };
 
             (entry.bot.id, bot)

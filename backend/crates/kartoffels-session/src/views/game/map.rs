@@ -89,7 +89,7 @@ impl Map {
                     .snapshot
                     .bots()
                     .alive()
-                    .by_idx(tile.meta[0])
+                    .get_by_idx(tile.meta[0])
                     .map(|bot| bot.id.color())
                     .unwrap();
 
@@ -108,7 +108,7 @@ impl Map {
                     .snapshot
                     .bots()
                     .alive()
-                    .by_idx(tile.meta[0])
+                    .get_by_idx(tile.meta[0])
                     .map(|bot| bot.id.color())
                     .unwrap();
 
@@ -157,7 +157,7 @@ impl Map {
                     .snapshot
                     .bots()
                     .alive()
-                    .by_idx(tile.meta[0])
+                    .get_by_idx(tile.meta[0])
                     .map(|bot| bot.id)
                     .unwrap();
 

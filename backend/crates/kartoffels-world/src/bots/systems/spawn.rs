@@ -2,6 +2,7 @@ use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use rand::{Rng, RngCore};
+use tracing::debug;
 
 pub fn run(world: &mut World) {
     if world.bots.alive.count() >= world.policy.max_alive_bots {
@@ -24,11 +25,11 @@ pub fn run(world: &mut World) {
 
     // Unwrap-safety: We've just made sure that the queue is not empty
     let bot = world.bots.queued.pop().unwrap();
+    let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
 
-    world
-        .bots
-        .alive
-        .add(AliveBot::new(&mut world.rng, pos, dir, bot));
+    debug!(id=?bot.id, ?pos, ?dir, "spawning bot");
+
+    world.bots.alive.add(bot);
 }
 
 // TODO parts of logic are duplicated with `run()`
@@ -46,10 +47,11 @@ pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
     )
     .context("couldn't determine spawn point")?;
 
-    world
-        .bots
-        .alive
-        .add(AliveBot::new(&mut world.rng, pos, dir, bot));
+    let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
+
+    debug!(id=?bot.id, ?pos, ?dir, "spawning bot");
+
+    world.bots.alive.add(bot);
 
     Ok(())
 }

@@ -1,6 +1,7 @@
 use super::{
-    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog, Mode, Perms,
-    SpawnBotDialog, State, UploadBotDialog, UploadBotRequest,
+    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog,
+    InspectBotDialog, Mode, Perms, SpawnBotDialog, State, UploadBotDialog,
+    UploadBotRequest,
 };
 use anyhow::Result;
 use base64::prelude::BASE64_STANDARD;
@@ -47,6 +48,7 @@ pub enum Event {
     RestartBot,
     DeleteBot,
     FollowBot,
+    InspectBot,
     Overclock(ClockSpeed),
     EnableDebugMode,
 }
@@ -176,6 +178,13 @@ impl Event {
             Event::FollowBot => {
                 if let Some(bot) = &mut state.bot {
                     bot.follow = !bot.follow;
+                }
+            }
+
+            Event::InspectBot => {
+                if let Some(bot) = &state.bot {
+                    state.dialog =
+                        Some(Dialog::InspectBot(InspectBotDialog::new(bot.id)));
                 }
             }
 

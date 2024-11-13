@@ -120,7 +120,7 @@ impl State {
     fn tick(&mut self, dt: f32, store: &Store) {
         if let Some(bot) = &self.bot {
             if bot.follow {
-                if let Some(bot) = self.snapshot.bots().alive().by_id(bot.id) {
+                if let Some(bot) = self.snapshot.bots().alive().get(bot.id) {
                     self.camera.move_at(bot.pos);
                 }
             }
@@ -225,7 +225,7 @@ impl State {
         self.snapshot = snapshot;
 
         if let Some(bot) = &mut self.bot {
-            let exists_now = self.snapshot.bots().by_id(bot.id).is_some();
+            let exists_now = self.snapshot.bots().has(bot.id);
 
             bot.exists |= exists_now;
 
