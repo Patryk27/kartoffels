@@ -4,8 +4,9 @@ use elf::abi::PT_LOAD;
 use elf::endian::LittleEndian;
 use elf::ElfBytes;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Firmware {
     pub(crate) segments: Vec<Segment>,
     pub(crate) entry_pc: u64,
@@ -59,6 +60,14 @@ impl Firmware {
         }
 
         Ok(Self { segments, entry_pc })
+    }
+}
+
+impl fmt::Debug for Firmware {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Firmware")
+            .field("entry_pc", &self.entry_pc)
+            .finish()
     }
 }
 

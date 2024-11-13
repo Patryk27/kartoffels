@@ -9,8 +9,9 @@ pub use self::fw::*;
 pub use self::mmio::*;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Cpu {
     pc: u64,
     #[serde(with = "serde_bytes")]
@@ -65,5 +66,11 @@ impl Cpu {
 
     pub fn regs(&self) -> &[i64; 32] {
         &self.regs
+    }
+}
+
+impl fmt::Debug for Cpu {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Cpu").field("pc", &self.pc).finish()
     }
 }
