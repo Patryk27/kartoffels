@@ -1,37 +1,48 @@
 use crate::{BotId, DeadBot};
-use lru::LruCache;
-use maybe_owned::MaybeOwned;
+use kartoffels_utils::DummyHasher;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::num::NonZeroUsize;
+use std::collections::{HashSet, VecDeque};
+use tracing::debug;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DeadBots {
-    entries: LruCache<BotId, DeadBot>,
+    entries: VecDeque<DeadBot>,
+    index: HashSet<BotId, DummyHasher>,
 }
 
 impl DeadBots {
     const MAX_ENTRIES: usize = 4 * 1024;
 
-    pub fn add(&mut self, id: BotId, bot: DeadBot) {
-        self.entries.put(id, bot);
+    pub fn add(&mut self, bot: DeadBot) {
+        if self.entries.len() >= Self::MAX_ENTRIES {
+            // Unwrap-safety: We've just checked that `self.entries` is not
+            // empty
+            let entry = self.entries.pop_front().unwrap();
+
+            debug!(id=?entry.id, "forgetting bot");
+
+            self.index.remove(&entry.id);
+        }
+
+        self.index.insert(bot.id);
+        self.entries.push_back(bot);
     }
 
     pub fn remove(&mut self, id: BotId) {
-        self.entries.pop_entry(&id);
+        if self.index.remove(&id) {
+            // Calling `.retain()` is suboptimal, but `self.remove()` is not a
+            // particularly frequently called function, so bothering with a
+            // separate index is not worth it here
+            self.entries.retain(|bot| bot.id != id);
+        }
     }
 
     pub fn contains(&self, id: BotId) -> bool {
-        self.entries.contains(&id)
+        self.index.contains(&id)
     }
-}
 
-impl Default for DeadBots {
-    fn default() -> Self {
-        Self {
-            entries: LruCache::new(
-                NonZeroUsize::new(Self::MAX_ENTRIES).unwrap(),
-            ),
-        }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut DeadBot> + '_ {
+        self.entries.iter_mut()
     }
 }
 
@@ -40,12 +51,7 @@ impl Serialize for DeadBots {
     where
         S: Serializer,
     {
-        serializer.collect_seq(self.entries.iter().map(|(id, bot)| {
-            SerializedDeadBot {
-                id: *id,
-                bot: MaybeOwned::Borrowed(bot),
-            }
-        }))
+        serializer.collect_seq(self.entries.iter())
     }
 }
 
@@ -55,20 +61,86 @@ impl<'de> Deserialize<'de> for DeadBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let bots = Vec::<SerializedDeadBot>::deserialize(deserializer)?;
+        let bots = Vec::<DeadBot>::deserialize(deserializer)?;
 
         for bot in bots {
-            this.add(bot.id, bot.bot.into_owned());
+            this.index.insert(bot.id);
+            this.entries.push_back(bot);
         }
 
         Ok(this)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct SerializedDeadBot<'a> {
-    id: BotId,
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    #[serde(flatten)]
-    bot: MaybeOwned<'a, DeadBot>,
+    fn bot(id: u64) -> DeadBot {
+        DeadBot {
+            events: Default::default(),
+            id: BotId::new(id),
+            serial: Default::default(),
+        }
+    }
+
+    #[test]
+    fn smoke() {
+        let mut target = DeadBots::default();
+
+        for id in 1..10 {
+            target.add(bot(id as u64));
+        }
+
+        for id in 1..10 {
+            assert!(target.contains(BotId::new(id as u64)));
+        }
+
+        assert!(!target.contains(BotId::new(10)));
+
+        // ---
+
+        target.remove(BotId::new(3));
+        target.remove(BotId::new(5));
+
+        assert!(target.contains(BotId::new(1)));
+        assert!(target.contains(BotId::new(2)));
+        assert!(!target.contains(BotId::new(3)));
+        assert!(target.contains(BotId::new(4)));
+        assert!(!target.contains(BotId::new(5)));
+        assert!(target.contains(BotId::new(6)));
+        assert!(target.contains(BotId::new(7)));
+        assert!(target.contains(BotId::new(8)));
+        assert!(target.contains(BotId::new(9)));
+
+        // ---
+
+        let expected = vec![
+            BotId::new(1),
+            BotId::new(2),
+            BotId::new(4),
+            BotId::new(6),
+            BotId::new(7),
+            BotId::new(8),
+            BotId::new(9),
+        ];
+
+        let actual: Vec<_> = target.iter_mut().map(|bot| bot.id).collect();
+
+        assert_eq!(expected, actual);
+
+        // ---
+
+        for id in 0..(DeadBots::MAX_ENTRIES - 3) {
+            target.add(bot(10 + id as u64));
+        }
+
+        for id in 1..=6 {
+            assert!(!target.contains(BotId::new(id)));
+        }
+
+        for id in 7..=(DeadBots::MAX_ENTRIES - 2) {
+            assert!(target.contains(BotId::new(id as u64)));
+        }
+    }
 }

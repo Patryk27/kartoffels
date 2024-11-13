@@ -1606,7 +1606,6 @@ dependencies = [
  "kartoffels-bots",
  "kartoffels-cpu",
  "kartoffels-utils",
- "lru",
  "maybe-owned",
  "pretty_assertions",
  "prettytable-rs",

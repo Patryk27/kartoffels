@@ -14,7 +14,6 @@ glam.workspace = true
 itertools.workspace = true
 kartoffels-cpu = { path = "../kartoffels-cpu" }
 kartoffels-utils = { path = "../kartoffels-utils" }
-lru.workspace = true
 maybe-owned.workspace = true
 prettytable-rs.workspace = true
 rand.workspace = true
