@@ -58,25 +58,29 @@ impl BotRadar {
                     ctxt.pos + ctxt.dir.as_vec().rotate(offset.perp())
                 };
 
-                let out_d0;
-                let out_d1;
-                let out_d2;
+                let out_z0;
+                let out_z1;
+                let out_z2;
 
-                if let Some(bot_id) = ctxt.bots.at(pos) {
+                if let Some(bot_id) = ctxt.bots.get_by_pos(pos) {
                     let bot_id = bot_id.get().get();
 
-                    out_d0 = TileKind::BOT as u32;
-                    out_d1 = (bot_id >> 32) as u32;
-                    out_d2 = bot_id as u32;
+                    out_z0 = TileKind::BOT as u32;
+                    out_z1 = (bot_id >> 32) as u32;
+                    out_z2 = bot_id as u32;
+                } else if let Some(object) = ctxt.objects.get(pos) {
+                    out_z0 = object.kind as u32;
+                    out_z1 = 0;
+                    out_z2 = 0;
                 } else {
-                    out_d0 = ctxt.map.get(pos).kind as u32;
-                    out_d1 = 0;
-                    out_d2 = 0;
+                    out_z0 = ctxt.map.get(pos).kind as u32;
+                    out_z1 = 0;
+                    out_z2 = 0;
                 }
 
-                self.scan[range.idx(x, y, 0)] = out_d0;
-                self.scan[range.idx(x, y, 1)] = out_d1;
-                self.scan[range.idx(x, y, 2)] = out_d2;
+                self.scan[range.idx(x, y, 0)] = out_z0;
+                self.scan[range.idx(x, y, 1)] = out_z1;
+                self.scan[range.idx(x, y, 2)] = out_z2;
             }
         }
 
@@ -136,7 +140,7 @@ impl BotRadarRange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AliveBots, BotId, Dir, Map};
+    use crate::{AliveBots, BotId, Dir, Map, ObjectKind, Objects};
     use glam::uvec2;
     use indoc::indoc;
     use itertools::Itertools;
@@ -319,26 +323,28 @@ mod tests {
             let mut map = Map::new(uvec2(7, 7));
 
             map.rect(ivec2(0, 0), ivec2(6, 6), TileKind::FLOOR);
-            map.set(ivec2(3, 1), TileKind::FLAG);
-            map.set(ivec2(3, 2), TileKind::BOT);
             map
+        };
+
+        let objects = {
+            let mut objects = Objects::default();
+
+            objects.put(ivec2(3, 1), ObjectKind::FLAG);
+            objects
         };
 
         let bots = {
             let mut bots = AliveBots::default();
 
-            bots.add(
-                BotId::new(112233445566778899),
-                AliveBot {
-                    pos: ivec2(3, 2),
-                    ..Default::default()
-                },
-            );
+            bots.add(AliveBot {
+                id: BotId::new(112233445566778899),
+                pos: ivec2(3, 2),
+                ..Default::default()
+            });
 
             bots
         };
 
-        let bots = bots.locator();
         let mut radar = BotRadar::default();
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
@@ -347,6 +353,7 @@ mod tests {
             bots: &bots,
             dir: &mut case.dir,
             map: &map,
+            objects: &objects,
             pos: case.pos,
             rng: &mut rng,
         };

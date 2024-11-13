@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotEvent, BotId, Dir, Map};
+use crate::{BotId, Dir, Map};
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::{Either, Itertools};
@@ -59,12 +59,17 @@ impl fmt::Display for Snapshot {
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct SnapshotBots {
     alive: SnapshotAliveBots,
+    dead: SnapshotDeadBots,
     queued: SnapshotQueuedBots,
 }
 
 impl SnapshotBots {
     pub fn alive(&self) -> &SnapshotAliveBots {
         &self.alive
+    }
+
+    pub fn dead(&self) -> &SnapshotDeadBots {
+        &self.dead
     }
 
     pub fn queued(&self) -> &SnapshotQueuedBots {
@@ -87,7 +92,7 @@ impl SnapshotBots {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.alive.is_empty() && self.queued.is_empty()
+        self.alive.is_empty() && self.dead.is_empty() && self.queued.is_empty()
     }
 }
 
@@ -182,7 +187,26 @@ pub struct SnapshotAliveBot {
     pub age: u32,
     pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
-    pub events: Vec<Arc<BotEvent>>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct SnapshotDeadBots {
+    entries: AHashMap<BotId, SnapshotDeadBot>,
+}
+
+impl SnapshotDeadBots {
+    pub fn by_id(&self, id: BotId) -> Option<&SnapshotDeadBot> {
+        self.entries.get(&id)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SnapshotDeadBot {
+    pub serial: Arc<VecDeque<u32>>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -203,7 +227,6 @@ impl SnapshotQueuedBots {
 #[derive(Debug, PartialEq, Eq)]
 pub struct SnapshotQueuedBot {
     pub serial: Arc<VecDeque<u32>>,
-    pub events: Vec<Arc<BotEvent>>,
     pub place: u8,
     pub requeued: bool,
 }

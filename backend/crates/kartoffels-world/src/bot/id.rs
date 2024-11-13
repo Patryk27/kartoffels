@@ -39,6 +39,13 @@ impl BotId {
     }
 }
 
+#[cfg(test)]
+impl Default for BotId {
+    fn default() -> Self {
+        Self::new(1)
+    }
+}
+
 impl Distribution<BotId> for Standard {
     fn sample<R>(&self, rng: &mut R) -> BotId
     where

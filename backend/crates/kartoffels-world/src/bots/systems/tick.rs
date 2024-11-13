@@ -1,24 +1,36 @@
-use crate::{AliveBotEntryMut, BotAction, BotId, KillBot, TileKind, World};
+use crate::{AliveBot, BotAction, KillBot, TileKind, World};
+use itertools::Either;
 
 pub fn run(world: &mut World) {
-    let ids = world.bots.alive.ids();
-    let steps = world.clock.steps();
+    let ticks = world.clock.ticks();
 
-    for _ in 0..steps {
-        for id in &ids {
-            tick(world, *id);
-        }
+    for _ in 0..ticks {
+        world_tick(world);
     }
 }
 
-fn tick(world: &mut World, id: BotId) {
-    let Some(AliveBotEntryMut { bot, locator }) = world.bots.alive.get_mut(id)
-    else {
-        // Our bot got killed in the meantime, happens
-        return;
-    };
+fn world_tick(world: &mut World) {
+    let len = world.bots.alive.len();
+    let mut idx = 0;
 
-    match bot.tick(&mut world.rng, &world.map, &locator) {
+    while idx < len {
+        if let Some(bot) = world.bots.alive.take(idx) {
+            let id = bot.id;
+            let pos = bot.pos;
+            let bot = bot_tick(world, bot);
+
+            world.bots.alive.insert(idx, id, pos, bot);
+        }
+
+        idx += 1;
+    }
+}
+
+fn bot_tick(
+    world: &mut World,
+    mut bot: Box<AliveBot>,
+) -> Option<Box<AliveBot>> {
+    match bot.tick(world) {
         Ok(Some(BotAction::ArmDrop { at, idx })) => {
             if let Some(object) = bot.inventory.take(idx) {
                 world.objects.put(at, object);
@@ -35,10 +47,12 @@ fn tick(world: &mut World, id: BotId) {
 
         Ok(Some(BotAction::ArmStab { at })) => {
             if let Some(killed_id) = world.bots.alive.get_by_pos(at) {
+                bot.log(format!("stabbed {killed_id}"));
+
                 let kill = KillBot {
-                    id: killed_id,
-                    reason: format!("stabbed out of existence by {id}"),
-                    killer: Some(id),
+                    killed: Either::Left(killed_id),
+                    reason: format!("stabbed out of existence by {}", bot.id),
+                    killer: Some(bot.id),
                 };
 
                 super::kill::run(world, kill);
@@ -48,17 +62,21 @@ fn tick(world: &mut World, id: BotId) {
         Ok(Some(BotAction::MotorMove { at })) => match world.map.get(at).kind {
             TileKind::VOID => {
                 let kill = KillBot {
-                    id,
+                    killed: Either::Right(bot),
                     reason: "fell into the void".into(),
                     killer: None,
                 };
 
                 super::kill::run(world, kill);
+
+                return None;
             }
 
             TileKind::FLOOR => {
-                if world.bots.alive.get_by_pos(at).is_none() {
-                    world.bots.alive.relocate(id, at);
+                if world.bots.alive.get_by_pos(at).is_none()
+                    && world.objects.get(at).is_none()
+                {
+                    bot.pos = at;
                 }
             }
 
@@ -71,12 +89,16 @@ fn tick(world: &mut World, id: BotId) {
 
         Err(err) => {
             let kill = KillBot {
-                id,
+                killed: Either::Right(bot),
                 reason: format!("firmware crashed: {err}"),
                 killer: None,
             };
 
             super::kill::run(world, kill);
+
+            return None;
         }
     };
+
+    Some(bot)
 }

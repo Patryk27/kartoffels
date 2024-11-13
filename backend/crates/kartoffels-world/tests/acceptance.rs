@@ -355,7 +355,7 @@ async fn err_couldnt_parse_firmware() {
 
 fn config() -> Config {
     Config {
-        clock: Clock::Manual { steps: 1024 },
+        clock: Clock::Manual { ticks: 1024 },
         mode: Mode::Deathmatch(DeathmatchMode::default()),
         name: "world".into(),
         path: None,

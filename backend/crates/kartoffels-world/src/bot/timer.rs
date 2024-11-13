@@ -24,7 +24,7 @@ impl BotTimer {
     pub fn age(&self, clock: &Clock) -> u32 {
         match clock {
             Clock::Auto => self.ticks / Clock::HZ,
-            Clock::Manual { steps } => self.ticks / steps,
+            Clock::Manual { ticks } => self.ticks / ticks,
         }
     }
 

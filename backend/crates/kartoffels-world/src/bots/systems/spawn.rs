@@ -4,7 +4,7 @@ use glam::IVec2;
 use rand::{Rng, RngCore};
 
 pub fn run(world: &mut World) {
-    if world.bots.alive.len() >= world.policy.max_alive_bots {
+    if world.bots.alive.count() >= world.policy.max_alive_bots {
         return;
     }
 
@@ -24,15 +24,16 @@ pub fn run(world: &mut World) {
 
     // Unwrap-safety: We've just made sure that the queue is not empty
     let bot = world.bots.queued.pop().unwrap();
-    let id = bot.id;
-    let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
 
-    world.bots.alive.add(id, bot);
+    world
+        .bots
+        .alive
+        .add(AliveBot::new(&mut world.rng, pos, dir, bot));
 }
 
 // TODO parts of logic are duplicated with `run()`
 pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
-    if world.bots.alive.len() >= world.policy.max_alive_bots {
+    if world.bots.alive.count() >= world.policy.max_alive_bots {
         return Err(anyhow!("too many alive bots"));
     }
 
@@ -45,10 +46,10 @@ pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
     )
     .context("couldn't determine spawn point")?;
 
-    let id = bot.id;
-    let bot = AliveBot::spawn(&mut world.rng, pos, dir, bot);
-
-    world.bots.alive.add(id, bot);
+    world
+        .bots
+        .alive
+        .add(AliveBot::new(&mut world.rng, pos, dir, bot));
 
     Ok(())
 }

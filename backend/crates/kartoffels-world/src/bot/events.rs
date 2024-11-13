@@ -22,6 +22,10 @@ impl BotEvents {
             msg: msg.into(),
         }));
     }
+
+    pub fn into_entries(self) -> VecDeque<Arc<BotEvent>> {
+        self.entries
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

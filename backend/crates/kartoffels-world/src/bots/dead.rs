@@ -1,13 +1,13 @@
 use crate::{BotId, DeadBot};
-use kartoffels_utils::DummyHasher;
+use ahash::AHashSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::{HashSet, VecDeque};
+use std::collections::VecDeque;
 use tracing::debug;
 
 #[derive(Clone, Debug, Default)]
 pub struct DeadBots {
     entries: VecDeque<DeadBot>,
-    index: HashSet<BotId, DummyHasher>,
+    index: AHashSet<BotId>,
 }
 
 impl DeadBots {

@@ -194,9 +194,10 @@ struct World {
 
 impl World {
     fn spawn(mut self, id: Id) {
-        // We store bot indices into map's tile metadata - those are u8s, so
-        // we can't index more than 256 bots
+        // We store bot indices into map's tile metadata and since those are u8,
+        // we can't have than 256 bots
         assert!(self.policy.max_alive_bots <= 256);
+        assert!(self.policy.max_queued_bots <= 256);
 
         let rt = TokioHandle::current();
         let span = info_span!("world", %id);

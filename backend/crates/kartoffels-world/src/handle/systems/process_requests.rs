@@ -1,5 +1,6 @@
 use crate::{bots, Clock, KillBot, Request, Shutdown, World};
 use anyhow::anyhow;
+use itertools::Either;
 use std::ops::ControlFlow;
 use tokio::sync::mpsc::error::TryRecvError;
 use tracing::debug;
@@ -61,7 +62,7 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 bots::kill::run(
                     world,
                     KillBot {
-                        id,
+                        killed: Either::Left(id),
                         reason,
                         killer: None,
                     },

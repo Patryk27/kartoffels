@@ -21,14 +21,17 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     };
 
-    state.ticks += Clock::STEPS;
+    state.ticks += Clock::TICKS;
 
     if Instant::now() < state.next_run_at {
         return;
     }
 
-    let alive =
-        format!("{}/{}", world.bots.alive.len(), world.policy.max_alive_bots);
+    let alive = format!(
+        "{}/{}",
+        world.bots.alive.count(),
+        world.policy.max_alive_bots
+    );
 
     let queued = format!(
         "{}/{}",

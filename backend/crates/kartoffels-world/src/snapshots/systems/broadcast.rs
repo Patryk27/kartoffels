@@ -1,6 +1,7 @@
 use crate::{
     Clock, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
-    SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileKind, World,
+    SnapshotDeadBot, SnapshotDeadBots, SnapshotQueuedBot, SnapshotQueuedBots,
+    Tile, TileKind, World,
 };
 use ahash::AHashMap;
 use std::cmp::Reverse;
@@ -50,28 +51,28 @@ pub fn run(world: &mut World, state: &mut State) {
     state.version += 1;
 }
 
-fn prepare_bots(world: &World) -> SnapshotBots {
+fn prepare_bots(world: &mut World) -> SnapshotBots {
     SnapshotBots {
         alive: prepare_alive_bots(world),
+        dead: prepare_dead_bots(world),
         queued: prepare_queued_bots(world),
     }
 }
 
-fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
+fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
     let scores = world.mode.scores();
 
     let entries: Vec<_> = world
         .bots
         .alive
-        .iter()
-        .map(|entry| SnapshotAliveBot {
-            id: entry.id,
-            pos: entry.bot.pos,
-            dir: entry.bot.dir,
-            age: entry.bot.timer.age(&world.clock),
-            score: scores.get(&entry.id).copied().unwrap_or_default(),
-            serial: Arc::new(entry.bot.serial.buffer().clone()),
-            events: Default::default(), // TODO
+        .iter_mut()
+        .map(|bot| SnapshotAliveBot {
+            id: bot.id,
+            pos: bot.pos,
+            dir: bot.dir,
+            age: bot.timer.age(&world.clock),
+            score: scores.get(&bot.id).copied().unwrap_or_default(),
+            serial: bot.serial.buffer(),
         })
         .collect();
 
@@ -100,20 +101,36 @@ fn prepare_alive_bots(world: &World) -> SnapshotAliveBots {
     }
 }
 
-fn prepare_queued_bots(world: &World) -> SnapshotQueuedBots {
+fn prepare_dead_bots(world: &mut World) -> SnapshotDeadBots {
+    let entries = world
+        .bots
+        .dead
+        .iter_mut()
+        .map(|entry| {
+            let bot = SnapshotDeadBot {
+                serial: entry.serial.clone(),
+            };
+
+            (entry.id, bot)
+        })
+        .collect();
+
+    SnapshotDeadBots { entries }
+}
+
+fn prepare_queued_bots(world: &mut World) -> SnapshotQueuedBots {
     let entries = world
         .bots
         .queued
-        .iter()
+        .iter_mut()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
-                serial: Arc::new(entry.bot.serial.buffer().clone()),
-                events: Default::default(), // TODO
+                serial: entry.bot.serial.buffer(),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
             };
 
-            (entry.id, bot)
+            (entry.bot.id, bot)
         })
         .collect();
 
@@ -141,6 +158,10 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
         if !map.get(chevron_pos).is_bot() {
             map.set(chevron_pos, chevron_tile);
         }
+    }
+
+    for (pos, obj) in world.objects.iter() {
+        map.set(pos, obj.kind);
     }
 
     map

@@ -21,11 +21,13 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
-use crate::{AliveBotsLocator, Dir, Map};
+use crate::{Dir, World};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -36,6 +38,7 @@ pub struct AliveBot {
     pub dir: Dir,
     pub events: BotEvents,
     pub fw: Firmware,
+    pub id: BotId,
     pub inventory: BotInventory,
     pub motor: BotMotor,
     pub oneshot: bool,
@@ -53,7 +56,7 @@ impl AliveBot {
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
 
-    pub fn spawn(
+    pub fn new(
         rng: &mut impl RngCore,
         pos: IVec2,
         dir: Dir,
@@ -69,6 +72,7 @@ impl AliveBot {
             dir,
             events: bot.events,
             fw: bot.fw,
+            id: bot.id,
             inventory: Default::default(),
             motor: Default::default(),
             oneshot: bot.oneshot,
@@ -85,9 +89,7 @@ impl AliveBot {
 
     pub fn tick(
         &mut self,
-        rng: &mut impl RngCore,
-        map: &Map,
-        bots: &AliveBotsLocator,
+        world: &mut World,
     ) -> Result<Option<BotAction>, Box<str>> {
         let mut action = None;
 
@@ -106,11 +108,12 @@ impl AliveBot {
             radar: &mut self.radar,
             ctxt: BotMmioContext {
                 action: &mut action,
-                bots,
+                bots: &world.bots.alive,
                 dir: &mut self.dir,
-                map,
+                map: &world.map,
+                objects: &world.objects,
                 pos: self.pos,
-                rng: &mut *rng,
+                rng: &mut world.rng,
             },
         })?;
 
@@ -120,7 +123,9 @@ impl AliveBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeadBot {
-    pub events: BotEvents,
+    pub events: Arc<VecDeque<Arc<BotEvent>>>,
+    pub id: BotId,
+    pub serial: Arc<VecDeque<u32>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

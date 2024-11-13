@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 #[derive(Clone, Debug, Default)]
 pub struct QueuedBots {
     entries: VecDeque<QueuedBot>,
-    id_to_place: AHashMap<BotId, u8>,
+    index: AHashMap<BotId, u8>,
 }
 
 impl QueuedBots {
@@ -28,31 +28,24 @@ impl QueuedBots {
     }
 
     pub fn remove(&mut self, id: BotId) {
-        let Some(place) = self.id_to_place.remove(&id) else {
+        let Some(idx) = self.index.remove(&id) else {
             return;
         };
 
-        self.entries.remove(place as usize);
+        self.entries.remove(idx as usize);
         self.reindex();
     }
 
-    #[cfg(test)]
-    pub fn get(&self, id: BotId) -> Option<QueuedBotEntry> {
-        let place = *self.id_to_place.get(&id)?;
-        let bot = &self.entries[place as usize];
-
-        Some(QueuedBotEntry { id, bot, place })
-    }
-
     pub fn contains(&self, id: BotId) -> bool {
-        self.id_to_place.contains_key(&id)
+        self.index.contains_key(&id)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = QueuedBotEntry> {
-        self.id_to_place.iter().map(|(&id, &place)| QueuedBotEntry {
-            id,
-            bot: &self.entries[place as usize],
-            place,
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = QueuedBotEntryMut> {
+        self.entries.iter_mut().enumerate().map(|(idx, bot)| {
+            QueuedBotEntryMut {
+                bot,
+                place: (idx + 1) as u8,
+            }
         })
     }
 
@@ -61,9 +54,9 @@ impl QueuedBots {
     }
 
     fn reindex(&mut self) {
-        self.id_to_place.clear();
+        self.index.clear();
 
-        self.id_to_place.extend(
+        self.index.extend(
             self.entries
                 .iter()
                 .enumerate()
@@ -100,9 +93,8 @@ impl<'de> Deserialize<'de> for QueuedBots {
 }
 
 #[derive(Debug)]
-pub struct QueuedBotEntry<'a> {
-    pub id: BotId,
-    pub bot: &'a QueuedBot,
+pub struct QueuedBotEntryMut<'a> {
+    pub bot: &'a mut QueuedBot,
     pub place: u8,
 }
 
@@ -127,34 +119,61 @@ mod tests {
     fn smoke() {
         let mut target = QueuedBots::default();
 
-        target.push(bot(10));
-        target.push(bot(20));
-        target.push(bot(30));
-        target.push(bot(40));
-        target.push(bot(50));
+        target.push(bot(1));
+        target.push(bot(2));
+        target.push(bot(3));
+        target.push(bot(4));
+        target.push(bot(5));
 
-        for id in [10, 20, 30, 40, 50] {
-            let id = BotId::new(id);
-
-            assert_eq!(id, target.get(id).unwrap().bot.id);
-        }
-
-        // ---
-
-        assert_eq!(BotId::new(10), target.pop().unwrap().id);
-        assert_eq!(BotId::new(20), target.pop().unwrap().id);
-        assert_eq!(BotId::new(30), target.pop().unwrap().id);
-
-        assert!(target.get(BotId::new(10)).is_none());
-        assert!(target.get(BotId::new(30)).is_none());
-
-        assert_eq!(BotId::new(40), target.get(BotId::new(40)).unwrap().bot.id);
-        assert_eq!(BotId::new(50), target.get(BotId::new(50)).unwrap().bot.id);
+        assert_eq!(5, target.len());
+        assert!(target.contains(BotId::new(1)));
+        assert!(target.contains(BotId::new(2)));
+        assert!(target.contains(BotId::new(3)));
+        assert!(target.contains(BotId::new(4)));
+        assert!(target.contains(BotId::new(5)));
+        assert!(!target.contains(BotId::new(6)));
 
         // ---
 
-        assert_eq!(BotId::new(40), target.pop().unwrap().id);
-        assert_eq!(BotId::new(50), target.pop().unwrap().id);
+        let expected = vec![
+            BotId::new(1),
+            BotId::new(2),
+            BotId::new(3),
+            BotId::new(4),
+            BotId::new(5),
+        ];
+
+        let actual: Vec<_> =
+            target.iter_mut().map(|entry| entry.bot.id).collect();
+
+        assert_eq!(expected, actual);
+
+        // ---
+
+        assert_eq!(BotId::new(1), target.peek().unwrap().id);
+        assert_eq!(BotId::new(1), target.pop().unwrap().id);
+        assert!(!target.contains(BotId::new(1)));
+
+        assert_eq!(BotId::new(2), target.peek().unwrap().id);
+        assert_eq!(BotId::new(2), target.pop().unwrap().id);
+        assert!(!target.contains(BotId::new(2)));
+
+        assert_eq!(BotId::new(3), target.peek().unwrap().id);
+        assert_eq!(BotId::new(3), target.pop().unwrap().id);
+        assert!(!target.contains(BotId::new(3)));
+
+        assert!(target.contains(BotId::new(4)));
+        assert!(target.contains(BotId::new(5)));
+
+        // ---
+
+        assert_eq!(BotId::new(4), target.pop().unwrap().id);
+        assert!(!target.contains(BotId::new(4)));
+
+        assert_eq!(BotId::new(5), target.pop().unwrap().id);
+        assert!(!target.contains(BotId::new(5)));
+
         assert!(target.pop().is_none());
+        assert_eq!(0, target.len());
     }
 }

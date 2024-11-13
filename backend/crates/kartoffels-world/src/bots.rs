@@ -7,7 +7,8 @@ pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
 pub use self::systems::*;
-use crate::BotId;
+use crate::{AliveBot, BotId};
+use itertools::Either;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -25,19 +26,15 @@ impl Bots {
     }
 
     pub fn remove(&mut self, id: BotId) {
-        if self.alive.contains(id) {
-            self.alive.remove(id);
-        } else if self.dead.contains(id) {
-            self.dead.remove(id);
-        } else if self.queued.contains(id) {
-            self.queued.remove(id);
-        }
+        self.alive.remove(id);
+        self.dead.remove(id);
+        self.queued.remove(id);
     }
 }
 
 #[derive(Debug)]
 pub struct KillBot {
-    pub id: BotId,
+    pub killed: Either<BotId, Box<AliveBot>>,
     pub reason: String,
     pub killer: Option<BotId>,
 }

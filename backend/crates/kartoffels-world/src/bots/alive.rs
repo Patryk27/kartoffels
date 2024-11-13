@@ -2,102 +2,88 @@ use crate::{AliveBot, BotId};
 use ahash::AHashMap;
 use anyhow::Result;
 use glam::IVec2;
-use kartoffels_utils::DummyHasher;
-use maybe_owned::MaybeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default)]
 pub struct AliveBots {
-    entries: HashMap<BotId, AliveBot, DummyHasher>,
+    entries: Vec<Option<Box<AliveBot>>>,
+    id_to_idx: AHashMap<BotId, u8>,
     pos_to_id: AHashMap<IVec2, BotId>,
 }
 
 impl AliveBots {
-    pub fn add(&mut self, id: BotId, bot: AliveBot) {
-        let was_pos_free = self.pos_to_id.insert(bot.pos, id).is_none();
-        let was_entry_free = self.entries.insert(id, bot).is_none();
+    pub fn add(&mut self, bot: AliveBot) {
+        for (idx, slot) in self.entries.iter_mut().enumerate() {
+            let idx = idx as u8;
 
-        assert!(was_pos_free);
-        assert!(was_entry_free);
-    }
+            if slot.is_none() {
+                self.id_to_idx.insert(bot.id, idx);
+                self.pos_to_id.insert(bot.pos, bot.id);
 
-    pub fn relocate(&mut self, id: BotId, new_pos: IVec2) {
-        let bot = self.entries.get_mut(&id).unwrap();
-        let id = self.pos_to_id.remove(&bot.pos).unwrap();
+                *slot = Some(Box::new(bot));
+                return;
+            }
+        }
 
-        self.pos_to_id.insert(new_pos, id);
+        let idx =
+            u8::try_from(self.entries.len()).expect("too many alive robots");
 
-        bot.pos = new_pos;
+        self.id_to_idx.insert(bot.id, idx);
+        self.pos_to_id.insert(bot.pos, bot.id);
+        self.entries.push(Some(Box::new(bot)));
     }
 
     pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
-        let bot = self.entries.remove(&id)?;
+        let idx = *self.id_to_idx.get(&id)?;
+        let bot = self.entries[idx as usize].take().unwrap();
 
         self.pos_to_id.remove(&bot.pos).unwrap();
 
-        Some(bot)
-    }
-
-    pub fn get_mut(&mut self, id: BotId) -> Option<AliveBotEntryMut> {
-        Some(AliveBotEntryMut {
-            bot: self.entries.get_mut(&id)?,
-            locator: AliveBotsLocator {
-                pos_to_id: &self.pos_to_id,
-            },
-        })
+        Some(*bot)
     }
 
     pub fn get_by_pos(&self, pos: IVec2) -> Option<BotId> {
         self.pos_to_id.get(&pos).copied()
     }
 
-    pub fn contains(&self, id: BotId) -> bool {
-        self.entries.contains_key(&id)
+    pub fn take(&mut self, idx: usize) -> Option<Box<AliveBot>> {
+        self.entries[idx].take()
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = AliveBotEntry> + '_ {
-        self.entries
-            .iter()
-            .map(|(id, bot)| AliveBotEntry { id: *id, bot })
+    pub fn insert(
+        &mut self,
+        idx: usize,
+        id: BotId,
+        pos: IVec2,
+        bot: Option<Box<AliveBot>>,
+    ) {
+        if let Some(bot) = bot {
+            if bot.pos != pos {
+                self.pos_to_id.remove(&pos).unwrap();
+                self.pos_to_id.insert(bot.pos, bot.id);
+            }
+
+            self.entries[idx] = Some(bot);
+        } else {
+            self.id_to_idx.remove(&id);
+            self.pos_to_id.remove(&pos);
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AliveBot> {
+        self.entries.iter_mut().flatten().map(|bot| &mut **bot)
+    }
+
+    pub fn contains(&self, id: BotId) -> bool {
+        self.id_to_idx.contains_key(&id)
     }
 
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
-    pub fn ids(&self) -> Vec<BotId> {
-        self.entries.keys().copied().collect()
-    }
-
-    #[cfg(test)]
-    pub fn locator(&self) -> AliveBotsLocator {
-        AliveBotsLocator {
-            pos_to_id: &self.pos_to_id,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct AliveBotEntry<'a> {
-    pub id: BotId,
-    pub bot: &'a AliveBot,
-}
-
-#[derive(Debug)]
-pub struct AliveBotEntryMut<'a> {
-    pub bot: &'a mut AliveBot,
-    pub locator: AliveBotsLocator<'a>,
-}
-
-#[derive(Debug)]
-pub struct AliveBotsLocator<'a> {
-    pos_to_id: &'a AHashMap<IVec2, BotId>,
-}
-
-impl AliveBotsLocator<'_> {
-    pub fn at(&self, pos: IVec2) -> Option<BotId> {
-        self.pos_to_id.get(&pos).copied()
+    pub fn count(&self) -> usize {
+        self.entries.iter().flatten().count()
     }
 }
 
@@ -106,12 +92,7 @@ impl Serialize for AliveBots {
     where
         S: Serializer,
     {
-        serializer.collect_seq(self.entries.iter().map(|(id, bot)| {
-            SerializedAliveBot {
-                id: *id,
-                bot: MaybeOwned::Borrowed(bot),
-            }
-        }))
+        serializer.collect_seq(self.entries.iter().flatten())
     }
 }
 
@@ -121,20 +102,12 @@ impl<'de> Deserialize<'de> for AliveBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let bots = Vec::<SerializedAliveBot>::deserialize(deserializer)?;
+        let bots = Vec::<AliveBot>::deserialize(deserializer)?;
 
         for bot in bots {
-            this.add(bot.id, bot.bot.into_owned());
+            this.add(bot);
         }
 
         Ok(this)
     }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct SerializedAliveBot<'a> {
-    id: BotId,
-
-    #[serde(flatten)]
-    bot: MaybeOwned<'a, AliveBot>,
 }

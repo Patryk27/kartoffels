@@ -12,9 +12,10 @@ pub fn run(world: &mut Value) {
         );
     }
 
+    for bot in world.query_mut("/bots/dead/*") {
         bot.as_map_mut()
             .unwrap()
-            .add_entry("inventory", Value::Array(vec![Value::Null; 32]));
+            .add_entry("serial", Value::Array(vec![]));
     }
 }
 
@@ -31,6 +32,12 @@ mod tests {
               "alive": [
                 {
                   "id": "1234-1234-1234-1234"
+                }
+              ],
+
+              "dead": [
+                {
+                  "id": "4321-4321-4321-4321"
                 }
               ]
             }
@@ -52,6 +59,12 @@ mod tests {
                     ]
                   }
                 }
+              ],
+
+              "dead": [
+                {
+                  "id": "4321-4321-4321-4321",
+                  "serial": []
                 }
               ]
             }

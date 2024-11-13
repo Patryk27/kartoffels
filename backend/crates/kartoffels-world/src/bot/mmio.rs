@@ -1,22 +1,22 @@
 use super::{
     BotAction, BotArm, BotBattery, BotMotor, BotRadar, BotSerial, BotTimer,
 };
-use crate::{AliveBotsLocator, Dir, Map};
+use crate::{AliveBots, Dir, Map, Objects};
 use glam::IVec2;
 use kartoffels_cpu::Mmio;
 use rand::{Rng, RngCore};
 
-pub struct BotMmio<'a, 'b> {
+pub struct BotMmio<'a> {
     pub arm: &'a mut BotArm,
     pub battery: &'a mut BotBattery,
     pub motor: &'a mut BotMotor,
     pub radar: &'a mut BotRadar,
     pub serial: &'a mut BotSerial,
     pub timer: &'a mut BotTimer,
-    pub ctxt: BotMmioContext<'a, 'b>,
+    pub ctxt: BotMmioContext<'a>,
 }
 
-impl Mmio for BotMmio<'_, '_> {
+impl Mmio for BotMmio<'_> {
     fn load(self, addr: u32) -> Result<u32, ()> {
         self.timer
             .mmio_load(addr)
@@ -38,16 +38,17 @@ impl Mmio for BotMmio<'_, '_> {
     }
 }
 
-pub struct BotMmioContext<'a, 'b> {
+pub struct BotMmioContext<'a> {
     pub action: &'a mut Option<BotAction>,
-    pub bots: &'a AliveBotsLocator<'b>,
+    pub bots: &'a AliveBots,
     pub dir: &'a mut Dir,
     pub map: &'a Map,
+    pub objects: &'a Objects,
     pub pos: IVec2,
     pub rng: &'a mut dyn RngCore,
 }
 
-impl BotMmioContext<'_, '_> {
+impl BotMmioContext<'_> {
     pub fn cooldown(&mut self, base: u32, off_percentage: u32) -> u32 {
         let off = base * off_percentage / 100;
         let min = base - off;
