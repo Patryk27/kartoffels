@@ -64,7 +64,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
         )
         .await;
 
-        ctxt.destroy_bots().await?;
+        ctxt.delete_bots().await?;
         ctxt.game.set_status(None).await?;
 
         match result {

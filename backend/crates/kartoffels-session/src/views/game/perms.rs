@@ -15,7 +15,7 @@ pub struct Perms {
     /// user themself.
     pub sync_pause: bool,
 
-    /// Whether the user can restart/destroy bots not uploaded by them.
+    /// Whether the user can delete/restart bots not uploaded by them.
     pub can_user_manage_bots: bool,
 
     pub can_user_pause: bool,

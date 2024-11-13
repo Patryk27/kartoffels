@@ -96,8 +96,8 @@ impl JoinedSidePanel {
     fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
         if state.perms.hero_mode {
             if state.perms.can_user_manage_bots {
-                Button::new(KeyCode::Char('D'), "destroy-bot")
-                    .throwing(Event::DestroyBot)
+                Button::new(KeyCode::Char('D'), "delete-bot")
+                    .throwing(Event::DeleteBot)
                     .render(ui);
             }
         } else {
@@ -117,8 +117,8 @@ impl JoinedSidePanel {
                         .throwing(Event::RestartBot)
                         .render(ui);
 
-                    Button::new(KeyCode::Char('D'), "destroy-bot")
-                        .throwing(Event::DestroyBot)
+                    Button::new(KeyCode::Char('D'), "delete-bot")
+                        .throwing(Event::DeleteBot)
                         .render(ui);
                 });
 

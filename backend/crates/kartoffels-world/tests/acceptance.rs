@@ -131,7 +131,7 @@ async fn kill_bot() {
 }
 
 #[tokio::test]
-async fn destroy_bot() {
+async fn delete_bot() {
     let world = kartoffels_world::create(config());
 
     let bot1 = world
@@ -155,7 +155,7 @@ async fn destroy_bot() {
 
     let snap1 = world.snapshot().await;
 
-    world.destroy_bot(bot2).await.unwrap();
+    world.delete_bot(bot2).await.unwrap();
     world.tick().await.unwrap();
 
     let snap2 = world.snapshot().await;

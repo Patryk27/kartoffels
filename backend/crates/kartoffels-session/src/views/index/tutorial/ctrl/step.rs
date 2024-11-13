@@ -54,9 +54,9 @@ impl TutorialCtxt {
         Ok(())
     }
 
-    pub async fn destroy_bots(&mut self) -> Result<()> {
+    pub async fn delete_bots(&mut self) -> Result<()> {
         for bot in self.snapshots.next().await?.bots().alive().iter() {
-            self.world.destroy_bot(bot.id).await?;
+            self.world.delete_bot(bot.id).await?;
         }
 
         Ok(())

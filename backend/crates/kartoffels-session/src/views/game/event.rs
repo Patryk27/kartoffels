@@ -45,7 +45,7 @@ pub enum Event {
     },
     LeaveBot,
     RestartBot,
-    DestroyBot,
+    DeleteBot,
     FollowBot,
     Overclock(ClockSpeed),
     EnableDebugMode,
@@ -167,10 +167,10 @@ impl Event {
                     .await?;
             }
 
-            Event::DestroyBot => {
+            Event::DeleteBot => {
                 let id = state.bot.take().unwrap().id;
 
-                state.handle.as_ref().unwrap().destroy_bot(id).await?;
+                state.handle.as_ref().unwrap().delete_bot(id).await?;
             }
 
             Event::FollowBot => {

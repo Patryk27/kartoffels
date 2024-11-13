@@ -113,10 +113,10 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn destroy_bot(&self, id: BotId) -> Result<()> {
+    pub async fn delete_bot(&self, id: BotId) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::DestroyBot { id, tx }).await?;
+        self.send(Request::DeleteBot { id, tx }).await?;
 
         rx.await.context(Self::ERR)
     }
@@ -225,7 +225,7 @@ pub enum Request {
         tx: oneshot::Sender<()>,
     },
 
-    DestroyBot {
+    DeleteBot {
         id: BotId,
 
         #[derivative(Debug = "ignore")]

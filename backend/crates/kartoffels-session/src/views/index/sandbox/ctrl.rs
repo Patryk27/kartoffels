@@ -33,7 +33,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgLine::new("# rules"),
         MsgLine::new(""),
         MsgLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
-        MsgLine::new("- you're allowed to destroy bots and restart them"),
+        MsgLine::new("- you're allowed to delete bots and restart them"),
         MsgLine::new(
             "- you've got some extra commands at hand, like `spawn-bot`",
         ),

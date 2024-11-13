@@ -70,7 +70,7 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(());
             }
 
-            Ok(Request::DestroyBot { id, tx }) => {
+            Ok(Request::DeleteBot { id, tx }) => {
                 world.bots.remove(id);
 
                 _ = tx.send(());

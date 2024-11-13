@@ -83,7 +83,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 }
 
 async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
-    ctxt.destroy_bots().await?;
+    ctxt.delete_bots().await?;
 
     ctxt.world
         .set_map({
