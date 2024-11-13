@@ -11,6 +11,10 @@ use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
+    while timer_ticks() <= 16000 {
+        //
+    }
+
     let guards = find_guards();
 
     for _ in 0..2 {
