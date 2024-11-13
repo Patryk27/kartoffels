@@ -105,6 +105,7 @@ async fn flow() {
 
     ctxt.upload_bot(TUT_01).await;
     ctxt.wait_for_modal("tutorial (6/16)").await;
+    ctxt.wait_while("alive (0s)").await;
     ctxt.see_frame("tutorial/flow/step-06.txt").await;
 
     // ---
