@@ -3,6 +3,15 @@ use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     for bot in world.query_mut("/bots/alive/*") {
+        bot.as_map_mut().unwrap().add_entry(
+            "inventory",
+            Value::Map(
+                Vec::default()
+                    .with_entry("objects", Value::Array(vec![Value::Null; 32])),
+            ),
+        );
+    }
+
         bot.as_map_mut()
             .unwrap()
             .add_entry("inventory", Value::Array(vec![Value::Null; 32]));
@@ -34,12 +43,15 @@ mod tests {
               "alive": [
                 {
                   "id": "1234-1234-1234-1234",
-                  "inventory": [
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null
-                  ]
+                  "inventory": {
+                    "objects": [
+                      null, null, null, null, null, null, null, null,
+                      null, null, null, null, null, null, null, null,
+                      null, null, null, null, null, null, null, null,
+                      null, null, null, null, null, null, null, null
+                    ]
+                  }
+                }
                 }
               ]
             }

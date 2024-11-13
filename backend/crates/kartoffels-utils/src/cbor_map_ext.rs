@@ -1,9 +1,17 @@
 use ciborium::Value;
 
-pub trait CborMapExt {
+pub trait CborMapExt
+where
+    Self: Sized,
+{
     fn add_entry(&mut self, key: &str, val: Value) -> &mut Self;
     fn get_entry_mut(&mut self, key: &str) -> Option<&mut Value>;
     fn remove_entry(&mut self, key: &str) -> Option<Value>;
+
+    fn with_entry(mut self, key: &str, val: Value) -> Self {
+        self.add_entry(key, val);
+        self
+    }
 
     fn rename_entry(&mut self, from_key: &str, to_key: &str) -> &mut Self {
         if let Some(val) = self.remove_entry(from_key) {
