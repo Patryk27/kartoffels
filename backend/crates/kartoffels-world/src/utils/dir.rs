@@ -87,7 +87,12 @@ impl Dir {
 
 impl fmt::Display for Dir {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{self:?}")
+        match self {
+            Dir::N => write!(f, "n"),
+            Dir::E => write!(f, "e"),
+            Dir::W => write!(f, "w"),
+            Dir::S => write!(f, "s"),
+        }
     }
 }
 
