@@ -5,23 +5,33 @@ use ratatui::layout::Rect;
 #[derive(Debug, Default)]
 pub struct Camera {
     pos: Vec2,
-    target: Vec2,
+    src: Vec2,
+    dst: Vec2,
+    t: f32,
 }
 
 impl Camera {
-    pub fn set_at(&mut self, target: IVec2) {
-        let target = target.as_vec2();
+    pub fn set(&mut self, pos: IVec2) {
+        let pos = pos.as_vec2();
 
-        self.pos = target;
-        self.target = target;
+        self.pos = pos;
+        self.src = pos;
+        self.dst = pos;
+        self.t = 0.0;
     }
 
-    pub fn move_at(&mut self, target: IVec2) {
-        self.target = target.as_vec2();
+    pub fn move_at(&mut self, pos: IVec2) {
+        if self.dst.distance(pos.as_vec2()) <= 3.0 {
+            self.dst = pos.as_vec2();
+        } else {
+            self.src = self.pos().as_vec2();
+            self.dst = pos.as_vec2();
+            self.t = 0.0;
+        }
     }
 
     pub fn move_by(&mut self, delta: IVec2) {
-        self.move_at((self.target + delta.as_vec2()).as_ivec2());
+        self.move_at((self.dst + delta.as_vec2()).as_ivec2());
     }
 
     pub fn screen_to_world(&self, pos: UVec2, map_area: Rect) -> IVec2 {
@@ -34,24 +44,20 @@ impl Camera {
 
     pub fn tick(&mut self, dt: f32, store: &Store) {
         if store.testing() {
-            // Don't bother animating camera during tests, it makes them less
-            // reproducible
-            self.pos = self.target;
-        } else {
-            let vec = self.target - self.pos;
-            let dir = vec.normalize();
-            let len = vec.length();
-
-            if len <= 0.5 {
-                self.pos = self.target;
-                return;
-            }
-
-            self.pos += dir * len.max(4.0) * (dt * 4.0).min(1.0);
+            // Don't bother animating camera during tests
+            self.pos = self.dst;
+            return;
         }
+
+        self.t = (self.t + dt * 2.2).min(1.0);
+        self.pos = self.src.lerp(self.dst, ease(self.t));
     }
 
     pub fn pos(&self) -> IVec2 {
-        self.pos.as_ivec2()
+        self.pos.round().as_ivec2()
     }
+}
+
+fn ease(x: f32) -> f32 {
+    1.0 - (1.0 - x).powi(2)
 }
