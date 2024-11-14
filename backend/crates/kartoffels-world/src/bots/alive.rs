@@ -34,7 +34,7 @@ impl AliveBots {
     }
 
     pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
-        let idx = *self.id_to_idx.get(&id)?;
+        let idx = self.id_to_idx.remove(&id)?;
         let bot = self.entries[idx as usize].take().unwrap();
 
         self.pos_to_id.remove(&bot.pos).unwrap();
@@ -109,5 +109,67 @@ impl<'de> Deserialize<'de> for AliveBots {
         }
 
         Ok(this)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use glam::ivec2;
+
+    fn bot(id: u64, pos: IVec2) -> AliveBot {
+        AliveBot {
+            id: BotId::new(id),
+            pos,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn smoke() {
+        let mut target = AliveBots::default();
+
+        target.add(bot(1, ivec2(10, 10)));
+        target.add(bot(2, ivec2(20, 20)));
+        target.add(bot(3, ivec2(30, 30)));
+        target.add(bot(4, ivec2(40, 40)));
+        target.add(bot(5, ivec2(50, 50)));
+
+        assert_eq!(5, target.len());
+        assert_eq!(5, target.count());
+
+        assert_eq!(Some(BotId::new(1)), target.get_by_pos(ivec2(10, 10)));
+        assert_eq!(Some(BotId::new(2)), target.get_by_pos(ivec2(20, 20)));
+        assert_eq!(Some(BotId::new(3)), target.get_by_pos(ivec2(30, 30)));
+        assert_eq!(Some(BotId::new(4)), target.get_by_pos(ivec2(40, 40)));
+        assert_eq!(Some(BotId::new(5)), target.get_by_pos(ivec2(50, 50)));
+        assert_eq!(None, target.get_by_pos(ivec2(10, 20)));
+
+        assert!(target.contains(BotId::new(1)));
+        assert!(target.contains(BotId::new(2)));
+        assert!(target.contains(BotId::new(3)));
+        assert!(target.contains(BotId::new(4)));
+        assert!(target.contains(BotId::new(5)));
+        assert!(!target.contains(BotId::new(6)));
+
+        // ---
+
+        assert_eq!(BotId::new(4), target.remove(BotId::new(4)).unwrap().id);
+        assert!(target.remove(BotId::new(4)).is_none());
+
+        assert_eq!(5, target.len());
+        assert_eq!(4, target.count());
+
+        assert_eq!(Some(BotId::new(1)), target.get_by_pos(ivec2(10, 10)));
+        assert_eq!(Some(BotId::new(2)), target.get_by_pos(ivec2(20, 20)));
+        assert_eq!(Some(BotId::new(3)), target.get_by_pos(ivec2(30, 30)));
+        assert_eq!(None, target.get_by_pos(ivec2(40, 40)));
+        assert_eq!(Some(BotId::new(5)), target.get_by_pos(ivec2(50, 50)));
+
+        assert!(target.contains(BotId::new(1)));
+        assert!(target.contains(BotId::new(2)));
+        assert!(target.contains(BotId::new(3)));
+        assert!(!target.contains(BotId::new(4)));
+        assert!(target.contains(BotId::new(5)));
     }
 }
