@@ -28,18 +28,19 @@ pub fn run(world: &mut World, cmd: KillBot) {
     world.mode.on_bot_killed(killed.id, killer);
     killed.log(reason);
 
-    let decision = if killed.oneshot {
-        Decision::Discard("bot was configured as oneshot")
-    } else if !world.policy.auto_respawn {
-        Decision::Discard("world has auto-respawn disabled")
-    } else if world.bots.queued.len() >= world.policy.max_queued_bots {
-        Decision::Discard("queue is full")
-    } else {
+    let decision = if !killed.oneshot
+        && world.policy.auto_respawn
+        && world.bots.queued.len() < world.policy.max_queued_bots
+    {
         Decision::Queue
+    } else {
+        Decision::Discard
     };
 
     match decision {
         Decision::Queue => {
+            killed.log("requeued");
+
             world.bots.queued.push(QueuedBot {
                 dir: None,
                 events: killed.events,
@@ -52,9 +53,7 @@ pub fn run(world: &mut World, cmd: KillBot) {
             });
         }
 
-        Decision::Discard(reason) => {
-            killed.log(format!("discarded ({reason})"));
-
+        Decision::Discard => {
             world.bots.dead.add(DeadBot {
                 events: killed.events.snapshot(),
                 id: killed.id,
@@ -67,5 +66,5 @@ pub fn run(world: &mut World, cmd: KillBot) {
 #[derive(Clone, Copy, Debug)]
 enum Decision {
     Queue,
-    Discard(&'static str),
+    Discard,
 }

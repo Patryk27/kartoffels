@@ -280,10 +280,34 @@ async fn with_auto_respawn() {
         .unwrap();
 
     world.tick().await.unwrap();
-    world.kill_bot(bot, "because i say so").await.unwrap();
+    world.kill_bot(bot, "killed manually").await.unwrap();
     world.tick().await.unwrap();
 
-    assert!(world.snapshot().await.bots().alive().get(bot).is_some());
+    let snapshot = world.snapshot().await;
+
+    assert!(snapshot.bots().alive().get(bot).is_some());
+    assert!(snapshot.bots().dead().get(bot).is_none());
+    assert!(snapshot.bots().queued().get(bot).is_none());
+
+    let expected = vec![
+        "respawned",
+        "requeued",
+        "killed manually",
+        "spawned",
+        "uploaded and queued",
+    ];
+
+    let actual: Vec<_> = snapshot
+        .bots()
+        .alive()
+        .get(bot)
+        .unwrap()
+        .events
+        .iter()
+        .map(|event| event.msg.clone())
+        .collect();
+
+    assert_eq!(expected, actual);
 }
 
 #[tokio::test]
@@ -302,10 +326,28 @@ async fn without_auto_respawn() {
         .unwrap();
 
     world.tick().await.unwrap();
-    world.kill_bot(bot, "because i say so").await.unwrap();
+    world.kill_bot(bot, "killed manually").await.unwrap();
     world.tick().await.unwrap();
 
-    assert!(world.snapshot().await.bots().alive().get(bot).is_none());
+    let snapshot = world.snapshot().await;
+
+    assert!(snapshot.bots().alive().get(bot).is_none());
+    assert!(snapshot.bots().dead().get(bot).is_some());
+    assert!(snapshot.bots().queued().get(bot).is_none());
+
+    let expected = vec!["killed manually", "spawned", "uploaded and queued"];
+
+    let actual: Vec<_> = snapshot
+        .bots()
+        .dead()
+        .get(bot)
+        .unwrap()
+        .events
+        .iter()
+        .map(|event| event.msg.clone())
+        .collect();
+
+    assert_eq!(expected, actual);
 }
 
 #[tokio::test]
