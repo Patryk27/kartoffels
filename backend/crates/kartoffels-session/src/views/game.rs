@@ -1,22 +1,22 @@
 mod bottom;
 mod camera;
+mod config;
 mod ctrl;
-mod dialog;
 mod event;
 mod map;
+mod modal;
 mod overlay;
-mod perms;
 mod side;
 
 use self::bottom::*;
 use self::camera::*;
+pub use self::config::*;
 pub use self::ctrl::*;
-use self::dialog::*;
-pub use self::dialog::{HelpMsg, HelpMsgRef, HelpMsgResponse};
 use self::event::*;
 use self::map::*;
+use self::modal::*;
+pub use self::modal::{HelpMsg, HelpMsgRef, HelpMsgResponse};
 use self::overlay::*;
-pub use self::perms::*;
 use self::side::*;
 use anyhow::Result;
 use futures_util::FutureExt;
@@ -33,6 +33,7 @@ use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::select;
+use tokio::sync::oneshot;
 use tracing::debug;
 
 pub async fn run<CtrlFn, CtrlFut>(
@@ -103,13 +104,14 @@ async fn run_once(
 struct State {
     bot: Option<JoinedBot>,
     camera: Camera,
-    dialog: Option<Dialog>,
+    config: Config,
     handle: Option<WorldHandle>,
     help: Option<HelpMsgRef>,
     map: Map,
+    modal: Option<Modal>,
     mode: Mode,
     paused: bool,
-    perms: Perms,
+    restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
     speed: ClockSpeed,
@@ -172,13 +174,13 @@ impl State {
 
         Clear::render(ui);
 
-        ui.enable(self.dialog.is_none(), |ui| {
+        ui.enable(self.modal.is_none(), |ui| {
             ui.clamp(bottom_area, |ui| {
                 BottomPanel::render(ui, self, store);
             });
 
             if self.handle.is_some() {
-                ui.enable(self.perms.ui_enabled, |ui| {
+                ui.enable(self.config.enabled, |ui| {
                     ui.clamp(side_area, |ui| {
                         SidePanel::render(ui, self);
                     });
@@ -192,8 +194,8 @@ impl State {
             Overlay::render(ui, self);
         });
 
-        if let Some(dialog) = &mut self.dialog {
-            dialog.render(ui, sess, &self.snapshot);
+        if let Some(modal) = &mut self.modal {
+            modal.render(ui, sess, &self.snapshot, self.restart.is_some());
         }
     }
 
@@ -219,7 +221,7 @@ impl State {
         // If map size's changed, recenter the camera - this comes handy for
         // controllers which call `world.set_map()`, e.g. the tutorial
         if snapshot.raw_map().size() != self.snapshot.raw_map().size() {
-            self.camera.set_at(snapshot.raw_map().center());
+            self.camera.set(snapshot.raw_map().center());
         }
 
         self.snapshot = snapshot;
@@ -240,7 +242,7 @@ impl State {
             self.paused = true;
             self.snapshots = None;
 
-            if self.perms.sync_pause
+            if self.config.sync_pause
                 && let Some(handle) = &self.handle
             {
                 handle.pause().await?;
@@ -257,7 +259,7 @@ impl State {
             self.snapshots =
                 self.handle.as_ref().map(|handle| handle.snapshots());
 
-            if self.perms.sync_pause
+            if self.config.sync_pause
                 && let Some(handle) = &self.handle
             {
                 handle.resume().await?;

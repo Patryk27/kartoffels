@@ -5,12 +5,12 @@ use ratatui::text::{Line, Span};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug, Default)]
-pub struct JoinBotDialog {
+pub struct JoinBotModal {
     id: String,
     caret: Caret,
 }
 
-impl JoinBotDialog {
+impl JoinBotModal {
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         ui.info_window(26, 4, Some(" join-bot "), |ui| {
             ui.line("enter bot id:");
@@ -29,7 +29,7 @@ impl JoinBotDialog {
 
             ui.row(|ui| {
                 Button::new(KeyCode::Escape, "cancel")
-                    .throwing(Event::CloseDialog)
+                    .throwing(Event::CloseModal)
                     .render(ui);
 
                 if Button::new(KeyCode::Enter, "join")
@@ -90,7 +90,7 @@ impl JoinBotDialog {
         let id = self.id.trim();
 
         let Ok(id) = id.parse() else {
-            ui.throw(Event::OpenErrorDialog {
+            ui.throw(Event::OpenErrorModal {
                 error: format!("`{}` is not a valid bot id", self.id),
             });
 
@@ -98,7 +98,7 @@ impl JoinBotDialog {
         };
 
         if !world.bots().has(id) {
-            ui.throw(Event::OpenErrorDialog {
+            ui.throw(Event::OpenErrorModal {
                 error: format!("bot `{id}` was not found"),
             });
 

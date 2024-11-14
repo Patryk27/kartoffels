@@ -10,11 +10,11 @@ use ratatui::text::Span;
 use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
-pub struct BotsDialog {
+pub struct BotsModal {
     state: WidgetListState,
 }
 
-impl BotsDialog {
+impl BotsModal {
     const WIDTHS: &[u16] = &[
         5,                        // nth
         BotId::LENGTH as u16 + 1, // id
@@ -42,7 +42,7 @@ impl BotsDialog {
                 .alive()
                 .iter_sorted_by_scores()
                 .enumerate()
-                .map(|(nth, bot)| BotsDialogRow { nth, bot });
+                .map(|(nth, bot)| BotsModalRow { nth, bot });
 
             let area = Rect {
                 height: ui.area.height - 2,
@@ -76,7 +76,7 @@ impl BotsDialog {
                     ui.space(2);
 
                     Button::new(KeyCode::Escape, "close")
-                        .throwing(Event::CloseDialog)
+                        .throwing(Event::CloseModal)
                         .right_aligned()
                         .render(ui);
                 });
@@ -86,12 +86,12 @@ impl BotsDialog {
 }
 
 #[derive(Clone, Debug)]
-struct BotsDialogRow<'a> {
+struct BotsModalRow<'a> {
     nth: usize,
     bot: &'a SnapshotAliveBot,
 }
 
-impl Render<Event> for BotsDialogRow<'_> {
+impl Render<Event> for BotsModalRow<'_> {
     fn render(self, ui: &mut Ui<Event>) {
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
@@ -101,7 +101,7 @@ impl Render<Event> for BotsDialogRow<'_> {
         let join = Button::new(None, "join")
             .throwing(Event::JoinBot { id: self.bot.id });
 
-        VirtualRow::new(ui, BotsDialog::WIDTHS)
+        VirtualRow::new(ui, BotsModal::WIDTHS)
             .add(nth)
             .add(id)
             .add(age)

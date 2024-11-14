@@ -27,4 +27,4 @@
 
 
 
-[esc] go-back
+[esc] menu

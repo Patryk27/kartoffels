@@ -9,7 +9,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("i mean, not nice, because we're dead, but baby steps"),
         MsgLine::new(""),
         MsgLine::new(
-            "now it's time for you to learn about *da radar*, using which you \
+            "now it's time for you to learn about *the radar*, using which you \
              can program the bot to avoid falling out the map",
         ),
     ],
@@ -18,7 +18,8 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.show_msg(&MSG).await?;
+    ctxt.sync().await?;
+    ctxt.game.msg(&MSG).await?;
 
     Ok(())
 }

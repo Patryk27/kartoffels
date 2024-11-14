@@ -12,15 +12,20 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State, store: &Store) {
+        if state.restart.is_some() {
+            Self::render_menu_btn(ui);
+            return;
+        }
+
         match &state.mode {
             Mode::Default => {
                 ui.row(|ui| {
-                    Self::render_go_back_btn(ui);
+                    Self::render_menu_btn(ui);
 
                     match &state.mode {
                         Mode::Default => {
                             if state.handle.is_some() {
-                                ui.enable(state.perms.ui_enabled, |ui| {
+                                ui.enable(state.config.enabled, |ui| {
                                     Self::render_pause_btn(ui, state);
                                     Self::render_help_btn(ui, state);
                                     Self::render_bots_btn(ui, state);
@@ -37,9 +42,7 @@ impl BottomPanel {
                 });
 
                 if state.handle.is_some() {
-                    ui.enable(state.perms.ui_enabled, |ui| {
-                        Self::render_status(ui, state);
-                    });
+                    Self::render_status(ui, state);
                 }
             }
 
@@ -51,7 +54,13 @@ impl BottomPanel {
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go-back")
-            .throwing(Event::GoBack { confirm: true })
+            .throwing(Event::GoBack)
+            .render(ui);
+    }
+
+    fn render_menu_btn(ui: &mut Ui<Event>) {
+        Button::new(KeyCode::Escape, "menu")
+            .throwing(Event::OpenMenuModal)
             .render(ui);
     }
 
@@ -59,7 +68,7 @@ impl BottomPanel {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
-        let enabled = state.perms.can_user_pause;
+        let enabled = state.config.can_pause;
 
         Button::new(KeyCode::Char(' '), label)
             .throwing(Event::TogglePause)
@@ -71,23 +80,23 @@ impl BottomPanel {
         ui.space(2);
 
         Button::new(KeyCode::Char('h'), "help")
-            .throwing(Event::OpenHelpDialog)
+            .throwing(Event::OpenHelpModal)
             .enabled(state.help.is_some())
             .render(ui);
     }
 
     fn render_bots_btn(ui: &mut Ui<Event>, state: &State) {
-        if !state.perms.hero_mode {
+        if !state.config.hero_mode {
             ui.space(2);
 
             Button::new(KeyCode::Char('b'), "bots")
-                .throwing(Event::OpenBotsDialog)
+                .throwing(Event::OpenBotsModal)
                 .render(ui);
         }
     }
 
     fn render_speed_btn(ui: &mut Ui<Event>, state: &State) {
-        if state.perms.can_user_set_speed {
+        if state.config.can_overclock {
             ui.space(2);
 
             Button::multi("speed")

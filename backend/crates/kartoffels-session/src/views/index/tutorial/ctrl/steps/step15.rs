@@ -1,7 +1,5 @@
 use super::prelude::*;
-use futures::stream::FuturesOrdered;
 use kartoffels_bots::DUMMY;
-use tokio_stream::StreamExt;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
@@ -36,7 +34,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "now, to complete the tutorial, implement a bot that does a 3x3 \
-             radar scan, rotates towards the closest enemy robot (`'@'`), goes \
+             radar scan, rotates towards the closest enemy (`'@'`), goes \
              forward and stabs it; when no enemy is in sight, let your robot \
              continue moving in its current direction",
         ),
@@ -51,29 +49,31 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
-    body: vec![MsgLine::new("hmm, your robot seems to have died")],
+    body: vec![MsgLine::new(
+        "hmm, your robot seems to have died - delete it and upload anew",
+    )],
     buttons: vec![MsgButton::confirm("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.show_msg(&MSG).await?;
+    ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
     loop {
         let dummies = setup_map(ctxt).await?;
-        let player = ctxt.snapshots.wait_until_bot_is_spawned().await?;
+        let player = ctxt.snapshots.next_uploaded_bot().await?;
 
         ctxt.game.set_status(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt, &dummies, player).await?;
 
-        ctxt.wait_for_ui().await?;
+        ctxt.sync().await?;
         ctxt.game.set_status(None).await?;
 
         if succeeded {
             break;
         } else {
-            ctxt.game.show_msg(&MSG_RETRY).await?;
+            ctxt.game.msg(&MSG_RETRY).await?;
         }
     }
 
@@ -111,25 +111,16 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
         ivec2(2, 9),
     ];
 
-    let dummies: Vec<_> = dummies
-        .into_iter()
-        .map(|pos| ctxt.world.create_bot(CreateBotRequest::new(DUMMY).at(pos)))
-        .collect::<FuturesOrdered<_>>()
-        .collect::<Result<_>>()
+    let dummies = ctxt
+        .world
+        .create_bots(
+            dummies
+                .into_iter()
+                .map(|pos| CreateBotRequest::new(DUMMY).at(pos).instant()),
+        )
         .await?;
 
-    loop {
-        if ctxt
-            .snapshots
-            .next()
-            .await?
-            .bots()
-            .alive()
-            .has_all_of(&dummies)
-        {
-            break;
-        }
-    }
+    ctxt.sync().await?;
 
     Ok(dummies)
 }

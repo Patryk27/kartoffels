@@ -1,17 +1,17 @@
+                                                       id
+                                                       22c6-5ce9-77dd-39cb
 
+                                                       status
+                                                       dead
 
-
-
-
-
-
+                                                       serial port
 
         âââââââââââââââââââââââ tutorial (13/16) âââââââââââââââââââââââ
-        â hmm, your robot seems to have died                           â
+        â hmm, your robot seems to have died - delete it and upload    â
+        â anew                                                         â
         â                                                              â
         â                                            [enter] try-again â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-                          ...
                   ......... .........
                                     .
                   .                 .
@@ -24,7 +24,7 @@
 
 
 
-
-
-                                                       [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+                                                       [f] stop-following-bot
+                                                       [i] inspect-bot
+                                                       [D] delete-bot
+[esc] menu  [spc] pause  [h] help

@@ -4,11 +4,11 @@ use ratatui::widgets::Paragraph;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
-pub struct ErrorDialog {
+pub struct ErrorModal {
     error: String,
 }
 
-impl ErrorDialog {
+impl ErrorModal {
     pub fn new(error: String) -> Self {
         Self { error }
     }
@@ -23,7 +23,7 @@ impl ErrorDialog {
 
             ui.clamp(ui.area.footer(1), |ui| {
                 Button::new(KeyCode::Enter, "close")
-                    .throwing(Event::CloseDialog)
+                    .throwing(Event::CloseModal)
                     .right_aligned()
                     .render(ui);
             });

@@ -308,7 +308,7 @@ impl CreateBotRequest {
         self
     }
 
-    pub fn spawn_at_once(mut self) -> Self {
+    pub fn instant(mut self) -> Self {
         self.instant = true;
         self
     }
@@ -326,9 +326,10 @@ pub struct SnapshotStream {
 
 impl SnapshotStream {
     pub async fn next(&mut self) -> Result<Arc<Snapshot>> {
-        self.rx.next().await.with_context(|| Handle::ERR)
+        self.rx.next().await.context(Handle::ERR)
     }
 
+    /// Waits until specified bot is spawned.
     pub async fn wait_for_bot(&mut self, id: BotId) -> Result<()> {
         loop {
             if self.next().await?.bots().alive().has(id) {
@@ -337,7 +338,19 @@ impl SnapshotStream {
         }
     }
 
-    pub async fn wait_until_bot_is_spawned(&mut self) -> Result<BotId> {
+    /// Waits until all specified bots are uploaded.
+    pub async fn wait_for_bots(&mut self, ids: &[BotId]) -> Result<()> {
+        loop {
+            if self.next().await?.bots().alive().has_all_of(ids) {
+                break;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Waits until a bot is uploaded and returns its id.
+    pub async fn next_uploaded_bot(&mut self) -> Result<BotId> {
         let known_bots: HashSet<_> = self
             .next()
             .await?
@@ -363,7 +376,8 @@ impl SnapshotStream {
         }
     }
 
-    pub async fn wait_until_bot_is_killed(&mut self) -> Result<()> {
+    /// Waits until a bot is killed.
+    pub async fn next_killed_bot(&mut self) -> Result<()> {
         let known_bots = self.next().await?.bots().alive().len();
 
         loop {

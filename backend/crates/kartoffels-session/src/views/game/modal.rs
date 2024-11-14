@@ -3,7 +3,7 @@ mod error;
 mod help;
 mod inspect_bot;
 mod join_bot;
-mod leaving;
+mod menu;
 mod spawn_bot;
 mod upload_bot;
 
@@ -12,7 +12,7 @@ pub use self::error::*;
 pub use self::help::*;
 pub use self::inspect_bot::*;
 pub use self::join_bot::*;
-pub use self::leaving::*;
+pub use self::menu::*;
 pub use self::spawn_bot::*;
 pub use self::upload_bot::*;
 use super::Event;
@@ -22,52 +22,53 @@ use kartoffels_world::prelude::Snapshot;
 use termwiz::input::{KeyCode, Modifiers};
 
 #[allow(clippy::type_complexity)]
-pub enum Dialog {
-    Bots(BotsDialog),
-    Error(ErrorDialog),
-    GoBack(GoBackDialog),
-    InspectBot(InspectBotDialog),
-    JoinBot(JoinBotDialog),
-    SpawnBot(SpawnBotDialog),
-    UploadBot(UploadBotDialog),
+pub enum Modal {
+    Bots(BotsModal),
+    Error(ErrorModal),
+    InspectBot(InspectBotModal),
+    JoinBot(JoinBotModal),
+    Menu(MenuModal),
+    SpawnBot(SpawnBotModal),
+    UploadBot(UploadBotModal),
 
     Help(HelpMsgRef),
     Custom(Box<dyn FnMut(&mut Ui<()>) + Send>),
 }
 
-impl Dialog {
+impl Modal {
     pub fn render(
         &mut self,
         ui: &mut Ui<Event>,
         sess: SessionId,
         world: &Snapshot,
+        can_restart: bool,
     ) {
         Backdrop::render(ui);
 
         match self {
-            Dialog::Bots(this) => {
+            Modal::Bots(this) => {
                 this.render(ui, world);
             }
-            Dialog::Error(this) => {
+            Modal::Error(this) => {
                 this.render(ui);
             }
-            Dialog::GoBack(this) => {
-                this.render(ui);
-            }
-            Dialog::InspectBot(this) => {
+            Modal::InspectBot(this) => {
                 this.render(ui, world);
             }
-            Dialog::JoinBot(this) => {
+            Modal::JoinBot(this) => {
                 this.render(ui, world);
             }
-            Dialog::SpawnBot(this) => {
+            Modal::Menu(this) => {
+                this.render(ui, can_restart);
+            }
+            Modal::SpawnBot(this) => {
                 this.render(ui);
             }
-            Dialog::UploadBot(this) => {
+            Modal::UploadBot(this) => {
                 this.render(ui, sess);
             }
 
-            Dialog::Help(this) => {
+            Modal::Help(this) => {
                 let event = ui.catch(|ui| {
                     this.render(ui);
                 });
@@ -78,17 +79,17 @@ impl Dialog {
                             ui.copy(payload);
                         }
                         HelpMsgResponse::Close => {
-                            ui.throw(Event::CloseDialog);
+                            ui.throw(Event::CloseModal);
                         }
                     }
                 }
 
                 if ui.key(KeyCode::Escape, Modifiers::NONE) {
-                    ui.throw(Event::CloseDialog);
+                    ui.throw(Event::CloseModal);
                 }
             }
 
-            Dialog::Custom(this) => {
+            Modal::Custom(this) => {
                 ui.catch(this);
             }
         }

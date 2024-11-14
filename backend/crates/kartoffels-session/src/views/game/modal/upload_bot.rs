@@ -12,14 +12,14 @@ use std::time::Instant;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
-pub struct UploadBotDialog {
+pub struct UploadBotModal {
     request: UploadBotRequest<()>,
     interest: Option<SessionUploadInterest>,
     spinner: Spinner,
     alert: Option<Instant>,
 }
 
-impl UploadBotDialog {
+impl UploadBotModal {
     pub fn new(
         request: UploadBotRequest<()>,
         store: &Store,
@@ -51,7 +51,7 @@ impl UploadBotDialog {
             if src.is_empty() {
                 // A bit hacky, but that's the most sane way for the web
                 // terminal to inform us that user has cancelled the file picker
-                ui.throw(Event::CloseDialog);
+                ui.throw(Event::CloseModal);
             } else {
                 ui.throw(Event::UploadBot {
                     request: self
@@ -117,7 +117,7 @@ impl UploadBotDialog {
 
             ui.row(|ui| {
                 Button::new(KeyCode::Escape, "cancel")
-                    .throwing(Event::CloseDialog)
+                    .throwing(Event::CloseModal)
                     .render(ui);
 
                 if Button::new(KeyCode::Char('c'), "copy-session-id")

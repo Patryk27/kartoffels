@@ -77,9 +77,23 @@ impl SnapshotBots {
     }
 
     pub fn has(&self, id: BotId) -> bool {
-        self.alive.get(id).is_some()
-            || self.dead.get(id).is_some()
-            || self.queued.get(id).is_some()
+        self.get(id).is_some()
+    }
+
+    pub fn get(&self, id: BotId) -> Option<SnapshotBot> {
+        if let Some(bot) = self.alive.get(id) {
+            return Some(SnapshotBot::Alive(bot));
+        }
+
+        if let Some(bot) = self.dead.get(id) {
+            return Some(SnapshotBot::Dead(bot));
+        }
+
+        if let Some(bot) = self.queued.get(id) {
+            return Some(SnapshotBot::Queued(bot));
+        }
+
+        None
     }
 
     pub fn is_empty(&self) -> bool {
@@ -97,6 +111,13 @@ impl fmt::Display for SnapshotBots {
 
         Ok(())
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SnapshotBot<'a> {
+    Alive(&'a SnapshotAliveBot),
+    Dead(&'a SnapshotDeadBot),
+    Queued(&'a SnapshotQueuedBot),
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -189,6 +210,10 @@ pub struct SnapshotDeadBots {
 impl SnapshotDeadBots {
     pub fn get(&self, id: BotId) -> Option<&SnapshotDeadBot> {
         self.entries.get(&id)
+    }
+
+    pub fn ids(&self) -> impl Iterator<Item = BotId> + '_ {
+        self.entries.keys().copied()
     }
 
     pub fn is_empty(&self) -> bool {

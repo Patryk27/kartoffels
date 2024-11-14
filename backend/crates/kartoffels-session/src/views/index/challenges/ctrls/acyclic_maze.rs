@@ -1,5 +1,5 @@
-use super::Challenge;
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
+use super::{Challenge, CONFIG};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
 use crate::MapBroadcaster;
 use anyhow::Result;
 use futures::future::BoxFuture;
@@ -38,7 +38,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     ]
 });
 
-static INIT_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
+static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     title: Some(" acyclic-maze "),
     body: DOCS.clone(),
 
@@ -76,23 +76,23 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     debug!("run()");
 
     Box::pin(async move {
-        if !game.show_msg(&INIT_MSG).await? {
+        if !game.msg(&START_MSG).await? {
             return Ok(());
         }
 
-        let (world, timmy) = setup(store, &game).await?;
+        let (world, timmy) = init(store, &game).await?;
 
-        main(&world, timmy).await?;
+        watch(&world, timmy).await?;
 
-        game.show_msg(&WIN_MSG).await?;
+        game.msg(&WIN_MSG).await?;
 
         Ok(())
     })
 }
 
-async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
-    game.set_perms(Perms::CHALLENGE.disabled()).await?;
+    game.set_config(CONFIG.disabled()).await?;
     game.set_status(Some("building world".into())).await?;
 
     let world = store.create_private_world(Config {
@@ -138,7 +138,7 @@ async fn setup(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     .run(store, &world)
     .await?;
 
-    game.set_perms(Perms::CHALLENGE).await?;
+    game.set_config(CONFIG).await?;
     game.set_status(None).await?;
 
     Ok((world, timmy))
@@ -265,7 +265,7 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     map
 }
 
-async fn main(world: &Handle, timmy: BotId) -> Result<()> {
+async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
     let mut snapshots = world.snapshots();
 
     // Wait for Timmy to appear - that's required only for tests, because there

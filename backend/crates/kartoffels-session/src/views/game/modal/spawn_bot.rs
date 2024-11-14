@@ -10,14 +10,14 @@ use kartoffels_ui::{Button, Render, Ui};
 use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
-pub struct SpawnBotDialog {
+pub struct SpawnBotModal {
     focus: Option<Focus>,
     bot_source: BotSourceType,
     bot_position: BotPosition,
     bot_count: BotCount,
 }
 
-impl SpawnBotDialog {
+impl SpawnBotModal {
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
         let event = ui.catch(|ui| {
             let width = 50;
@@ -110,12 +110,12 @@ impl SpawnBotDialog {
                 if self.focus.is_some() {
                     self.focus = None;
                 } else {
-                    return Some(ParentEvent::CloseDialog);
+                    return Some(ParentEvent::CloseModal);
                 }
             }
 
             Event::Confirm => {
-                return Some(ParentEvent::OpenUploadBotDialog {
+                return Some(ParentEvent::OpenUploadBotModal {
                     request: UploadBotRequest {
                         source: self.bot_source,
                         position: self.bot_position,

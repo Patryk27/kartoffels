@@ -1,10 +1,10 @@
+                                                       id
+                                                       22c6-5ce9-77dd-39cb
 
+                                                       status
+                                                       dead
 
-
-
-
-
-
+                                                       serial port
 
 
 
@@ -24,7 +24,7 @@
 
 
 
-
-
-                                                       [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+                                                       [f] stop-following-bot
+                                                       [i] inspect-bot
+                                                       [D] delete-bot
+[esc] menu  [spc] pause  [h] help

@@ -115,6 +115,12 @@ impl Map {
                 bg = theme::BG;
             }
 
+            TileKind::DOOR => {
+                ch = '+';
+                fg = theme::GRAY;
+                bg = theme::BG;
+            }
+
             TileKind::FLOOR => {
                 ch = '.';
                 fg = theme::DARK_GRAY;
@@ -161,7 +167,7 @@ impl Map {
                     .map(|bot| bot.id)
                     .unwrap();
 
-                if ui.mouse_over(ui.area) && !state.perms.hero_mode {
+                if ui.mouse_over(ui.area) && state.config.can_join_bots {
                     fg = theme::BG;
                     bg = theme::GREEN;
 

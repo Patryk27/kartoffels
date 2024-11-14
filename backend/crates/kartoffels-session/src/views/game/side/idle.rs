@@ -8,36 +8,49 @@ pub struct IdleSidePanel;
 
 impl IdleSidePanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
-        let actions = Self::layout(state);
+        let btns = Self::btns(state);
 
         let [_, area] = Layout::vertical([
             Constraint::Fill(1),
-            Constraint::Length(actions.len() as u16),
+            Constraint::Length(btns.len() as u16),
         ])
         .areas(ui.area);
 
         ui.clamp(area, |ui| {
-            for action in actions {
-                action.render(ui, state);
+            for btn in btns {
+                btn.render(ui);
             }
         });
     }
 
-    fn layout(state: &State) -> Vec<Action> {
+    fn btns(state: &State) -> Vec<Button<Event>> {
         let mut btns = Vec::new();
 
         match state.mode {
             Mode::Default => {
-                if !state.perms.hero_mode {
-                    btns.push(Action::JoinBot);
+                if !state.config.hero_mode {
+                    btns.push(
+                        Button::new(KeyCode::Char('j'), "join-bot")
+                            .throwing(Event::OpenJoinBotModal)
+                            .enabled(!state.snapshot.bots().is_empty()),
+                    );
                 }
 
-                if state.perms.can_user_upload_bots {
-                    btns.push(Action::UploadBot);
+                if state.config.can_upload_bots {
+                    btns.push(
+                        Button::new(KeyCode::Char('u'), "upload-bot").throwing(
+                            Event::OpenUploadBotModal {
+                                request: UploadBotRequest::default(),
+                            },
+                        ),
+                    );
                 }
 
-                if state.perms.can_user_spawn_prefabs {
-                    btns.push(Action::SpawnBot);
+                if state.config.can_spawn_bots {
+                    btns.push(
+                        Button::new(KeyCode::Char('S'), "spawn-bot")
+                            .throwing(Event::OpenSpawnBotModal),
+                    );
                 }
             }
 
@@ -47,40 +60,5 @@ impl IdleSidePanel {
         }
 
         btns
-    }
-}
-
-#[allow(clippy::enum_variant_names)]
-#[derive(Debug)]
-enum Action {
-    JoinBot,
-    UploadBot,
-    SpawnBot,
-}
-
-impl Action {
-    fn render(self, ui: &mut Ui<Event>, state: &State) {
-        match self {
-            Action::JoinBot => {
-                Button::new(KeyCode::Char('j'), "join-bot")
-                    .throwing(Event::OpenJoinBotDialog)
-                    .enabled(!state.snapshot.bots().is_empty())
-                    .render(ui);
-            }
-
-            Action::UploadBot => {
-                Button::new(KeyCode::Char('u'), "upload-bot")
-                    .throwing(Event::OpenUploadBotDialog {
-                        request: UploadBotRequest::default(),
-                    })
-                    .render(ui);
-            }
-
-            Action::SpawnBot => {
-                Button::new(KeyCode::Char('S'), "spawn-bot")
-                    .throwing(Event::OpenSpawnBotDialog)
-                    .render(ui);
-            }
-        }
     }
 }

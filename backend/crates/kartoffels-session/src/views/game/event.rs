@@ -1,9 +1,9 @@
 use super::{
-    BotPosition, BotSource, BotSourceType, Dialog, ErrorDialog,
-    InspectBotDialog, Mode, Perms, SpawnBotDialog, State, UploadBotDialog,
-    UploadBotRequest,
+    BotPosition, BotSource, BotSourceType, BotsModal, Config, ErrorModal,
+    InspectBotModal, JoinBotModal, MenuModal, Modal, Mode, SpawnBotModal,
+    State, UploadBotModal, UploadBotRequest,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use glam::IVec2;
@@ -15,10 +15,8 @@ use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
-    CloseDialog,
-    GoBack {
-        confirm: bool,
-    },
+    GoBack,
+    Restart,
     JoinBot {
         id: BotId,
     },
@@ -26,16 +24,18 @@ pub enum Event {
         delta: IVec2,
     },
     TogglePause,
-    OpenBotsDialog,
-    OpenErrorDialog {
+    CloseModal,
+    OpenBotsModal,
+    OpenErrorModal {
         error: String,
     },
-    OpenHelpDialog,
-    OpenJoinBotDialog,
-    OpenUploadBotDialog {
+    OpenHelpModal,
+    OpenJoinBotModal,
+    OpenMenuModal,
+    OpenUploadBotModal {
         request: UploadBotRequest<BotSourceType>,
     },
-    OpenSpawnBotDialog,
+    OpenSpawnBotModal,
     UploadBot {
         request: UploadBotRequest<BotSource>,
     },
@@ -62,17 +62,9 @@ impl Event {
         state: &mut State,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
-            Event::CloseDialog => {
-                state.dialog = None;
-            }
-
-            Event::GoBack { confirm } => match &state.mode {
+            Event::GoBack => match &state.mode {
                 Mode::Default => {
-                    if confirm {
-                        state.dialog = Some(Dialog::GoBack(Default::default()));
-                    } else {
-                        return Ok(ControlFlow::Break(()));
-                    }
+                    return Ok(ControlFlow::Break(()));
                 }
 
                 Mode::SpawningBot { .. } => {
@@ -80,9 +72,19 @@ impl Event {
                 }
             },
 
+            Event::Restart => {
+                state.bot = None;
+                state.mode = Mode::Default;
+                state.modal = None;
+
+                if state.restart.take().unwrap().send(()).is_err() {
+                    return Err(anyhow!("couldn't restart the game"));
+                }
+            }
+
             Event::JoinBot { id } => {
                 state.join_bot(id, true);
-                state.dialog = None;
+                state.modal = None;
             }
 
             Event::MoveCamera { delta } => {
@@ -101,28 +103,35 @@ impl Event {
                 }
             }
 
-            Event::OpenBotsDialog => {
-                state.dialog = Some(Dialog::Bots(Default::default()));
+            Event::CloseModal => {
+                state.modal = None;
             }
 
-            Event::OpenHelpDialog => {
-                state.dialog = Some(Dialog::Help(state.help.unwrap()));
+            Event::OpenBotsModal => {
+                state.modal = Some(Modal::Bots(BotsModal::default()));
             }
 
-            Event::OpenErrorDialog { error } => {
-                state.dialog = Some(Dialog::Error(ErrorDialog::new(error)));
+            Event::OpenHelpModal => {
+                state.modal = Some(Modal::Help(state.help.unwrap()));
             }
 
-            Event::OpenJoinBotDialog => {
-                state.dialog = Some(Dialog::JoinBot(Default::default()));
+            Event::OpenErrorModal { error } => {
+                state.modal = Some(Modal::Error(ErrorModal::new(error)));
             }
 
-            Event::OpenSpawnBotDialog => {
-                state.dialog =
-                    Some(Dialog::SpawnBot(SpawnBotDialog::default()));
+            Event::OpenMenuModal => {
+                state.modal = Some(Modal::Menu(MenuModal));
             }
 
-            Event::OpenUploadBotDialog { request } => match request.source {
+            Event::OpenJoinBotModal => {
+                state.modal = Some(Modal::JoinBot(JoinBotModal::default()));
+            }
+
+            Event::OpenSpawnBotModal => {
+                state.modal = Some(Modal::SpawnBot(SpawnBotModal::default()));
+            }
+
+            Event::OpenUploadBotModal { request } => match request.source {
                 BotSourceType::Upload => {
                     let request = request.with_source(());
 
@@ -130,27 +139,27 @@ impl Event {
                         term.send(vec![0x04]).await?;
                     }
 
-                    state.dialog = Some(Dialog::UploadBot(
-                        UploadBotDialog::new(request, store, sess),
-                    ));
+                    state.modal = Some(Modal::UploadBot(UploadBotModal::new(
+                        request, store, sess,
+                    )));
                 }
 
                 BotSourceType::Prefab(source) => {
                     let request = request
                         .with_source(BotSource::BinaryRef(source.source()));
 
-                    state.dialog = None;
+                    state.modal = None;
                     state.upload_bot(request).await?;
                 }
             },
 
             Event::UploadBot { request } => {
-                state.dialog = None;
+                state.modal = None;
                 state.upload_bot(request).await?;
             }
 
             Event::CreateBot { src, pos, follow } => {
-                state.dialog = None;
+                state.modal = None;
                 state.create_bot(&src, pos, follow).await?;
             }
 
@@ -183,8 +192,8 @@ impl Event {
 
             Event::InspectBot => {
                 if let Some(bot) = &state.bot {
-                    state.dialog =
-                        Some(Dialog::InspectBot(InspectBotDialog::new(bot.id)));
+                    state.modal =
+                        Some(Modal::InspectBot(InspectBotModal::new(bot.id)));
                 }
             }
 
@@ -194,7 +203,7 @@ impl Event {
             }
 
             Event::EnableDebugMode => {
-                state.perms = Perms::DEBUG;
+                state.config = Config::DEBUG;
             }
         }
 
@@ -242,7 +251,7 @@ impl State {
                     Ok(src) => Cow::Owned(src),
 
                     Err(err) => {
-                        self.dialog = Some(Dialog::Error(ErrorDialog::new(
+                        self.modal = Some(Modal::Error(ErrorModal::new(
                             format!("couldn't decode pasted content:\n\n{err}"),
                         )));
 
@@ -266,8 +275,8 @@ impl State {
             Ok(id) => id,
 
             Err(err) => {
-                self.dialog =
-                    Some(Dialog::Error(ErrorDialog::new(format!("{err:?}"))));
+                self.modal =
+                    Some(Modal::Error(ErrorModal::new(format!("{err:?}"))));
 
                 return Ok(());
             }

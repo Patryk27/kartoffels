@@ -54,24 +54,20 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
-    body: vec![MsgLine::new("hmm, your robot seems to have died")],
+    body: vec![MsgLine::new(
+        "hmm, your robot seems to have died - delete it and upload anew",
+    )],
     buttons: vec![MsgButton::confirm("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.show_msg(&MSG).await?;
+    ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
-
-    ctxt.game
-        .update_perms(|perms| {
-            perms.can_user_manage_bots = true;
-        })
-        .await?;
 
     setup_map(ctxt).await?;
 
     loop {
-        ctxt.snapshots.wait_until_bot_is_spawned().await?;
+        ctxt.snapshots.next_uploaded_bot().await?;
         ctxt.game.set_status(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt).await?;
@@ -81,7 +77,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
         if succeeded {
             break;
         } else {
-            ctxt.game.show_msg(&MSG_RETRY).await?;
+            ctxt.game.msg(&MSG_RETRY).await?;
         }
     }
 

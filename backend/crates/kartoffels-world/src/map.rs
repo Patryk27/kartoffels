@@ -311,6 +311,7 @@ pub struct TileKind;
 impl TileKind {
     pub const BOT: u8 = b'@';
     pub const BOT_CHEVRON: u8 = b'~';
+    pub const DOOR: u8 = b'+';
     pub const FLOOR: u8 = b'.';
     pub const VOID: u8 = b' ';
     pub const WALL_H: u8 = b'-';

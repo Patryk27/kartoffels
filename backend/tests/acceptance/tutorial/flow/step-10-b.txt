@@ -2,8 +2,8 @@
                                                        0543-c377-57f0-8d9a
 
                        .........                       status
-                     .............                     alive (0s)
-                    ...............                    > pos: [11, 12]
+                     .............                     alive
+                    ...............                    > age: 0s
         âââââââââââââââââââââââ tutorial (10/16) âââââââââââââââââââââââ
         â hmm, your robot seems to be still alive                      â
         â                                                              â
@@ -24,7 +24,7 @@
                     ...............
                      .............
                        .........
-
-
-
-[esc] go-back  [spc] pause  [h] help
+                                                       [f] stop-following-bot
+                                                       [i] inspect-bot
+                                                       [D] delete-bot
+[esc] menu  [spc] pause  [h] help

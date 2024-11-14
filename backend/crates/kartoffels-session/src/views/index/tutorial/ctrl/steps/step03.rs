@@ -22,7 +22,7 @@ static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     loop {
-        match ctxt.game.show_msg(&MSG).await? {
+        match ctxt.game.msg(&MSG).await? {
             "copy" => {
                 ctxt.game.copy_to_clipboard(CMD).await?;
             }

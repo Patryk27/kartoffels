@@ -1,9 +1,9 @@
-use crate::views::game::{GameCtrl, Perms};
+use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
 use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::{
-    ArenaTheme, Config, Handle, Policy, SnapshotStream, Theme,
+    ArenaTheme, Config as WorldConfig, Handle, Policy, SnapshotStream, Theme,
 };
 
 pub struct TutorialCtxt {
@@ -14,9 +14,22 @@ pub struct TutorialCtxt {
 
 impl TutorialCtxt {
     pub async fn new(store: &Store, game: GameCtrl) -> Result<Self> {
-        game.set_perms(Perms::TUTORIAL).await?;
+        game.set_config(Config {
+            enabled: true,
+            hero_mode: true,
+            sync_pause: true,
 
-        let world = store.create_private_world(Config {
+            can_delete_bots: true,
+            can_join_bots: false,
+            can_overclock: false,
+            can_pause: false,
+            can_restart_bots: false,
+            can_spawn_bots: false,
+            can_upload_bots: true,
+        })
+        .await?;
+
+        let world = store.create_private_world(WorldConfig {
             name: "tutorial".into(),
             policy: Policy {
                 auto_respawn: false,
@@ -42,7 +55,9 @@ impl TutorialCtxt {
         })
     }
 
-    pub async fn wait_for_ui(&mut self) -> Result<()> {
+    /// Waits for user interface to catch up with the latest snapshot of the
+    /// world.
+    pub async fn sync(&mut self) -> Result<()> {
         let latest_version = self.snapshots.next().await?.version();
 
         loop {
@@ -55,8 +70,13 @@ impl TutorialCtxt {
     }
 
     pub async fn delete_bots(&mut self) -> Result<()> {
-        for bot in self.snapshots.next().await?.bots().alive().iter() {
-            self.world.delete_bot(bot.id).await?;
+        let snapshot = self.snapshots.next().await?;
+
+        let alive_ids = snapshot.bots().alive().iter().map(|bot| bot.id);
+        let dead_ids = snapshot.bots().dead().ids();
+
+        for id in alive_ids.chain(dead_ids) {
+            self.world.delete_bot(id).await?;
         }
 
         Ok(())

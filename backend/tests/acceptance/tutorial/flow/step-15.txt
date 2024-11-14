@@ -15,9 +15,9 @@
         â easy enough, isn't it?                                       â
         â                                                              â
         â now, to complete the tutorial, implement a bot that does a   â
-        â 3x3 radar scan, rotates towards the closest enemy robot      â
-        â ('@'), goes forward and stabs it; when no enemy is in sight, â
-        â let your robot continue moving in its current direction      â
+        â 3x3 radar scan, rotates towards the closest enemy ('@'),     â
+        â goes forward and stabs it; when no enemy is in sight, let    â
+        â your robot continue moving in its current direction          â
         â                                                              â
         â for simplicity, the enemies will not try to kill you and     â
         â they will be located directly north / east / west / south -  â
@@ -27,4 +27,4 @@
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] menu  [spc] pause  [h] help

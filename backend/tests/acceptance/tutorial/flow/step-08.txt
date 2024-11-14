@@ -27,4 +27,4 @@
         â                                                 [enter] next â
         ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] menu  [spc] pause  [h] help

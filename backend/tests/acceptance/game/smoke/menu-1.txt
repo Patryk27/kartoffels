@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+                       ââââââââââââââ menu ââââââââââââââ
+                       â       whaddya want to do?      â
+                       â                                â
+                       â         [l] leave game         â
+                       â     [esc] go back to game      â
+                       ââââââââââââââââââââââââââââââââââ
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                       [j] join-bot
+                                                       [u] upload-bot
+[esc] menu  [spc] pause  [h] help  [b] bots

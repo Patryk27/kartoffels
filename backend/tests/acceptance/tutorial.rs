@@ -105,7 +105,7 @@ async fn flow() {
 
     ctxt.upload_bot(TUT_01).await;
     ctxt.wait_for_modal("tutorial (6/16)").await;
-    ctxt.wait_while("alive (0s)").await;
+    ctxt.wait_while("alive").await;
     ctxt.see_frame("tutorial/flow/step-06.txt").await;
 
     // ---
@@ -115,7 +115,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-07-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for("alive (0s)").await;
+    ctxt.wait_for("alive").await;
     ctxt.see_frame("tutorial/flow/step-07-b.txt").await;
 
     time::pause();
@@ -212,6 +212,11 @@ async fn flow() {
     ctxt.wait_while_modal("tutorial (13/16)").await;
     ctxt.see_frame("tutorial/flow/step-13-f.txt").await;
 
+    ctxt.see("[D] delete-bot");
+    ctxt.press(KeyCode::Char('D')).await;
+    ctxt.wait_while("[D] delete-bot").await;
+    ctxt.see_frame("tutorial/flow/step-13-g.txt").await;
+
     ctxt.upload_bot(TUT_03).await;
 
     ctxt.store()
@@ -246,5 +251,6 @@ async fn flow() {
     time::sleep(Duration::from_millis(250)).await;
 
     ctxt.upload_bot(TUT_04).await;
+    ctxt.wait_for("watching").await;
     ctxt.wait_for_modal("tutorial (16/16)").await;
 }

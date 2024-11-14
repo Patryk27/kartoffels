@@ -10,7 +10,7 @@
      ...â                                                              â
     ....â i mean, not nice, because we're dead, but baby steps         â
     ....â                                                              â
-    ....â now it's time for you to learn about da radar, using which   â
+    ....â now it's time for you to learn about the radar, using which  â
     ....â you can program the bot to avoid falling out the map         â
     ....â                                                              â
     ....â                                                 [enter] next â
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] menu  [spc] pause  [h] help

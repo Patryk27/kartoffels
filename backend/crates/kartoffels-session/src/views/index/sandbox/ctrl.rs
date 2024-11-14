@@ -1,10 +1,10 @@
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse, Perms};
+use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgResponse};
 use crate::MapBroadcaster;
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
 use kartoffels_world::prelude::{
-    Config, Dir, Handle, Map, Policy, Theme, TileKind,
+    Config as WorldConfig, Dir, Handle, Map, Policy, Theme, TileKind,
 };
 use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -45,12 +45,26 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     buttons: vec![HelpMsgResponse::close()],
 });
 
+const CONFIG: Config = Config {
+    enabled: true,
+    hero_mode: false,
+    sync_pause: true,
+
+    can_delete_bots: true,
+    can_join_bots: true,
+    can_overclock: false,
+    can_pause: true,
+    can_restart_bots: true,
+    can_spawn_bots: true,
+    can_upload_bots: true,
+};
+
 pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     let world = init(store, &game).await?;
 
     create_map(store, theme, &world).await?;
 
-    game.set_perms(Perms::SANDBOX).await?;
+    game.set_config(CONFIG).await?;
     game.set_status(None).await?;
 
     future::pending().await
@@ -58,10 +72,10 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
 
 async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
-    game.set_perms(Perms::SANDBOX.disabled()).await?;
+    game.set_config(CONFIG.disabled()).await?;
     game.set_status(Some("building world".into())).await?;
 
-    let world = store.create_private_world(Config {
+    let world = store.create_private_world(WorldConfig {
         name: "sandbox".into(),
         policy: Policy {
             auto_respawn: true,

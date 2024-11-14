@@ -1,11 +1,11 @@
 use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
-use kartoffels_ui::{theme, Button, RectExt, Render, Ui};
+use kartoffels_ui::{theme, Button, Render, Ui};
 use kartoffels_world::prelude::{
-    SnapshotAliveBot, SnapshotDeadBot, SnapshotQueuedBot,
+    SnapshotAliveBot, SnapshotBot, SnapshotDeadBot, SnapshotQueuedBot,
 };
 use ordinal::Ordinal;
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Stylize;
 use std::collections::VecDeque;
 use termwiz::input::KeyCode;
@@ -14,45 +14,49 @@ use termwiz::input::KeyCode;
 pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
-    pub fn render(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
-        ui.line("id".underlined());
-        ui.line(bot.id.to_string().fg(bot.id.color()));
-        ui.space(1);
+    pub fn render(ui: &mut Ui<Event>, state: &State, jbot: &JoinedBot) {
+        let bot = state.snapshot.bots().get(jbot.id);
+        let btns = Self::btns(state, jbot);
 
-        let footer_height = if state.perms.hero_mode {
-            2
-        } else if state.perms.can_user_manage_bots {
-            5
-        } else {
-            3
-        };
-
-        let bot_area = Rect {
-            x: ui.area.x,
-            y: ui.area.y,
-            width: ui.area.width,
-            height: ui.area.height - footer_height - 1,
-        };
+        let [bot_area, _, btns_area] = Layout::vertical([
+            Constraint::Fill(1),
+            Constraint::Length(1),
+            Constraint::Length(btns.len() as u16),
+        ])
+        .areas(ui.area);
 
         ui.clamp(bot_area, |ui| {
-            if let Some(bot) = state.snapshot.bots().alive().get(bot.id) {
+            Self::render_bot(ui, jbot, bot);
+        });
+
+        ui.clamp(btns_area, |ui| {
+            for btn in btns {
+                btn.render(ui);
+            }
+        });
+    }
+
+    fn render_bot(
+        ui: &mut Ui<Event>,
+        jbot: &JoinedBot,
+        bot: Option<SnapshotBot>,
+    ) {
+        ui.line("id".underlined());
+        ui.line(jbot.id.to_string().fg(jbot.id.color()));
+        ui.space(1);
+
+        match bot {
+            Some(SnapshotBot::Alive(bot)) => {
                 Self::render_alive_bot(ui, bot);
-                return;
             }
-
-            if let Some(bot) = state.snapshot.bots().dead().get(bot.id) {
+            Some(SnapshotBot::Dead(bot)) => {
                 Self::render_dead_bot(ui, bot);
-                return;
             }
-
-            if let Some(bot) = state.snapshot.bots().queued().get(bot.id) {
+            Some(SnapshotBot::Queued(bot)) => {
                 Self::render_queued_bot(ui, bot);
             }
-        });
-
-        ui.clamp(ui.area.footer(footer_height), |ui| {
-            Self::render_footer(ui, state, bot)
-        });
+            _ => (),
+        }
     }
 
     fn render_alive_bot(ui: &mut Ui<Event>, bot: &SnapshotAliveBot) {
@@ -69,7 +73,7 @@ impl JoinedSidePanel {
 
     fn render_dead_bot(ui: &mut Ui<Event>, bot: &SnapshotDeadBot) {
         ui.line("status".underlined());
-        ui.line("killed, discarded".fg(theme::RED));
+        ui.line("dead".fg(theme::RED));
         ui.space(1);
 
         Self::render_bot_serial(ui, &bot.serial);
@@ -101,51 +105,48 @@ impl JoinedSidePanel {
         }
     }
 
-    // TODO refactor
-    fn render_footer(ui: &mut Ui<Event>, state: &State, bot: &JoinedBot) {
-        if state.perms.hero_mode {
-            Button::new(KeyCode::Char('i'), "inspect-bot")
-                .throwing(Event::InspectBot)
-                .render(ui);
+    fn btns(state: &State, bot: &JoinedBot) -> Vec<Button<'static, Event>> {
+        let mut btns = Vec::new();
 
-            if state.perms.can_user_manage_bots {
-                Button::new(KeyCode::Char('D'), "delete-bot")
-                    .throwing(Event::DeleteBot)
-                    .render(ui);
-            }
-        } else {
-            Button::new(KeyCode::Char('i'), "inspect-bot")
-                .throwing(Event::InspectBot)
-                .render(ui);
-
-            let follow_caption = if bot.follow {
+        btns.push({
+            let label = if bot.follow {
                 "stop-following-bot"
             } else {
                 "follow-bot"
             };
 
-            Button::new(KeyCode::Char('f'), follow_caption)
-                .throwing(Event::FollowBot)
-                .render(ui);
+            Button::new(KeyCode::Char('f'), label).throwing(Event::FollowBot)
+        });
 
-            if state.perms.can_user_manage_bots {
-                ui.enable(!state.paused, |ui| {
-                    Button::new(KeyCode::Char('R'), "restart-bot")
-                        .throwing(Event::RestartBot)
-                        .render(ui);
+        btns.push(
+            Button::new(KeyCode::Char('i'), "inspect-bot")
+                .throwing(Event::InspectBot),
+        );
 
-                    Button::new(KeyCode::Char('D'), "delete-bot")
-                        .throwing(Event::DeleteBot)
-                        .render(ui);
-                });
-
-                ui.space(2);
-            }
-
-            Button::new(KeyCode::Char('l'), "leave-bot")
-                .throwing(Event::LeaveBot)
-                .render(ui);
+        if state.config.can_restart_bots {
+            btns.push(
+                Button::new(KeyCode::Char('R'), "restart-bot")
+                    .throwing(Event::RestartBot)
+                    .enabled(!state.paused),
+            );
         }
+
+        if state.config.can_delete_bots {
+            btns.push(
+                Button::new(KeyCode::Char('D'), "delete-bot")
+                    .throwing(Event::DeleteBot)
+                    .enabled(!state.paused),
+            );
+        }
+
+        if !state.config.hero_mode {
+            btns.push(
+                Button::new(KeyCode::Char('l'), "leave-bot")
+                    .throwing(Event::LeaveBot),
+            );
+        }
+
+        btns
     }
 }
 

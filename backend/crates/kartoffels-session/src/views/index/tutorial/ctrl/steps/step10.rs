@@ -52,7 +52,7 @@ static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.show_msg(&MSG).await?;
+    ctxt.game.msg(&MSG).await?;
     ctxt.game.resume().await?;
 
     loop {
@@ -60,7 +60,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
         let result = time::timeout(
             Duration::from_secs(10),
-            ctxt.snapshots.wait_until_bot_is_killed(),
+            ctxt.snapshots.next_killed_bot(),
         )
         .await;
 
@@ -73,9 +73,9 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
             }
 
             Err(_) => {
-                ctxt.game.show_msg(&MSG_RETRY).await?;
+                ctxt.game.msg(&MSG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.snapshots.wait_until_bot_is_spawned().await?;
+                ctxt.snapshots.next_uploaded_bot().await?;
                 ctxt.game.set_help(None).await?;
             }
         }

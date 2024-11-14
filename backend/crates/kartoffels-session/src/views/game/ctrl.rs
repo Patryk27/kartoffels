@@ -1,5 +1,5 @@
-use super::{Dialog, State};
-use crate::views::game::{HelpMsgRef, Perms};
+use super::{Modal, State};
+use crate::views::game::{Config, HelpMsgRef};
 use anyhow::{anyhow, Result};
 use kartoffels_ui::{theme, Msg, Term, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
@@ -40,45 +40,36 @@ impl GameCtrl {
         Ok(())
     }
 
-    pub async fn set_perms(&self, perms: Perms) -> Result<()> {
-        self.send(GameCtrlEvent::SetPerms(perms)).await?;
+    pub async fn set_config(&self, config: Config) -> Result<()> {
+        self.send(GameCtrlEvent::SetConfig(config)).await?;
 
         Ok(())
     }
 
-    pub async fn update_perms(
+    async fn open_modal(
         &self,
-        f: impl FnOnce(&mut Perms) + Send + 'static,
+        modal: impl FnMut(&mut Ui<()>) + Send + 'static,
     ) -> Result<()> {
-        self.send(GameCtrlEvent::UpdatePerms(Box::new(f))).await?;
-
-        Ok(())
-    }
-
-    async fn open_dialog(
-        &self,
-        dialog: impl FnMut(&mut Ui<()>) + Send + 'static,
-    ) -> Result<()> {
-        self.send(GameCtrlEvent::SetDialog(Some(Box::new(dialog))))
+        self.send(GameCtrlEvent::SetModal(Some(Box::new(modal))))
             .await?;
 
         Ok(())
     }
 
-    async fn close_dialog(&self) -> Result<()> {
-        self.send(GameCtrlEvent::SetDialog(None)).await?;
+    async fn close_modal(&self) -> Result<()> {
+        self.send(GameCtrlEvent::SetModal(None)).await?;
 
         Ok(())
     }
 
-    pub async fn show_msg<T>(&self, msg: &'static Msg<T>) -> Result<T>
+    pub async fn msg<T>(&self, msg: &'static Msg<T>) -> Result<T>
     where
         T: Clone + Send + Sync + 'static,
     {
         let (tx, rx) = oneshot::channel();
         let mut tx = Some(tx);
 
-        self.open_dialog(move |ui| {
+        self.open_modal(move |ui| {
             let resp = ui.catch(|ui| {
                 msg.render(ui);
             });
@@ -95,13 +86,13 @@ impl GameCtrl {
 
         time::sleep(theme::FRAME_TIME).await;
 
-        self.close_dialog().await?;
+        self.close_modal().await?;
 
         Ok(resp)
     }
 
-    pub async fn set_help(&self, dialog: Option<HelpMsgRef>) -> Result<()> {
-        self.send(GameCtrlEvent::SetHelp(dialog)).await?;
+    pub async fn set_help(&self, help: Option<HelpMsgRef>) -> Result<()> {
+        self.send(GameCtrlEvent::SetHelp(help)).await?;
 
         Ok(())
     }
@@ -130,6 +121,14 @@ impl GameCtrl {
         rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
 
+    pub async fn wait_for_restart(&self) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(GameCtrlEvent::WaitForRestart(tx)).await?;
+
+        rx.await.map_err(|_| anyhow!("{}", Self::ERR))
+    }
+
     async fn send(&self, event: GameCtrlEvent) -> Result<()> {
         self.tx
             .send(event)
@@ -148,13 +147,13 @@ pub(super) enum GameCtrlEvent {
     Join(WorldHandle),
     Pause,
     Resume,
-    SetPerms(Perms),
-    UpdatePerms(Box<dyn FnOnce(&mut Perms) + Send>),
-    SetDialog(Option<Box<dyn FnMut(&mut Ui<()>) + Send>>),
+    SetConfig(Config),
+    SetModal(Option<Box<dyn FnMut(&mut Ui<()>) + Send>>),
     SetHelp(Option<HelpMsgRef>),
     SetStatus(Option<String>),
     CopyToClipboard(String),
     GetSnapshotVersion(oneshot::Sender<u64>),
+    WaitForRestart(oneshot::Sender<()>),
 }
 
 impl GameCtrlEvent {
@@ -169,7 +168,7 @@ impl GameCtrlEvent {
 
                 state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
-                state.camera.set_at(state.snapshot.raw_map().center());
+                state.camera.set(state.snapshot.raw_map().center());
                 state.handle = Some(handle);
                 state.bot = None;
             }
@@ -182,16 +181,12 @@ impl GameCtrlEvent {
                 state.resume().await?;
             }
 
-            GameCtrlEvent::SetPerms(perms) => {
-                state.perms = perms;
+            GameCtrlEvent::SetConfig(config) => {
+                state.config = config;
             }
 
-            GameCtrlEvent::UpdatePerms(f) => {
-                f(&mut state.perms);
-            }
-
-            GameCtrlEvent::SetDialog(dialog) => {
-                state.dialog = dialog.map(Dialog::Custom);
+            GameCtrlEvent::SetModal(modal) => {
+                state.modal = modal.map(Modal::Custom);
             }
 
             GameCtrlEvent::SetHelp(help) => {
@@ -208,6 +203,15 @@ impl GameCtrlEvent {
 
             GameCtrlEvent::GetSnapshotVersion(tx) => {
                 _ = tx.send(state.snapshot.version());
+            }
+
+            GameCtrlEvent::WaitForRestart(tx) => {
+                state.config.can_join_bots = false;
+                state.config.can_restart_bots = false;
+                state.config.can_restart_bots = false;
+                state.config.can_spawn_bots = false;
+                state.config.can_upload_bots = false;
+                state.restart = Some(tx);
             }
         }
 

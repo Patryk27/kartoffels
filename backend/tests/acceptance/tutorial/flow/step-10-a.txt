@@ -24,7 +24,7 @@
                   ...............
                    .............
                      .........
-
-
-
-[esc] go-back  [spc] resume  [h] help                                     paused
+                                                       [f] stop-following-bot
+                                                       [i] inspect-bot
+                                                       [D] delete-bot
+[esc] menu  [spc] resume  [h] help                                        paused
