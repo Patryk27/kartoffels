@@ -14,8 +14,8 @@ impl MenuModal {
             ui.line(Line::raw("whaddya want to do?").centered());
             ui.line("");
 
-            Button::new(KeyCode::Char('l'), "leave game")
-                .throwing(Event::GoBack)
+            Button::new(KeyCode::Escape, "nevermind")
+                .throwing(Event::CloseModal)
                 .centered()
                 .render(ui);
 
@@ -26,8 +26,8 @@ impl MenuModal {
                     .render(ui);
             }
 
-            Button::new(KeyCode::Escape, "go back to game")
-                .throwing(Event::CloseModal)
+            Button::new(KeyCode::Char('l'), "leave game")
+                .throwing(Event::GoBack)
                 .centered()
                 .render(ui);
         });

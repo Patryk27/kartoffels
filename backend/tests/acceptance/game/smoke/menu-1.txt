@@ -9,8 +9,8 @@
                        ââââââââââââââ menu ââââââââââââââ
                        â       whaddya want to do?      â
                        â                                â
+                       â        [esc] nevermind         â
                        â         [l] leave game         â
-                       â     [esc] go back to game      â
                        ââââââââââââââââââââââââââââââââââ
 
 
