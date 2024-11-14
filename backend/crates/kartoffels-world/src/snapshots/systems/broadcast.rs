@@ -44,7 +44,7 @@ pub fn run(world: &mut World, state: &mut State) {
     world.snapshots.send_replace(snapshot);
 
     state.next_run_at = match world.clock {
-        Clock::Auto { .. } => Instant::now() + Duration::from_millis(50),
+        Clock::Auto { .. } => Instant::now() + Duration::from_millis(33),
         Clock::Manual { .. } => Instant::now(),
     };
 
