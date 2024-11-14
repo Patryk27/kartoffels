@@ -72,11 +72,11 @@ fn bot_tick(
 
         Ok(Some(BotAction::ArmStab { at })) => {
             if let Some(killed_id) = world.bots.alive.get_by_pos(at) {
-                bot.log(format!("stabbed {killed_id}"));
+                bot.log(format!("killed {killed_id} (knife)"));
 
                 let kill = KillBot {
                     killed: Either::Left(killed_id),
-                    reason: format!("stabbed out of existence by {}", bot.id),
+                    reason: format!("killed by {} (knife)", bot.id),
                     killer: Some(bot.id),
                 };
 
