@@ -3,23 +3,21 @@
 
 
 
-
-        âââââââââââââââââââââââââ acyclic-maze âââââââââââââââââââââââââ
-        â poor timmy-bot went for a walk and got attacked by a masked  â
-        â perpetrator which took poor timmy-bot's wheels and ran away  â
-        â                                                              â
-        â show mercy:                                                  â
-        â                                                              â
-        â implement a robot that traverses the maze, locates timmy and â
-        â kills it - you'll be starting in the bottom-right corner     â
-        â                                                              â
-        â [esc] go-back                                  [enter] start â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-
-
-
-
-
+        ######################### acyclic-maze #########################
+        # timmy-bot went for a walk and got mugged by a perpetrator    #
+        # who took poor timmy-bot's wheels and ran away, leaving him   #
+        # stranded                                                     #
+        #                                                              #
+        # show mercy:                                                  #
+        #                                                              #
+        # traverse the maze, find timmy and kill it - you'll be        #
+        # starting in the bottom-right corner                          #
+        #                                                              #
+        #                                                         xoxo #
+        #                                               the architects #
+        #                                                              #
+        # [esc] go-back                                  [enter] start #
+        ################################################################
 
 
 
@@ -27,4 +25,6 @@
 
 
 
-[esc] menu
+
+
+[esc] go-back

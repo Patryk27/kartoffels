@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+                           ######### go-back #########
+                           # do you want to go back? #
+                           #                         #
+                           # [n] no          [y] yes #
+                           ###########################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                       [j] join-bot
+                                                       [u] upload-bot
+[esc] go-back  [h] help  [spc] pause  [b] bots

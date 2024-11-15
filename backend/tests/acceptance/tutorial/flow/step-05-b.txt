@@ -4,17 +4,17 @@
                       .........
                     .............
                    ...............
-        âââââââââââââââââââââââââââââ help âââââââââââââââââââââââââââââ
-        â run this:                                                    â
-        â     ./build                                                  â
-        â                                                              â
-        â ... then close this message and press [u] to upload the bot  â
-        â                                                              â
-        â when the file picker opens, choose a file called kartoffel - â
-        â it should be located next to README.md etc.                  â
-        â                                                              â
-        â                                                  [esc] close â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ############################# help #############################
+        # run this:                                                    #
+        #     ./build                                                  #
+        #                                                              #
+        # ... then close this message and press [u] to upload the bot  #
+        #                                                              #
+        # when the file picker opens, choose a file called kartoffel - #
+        # it should be located next to README.md etc.                  #
+        #                                                              #
+        #                                                  [esc] close #
+        ################################################################
                .......................
                .......................
                 .....................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

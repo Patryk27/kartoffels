@@ -3,21 +3,21 @@
 
                       .........
                     .............
-        âââââââââââââââââââââââ tutorial (5/16) ââââââââââââââââââââââââ
-        â as you can see, the code in main.rs just calls a couple of   â
-        â functions in a loop - but before we jump into explanations,  â
-        â let's see the robot in action!                               â
-        â                                                              â
-        â run this:                                                    â
-        â     ./build                                                  â
-        â                                                              â
-        â ... then close this message and press [u] to upload the bot  â
-        â                                                              â
-        â when the file picker opens, choose a file called kartoffel - â
-        â it should be located next to README.md etc.                  â
-        â                                                              â
-        â                                                 [enter] next â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (5/16) ########################
+        # as you can see, the code in main.rs just calls a couple of   #
+        # functions in a loop - but before we jump into explanations,  #
+        # let's see the robot in action!                               #
+        #                                                              #
+        # run this:                                                    #
+        #     ./build                                                  #
+        #                                                              #
+        # ... then close this message and press [u] to upload the bot  #
+        #                                                              #
+        # when the file picker opens, choose a file called kartoffel - #
+        # it should be located next to README.md etc.                  #
+        #                                                              #
+        #                                                 [enter] next #
+        ################################################################
                 .....................
                  ...................
                   .................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

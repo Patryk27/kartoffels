@@ -5,16 +5,16 @@
          .............
         ...............
        .................
-      ..âââââââââââââââââââââââ tutorial (11/16) âââââââââââââââââââââââ
-     ...â nice!                                                        â
-     ...â                                                              â
-    ....â i mean, not nice, because we're dead, but baby steps         â
-    ....â                                                              â
-    ....â now it's time for you to learn about the radar, using which  â
-    ....â you can program the bot to avoid falling out the map         â
-    ....â                                                              â
-    ....â                                                 [enter] next â
-    ....ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+      ..####################### tutorial (11/16) #######################
+     ...# nice!                                                        #
+     ...#                                                              #
+    ....# i mean, not nice, because we're dead, but baby steps         #
+    ....#                                                              #
+    ....# now it's time for you to learn about the radar, using which  #
+    ....# you can program the bot to avoid falling out the map         #
+    ....#                                                              #
+    ....#                                                 [enter] next #
+    ....################################################################
     .......................
     .......................
      .....................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

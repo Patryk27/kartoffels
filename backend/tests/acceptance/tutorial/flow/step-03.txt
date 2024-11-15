@@ -5,16 +5,16 @@
                     .............
                    ...............
                   .................
-        âââââââââââââââââââââââ tutorial (3/16) ââââââââââââââââââââââââ
-        â look at you, learning so fast - NEXT LESSON!                 â
-        â                                                              â
-        â run this:                                                    â
-        â     git clone https://github.com/patryk27/kartoffel          â
-        â                                                              â
-        â ... and press [enter] once you're ready                      â
-        â                                                              â
-        â [c] copy-command                                [enter] next â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (3/16) ########################
+        # look at you, learning so fast - NEXT LESSON!                 #
+        #                                                              #
+        # run this:                                                    #
+        #     git clone https://github.com/patryk27/kartoffel          #
+        #                                                              #
+        # ... and press [enter] once you're ready                      #
+        #                                                              #
+        # [c] copy-command                                [enter] next #
+        ################################################################
                .......................
                .......................
                 .....................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

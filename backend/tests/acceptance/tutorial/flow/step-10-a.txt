@@ -5,15 +5,15 @@
                    .............
                   ...............
                  .................
-        âââââââââââââââââââââââ tutorial (10/16) âââââââââââââââââââââââ
-        â yes... ha ha ha... YES!                                      â
-        â                                                              â
-        â by telling the robot to always move forward instead of       â
-        â driving in squares, we should see the robot, well, moving    â
-        â forward and unknowingly falling out of the map               â
-        â                                                              â
-        â                                                 [enter] next â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (10/16) #######################
+        # yes... ha ha ha... YES!                                      #
+        #                                                              #
+        # by telling the robot to always move forward instead of       #
+        # driving in squares, we should see the robot, well, moving    #
+        # forward and unknowingly falling out of the map               #
+        #                                                              #
+        #                                                 [enter] next #
+        ################################################################
               .......................
               .......................
               .......................
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] menu  [spc] resume  [h] help                                        paused
+[esc] go-back  [h] help  [spc] resume                                     paused

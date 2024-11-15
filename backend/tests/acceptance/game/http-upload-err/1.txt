@@ -6,11 +6,11 @@
 
 
 
-             ââââââââââââââââââââââââ ouch ââââââââââââââââââââââââ
-             â too many robots queued, try again in a moment      â
-             â                                                    â
-             â                                      [enter] close â
-             ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+             ######################## ouch ########################
+             # too many robots queued, try again in a moment      #
+             #                                                    #
+             #                                      [enter] close #
+             ######################################################
 
 
 
@@ -27,4 +27,4 @@
 
                                                        [j] join-bot
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help  [b] bots
+[esc] go-back  [h] help  [spc] pause  [b] bots

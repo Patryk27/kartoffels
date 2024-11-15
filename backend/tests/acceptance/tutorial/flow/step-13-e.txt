@@ -6,12 +6,12 @@
 
                                                        serial port
 
-        âââââââââââââââââââââââ tutorial (13/16) âââââââââââââââââââââââ
-        â hmm, your robot seems to have died - delete it and upload    â
-        â anew                                                         â
-        â                                                              â
-        â                                            [enter] try-again â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (13/16) #######################
+        # hmm, your robot seems to have died - delete it and upload    #
+        # anew                                                         #
+        #                                                              #
+        #                                            [enter] try-again #
+        ################################################################
                   ......... .........
                                     .
                   .                 .
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

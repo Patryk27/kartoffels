@@ -4,17 +4,17 @@
 
 
 
-        âââââââââââââââââââââââ tutorial (14/16) âââââââââââââââââââââââ
-        â congrats!                                                    â
-        â                                                              â
-        â i don't want to keep you for much longer, so let's wrap      â
-        â things up with a lesson on the last peripheral you need to   â
-        â know in order to play:                                       â
-        â                                                              â
-        â                        ðª the knife ðª                       â
-        â                                                              â
-        â                               [enter] lets-take-a-stab-at-it â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (14/16) #######################
+        # congrats!                                                    #
+        #                                                              #
+        # i don't want to keep you for much longer, so let's wrap      #
+        # things up with a lesson on the last peripheral you need to   #
+        # know in order to play:                                       #
+        #                                                              #
+        #                        ðª the knife ðª                       #
+        #                                                              #
+        #                               [enter] lets-take-a-stab-at-it #
+        ################################################################
 
 
 
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause

@@ -4,17 +4,17 @@
                        .........                       status
                      .............                     alive
                     ...............                    > age: 0s
-        âââââââââââââââââââââââ tutorial (10/16) âââââââââââââââââââââââ
-        â hmm, your robot seems to be still alive                      â
-        â                                                              â
-        â this wasn't a triumph, i'm making a note here, NOT a huge    â
-        â success                                                      â
-        â                                                              â
-        â make sure you've removed the call to motor_turn_right() and  â
-        â upload the bot again                                         â
-        â                                                              â
-        â                                            [enter] try-again â
-        ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+        ####################### tutorial (10/16) #######################
+        # hmm, your robot seems to be still alive                      #
+        #                                                              #
+        # this wasn't a triumph, i'm making a note here, NOT a huge    #
+        # success                                                      #
+        #                                                              #
+        # make sure you've removed the call to motor_turn_right() and  #
+        # upload the bot again                                         #
+        #                                                              #
+        #                                            [enter] try-again #
+        ################################################################
                 .......................
                 .......................
                  .....................
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] menu  [spc] pause  [h] help
+[esc] go-back  [h] help  [spc] pause
