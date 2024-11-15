@@ -145,8 +145,8 @@ impl TestContext {
     }
 
     #[track_caller]
-    pub async fn wait_for_modal(&mut self, text: &str) {
-        self.wait_for(&format!("â {text} â")).await;
+    pub async fn wait_for_modal(&mut self, title: &str) {
+        self.wait_for(&format!("# {title} #")).await;
     }
 
     #[track_caller]
@@ -167,8 +167,8 @@ impl TestContext {
     }
 
     #[track_caller]
-    pub async fn wait_while_modal(&mut self, text: &str) {
-        self.wait_while(&format!("â {text} â")).await;
+    pub async fn wait_while_modal(&mut self, title: &str) {
+        self.wait_while(&format!("# {title} #")).await;
     }
 
     #[track_caller]
@@ -243,7 +243,12 @@ impl TestContext {
     }
 
     pub fn stdout(&self) -> String {
-        self.term.text().join("\n")
+        let stdout = self.term.text().join("\n");
+
+        // avt has some issues handling the special `-` and `|` characters used
+        // for building borders and says that both are `â` - to make tests more
+        // readable, let's replace that nasty character with just the hash sign
+        stdout.replace("â", "#")
     }
 }
 
