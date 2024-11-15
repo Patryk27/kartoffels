@@ -195,7 +195,7 @@ impl State {
         });
 
         if let Some(modal) = &mut self.modal {
-            modal.render(ui, sess, &self.snapshot, self.restart.is_some());
+            modal.render(ui, sess, &self.snapshot);
         }
     }
 

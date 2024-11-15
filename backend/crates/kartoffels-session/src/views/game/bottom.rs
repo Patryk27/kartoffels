@@ -12,55 +12,51 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State, store: &Store) {
-        if state.restart.is_some() {
-            Self::render_menu_btn(ui);
-            return;
-        }
+        ui.row(|ui| {
+            Self::render_go_back_btn(ui);
 
-        match &state.mode {
-            Mode::Default => {
-                ui.row(|ui| {
-                    Self::render_menu_btn(ui);
+            if state.restart.is_some() {
+                Self::render_restart_btn(ui);
+                return;
+            }
 
-                    match &state.mode {
-                        Mode::Default => {
-                            if state.handle.is_some() {
-                                ui.enable(state.config.enabled, |ui| {
-                                    Self::render_pause_btn(ui, state);
-                                    Self::render_help_btn(ui, state);
-                                    Self::render_bots_btn(ui, state);
-                                    Self::render_speed_btn(ui, state);
-                                    Self::render_debug_btn(ui, store);
-                                });
-                            }
-                        }
-
-                        Mode::SpawningBot { .. } => {
-                            //
-                        }
+            match &state.mode {
+                Mode::Default => {
+                    if state.handle.is_some() {
+                        ui.enable(state.config.enabled, |ui| {
+                            Self::render_help_btn(ui, state);
+                            Self::render_pause_btn(ui, state);
+                            Self::render_bots_btn(ui, state);
+                            Self::render_overclock_btn(ui, state);
+                            Self::render_debug_btn(ui, store);
+                        });
                     }
-                });
+                }
 
-                if state.handle.is_some() {
-                    Self::render_status(ui, state);
+                Mode::SpawningBot { .. } => {
+                    //
                 }
             }
+        });
 
-            Mode::SpawningBot { .. } => {
-                Self::render_go_back_btn(ui);
-            }
+        if state.handle.is_some() {
+            Self::render_status(ui, state);
         }
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go-back")
-            .throwing(Event::GoBack)
+            .throwing(Event::GoBack {
+                needs_confirmation: true,
+            })
             .render(ui);
     }
 
-    fn render_menu_btn(ui: &mut Ui<Event>) {
-        Button::new(KeyCode::Escape, "menu")
-            .throwing(Event::OpenMenuModal)
+    fn render_restart_btn(ui: &mut Ui<Event>) {
+        ui.space(2);
+
+        Button::new(KeyCode::Char('r'), "restart")
+            .throwing(Event::Restart)
             .render(ui);
     }
 
@@ -95,11 +91,11 @@ impl BottomPanel {
         }
     }
 
-    fn render_speed_btn(ui: &mut Ui<Event>, state: &State) {
+    fn render_overclock_btn(ui: &mut Ui<Event>, state: &State) {
         if state.config.can_overclock {
             ui.space(2);
 
-            Button::multi("speed")
+            Button::multi("overclock")
                 .option(
                     KeyCode::Char('1'),
                     Event::Overclock(ClockSpeed::Normal),
@@ -127,60 +123,42 @@ impl BottomPanel {
     }
 
     fn render_status(ui: &mut Ui<Event>, state: &State) {
-        if state.paused {
-            let area = Rect {
-                x: ui.area.width - 6,
-                y: ui.area.y,
-                width: 6,
-                height: 1,
-            };
-
-            ui.clamp(area, |ui| {
-                Span::raw("paused").fg(theme::FG).bg(theme::RED).render(ui);
-            });
+        let span = if state.paused {
+            Some(Span::raw("paused").fg(theme::FG).bg(theme::RED))
         } else if let Some((status, status_tt)) = &state.status {
-            let width = status.len() as u16;
+            let span = Span::raw(status);
 
-            let area = Rect {
-                x: ui.area.width - width,
-                y: ui.area.y,
-                width,
-                height: 1,
-            };
-
-            ui.clamp(area, |ui| {
-                let span = Span::raw(status);
-
-                let span = if status_tt.elapsed().as_millis() % 1000 <= 500 {
-                    span.fg(theme::BG).bg(theme::YELLOW)
-                } else {
-                    span.fg(theme::YELLOW)
-                };
-
-                span.render(ui);
-            });
+            if status_tt.elapsed().as_millis() % 1000 <= 500 {
+                Some(span.fg(theme::BG).bg(theme::YELLOW))
+            } else {
+                Some(span.fg(theme::YELLOW))
+            }
         } else {
             let speed = match state.speed {
                 ClockSpeed::Normal => None,
-                ClockSpeed::Faster => Some("SPD:FASTER"),
-                ClockSpeed::Fastest => Some("SPD:FASTERER"),
-                ClockSpeed::Unlimited => Some("SPD:UNLIM"),
+                ClockSpeed::Faster => Some("spd:fast"),
+                ClockSpeed::Fastest => Some("spd:faster"),
+                ClockSpeed::Unlimited => Some("spd:∞"),
             };
 
-            if let Some(speed) = speed {
-                let width = speed.len() as u16;
+            speed.map(|speed| Span::raw(speed).fg(theme::WASHED_PINK))
+        };
 
-                let area = Rect {
-                    x: ui.area.width - width,
-                    y: ui.area.y,
-                    width,
-                    height: 1,
-                };
+        let Some(span) = span else {
+            return;
+        };
 
-                ui.clamp(area, |ui| {
-                    Span::raw(speed).fg(theme::WASHED_PINK).render(ui);
-                });
-            }
-        }
+        let width = span.content.len() as u16;
+
+        let area = Rect {
+            x: ui.area.width - width,
+            y: ui.area.y,
+            width,
+            height: 1,
+        };
+
+        ui.clamp(area, |ui| {
+            span.render(ui);
+        });
     }
 }

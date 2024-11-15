@@ -1,6 +1,6 @@
 use super::{
     BotPosition, BotSource, BotSourceType, BotsModal, Config, ErrorModal,
-    InspectBotModal, JoinBotModal, MenuModal, Modal, Mode, SpawnBotModal,
+    GoBackModal, InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal,
     State, UploadBotModal, UploadBotRequest,
 };
 use anyhow::{anyhow, Result};
@@ -15,7 +15,9 @@ use std::ops::ControlFlow;
 
 #[derive(Debug)]
 pub enum Event {
-    GoBack,
+    GoBack {
+        needs_confirmation: bool,
+    },
     Restart,
     JoinBot {
         id: BotId,
@@ -31,7 +33,6 @@ pub enum Event {
     },
     OpenHelpModal,
     OpenJoinBotModal,
-    OpenMenuModal,
     OpenUploadBotModal {
         request: UploadBotRequest<BotSourceType>,
     },
@@ -62,9 +63,13 @@ impl Event {
         state: &mut State,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
-            Event::GoBack => match &state.mode {
+            Event::GoBack { needs_confirmation } => match &state.mode {
                 Mode::Default => {
-                    return Ok(ControlFlow::Break(()));
+                    if needs_confirmation {
+                        state.modal = Some(Modal::GoBack(GoBackModal));
+                    } else {
+                        return Ok(ControlFlow::Break(()));
+                    }
                 }
 
                 Mode::SpawningBot { .. } => {
@@ -117,10 +122,6 @@ impl Event {
 
             Event::OpenErrorModal { error } => {
                 state.modal = Some(Modal::Error(ErrorModal::new(error)));
-            }
-
-            Event::OpenMenuModal => {
-                state.modal = Some(Modal::Menu(MenuModal));
             }
 
             Event::OpenJoinBotModal => {

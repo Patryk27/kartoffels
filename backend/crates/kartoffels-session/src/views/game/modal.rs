@@ -1,18 +1,18 @@
 mod bots;
 mod error;
+mod go_back;
 mod help;
 mod inspect_bot;
 mod join_bot;
-mod menu;
 mod spawn_bot;
 mod upload_bot;
 
 pub use self::bots::*;
 pub use self::error::*;
+pub use self::go_back::*;
 pub use self::help::*;
 pub use self::inspect_bot::*;
 pub use self::join_bot::*;
-pub use self::menu::*;
 pub use self::spawn_bot::*;
 pub use self::upload_bot::*;
 use super::Event;
@@ -25,9 +25,9 @@ use termwiz::input::{KeyCode, Modifiers};
 pub enum Modal {
     Bots(BotsModal),
     Error(ErrorModal),
+    GoBack(GoBackModal),
     InspectBot(InspectBotModal),
     JoinBot(JoinBotModal),
-    Menu(MenuModal),
     SpawnBot(SpawnBotModal),
     UploadBot(UploadBotModal),
 
@@ -41,7 +41,6 @@ impl Modal {
         ui: &mut Ui<Event>,
         sess: SessionId,
         world: &Snapshot,
-        can_restart: bool,
     ) {
         Backdrop::render(ui);
 
@@ -52,14 +51,14 @@ impl Modal {
             Modal::Error(this) => {
                 this.render(ui);
             }
+            Modal::GoBack(this) => {
+                this.render(ui);
+            }
             Modal::InspectBot(this) => {
                 this.render(ui, world);
             }
             Modal::JoinBot(this) => {
                 this.render(ui, world);
-            }
-            Modal::Menu(this) => {
-                this.render(ui, can_restart);
             }
             Modal::SpawnBot(this) => {
                 this.render(ui);
