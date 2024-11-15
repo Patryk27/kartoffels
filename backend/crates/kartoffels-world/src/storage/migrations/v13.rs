@@ -50,12 +50,7 @@ mod tests {
                 {
                   "id": "1234-1234-1234-1234",
                   "inventory": {
-                    "objects": [
-                      null, null, null, null, null, null, null, null,
-                      null, null, null, null, null, null, null, null,
-                      null, null, null, null, null, null, null, null,
-                      null, null, null, null, null, null, null, null
-                    ]
+                    "objects": []
                   }
                 }
               ],
