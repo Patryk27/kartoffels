@@ -56,7 +56,7 @@ fn bot_tick(
                         ));
                     }
 
-                    Err(object) => {
+                    Err(_) => {
                         bot.log(format!(
                             "failed to pick {} from {},{} (inventory full)",
                             object.name(),
