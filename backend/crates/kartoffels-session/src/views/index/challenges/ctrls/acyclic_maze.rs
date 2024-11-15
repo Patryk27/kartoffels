@@ -13,12 +13,14 @@ use kartoffels_world::prelude::{
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::LazyLock;
+use termwiz::input::KeyCode;
 use tokio::sync::mpsc;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "acyclic-maze",
     desc: "what can go wrong when a tiny bot enters a huge maze?",
+    key: KeyCode::Char('a'),
     run,
 };
 

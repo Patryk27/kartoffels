@@ -77,12 +77,10 @@ async fn run_once(
                 };
 
                 ui.info_window(width, height, Some(" challenges "), |ui| {
-                    for (idx, challenge) in CHALLENGES.iter().enumerate() {
-                        let key = KeyCode::Char((b'1' + (idx as u8)) as char);
-
-                        Button::new(key, challenge.name)
-                            .help(challenge.desc)
-                            .throwing(Event::Play(challenge))
+                    for chl in CHALLENGES {
+                        Button::new(chl.key, chl.name)
+                            .help(chl.desc)
+                            .throwing(Event::Play(chl))
                             .render(ui);
 
                         ui.space(1);

@@ -12,11 +12,13 @@ use kartoffels_world::prelude::{
 };
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
+use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "diamond-heist",
     desc: "TODO",
+    key: KeyCode::Char('d'),
     run,
 };
 

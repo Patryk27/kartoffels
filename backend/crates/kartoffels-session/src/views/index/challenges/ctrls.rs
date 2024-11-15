@@ -5,6 +5,7 @@ use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
 use futures_util::future::BoxFuture;
 use kartoffels_store::Store;
+use termwiz::input::KeyCode;
 
 const CONFIG: Config = Config {
     enabled: true,
@@ -24,6 +25,7 @@ const CONFIG: Config = Config {
 pub struct Challenge {
     pub name: &'static str,
     pub desc: &'static str,
+    pub key: KeyCode,
     pub run: fn(&Store, GameCtrl) -> BoxFuture<Result<()>>,
 }
 
