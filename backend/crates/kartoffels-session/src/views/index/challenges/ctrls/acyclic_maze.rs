@@ -12,6 +12,7 @@ use kartoffels_world::prelude::{
 };
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
+use ratatui::style::Stylize;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
 use tokio::sync::mpsc;
@@ -27,16 +28,19 @@ pub static CHALLENGE: Challenge = Challenge {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "poor timmy-bot went for a walk and got attacked by a masked \
-             perpetrator which took poor timmy-bot's wheels and ran away",
+            "timmy-bot went for a walk and got mugged by a perpetrator who \
+             took poor timmy-bot's wheels and ran away, leaving him stranded",
         ),
         MsgLine::new(""),
         MsgLine::new("*show mercy:*"),
         MsgLine::new(""),
         MsgLine::new(
-            "implement a robot that traverses the maze, locates timmy and \
-             _kills it_ - you'll be starting in the bottom-right corner",
+            "traverse the maze, find timmy and kill it - you'll be starting in \
+             the bottom-right corner",
         ),
+        MsgLine::new(""),
+        MsgLine::new("xoxo").italic().right_aligned(),
+        MsgLine::new("the architects").italic().right_aligned(),
     ]
 });
 
@@ -56,13 +60,16 @@ static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     buttons: vec![HelpMsgResponse::close()],
 });
 
-static WIN_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" acyclic-maze "),
 
-    body: vec![MsgLine::new(
-        "congrats - poor timmy-bot is surely in a better place now, thanks to \
-         you!",
-    )],
+    body: vec![
+        MsgLine::new("congrats!"),
+        MsgLine::new(""),
+        MsgLine::new(
+            "poor timmy-bot is surely in a better place now, thanks to you!",
+        ),
+    ],
 
     buttons: vec![MsgButton::confirm("ok", ())],
 });
@@ -86,7 +93,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         watch(&world, timmy).await?;
 
-        game.msg(&WIN_MSG).await?;
+        game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
     })
@@ -95,7 +102,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
-    game.set_status(Some("building world".into())).await?;
+    game.set_status(Some("building-world".into())).await?;
 
     let world = store.create_private_world(Config {
         name: "challenge:acyclic-maze".into(),

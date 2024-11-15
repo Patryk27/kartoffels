@@ -73,7 +73,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
 async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
-    game.set_status(Some("building world".into())).await?;
+    game.set_status(Some("building-world".into())).await?;
 
     let world = store.create_private_world(WorldConfig {
         name: "sandbox".into(),
