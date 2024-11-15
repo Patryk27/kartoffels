@@ -105,7 +105,6 @@ async fn flow() {
 
     ctxt.upload_bot(TUT_01).await;
     ctxt.wait_for_modal("tutorial (6/16)").await;
-    ctxt.wait_while("alive").await;
     ctxt.see_frame("tutorial/flow/step-06.txt").await;
 
     // ---
@@ -115,7 +114,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-07-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for("alive").await;
+    ctxt.wait_while_modal("tutorial (7/16)").await;
     ctxt.see_frame("tutorial/flow/step-07-b.txt").await;
 
     time::pause();

@@ -45,6 +45,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
     ctxt.snapshots.next_uploaded_bot().await?;
+    ctxt.sync().await?;
     ctxt.game.set_help(None).await?;
     ctxt.game.pause().await?;
 
