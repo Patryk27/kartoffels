@@ -91,13 +91,26 @@ document.fonts.ready.then(() => {
 
   socket.onerror = () => {
     term.reset();
-    term.write("couldn't connect to the server");
+    term.write(
+      "ouch, the server is unreachable - try again in a moment\r\n\r\n",
+    );
+    term.write("");
+    term.write("if this issue persists, lemme know:\r\n");
+    term.write("> https://github.com/Patryk27/kartoffels");
 
     isConnected = false;
   };
 
   socket.onclose = () => {
-    term.write("\n\rconnection to server closed");
+    if (isConnected) {
+      term.clear();
+      term.write(
+        "ouch, lost connection to the server - try again in a moment\r\n\r\n",
+      );
+      term.write("");
+      term.write("if this issue persists, lemme know:\r\n");
+      term.write("> https://github.com/Patryk27/kartoffels");
+    }
 
     isConnected = false;
   };
