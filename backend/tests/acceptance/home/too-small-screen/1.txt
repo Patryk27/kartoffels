@@ -1,7 +1,7 @@
-ouch, your terminal is too small to play kartoffels :'(
+ouch, your terminal is too small to play kartoffels - try zooming out
+(Ctrl+-, Cmd+- etc.)
 
-get something with at least 80x30 characters... or zoom out (Ctrl+-,
-Cmd+- etc.)
+
 
 
 

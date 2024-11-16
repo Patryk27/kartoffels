@@ -144,10 +144,8 @@ impl Term {
                 Clear::render_ex(area, buf);
 
                 Paragraph::new(
-                    "ouch, your terminal is too small to play kartoffels :'(\
-                     \n\n\
-                     get something with at least 80x30 characters... or zoom \
-                     out (Ctrl+-, Cmd+- etc.)",
+                    "ouch, your terminal is too small to play kartoffels - try \
+                     zooming out (Ctrl+-, Cmd+- etc.)",
                 )
                 .wrap(Default::default())
                 .render(area, buf);
