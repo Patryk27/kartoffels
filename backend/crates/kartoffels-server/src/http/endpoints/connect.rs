@@ -3,11 +3,15 @@ use anyhow::{Context, Result};
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{ConnectInfo, State, WebSocketUpgrade};
 use axum::response::IntoResponse;
+use flate2::write::GzEncoder;
+use flate2::Compression;
+use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Term, TermEndpoint};
+use kartoffels_ui::{Stdin, Stdout, Term, TermEndpoint};
 use serde::Deserialize;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -76,69 +80,83 @@ async fn recv_hello_msg(socket: &mut WebSocket) -> Result<HelloMsg> {
 }
 
 fn create_term(socket: WebSocket, hello: HelloMsg) -> Result<Term> {
-    let (mut stdout, mut stdin) = socket.split();
-
-    let stdin = {
-        let (tx, rx) = mpsc::channel(1);
-
-        task::spawn(
-            async move {
-                while let Some(msg) = stdin.next().await {
-                    match msg {
-                        Ok(Message::Text(msg)) => {
-                            if tx.send(msg.into_bytes()).await.is_err() {
-                                break;
-                            }
-                        }
-
-                        Ok(Message::Binary(msg)) => {
-                            if tx.send(msg).await.is_err() {
-                                break;
-                            }
-                        }
-
-                        Ok(_) => {
-                            //
-                        }
-
-                        Err(_) => {
-                            info!(
-                                "couldn't pull data from socket, killing stdin"
-                            );
-
-                            return;
-                        }
-                    }
-                }
-            }
-            .in_current_span(),
-        );
-
-        rx
-    };
-
-    let stdout = {
-        let (tx, mut rx) = mpsc::channel::<Vec<u8>>(1);
-
-        task::spawn(
-            async move {
-                while let Some(msg) = rx.recv().await {
-                    if stdout.send(Message::Binary(msg)).await.is_err() {
-                        info!("couldn't push data into socket, killing stdout");
-                        return;
-                    }
-                }
-            }
-            .in_current_span(),
-        );
-
-        tx
-    };
-
+    let (stdout, stdin) = socket.split();
+    let stdin = create_term_stdin(stdin);
+    let stdout = create_term_stdout(stdout);
     let size = uvec2(hello.cols, hello.rows);
     let term = Term::new(TermEndpoint::Web, stdin, stdout, size)?;
 
     Ok(term)
+}
+
+fn create_term_stdin(mut stdin: SplitStream<WebSocket>) -> Stdin {
+    let (tx, rx) = mpsc::channel(1);
+
+    task::spawn(
+        async move {
+            while let Some(msg) = stdin.next().await {
+                match msg {
+                    Ok(Message::Text(msg)) => {
+                        if tx.send(msg.into_bytes()).await.is_err() {
+                            break;
+                        }
+                    }
+
+                    Ok(Message::Binary(msg)) => {
+                        if tx.send(msg).await.is_err() {
+                            break;
+                        }
+                    }
+
+                    Ok(_) => {
+                        //
+                    }
+
+                    Err(_) => {
+                        info!("couldn't pull data from socket, killing stdin");
+                        return;
+                    }
+                }
+            }
+        }
+        .in_current_span(),
+    );
+
+    rx
+}
+
+fn create_term_stdout(mut stdout: SplitSink<WebSocket, Message>) -> Stdout {
+    let (tx, mut rx) = mpsc::channel::<Vec<u8>>(1);
+
+    task::spawn(
+        async move {
+            while let Some(frame) = rx.recv().await {
+                let frame = compress(&frame);
+
+                if stdout.send(Message::Binary(frame)).await.is_err() {
+                    info!("couldn't push data into socket, killing stdout");
+                    return;
+                }
+            }
+        }
+        .in_current_span(),
+    );
+
+    tx
+}
+
+fn compress(frame: &[u8]) -> Vec<u8> {
+    // Note that while encoding is a blocking operation, since the dataset we're
+    // operating on is pretty small, using a dedicated thread-pool for encoding
+    // doesn't make much sense.
+    //
+    // Quick benchmark says an average call to `compress()` finishes in ~100µs,
+    // which is good enough not to block the runtime.
+
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+
+    encoder.write_all(frame).unwrap();
+    encoder.finish().unwrap()
 }
 
 #[derive(Clone, Debug, Deserialize)]

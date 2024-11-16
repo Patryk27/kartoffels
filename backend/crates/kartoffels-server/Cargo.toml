@@ -9,6 +9,7 @@ anyhow.workspace = true
 axum.workspace = true
 clap.workspace = true
 ed25519-dalek.workspace = true
+flate2.workspace = true
 futures-util.workspace = true
 glam.workspace = true
 indoc.workspace = true

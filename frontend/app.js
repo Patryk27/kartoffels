@@ -1,5 +1,5 @@
 import "@xterm/xterm/css/xterm.css";
-import { AttachAddon } from "@xterm/addon-attach";
+import pako from "pako";
 import { ClipboardAddon } from "@xterm/addon-clipboard";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
@@ -63,8 +63,8 @@ document.fonts.ready.then(() => {
     );
 
     term.loadAddon(
-      new AttachAddon(socket, {
-        bidirectional: true,
+      new TermSocketAddon(socket, () => {
+        handleBotCreate();
       }),
     );
 
@@ -79,14 +79,6 @@ document.fonts.ready.then(() => {
     });
 
     term.focus();
-  };
-
-  socket.onmessage = (event) => {
-    const msg = new Uint8Array(event.data);
-
-    if (msg.length == 1 && msg[0] == 0x04) {
-      handleBotCreate();
-    }
   };
 
   socket.onerror = () => {
@@ -127,6 +119,9 @@ document.fonts.ready.then(() => {
     input.type = "file";
 
     input.oncancel = () => {
+      // HACK backend knows that an empty paste means that the user has aborted
+      //      the uploading; ideally we'd have a dedicated message for that, but
+      //      well
       term.paste("");
     };
 
@@ -145,3 +140,32 @@ document.fonts.ready.then(() => {
     input.click();
   }
 });
+
+// Proxy between WebSocket and xterm.js.
+//
+// We can't use the built-in `AttachAddon`, since backend sends us gzipped
+// messages that that addon can't handle.
+class TermSocketAddon {
+  constructor(socket, onBotCreateRequested) {
+    this.socket = socket;
+    this.onBotCreateRequested = onBotCreateRequested;
+  }
+
+  activate(term) {
+    this.socket.addEventListener("message", (event) => {
+      event.data.arrayBuffer().then((compressedData) => {
+        const data = pako.ungzip(compressedData);
+
+        if (data.length == 1 && data[0] == 0x04) {
+          this.onBotCreateRequested();
+        } else {
+          term.write(data);
+        }
+      });
+    });
+
+    term.onData((data) => {
+      this.socket.send(data);
+    });
+  }
+}

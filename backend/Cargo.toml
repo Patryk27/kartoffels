@@ -31,6 +31,7 @@ clap = { version = "4.5.4", features = ["derive"] }
 derivative = "2.2.0"
 ed25519-dalek = "*"
 elf = "0.7.4"
+flate2 = "1.0.35"
 futures = "0.3.30"
 futures-util = { version = "0.3.30", features = ["sink"] }
 glam = { version = "0.27.0", features = ["serde"] }
@@ -80,6 +81,7 @@ kartoffels-toolbox = { path = "./crates/kartoffels-toolbox" }
 [dev-dependencies]
 avt.workspace = true
 base64.workspace = true
+flate2.workspace = true
 futures-util.workspace = true
 kartoffels-bots = { path = "./crates/kartoffels-bots" }
 kartoffels-store = { path = "./crates/kartoffels-store" }

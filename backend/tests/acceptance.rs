@@ -10,9 +10,11 @@ mod acceptance {
 use anyhow::Result;
 use avt::Vt;
 use base64::Engine;
+use flate2::read::GzDecoder;
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use kartoffels_store::{SessionId, Store};
 use kartoffels_world::prelude::Handle as WorldHandle;
+use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -99,7 +101,14 @@ impl TestContext {
     }
 
     async fn recv(&mut self) {
-        let stdout = self.stdout.next().await.unwrap().unwrap().into_data();
+        let compressed_stdout =
+            self.stdout.next().await.unwrap().unwrap().into_data();
+
+        let mut stdout = Vec::new();
+
+        GzDecoder::new(Cursor::new(compressed_stdout))
+            .read_to_end(&mut stdout)
+            .unwrap();
 
         for input in stdout {
             self.term.feed(input as char);
