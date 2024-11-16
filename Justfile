@@ -59,7 +59,7 @@ perf:
 
 # ---
 
-start-demo:
+demo:
     sudo nixos-container update demo --flake .
     sudo nixos-container start demo
     @echo
