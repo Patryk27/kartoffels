@@ -2,7 +2,7 @@ use crate::{BotId, DeadBot};
 use ahash::AHashSet;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::VecDeque;
-use tracing::debug;
+use tracing::trace;
 
 #[derive(Clone, Debug, Default)]
 pub struct DeadBots {
@@ -19,7 +19,7 @@ impl DeadBots {
             // empty
             let entry = self.entries.pop_front().unwrap();
 
-            debug!(id=?entry.id, "forgetting bot");
+            trace!(id=?entry.id, "forgetting bot");
 
             self.index.remove(&entry.id);
         }

@@ -1,6 +1,6 @@
 use crate::{DeadBot, KillBot, QueuedBot, World};
 use itertools::Either;
-use tracing::debug;
+use tracing::trace;
 
 pub fn run(world: &mut World, cmd: KillBot) {
     let KillBot {
@@ -9,7 +9,14 @@ pub fn run(world: &mut World, cmd: KillBot) {
         killer,
     } = cmd;
 
-    debug!(?killed, ?reason, ?killer, "killing bot");
+    match &killed {
+        Either::Left(id) => {
+            trace!(killed=?id, ?reason, ?killer, "killing bot");
+        }
+        Either::Right(bot) => {
+            trace!(killed=?bot, ?reason, ?killer, "killing bot");
+        }
+    }
 
     let mut killed = match killed {
         Either::Left(id) => {

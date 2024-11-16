@@ -2,7 +2,7 @@ use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use rand::{Rng, RngCore};
-use tracing::debug;
+use tracing::trace;
 
 pub fn run(world: &mut World) {
     if world.bots.alive.count() >= world.policy.max_alive_bots {
@@ -27,7 +27,7 @@ pub fn run(world: &mut World) {
     let bot = world.bots.queued.pop().unwrap();
     let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
 
-    debug!(id=?bot.id, ?pos, ?dir, "spawning bot");
+    trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
 
     world.bots.alive.add(bot);
 }
@@ -49,7 +49,7 @@ pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
 
     let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
 
-    debug!(id=?bot.id, ?pos, ?dir, "spawning bot");
+    trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
 
     world.bots.alive.add(bot);
 
