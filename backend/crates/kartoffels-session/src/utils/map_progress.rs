@@ -6,11 +6,11 @@ use std::future::Future;
 use tokio::sync::mpsc;
 use tokio::{time, try_join};
 
-pub struct MapBroadcaster<Fn> {
+pub struct MapProgress<Fn> {
     fun: Fn,
 }
 
-impl<Fn, Fut> MapBroadcaster<Fn>
+impl<Fn, Fut> MapProgress<Fn>
 where
     Fn: FnOnce(mpsc::Sender<Map>) -> Fut,
     Fut: Future<Output = Result<Map>>,

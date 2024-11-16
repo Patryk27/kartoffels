@@ -1,6 +1,6 @@
 use super::{Challenge, CONFIG};
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
-use crate::MapBroadcaster;
+use crate::MapProgress;
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
@@ -10,7 +10,7 @@ use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileKind,
 };
-use rand::{Rng, SeedableRng};
+use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
@@ -133,14 +133,14 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
 
     // ---
 
-    MapBroadcaster::new(|tx| async move {
+    MapProgress::new(|tx| async move {
         let seed = if store.testing() {
             Default::default()
         } else {
             rand::thread_rng().gen()
         };
 
-        let map = create_map_ex(seed, tx).await;
+        let map = create_map(seed, tx).await;
 
         Ok(map)
     })
@@ -153,41 +153,60 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     Ok((world, timmy))
 }
 
-async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
-    const NOT_VISITED: u8 = 0;
-    const VISITED: u8 = 1;
-
+async fn create_map(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     debug!(?seed);
 
     let mut map = Map::new(SIZE);
     let mut rng = ChaCha8Rng::from_seed(seed);
 
-    // Draw top border
+    create_map_borders(&mut map, &progress).await;
+    create_map_maze(&mut map, &mut rng, &progress).await;
+    create_map_entrance(&mut map, &progress).await;
+
+    map
+}
+
+async fn create_map_borders(map: &mut Map, progress: &mpsc::Sender<Map>) {
     map.line(ivec2(0, 0), ivec2(AREA.x as i32 - 1, 0), TileKind::WALL_H);
 
-    // Draw left border
+    _ = progress.send(map.clone()).await;
+
     map.line(ivec2(0, 1), ivec2(0, AREA.y as i32 - 2), TileKind::WALL_V);
 
-    // Draw bottom border
+    _ = progress.send(map.clone()).await;
+
     map.line(
         ivec2(0, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
         TileKind::WALL_H,
     );
 
-    // Draw right border
+    _ = progress.send(map.clone()).await;
+
     map.line(
         ivec2(AREA.x as i32 - 1, 1),
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         TileKind::WALL_V,
     );
 
-    // ---
+    _ = progress.send(map.clone()).await;
+}
+
+async fn create_map_maze(
+    map: &mut Map,
+    rng: &mut impl RngCore,
+    progress: &mpsc::Sender<Map>,
+) {
+    // We use the classical recursive backtracing algorithm here, a'la
+    // https://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+
+    const NOT_VISITED: u8 = 0;
+    const VISITED: u8 = 1;
 
     let mut nth = 0;
     let mut frontier = Vec::new();
 
-    for dir in Dir::shuffled(&mut rng) {
+    for dir in Dir::shuffled(rng) {
         frontier.push((TIMMY_POS, dir));
     }
 
@@ -228,7 +247,7 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
                 }
             }
 
-            for dir in Dir::shuffled(&mut rng) {
+            for dir in Dir::shuffled(rng) {
                 frontier.push((dst_pos, dir));
             }
 
@@ -243,15 +262,16 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
     map.for_each_mut(|_, tile| {
         tile.meta[0] = 0;
     });
+}
 
-    // ---
-
-    // Draw entrance
+async fn create_map_entrance(map: &mut Map, progress: &mpsc::Sender<Map>) {
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 2),
         TileKind::FLOOR,
     );
+
+    _ = progress.send(map.clone()).await;
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 3),
@@ -259,19 +279,21 @@ async fn create_map_ex(seed: [u8; 32], progress: mpsc::Sender<Map>) -> Map {
         TileKind::WALL_H,
     );
 
+    _ = progress.send(map.clone()).await;
+
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
         TileKind::WALL_H,
     );
 
+    _ = progress.send(map.clone()).await;
+
     map.line(
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
         TileKind::WALL_V,
     );
-
-    map
 }
 
 async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
@@ -308,7 +330,7 @@ mod tests {
             .join("map");
 
         let (tx, _) = mpsc::channel(1);
-        let map = executor::block_on(create_map_ex(Default::default(), tx));
+        let map = executor::block_on(create_map(Default::default(), tx));
 
         Asserter::new(dir).assert("expected.txt", map.to_string());
     }

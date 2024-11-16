@@ -1,10 +1,10 @@
 use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgResponse};
-use crate::MapBroadcaster;
+use crate::MapProgress;
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
 use kartoffels_world::prelude::{
-    Config as WorldConfig, Dir, Handle, Map, Policy, Theme, TileKind,
+    Config as WorldConfig, Dir, Map, Policy, Theme, TileKind,
 };
 use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -60,9 +60,7 @@ const CONFIG: Config = Config {
 };
 
 pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
-    let world = init(store, &game).await?;
-
-    create_map(store, theme, &world).await?;
+    init(store, theme, &game).await?;
 
     game.set_config(CONFIG).await?;
     game.set_status(None).await?;
@@ -70,7 +68,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     future::pending().await
 }
 
-async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
+async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_status(Some("building-world".into())).await?;
@@ -87,23 +85,21 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
 
     game.join(world.clone()).await?;
 
-    Ok(world)
-}
+    // ---
 
-async fn create_map(store: &Store, theme: Theme, world: &Handle) -> Result<()> {
-    MapBroadcaster::new(|tx| async move {
+    MapProgress::new(|tx| async move {
         let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
-        let map = create_map_ex(rng, theme, tx).await?;
+        let map = create_map(rng, theme, tx).await?;
 
         Ok(map)
     })
-    .run(store, world)
+    .run(store, &world)
     .await?;
 
     Ok(())
 }
 
-async fn create_map_ex(
+async fn create_map(
     mut rng: impl RngCore,
     theme: Theme,
     progress: mpsc::Sender<Map>,
