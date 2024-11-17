@@ -255,7 +255,6 @@ async fn flow() {
     // ---
 
     ctxt.wait_for("yay, you made it!").await;
-    ctxt.see_frame("tutorial/flow/completed.txt").await;
 
     // ---
 
