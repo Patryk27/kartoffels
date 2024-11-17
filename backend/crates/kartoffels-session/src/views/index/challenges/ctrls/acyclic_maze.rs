@@ -31,7 +31,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              took poor timmy-bot's wheels and ran away, leaving him stranded",
         ),
         MsgLine::new(""),
-        MsgLine::new("*show mercy:*"),
+        MsgLine::new("*show mercy*").centered(),
         MsgLine::new(""),
         MsgLine::new(
             "traverse the maze, find timmy and kill it - you'll be starting in \

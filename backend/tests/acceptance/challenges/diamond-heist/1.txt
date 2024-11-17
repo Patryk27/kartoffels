@@ -6,7 +6,7 @@
         # a precious, rare diamond has been stolen from us and put     #
         # under a guard watch in the nearby museum                     #
         #                                                              #
-        # steal it back:                                               #
+        #                         steal it back                        #
         #                                                              #
         # go inside the room, take the diamond (using arm_take()) and  #
         # then drive away - you'll be starting in the bottom-left      #

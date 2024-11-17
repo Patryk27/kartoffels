@@ -8,7 +8,7 @@
         # who took poor timmy-bot's wheels and ran away, leaving him   #
         # stranded                                                     #
         #                                                              #
-        # show mercy:                                                  #
+        #                          show mercy                          #
         #                                                              #
         # traverse the maze, find timmy and kill it - you'll be        #
         # starting in the bottom-right corner                          #
