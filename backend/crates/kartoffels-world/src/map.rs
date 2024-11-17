@@ -1,3 +1,6 @@
+mod builder;
+
+pub use self::builder::*;
 use ahash::HashMap;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
@@ -71,9 +74,9 @@ impl Map {
         }
     }
 
-    pub fn set_if_void(&mut self, point: IVec2, tile: impl Into<Tile>) {
-        if self.get(point).is_void() {
-            self.set(point, tile);
+    pub fn set_if_void(&mut self, pos: IVec2, tile: impl Into<Tile>) {
+        if self.get(pos).is_void() {
+            self.set(pos, tile);
         }
     }
 

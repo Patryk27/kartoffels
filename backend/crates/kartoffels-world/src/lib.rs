@@ -30,7 +30,7 @@ pub mod prelude {
     pub use crate::handle::{
         CreateBotRequest, Handle, Request, SnapshotStream,
     };
-    pub use crate::map::{Map, Tile, TileKind};
+    pub use crate::map::{Map, MapBuilder, Tile, TileKind};
     pub use crate::mode::{DeathmatchMode, Mode};
     pub use crate::objects::{Object, ObjectKind};
     pub use crate::policy::Policy;

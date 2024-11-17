@@ -8,14 +8,13 @@ use kartoffels_bots::DUMMY;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Policy, TileKind,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, MapBuilder, Policy,
+    TileKind,
 };
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use rand::RngCore;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
-use tokio::sync::mpsc;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
@@ -131,7 +130,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
 
     game.join(world.clone()).await?;
 
-    utils::map::reveal(store, &world, create_map).await?;
+    utils::map::build(store, &world, create_map).await?;
 
     game.set_config(CONFIG).await?;
     game.set_status(None).await?;
@@ -139,53 +138,44 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     Ok((world, timmy))
 }
 
-async fn create_map(
-    seed: [u8; 32],
-    progress: mpsc::Sender<Map>,
-) -> Result<Map> {
-    debug!(?seed);
+async fn create_map(mut map: MapBuilder, mut rng: impl RngCore) -> Result<Map> {
+    map.init(SIZE);
 
-    let mut map = Map::new(SIZE);
-    let mut rng = ChaCha8Rng::from_seed(seed);
+    utils::map::draw_borders(&mut map, AREA).await;
+    utils::map::draw_maze(&mut map, &mut rng, AREA, TIMMY_POS).await;
+    create_map_entrance(&mut map).await;
 
-    utils::map::draw_borders(&mut map, AREA, &progress).await;
-    utils::map::draw_maze(&mut map, &mut rng, &progress, AREA, TIMMY_POS).await;
-
-    create_map_entrance(&mut map, &progress).await;
-
-    Ok(map)
+    Ok(map.finish())
 }
 
-async fn create_map_entrance(map: &mut Map, progress: &mpsc::Sender<Map>) {
+async fn create_map_entrance(map: &mut MapBuilder) {
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 2),
         TileKind::FLOOR,
-    );
-
-    _ = progress.send(map.clone()).await;
+    )
+    .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
         TileKind::WALL_H,
-    );
-
-    _ = progress.send(map.clone()).await;
+    )
+    .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
         TileKind::WALL_H,
-    );
-
-    _ = progress.send(map.clone()).await;
+    )
+    .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
         TileKind::WALL_V,
-    );
+    )
+    .await;
 }
 
 async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
@@ -207,6 +197,8 @@ async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
 mod tests {
     use super::*;
     use kartoffels_utils::Asserter;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
     use std::path::Path;
 
     #[tokio::test]
@@ -220,8 +212,9 @@ mod tests {
             .join("tests")
             .join("map");
 
-        let (tx, _) = mpsc::channel(1);
-        let map = create_map(Default::default(), tx).await.unwrap();
+        let (map, _) = MapBuilder::new(false);
+        let rng = ChaCha8Rng::from_seed(Default::default());
+        let map = create_map(map, rng).await.unwrap();
 
         Asserter::new(dir).assert("expected.txt", map.to_string());
     }

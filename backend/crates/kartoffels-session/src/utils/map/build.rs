@@ -1,31 +1,36 @@
 use anyhow::{Error, Result};
 use kartoffels_store::Store;
 use kartoffels_ui::theme;
-use kartoffels_world::prelude::{Handle, Map};
-use rand::Rng;
+use kartoffels_world::prelude::{Handle, Map, MapBuilder};
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha8Rng;
 use std::future::Future;
-use tokio::sync::mpsc;
 use tokio::{time, try_join};
+use tracing::debug;
 
-type RngSeed = [u8; 32];
-
-pub async fn reveal<CreateMapFn, CreateMapFut>(
+pub async fn build<BuildMapFn, BuildMapFut>(
     store: &Store,
     world: &Handle,
-    create_map: CreateMapFn,
+    build: BuildMapFn,
 ) -> Result<()>
 where
-    CreateMapFn: FnOnce(RngSeed, mpsc::Sender<Map>) -> CreateMapFut,
-    CreateMapFut: Future<Output = Result<Map>>,
+    BuildMapFn: FnOnce(MapBuilder, ChaCha8Rng) -> BuildMapFut,
+    BuildMapFut: Future<Output = Result<Map>>,
 {
-    let seed = if store.testing() {
-        Default::default()
-    } else {
-        rand::thread_rng().gen()
+    let rng = {
+        let seed = if store.testing() {
+            Default::default()
+        } else {
+            rand::thread_rng().gen()
+        };
+
+        debug!(?seed, "building world");
+
+        ChaCha8Rng::from_seed(seed)
     };
 
-    let (tx, mut rx) = mpsc::channel(1);
-    let map = (create_map)(seed, tx);
+    let (map, mut rx) = MapBuilder::new(!store.testing());
+    let map = (build)(map, rng);
 
     let progress = async {
         while let Some(map) = rx.recv().await {

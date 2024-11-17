@@ -6,12 +6,10 @@ use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
-use kartoffels_world::prelude::{Config, Dir, Handle, Map, Policy};
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+use kartoffels_world::prelude::{Config, Dir, Handle, Map, MapBuilder, Policy};
+use rand::RngCore;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
-use tokio::sync::mpsc;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
@@ -89,7 +87,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
     world.set_spawn(SPAWN_POS, Dir::W).await?;
     game.join(world.clone()).await?;
 
-    utils::map::reveal(store, &world, create_map).await?;
+    utils::map::build(store, &world, create_map).await?;
 
     game.set_config(CONFIG).await?;
     game.set_status(None).await?;
@@ -97,19 +95,13 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<Handle> {
     Ok(world)
 }
 
-async fn create_map(
-    seed: [u8; 32],
-    progress: mpsc::Sender<Map>,
-) -> Result<Map> {
-    debug!(?seed);
+async fn create_map(mut map: MapBuilder, mut rng: impl RngCore) -> Result<Map> {
+    map.init(SIZE);
 
-    let mut map = Map::new(SIZE);
-    let mut rng = ChaCha8Rng::from_seed(seed);
+    utils::map::draw_maze(&mut map, &mut rng, SIZE, SPAWN_POS).await;
+    utils::map::draw_holes(&mut map, &mut rng, 64).await;
 
-    utils::map::draw_maze(&mut map, &mut rng, &progress, SIZE, SPAWN_POS).await;
-    utils::map::draw_holes(&mut map, &mut rng, &progress, 64).await;
-
-    Ok(map)
+    Ok(map.finish())
 }
 
 async fn watch(world: &Handle) -> Result<()> {

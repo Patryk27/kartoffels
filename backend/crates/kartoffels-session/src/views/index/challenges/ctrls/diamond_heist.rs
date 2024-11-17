@@ -1,4 +1,5 @@
 use super::{Challenge, CONFIG};
+use crate::utils;
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
 use anyhow::Result;
 use futures::future::BoxFuture;
@@ -155,9 +156,15 @@ async fn init(
 
     anchors.fill(&mut map, TileKind::FLOOR);
 
-    world.set_map(map).await?;
     world.set_spawn(anchors.get('a'), Dir::E).await?;
     world.put_object(anchors.get('b'), ObjectKind::GEM).await?;
+
+    utils::map::build(store, &world, |mut mapb, mut rng| async move {
+        mapb.reveal(map, &mut rng).await;
+
+        Ok(mapb.finish())
+    })
+    .await?;
 
     // ---
 

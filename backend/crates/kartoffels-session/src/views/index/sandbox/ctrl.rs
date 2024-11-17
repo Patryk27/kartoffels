@@ -3,14 +3,9 @@ use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgResponse};
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
-use kartoffels_world::prelude::{
-    Config as WorldConfig, Dir, Map, Policy, Theme, TileKind,
-};
-use rand::{Rng, RngCore, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use kartoffels_world::prelude::{Config as WorldConfig, Policy, Theme};
 use std::future;
 use std::sync::LazyLock;
-use tokio::sync::mpsc;
 
 const MAX_BOTS: usize = 16;
 
@@ -85,79 +80,14 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
 
     game.join(world.clone()).await?;
 
-    utils::map::reveal(store, &world, |_, tx| async move {
-        let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
-        let map = create_map(rng, theme, tx).await?;
+    utils::map::build(store, &world, |mut mapb, mut rng| async move {
+        let map = theme.create_map(&mut rng)?;
 
-        Ok(map)
+        mapb.reveal(map, &mut rng).await;
+
+        Ok(mapb.finish())
     })
     .await?;
 
     Ok(())
-}
-
-async fn create_map(
-    mut rng: impl RngCore,
-    theme: Theme,
-    progress: mpsc::Sender<Map>,
-) -> Result<Map> {
-    const NOT_VISITED: u8 = 0;
-    const VISITED: u8 = 1;
-
-    let mut map = theme.create_map(&mut rng)?;
-    let mut nth = 0;
-    let mut frontier = Vec::new();
-
-    // ---
-
-    for _ in 0..1024 {
-        if frontier.len() >= 2 {
-            break;
-        }
-
-        let pos = map.sample_pos(&mut rng);
-
-        if map.get(pos).is_floor() {
-            frontier.push(pos);
-        }
-    }
-
-    // ---
-
-    while !frontier.is_empty() {
-        let idx = rng.gen_range(0..frontier.len());
-        let pos = frontier.swap_remove(idx);
-
-        if map.get(pos).meta[0] == NOT_VISITED {
-            map.get_mut(pos).meta[0] = VISITED;
-
-            for dir in Dir::all() {
-                if map.contains(pos + dir) {
-                    frontier.push(pos + dir);
-                }
-            }
-
-            if nth % 64 == 0 {
-                let map = map.clone().map(|_, tile| {
-                    if tile.meta[0] == NOT_VISITED {
-                        TileKind::VOID.into()
-                    } else {
-                        tile
-                    }
-                });
-
-                _ = progress.send(map).await;
-            }
-
-            nth += 1;
-        }
-    }
-
-    // ---
-
-    map.for_each_mut(|_, tile| {
-        tile.meta[0] = 0;
-    });
-
-    Ok(map)
 }
