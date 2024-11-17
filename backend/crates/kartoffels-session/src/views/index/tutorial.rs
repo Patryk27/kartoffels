@@ -1,3 +1,4 @@
+mod completed;
 mod ctrl;
 
 use crate::views::game;
@@ -10,5 +11,16 @@ pub async fn run(
     sess: SessionId,
     term: &mut Term,
 ) -> Result<()> {
-    game::run(store, sess, term, |ctrl| ctrl::run(store, ctrl)).await
+    let mut completed = false;
+
+    game::run(store, sess, term, |ctrl| {
+        ctrl::run(store, ctrl, &mut completed)
+    })
+    .await?;
+
+    if completed {
+        completed::run(term).await?;
+    }
+
+    Ok(())
 }

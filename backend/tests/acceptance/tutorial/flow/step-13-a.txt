@@ -1,10 +1,10 @@
 
         ####################### tutorial (13/16) #######################
-        # so, how about we implement a line following robot to         #
-        # solidify all this knowledge, eh?                             #
+        # so, how about we implement a line follower to solidify all   #
+        # this knowledge, eh?                                          #
         #                                                              #
-        # a line following robot does what its name says - it uses     #
-       .# radar to check where to go next and then goes there, like:   #
+        # a line follower does what its name says - it uses radar to   #
+       .# check where to go next and then goes there, like:            #
       ..#                                                              #
      ...#     1. scan the area                                         #
      ...#     2a. if there's '.' in front you, move there              #

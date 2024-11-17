@@ -13,7 +13,6 @@ pub mod step12;
 pub mod step13;
 pub mod step14;
 pub mod step15;
-pub mod step16;
 
 mod prelude {
     pub(super) use super::super::TutorialCtxt;

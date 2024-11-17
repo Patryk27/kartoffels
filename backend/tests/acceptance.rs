@@ -38,7 +38,7 @@ struct TestContext {
 }
 
 impl TestContext {
-    pub const HOME: &str =
+    pub const INDEX: &str =
         "welcome to kartoffels, a game where you're given a potato";
 
     pub async fn new(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {

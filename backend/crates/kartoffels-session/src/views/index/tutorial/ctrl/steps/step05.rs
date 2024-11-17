@@ -6,8 +6,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new(
             "as you can see, the code in `main.rs` just calls a couple of \
-             functions in a loop - but before we jump into explanations, let's \
-             see the robot in action!",
+             functions in a loop - let's see them in action!",
         ),
         MsgLine::new(""),
     ]

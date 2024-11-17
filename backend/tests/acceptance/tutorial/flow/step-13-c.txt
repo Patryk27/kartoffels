@@ -1,8 +1,8 @@
 
 
         ############################# help #############################
-        # a line following robot does what its name says - it uses     #
-        # radar to check where to go next and then goes there, like:   #
+        # a line follower does what its name says - it uses radar to   #
+        # check where to go next and then goes there, like:            #
         #                                                              #
         #     1. scan the area                                         #
         #     2a. if there's '.' in front you, move there              #

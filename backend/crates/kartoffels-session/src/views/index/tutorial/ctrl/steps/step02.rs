@@ -14,10 +14,9 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new("lesson #2, at any time:").bold(),
         MsgLine::new("- press [`Ctrl-a`] to go back to the main menu"),
-        MsgLine::ssh("- press [`Ctrl-c`] to disconnect and leave the game"),
+        MsgLine::ssh("- press [`Ctrl-c`] to disconnect and quit the game"),
         MsgLine::new(""),
-        MsgLine::new("lesson #3, during the game, when no message is visible:")
-            .bold(),
+        MsgLine::new("lesson #3, during the game:").bold(),
         MsgLine::new("- press [`h`] to get help (ambulance paid separately)"),
         MsgLine::new(
             "- press [`w`/`a`/`s`/`d`] or arrow keys to move the camera",

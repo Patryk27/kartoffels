@@ -7,7 +7,7 @@ use termwiz::input::KeyCode;
 async fn acyclic_maze() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[c] challenges");
     ctxt.press(KeyCode::Char('c')).await;
 
@@ -44,7 +44,7 @@ async fn acyclic_maze() {
 async fn diamond_heist() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[c] challenges");
     ctxt.press(KeyCode::Char('c')).await;
 

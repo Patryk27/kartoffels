@@ -7,7 +7,11 @@ use crate::views::game::GameCtrl;
 use anyhow::Result;
 use kartoffels_store::Store;
 
-pub async fn run(store: &Store, game: GameCtrl) -> Result<()> {
+pub async fn run(
+    store: &Store,
+    game: GameCtrl,
+    completed: &mut bool,
+) -> Result<()> {
     let mut ctxt = TutorialCtxt::new(store, game).await?;
 
     if !step01::run(&mut ctxt).await? {
@@ -28,7 +32,8 @@ pub async fn run(store: &Store, game: GameCtrl) -> Result<()> {
     step13::run(&mut ctxt).await?;
     step14::run(&mut ctxt).await?;
     step15::run(&mut ctxt).await?;
-    step16::run(&mut ctxt).await?;
+
+    *completed = true;
 
     Ok(())
 }

@@ -32,7 +32,7 @@ async fn smoke() {
         TestContext::new([first, second, third]).await
     };
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see_frame("game/smoke/home-1.txt").await;
 
     ctxt.press(KeyCode::Char('p')).await;
@@ -128,7 +128,7 @@ async fn http_upload_ok() {
         TestContext::new([world]).await
     };
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.press(KeyCode::Char('p')).await;
 
     ctxt.wait_for("[1] world").await;
@@ -158,7 +158,7 @@ async fn http_upload_err() {
         TestContext::new([world]).await
     };
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.press(KeyCode::Char('p')).await;
 
     ctxt.wait_for("[1] world").await;

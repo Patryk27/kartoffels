@@ -8,7 +8,7 @@ use tokio::time;
 async fn ctxt() -> TestContext {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[t] tutorial");
     ctxt.press(KeyCode::Char('t')).await;
 
@@ -29,18 +29,18 @@ async fn smoke() {
 async fn leave() {
     let mut ctxt = ctxt().await;
 
-    ctxt.dont_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::INDEX);
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
 }
 
 #[tokio::test]
 async fn leave_and_start() {
     let mut ctxt = ctxt().await;
 
-    ctxt.dont_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::INDEX);
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
 
     ctxt.press(KeyCode::Char('t')).await;
     ctxt.wait_for("hey there").await;
@@ -52,9 +52,9 @@ async fn leave_and_start() {
 async fn leave_using_ctrl_c() {
     let mut ctxt = ctxt().await;
 
-    ctxt.dont_see(TestContext::HOME);
+    ctxt.dont_see(TestContext::INDEX);
     ctxt.press_ex(KeyCode::Char('a'), Modifiers::CTRL).await;
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
 }
 
 #[tokio::test]
@@ -251,5 +251,14 @@ async fn flow() {
 
     ctxt.upload_bot(TUT_04).await;
     ctxt.wait_for("watching").await;
-    ctxt.wait_for_modal("tutorial (16/16)").await;
+
+    // ---
+
+    ctxt.wait_for("yay, you made it!").await;
+    ctxt.see_frame("tutorial/flow/completed.txt").await;
+
+    // ---
+
+    ctxt.press(KeyCode::Enter).await;
+    ctxt.wait_for(TestContext::INDEX).await;
 }

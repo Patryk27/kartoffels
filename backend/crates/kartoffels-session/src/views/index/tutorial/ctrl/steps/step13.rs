@@ -5,8 +5,8 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "so, how about we implement a *line following robot* to solidify \
-             all this knowledge, eh?",
+            "so, how about we implement a *line follower* to solidify all this \
+             knowledge, eh?",
         ),
         MsgLine::new(""),
     ]
@@ -26,8 +26,8 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "a line following robot does what its name says - it uses radar to \
-             check where to go next and then goes there, like:",
+            "a line follower does what its name says - it uses radar to check \
+             where to go next and then goes there, like:",
         ),
         MsgLine::new(""),
         MsgLine::new("\t1. scan the area"),

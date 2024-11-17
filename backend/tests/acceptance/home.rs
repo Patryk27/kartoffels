@@ -4,7 +4,7 @@ use crate::TestContext;
 async fn smoke() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::HOME).await;
+    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see_frame("home/smoke/1.txt").await;
 }
 
