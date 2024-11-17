@@ -21,7 +21,7 @@ async fn acyclic_maze() {
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("upload-bot").await;
-    ctxt.wait_while("building-world").await;
+    ctxt.wait_while("building").await;
     ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
 
     ctxt.upload_bot(CHL_ACYCLIC_MAZE).await;
@@ -58,7 +58,7 @@ async fn diamond_heist() {
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_for("upload-bot").await;
-    ctxt.wait_while("building-world").await;
+    ctxt.wait_while("building").await;
     ctxt.see_frame("challenges/diamond-heist/2.txt").await;
 
     ctxt.upload_bot(CHL_DIAMOND_HEIST).await;

@@ -1,5 +1,5 @@
+use crate::utils;
 use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgResponse};
-use crate::MapProgress;
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
@@ -71,7 +71,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
 async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
-    game.set_status(Some("building-world".into())).await?;
+    game.set_status(Some("building".into())).await?;
 
     let world = store.create_private_world(WorldConfig {
         name: "sandbox".into(),
@@ -85,15 +85,12 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
 
     game.join(world.clone()).await?;
 
-    // ---
-
-    MapProgress::new(|tx| async move {
+    utils::map::reveal(store, &world, |_, tx| async move {
         let rng = ChaCha8Rng::from_seed(rand::thread_rng().gen());
         let map = create_map(rng, theme, tx).await?;
 
         Ok(map)
     })
-    .run(store, &world)
     .await?;
 
     Ok(())

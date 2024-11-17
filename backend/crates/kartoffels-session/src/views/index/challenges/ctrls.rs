@@ -1,4 +1,5 @@
 mod acyclic_maze;
+mod cyclic_maze;
 mod diamond_heist;
 
 use crate::views::game::{Config, GameCtrl};
@@ -29,5 +30,8 @@ pub struct Challenge {
     pub run: fn(&Store, GameCtrl) -> BoxFuture<Result<()>>,
 }
 
-pub static CHALLENGES: &[&Challenge] =
-    &[&acyclic_maze::CHALLENGE, &diamond_heist::CHALLENGE];
+pub static CHALLENGES: &[&Challenge] = &[
+    &acyclic_maze::CHALLENGE,
+    &cyclic_maze::CHALLENGE,
+    &diamond_heist::CHALLENGE,
+];

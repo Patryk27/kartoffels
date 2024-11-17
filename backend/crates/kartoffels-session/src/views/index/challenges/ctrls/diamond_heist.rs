@@ -19,7 +19,7 @@ use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "diamond-heist",
-    desc: "will you re-steal a diamond for us, mr james bot?",
+    desc: "are you brave enough to steal a diamond, mr james bot?",
     key: KeyCode::Char('d'),
     run,
 };
@@ -123,7 +123,7 @@ async fn init(
 ) -> Result<(Handle, Vec<BotId>, IVec2)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG).await?;
-    game.set_status(Some("building-world".into())).await?;
+    game.set_status(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
         name: "challenge:diamond-heist".into(),
