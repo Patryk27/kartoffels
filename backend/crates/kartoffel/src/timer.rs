@@ -15,3 +15,19 @@ pub fn timer_seed() -> u32 {
 pub fn timer_ticks() -> u32 {
     rdi(MEM_TIMER, 1)
 }
+
+/// Waits for until given number of ticks has passed.
+///
+/// # Example
+///
+/// ```
+/// timer_wait(64000); // waits for one second
+/// ```
+#[inline(always)]
+pub fn timer_wait(ticks: u32) {
+    let ticks = timer_ticks() + ticks;
+
+    while timer_ticks() < ticks {
+        //
+    }
+}
