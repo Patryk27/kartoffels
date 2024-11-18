@@ -32,11 +32,13 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
 
             Ok(Request::Pause { tx }) => {
                 world.paused = true;
+
                 _ = tx.send(());
             }
 
             Ok(Request::Resume { tx }) => {
                 world.paused = false;
+
                 _ = tx.send(());
             }
 
@@ -89,10 +91,16 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(());
             }
 
-            Ok(Request::PutObject { pos, obj, tx }) => {
-                world.objects.put(pos, obj);
+            Ok(Request::CreateObject { obj, pos, tx }) => {
+                let id = world.objects.create(&mut world.rng, obj, pos);
 
-                _ = tx.send(());
+                _ = tx.send(id);
+            }
+
+            Ok(Request::DeleteObject { id, tx }) => {
+                let result = world.objects.remove(id);
+
+                _ = tx.send(result);
             }
 
             Ok(Request::Overclock { speed, tx }) => {

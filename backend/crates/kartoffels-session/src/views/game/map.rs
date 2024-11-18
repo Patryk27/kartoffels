@@ -139,6 +139,12 @@ impl Map {
                 bg = theme::BG;
             }
 
+            ObjectKind::FLAG => {
+                ch = '=';
+                fg = theme::YELLOW;
+                bg = theme::BG;
+            }
+
             ObjectKind::GEM => {
                 ch = '*';
                 fg = theme::BLUE;

@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 ahash.workspace = true
 anyhow.workspace = true
+derivative.workspace = true
 kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
 rand.workspace = true

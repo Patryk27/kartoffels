@@ -32,27 +32,22 @@ fn bot_tick(
 ) -> Option<Box<AliveBot>> {
     match bot.tick(world) {
         Ok(Some(BotAction::ArmDrop { at, idx })) => {
-            if let Some(object) = bot.inventory.take(idx) {
-                bot.log(format!(
-                    "dropped {} at {},{}",
-                    object.name(),
-                    at.x,
-                    at.y
-                ));
+            if let Some((id, obj)) = bot.inventory.take(idx) {
+                bot.log(format!("dropped {} at {},{}", obj.name(), at.x, at.y));
 
-                world.objects.put(at, object);
+                world.objects.add(id, obj, Some(at));
             } else {
                 bot.log("dropped nothing");
             }
         }
 
         Ok(Some(BotAction::ArmPick { at })) => {
-            if let Some(object) = world.objects.take(at) {
-                match bot.inventory.add(object) {
+            if let Some((id, obj)) = world.objects.remove_at(at) {
+                match bot.inventory.add(id, obj) {
                     Ok(_) => {
                         bot.log(format!(
                             "picked {} from {},{}",
-                            object.name(),
+                            obj.name(),
                             at.x,
                             at.y
                         ));
@@ -61,12 +56,12 @@ fn bot_tick(
                     Err(_) => {
                         bot.log(format!(
                             "failed to pick {} from {},{} (inventory full)",
-                            object.name(),
+                            obj.name(),
                             at.x,
                             at.y
                         ));
 
-                        world.objects.put(at, object);
+                        world.objects.add(id, obj, Some(at));
                     }
                 }
             } else {
@@ -75,7 +70,7 @@ fn bot_tick(
         }
 
         Ok(Some(BotAction::ArmStab { at })) => {
-            if let Some(killed_id) = world.bots.alive.get_by_pos(at) {
+            if let Some(killed_id) = world.bots.alive.lookup_at(at) {
                 bot.log(format!("killed {killed_id} (knife)"));
 
                 let kill = KillBot {
@@ -104,8 +99,8 @@ fn bot_tick(
             }
 
             TileKind::FLOOR => {
-                if world.bots.alive.get_by_pos(at).is_none()
-                    && world.objects.get(at).is_none()
+                if world.bots.alive.lookup_at(at).is_none()
+                    && world.objects.lookup_at(at).is_none()
                 {
                     bot.pos = at;
                 }

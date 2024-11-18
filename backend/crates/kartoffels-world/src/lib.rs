@@ -11,6 +11,7 @@ mod config;
 mod handle;
 mod map;
 mod mode;
+mod object;
 mod objects;
 mod policy;
 mod snapshots;
@@ -32,12 +33,12 @@ pub mod prelude {
     };
     pub use crate::map::{Map, MapBuilder, Tile, TileKind};
     pub use crate::mode::{DeathmatchMode, Mode};
-    pub use crate::objects::{Object, ObjectKind};
+    pub use crate::object::{Object, ObjectId, ObjectKind};
     pub use crate::policy::Policy;
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBot,
-        SnapshotBots, SnapshotDeadBot, SnapshotDeadBots, SnapshotQueuedBot,
-        SnapshotQueuedBots,
+        SnapshotBots, SnapshotDeadBot, SnapshotDeadBots, SnapshotObjects,
+        SnapshotQueuedBot, SnapshotQueuedBots,
     };
     pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
@@ -50,6 +51,7 @@ pub(crate) use self::config::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
+pub(crate) use self::object::*;
 pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::snapshots::*;

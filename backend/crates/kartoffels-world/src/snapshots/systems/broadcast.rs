@@ -1,7 +1,7 @@
 use crate::{
     Clock, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
-    SnapshotDeadBot, SnapshotDeadBots, SnapshotQueuedBot, SnapshotQueuedBots,
-    Tile, TileKind, World,
+    SnapshotDeadBot, SnapshotDeadBots, SnapshotObject, SnapshotObjects,
+    SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileKind, World,
 };
 use ahash::AHashMap;
 use std::cmp::Reverse;
@@ -31,12 +31,14 @@ pub fn run(world: &mut World, state: &mut State) {
         let bots = prepare_bots(world);
         let raw_map = world.map.clone();
         let map = prepare_map(&bots, world);
+        let objects = prepare_objects(world);
         let version = state.version;
 
         Arc::new(Snapshot {
             raw_map,
             map,
             bots,
+            objects,
             version,
         })
     };
@@ -163,9 +165,25 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
         }
     }
 
-    for (pos, obj) in world.objects.iter() {
-        map.set(pos, obj.kind);
+    for obj in world.objects.iter() {
+        if let Some(pos) = obj.pos {
+            map.set(pos, obj.obj.kind);
+        }
     }
 
     map
+}
+
+fn prepare_objects(world: &World) -> SnapshotObjects {
+    let objects = world
+        .objects
+        .iter()
+        .map(|obj| SnapshotObject {
+            id: obj.id,
+            pos: obj.pos,
+            obj: obj.obj,
+        })
+        .collect();
+
+    SnapshotObjects { objects }
 }

@@ -8,6 +8,7 @@ extern crate alloc;
 mod allocator;
 mod arm;
 mod battery;
+mod compass;
 mod inventory;
 mod motor;
 mod panic;
@@ -17,6 +18,7 @@ mod timer;
 
 pub use self::arm::*;
 pub use self::battery::*;
+pub use self::compass::*;
 pub use self::inventory::*;
 pub use self::motor::*;
 pub use self::radar::*;
@@ -31,6 +33,7 @@ const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
 const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
 const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
+const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
 
 #[inline(always)]
 fn rdi(ptr: *mut u32, off: usize) -> u32 {

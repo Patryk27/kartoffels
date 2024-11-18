@@ -15,11 +15,11 @@ pub enum Dir {
     #[serde(rename = ">")]
     E,
 
-    #[serde(rename = "<")]
-    W,
-
     #[serde(rename = "v")]
     S,
+
+    #[serde(rename = "<")]
+    W,
 }
 
 impl Dir {
@@ -39,8 +39,8 @@ impl Dir {
         match self {
             Dir::N => Dir::W,
             Dir::E => Dir::N,
-            Dir::W => Dir::S,
             Dir::S => Dir::E,
+            Dir::W => Dir::S,
         }
     }
 
@@ -49,8 +49,8 @@ impl Dir {
         match self {
             Dir::N => Dir::E,
             Dir::E => Dir::S,
-            Dir::W => Dir::N,
             Dir::S => Dir::W,
+            Dir::W => Dir::N,
         }
     }
 
@@ -59,18 +59,8 @@ impl Dir {
         match self {
             Dir::N => Dir::S,
             Dir::E => Dir::W,
-            Dir::W => Dir::E,
             Dir::S => Dir::N,
-        }
-    }
-
-    #[must_use]
-    pub fn as_bit(self) -> u8 {
-        match self {
-            Dir::N => 1,
-            Dir::E => 2,
-            Dir::W => 4,
-            Dir::S => 8,
+            Dir::W => Dir::E,
         }
     }
 
@@ -90,8 +80,8 @@ impl fmt::Display for Dir {
         match self {
             Dir::N => write!(f, "n"),
             Dir::E => write!(f, "e"),
-            Dir::W => write!(f, "w"),
             Dir::S => write!(f, "s"),
+            Dir::W => write!(f, "w"),
         }
     }
 }

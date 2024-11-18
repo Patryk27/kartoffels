@@ -17,6 +17,7 @@ bots!([
     static CHL_ACYCLIC_MAZE = "chl-acyclic-maze";
     static CHL_DIAMOND_HEIST = "chl-diamond-heist";
     static CHL_DIAMOND_HEIST_GUARD = "chl-diamond-heist-guard";
+    static CHL_PERSONAL_ROOMBA = "chl-personal-roomba";
     static DUMMY = "dummy";
     static ROBERTO = "roberto";
     static TUT_01 = "tut-01";

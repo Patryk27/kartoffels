@@ -4,6 +4,7 @@ mod open;
 
 use ahash::AHashMap;
 use anyhow::{anyhow, Result};
+use derivative::Derivative;
 use kartoffels_utils::Id;
 use kartoffels_world::prelude::{Config as WorldConfig, Handle as WorldHandle};
 use rand::Rng;
@@ -176,7 +177,10 @@ impl SessionUploadInterest {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Derivative,
+)]
+#[derivative(Debug = "transparent")]
 pub struct SessionId(Id);
 
 impl fmt::Display for SessionId {

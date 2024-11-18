@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClockSpeed, Dir, Map, Object, Snapshot};
+use crate::{BotId, ClockSpeed, Dir, Map, Object, ObjectId, Snapshot};
 use ahash::HashSet;
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
@@ -146,19 +146,27 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn put_object(
+    pub async fn create_object(
         &self,
-        pos: IVec2,
-        obj: impl Into<Object>,
-    ) -> Result<()> {
+        obj: Object,
+        pos: impl Into<Option<IVec2>>,
+    ) -> Result<ObjectId> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::PutObject {
-            pos,
-            obj: obj.into(),
+        self.send(Request::CreateObject {
+            obj,
+            pos: pos.into(),
             tx,
         })
         .await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn delete_object(&self, id: ObjectId) -> Result<Option<Object>> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::DeleteObject { id, tx }).await?;
 
         rx.await.context(Self::ERR)
     }
@@ -260,12 +268,19 @@ pub enum Request {
         tx: oneshot::Sender<()>,
     },
 
-    PutObject {
-        pos: IVec2,
+    CreateObject {
         obj: Object,
+        pos: Option<IVec2>,
 
         #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<()>,
+        tx: oneshot::Sender<ObjectId>,
+    },
+
+    DeleteObject {
+        id: ObjectId,
+
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<Option<Object>>,
     },
 
     Overclock {

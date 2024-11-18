@@ -243,16 +243,15 @@ impl Anchors {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(packed)]
 pub struct Tile {
     pub kind: u8,
     pub meta: [u8; 3],
 }
 
 impl Tile {
-    pub fn new(ty: u8) -> Self {
+    pub fn new(kind: u8) -> Self {
         Self {
-            kind: ty,
+            kind,
             meta: [0, 0, 0],
         }
     }
@@ -275,8 +274,8 @@ impl Tile {
 }
 
 impl From<u8> for Tile {
-    fn from(ty: u8) -> Self {
-        Self::new(ty)
+    fn from(kind: u8) -> Self {
+        Self::new(kind)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{AliveBot, Bots, Dir, Map, QueuedBot, World};
+use crate::{AliveBot, Bots, Dir, Map, Objects, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use rand::{Rng, RngCore};
@@ -17,6 +17,7 @@ pub fn run(world: &mut World) {
         &mut world.rng,
         &world.map,
         &world.bots,
+        &world.objects,
         world.spawn,
         bot,
     ) else {
@@ -42,6 +43,7 @@ pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
         &mut world.rng,
         &world.map,
         &world.bots,
+        &world.objects,
         world.spawn,
         &bot,
     )
@@ -60,13 +62,14 @@ fn determine_spawn_point(
     rng: &mut impl RngCore,
     map: &Map,
     bots: &Bots,
+    objs: &Objects,
     spawn: (Option<IVec2>, Option<Dir>),
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     if let Some(pos) = bot.pos {
         let dir = bot.dir.unwrap_or_else(|| rng.gen());
 
-        return if is_pos_legal(map, bots, pos) {
+        return if is_pos_legal(map, bots, objs, pos) {
             Some((pos, dir))
         } else {
             None
@@ -76,20 +79,21 @@ fn determine_spawn_point(
     if let Some(pos) = spawn.0 {
         let dir = spawn.1.unwrap_or_else(|| rng.gen());
 
-        return if is_pos_legal(map, bots, pos) {
+        return if is_pos_legal(map, bots, objs, pos) {
             Some((pos, dir))
         } else {
             None
         };
     }
 
-    sample_map(rng, map, bots, bot)
+    sample_map(rng, map, bots, objs, bot)
 }
 
 fn sample_map(
     rng: &mut impl RngCore,
     map: &Map,
     bots: &Bots,
+    objs: &Objects,
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     let mut nth = 0;
@@ -97,7 +101,7 @@ fn sample_map(
     loop {
         let pos = map.sample_pos(rng);
 
-        if is_pos_legal(map, bots, pos) {
+        if is_pos_legal(map, bots, objs, pos) {
             let dir = bot.dir.unwrap_or_else(|| rng.gen());
 
             return Some((pos, dir));
@@ -111,6 +115,8 @@ fn sample_map(
     }
 }
 
-fn is_pos_legal(map: &Map, bots: &Bots, pos: IVec2) -> bool {
-    map.get(pos).is_floor() && bots.alive.get_by_pos(pos).is_none()
+fn is_pos_legal(map: &Map, bots: &Bots, objs: &Objects, pos: IVec2) -> bool {
+    map.get(pos).is_floor()
+        && bots.alive.lookup_at(pos).is_none()
+        && objs.lookup_at(pos).is_none()
 }

@@ -1,92 +1,85 @@
+use crate::{Object, ObjectId};
 use ahash::AHashMap;
 use glam::IVec2;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use rand::{Rng, RngCore};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Objects {
-    objects: AHashMap<IVec2, Object>,
+    objects: AHashMap<ObjectId, Object>,
+    pos_to_id: AHashMap<IVec2, ObjectId>,
+    id_to_pos: AHashMap<ObjectId, IVec2>,
 }
 
 impl Objects {
-    pub fn put(&mut self, pos: IVec2, obj: impl Into<Object>) {
-        self.objects.insert(pos, obj.into());
+    pub fn create(
+        &mut self,
+        rng: &mut impl RngCore,
+        obj: Object,
+        pos: Option<IVec2>,
+    ) -> ObjectId {
+        let id = loop {
+            let id = rng.gen();
+
+            if !self.objects.contains_key(&id) {
+                break id;
+            }
+        };
+
+        self.add(id, obj, pos);
+
+        id
     }
 
-    pub fn get(&self, pos: IVec2) -> Option<Object> {
-        self.objects.get(&pos).copied()
-    }
+    pub fn add(&mut self, id: ObjectId, obj: Object, pos: Option<IVec2>) {
+        self.objects.insert(id, obj);
 
-    pub fn take(&mut self, pos: IVec2) -> Option<Object> {
-        self.objects.remove(&pos)
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = (IVec2, Object)> + '_ {
-        self.objects.iter().map(|(pos, obj)| (*pos, *obj))
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[repr(packed)]
-pub struct Object {
-    pub kind: u8,
-    pub meta: [u8; 3],
-}
-
-impl Object {
-    pub fn new(ty: u8) -> Self {
-        Self {
-            kind: ty,
-            meta: [0, 0, 0],
+        if let Some(pos) = pos {
+            self.pos_to_id.insert(pos, id);
+            self.id_to_pos.insert(id, pos);
         }
     }
 
-    pub fn name(&self) -> &'static str {
-        match self.kind {
-            ObjectKind::FLAG => "flag",
-            ObjectKind::GEM => "gem",
-            _ => "unknown object",
+    pub fn get(&self, id: ObjectId) -> Option<Object> {
+        self.objects.get(&id).copied()
+    }
+
+    pub fn get_at(&self, pos: IVec2) -> Option<Object> {
+        self.get(self.lookup_at(pos)?)
+    }
+
+    pub fn remove(&mut self, id: ObjectId) -> Option<Object> {
+        let obj = self.objects.remove(&id)?;
+
+        if let Some(pos) = self.id_to_pos.remove(&id) {
+            self.pos_to_id.remove(&pos).unwrap();
         }
+
+        Some(obj)
     }
-}
 
-impl From<u8> for Object {
-    fn from(value: u8) -> Self {
-        Self::new(value)
+    pub fn remove_at(&mut self, pos: IVec2) -> Option<(ObjectId, Object)> {
+        let id = self.lookup_at(pos)?;
+        let obj = self.remove(id).unwrap();
+
+        Some((id, obj))
     }
-}
 
-impl Serialize for Object {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        u32::from_be_bytes([
-            self.kind,
-            self.meta[0],
-            self.meta[1],
-            self.meta[2],
-        ])
-        .serialize(serializer)
+    pub fn lookup_at(&self, pos: IVec2) -> Option<ObjectId> {
+        self.pos_to_id.get(&pos).copied()
     }
-}
 
-impl<'de> Deserialize<'de> for Object {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let [b0, b1, b2, b3] = u32::deserialize(deserializer)?.to_be_bytes();
-
-        Ok(Self {
-            kind: b0,
-            meta: [b1, b2, b3],
+    pub fn iter(&self) -> impl Iterator<Item = ObjectEntry> + '_ {
+        self.objects.iter().map(|(id, obj)| ObjectEntry {
+            id: *id,
+            pos: self.id_to_pos.get(id).copied(),
+            obj: *obj,
         })
     }
 }
 
-pub struct ObjectKind;
-
-impl ObjectKind {
-    pub const FLAG: u8 = b'=';
-    pub const GEM: u8 = b'*';
+#[derive(Clone, Copy, Debug)]
+pub struct ObjectEntry {
+    pub id: ObjectId,
+    pub obj: Object,
+    pub pos: Option<IVec2>,
 }

@@ -1,7 +1,7 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotEvent, BotId, Dir, Map};
+use crate::{BotEvent, BotId, Dir, Map, Object, ObjectId};
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Itertools;
@@ -16,6 +16,7 @@ pub struct Snapshot {
     raw_map: Map,
     map: Map,
     bots: SnapshotBots,
+    objects: SnapshotObjects,
     version: u64,
 }
 
@@ -30,6 +31,10 @@ impl Snapshot {
 
     pub fn bots(&self) -> &SnapshotBots {
         &self.bots
+    }
+
+    pub fn objects(&self) -> &SnapshotObjects {
+        &self.objects
     }
 
     pub fn version(&self) -> u64 {
@@ -248,4 +253,26 @@ pub struct SnapshotQueuedBot {
     pub place: u8,
     pub requeued: bool,
     pub serial: Arc<VecDeque<u32>>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct SnapshotObjects {
+    objects: Vec<SnapshotObject>,
+}
+
+impl SnapshotObjects {
+    pub fn iter(&self) -> impl Iterator<Item = &SnapshotObject> + '_ {
+        self.objects.iter()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.objects.is_empty()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct SnapshotObject {
+    pub id: ObjectId,
+    pub obj: Object,
+    pub pos: Option<IVec2>,
 }

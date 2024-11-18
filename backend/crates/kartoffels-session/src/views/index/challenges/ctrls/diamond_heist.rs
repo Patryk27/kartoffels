@@ -9,8 +9,8 @@ use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, ObjectKind, Policy,
-    TileKind,
+    BotId, Config, CreateBotRequest, Dir, Handle, Map, Object, ObjectKind,
+    Policy, TileKind,
 };
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
@@ -46,6 +46,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              your advantage",
         ),
         MsgLine::new(""),
+        MsgLine::new("difficulty: medium"),
         MsgLine::new("xoxo").italic().right_aligned(),
         MsgLine::new("the architects").italic().right_aligned(),
     ]
@@ -112,6 +113,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
             }
         }
 
+        game.pause().await?;
         game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
@@ -157,7 +159,10 @@ async fn init(
     anchors.fill(&mut map, TileKind::FLOOR);
 
     world.set_spawn(anchors.get('a'), Dir::E).await?;
-    world.put_object(anchors.get('b'), ObjectKind::GEM).await?;
+
+    world
+        .create_object(Object::new(ObjectKind::GEM), anchors.get('b'))
+        .await?;
 
     utils::map::build(store, &world, |mut mapb, mut rng| async move {
         mapb.reveal(map, &mut rng).await;

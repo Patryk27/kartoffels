@@ -42,7 +42,7 @@ impl AliveBots {
         Some(*bot)
     }
 
-    pub fn get_by_pos(&self, pos: IVec2) -> Option<BotId> {
+    pub fn lookup_at(&self, pos: IVec2) -> Option<BotId> {
         self.pos_to_id.get(&pos).copied()
     }
 
@@ -138,12 +138,12 @@ mod tests {
         assert_eq!(5, target.len());
         assert_eq!(5, target.count());
 
-        assert_eq!(Some(BotId::new(1)), target.get_by_pos(ivec2(10, 10)));
-        assert_eq!(Some(BotId::new(2)), target.get_by_pos(ivec2(20, 20)));
-        assert_eq!(Some(BotId::new(3)), target.get_by_pos(ivec2(30, 30)));
-        assert_eq!(Some(BotId::new(4)), target.get_by_pos(ivec2(40, 40)));
-        assert_eq!(Some(BotId::new(5)), target.get_by_pos(ivec2(50, 50)));
-        assert_eq!(None, target.get_by_pos(ivec2(10, 20)));
+        assert_eq!(Some(BotId::new(1)), target.lookup_at(ivec2(10, 10)));
+        assert_eq!(Some(BotId::new(2)), target.lookup_at(ivec2(20, 20)));
+        assert_eq!(Some(BotId::new(3)), target.lookup_at(ivec2(30, 30)));
+        assert_eq!(Some(BotId::new(4)), target.lookup_at(ivec2(40, 40)));
+        assert_eq!(Some(BotId::new(5)), target.lookup_at(ivec2(50, 50)));
+        assert_eq!(None, target.lookup_at(ivec2(10, 20)));
 
         assert!(target.contains(BotId::new(1)));
         assert!(target.contains(BotId::new(2)));
@@ -160,11 +160,11 @@ mod tests {
         assert_eq!(5, target.len());
         assert_eq!(4, target.count());
 
-        assert_eq!(Some(BotId::new(1)), target.get_by_pos(ivec2(10, 10)));
-        assert_eq!(Some(BotId::new(2)), target.get_by_pos(ivec2(20, 20)));
-        assert_eq!(Some(BotId::new(3)), target.get_by_pos(ivec2(30, 30)));
-        assert_eq!(None, target.get_by_pos(ivec2(40, 40)));
-        assert_eq!(Some(BotId::new(5)), target.get_by_pos(ivec2(50, 50)));
+        assert_eq!(Some(BotId::new(1)), target.lookup_at(ivec2(10, 10)));
+        assert_eq!(Some(BotId::new(2)), target.lookup_at(ivec2(20, 20)));
+        assert_eq!(Some(BotId::new(3)), target.lookup_at(ivec2(30, 30)));
+        assert_eq!(None, target.lookup_at(ivec2(40, 40)));
+        assert_eq!(Some(BotId::new(5)), target.lookup_at(ivec2(50, 50)));
 
         assert!(target.contains(BotId::new(1)));
         assert!(target.contains(BotId::new(2)));

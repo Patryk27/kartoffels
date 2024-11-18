@@ -1,6 +1,6 @@
 mod acyclic_maze;
-mod cyclic_maze;
 mod diamond_heist;
+mod personal_roomba;
 
 use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
@@ -32,6 +32,6 @@ pub struct Challenge {
 
 pub static CHALLENGES: &[&Challenge] = &[
     &acyclic_maze::CHALLENGE,
-    &cyclic_maze::CHALLENGE,
     &diamond_heist::CHALLENGE,
+    &personal_roomba::CHALLENGE,
 ];

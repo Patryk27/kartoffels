@@ -12,6 +12,7 @@ pub const GREEN: Color = Color::Rgb(0, 255, 128);
 pub const PINK: Color = Color::Rgb(255, 0, 128);
 pub const RED: Color = Color::Rgb(255, 0, 0);
 pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
+pub const WHITE: Color = Color::Rgb(255, 255, 255);
 pub const YELLOW: Color = Color::Rgb(255, 212, 80);
 
 pub const FRAME_TIME: Duration = Duration::from_millis(1000 / 30);

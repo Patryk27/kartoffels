@@ -1,6 +1,7 @@
 mod action;
 mod arm;
 mod battery;
+mod compass;
 mod events;
 mod id;
 mod inventory;
@@ -13,6 +14,7 @@ mod timer;
 pub use self::action::*;
 pub use self::arm::*;
 pub use self::battery::*;
+pub use self::compass::*;
 pub use self::events::*;
 pub use self::id::*;
 pub use self::inventory::*;
@@ -34,6 +36,7 @@ use std::sync::Arc;
 pub struct AliveBot {
     pub arm: BotArm,
     pub battery: BotBattery,
+    pub compass: BotCompass,
     pub cpu: Cpu,
     pub dir: Dir,
     pub events: BotEvents,
@@ -55,6 +58,7 @@ impl AliveBot {
     const MEM_MOTOR: u32 = 3 * 1024;
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
+    const MEM_COMPASS: u32 = 6 * 1024;
 
     pub fn new(
         rng: &mut impl RngCore,
@@ -68,6 +72,7 @@ impl AliveBot {
         Self {
             arm: Default::default(),
             battery: Default::default(),
+            compass: Default::default(),
             cpu: Cpu::new(&bot.fw),
             dir,
             events: bot.events,
@@ -98,14 +103,17 @@ impl AliveBot {
         self.arm.tick();
         self.motor.tick();
         self.radar.tick();
+        self.compass.tick(self.dir);
 
         self.cpu.tick(BotMmio {
-            timer: &mut self.timer,
-            battery: &mut self.battery,
-            serial: &mut self.serial,
-            motor: &mut self.motor,
             arm: &mut self.arm,
+            battery: &mut self.battery,
+            compass: &mut self.compass,
+            motor: &mut self.motor,
             radar: &mut self.radar,
+            serial: &mut self.serial,
+            timer: &mut self.timer,
+
             ctxt: BotMmioContext {
                 action: &mut action,
                 bots: &world.bots.alive,

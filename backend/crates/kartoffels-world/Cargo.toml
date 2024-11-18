@@ -24,6 +24,9 @@ tokio-stream.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 
+[target.'cfg(not(target_arch = "riscv64"))'.dependencies]
+glam = { workspace = true, features = ["serde"] }
+
 [dev-dependencies]
 indoc.workspace = true
 itertools.workspace = true

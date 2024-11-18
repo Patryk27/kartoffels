@@ -28,7 +28,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
             "timmy-bot went for a walk and got mugged by a perpetrator who \
-             took poor timmy-bot's wheels and ran away, leaving him stranded",
+             took timmy-bot's wheels and ran away",
         ),
         MsgLine::new(""),
         MsgLine::new("*show mercy*").centered(),
@@ -38,6 +38,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              the bottom-right corner",
         ),
         MsgLine::new(""),
+        MsgLine::new("difficulty: easy"),
         MsgLine::new("xoxo").italic().right_aligned(),
         MsgLine::new("the architects").italic().right_aligned(),
     ]
@@ -92,6 +93,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         watch(&world, timmy).await?;
 
+        game.pause().await?;
         game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
@@ -143,12 +145,12 @@ async fn create_map(mut map: MapBuilder, mut rng: impl RngCore) -> Result<Map> {
 
     utils::map::draw_borders(&mut map, AREA).await;
     utils::map::draw_maze(&mut map, &mut rng, AREA, TIMMY_POS).await;
-    create_map_entrance(&mut map).await;
+    draw_entrance(&mut map).await;
 
     Ok(map.finish())
 }
 
-async fn create_map_entrance(map: &mut MapBuilder) {
+async fn draw_entrance(map: &mut MapBuilder) {
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 2),

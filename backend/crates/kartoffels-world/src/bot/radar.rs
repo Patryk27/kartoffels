@@ -62,13 +62,13 @@ impl BotRadar {
                 let out_z1;
                 let out_z2;
 
-                if let Some(bot_id) = ctxt.bots.get_by_pos(pos) {
+                if let Some(bot_id) = ctxt.bots.lookup_at(pos) {
                     let bot_id = bot_id.get().get();
 
                     out_z0 = TileKind::BOT as u32;
                     out_z1 = (bot_id >> 32) as u32;
                     out_z2 = bot_id as u32;
-                } else if let Some(object) = ctxt.objects.get(pos) {
+                } else if let Some(object) = ctxt.objects.get_at(pos) {
                     out_z0 = object.kind as u32;
                     out_z1 = 0;
                     out_z2 = 0;
@@ -140,7 +140,9 @@ impl BotRadarRange {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{AliveBots, BotId, Dir, Map, ObjectKind, Objects};
+    use crate::{
+        AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind, Objects,
+    };
     use glam::uvec2;
     use indoc::indoc;
     use itertools::Itertools;
@@ -329,7 +331,12 @@ mod tests {
         let objects = {
             let mut objects = Objects::default();
 
-            objects.put(ivec2(3, 1), ObjectKind::FLAG);
+            objects.add(
+                ObjectId::new(123),
+                Object::new(ObjectKind::FLAG),
+                Some(ivec2(3, 1)),
+            );
+
             objects
         };
 
