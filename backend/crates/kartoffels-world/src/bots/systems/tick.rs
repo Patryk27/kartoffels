@@ -41,6 +41,8 @@ fn bot_tick(
                 ));
 
                 world.objects.put(at, object);
+            } else {
+                bot.log("dropped nothing");
             }
         }
 
@@ -67,6 +69,8 @@ fn bot_tick(
                         world.objects.put(at, object);
                     }
                 }
+            } else {
+                bot.log("picked fresh air");
             }
         }
 
@@ -81,6 +85,8 @@ fn bot_tick(
                 };
 
                 super::kill::run(world, kill);
+            } else {
+                bot.log("stabbed fresh air");
             }
         }
 
