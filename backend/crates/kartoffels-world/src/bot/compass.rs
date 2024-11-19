@@ -22,13 +22,61 @@ impl BotCompass {
         match addr {
             AliveBot::MEM_COMPASS => Ok(match self.dir.take() {
                 None => 0,
-                Some(Dir::N) => 0,
-                Some(Dir::E) => 1,
-                Some(Dir::S) => 2,
-                Some(Dir::W) => 3,
+                Some(Dir::N) => 1,
+                Some(Dir::E) => 2,
+                Some(Dir::S) => 3,
+                Some(Dir::W) => 4,
             }),
 
             _ => Err(()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke() {
+        let mut target = BotCompass::default();
+
+        target.tick(Dir::N);
+
+        assert_eq!(Ok(1), target.mmio_load(AliveBot::MEM_COMPASS));
+        assert_eq!(Ok(0), target.mmio_load(AliveBot::MEM_COMPASS));
+
+        // ---
+
+        for _ in 0..128_000 {
+            target.tick(Dir::N);
+        }
+
+        target.tick(Dir::E);
+
+        assert_eq!(Ok(2), target.mmio_load(AliveBot::MEM_COMPASS));
+        assert_eq!(Ok(0), target.mmio_load(AliveBot::MEM_COMPASS));
+
+        // ---
+
+        for _ in 0..128_000 {
+            target.tick(Dir::N);
+        }
+
+        target.tick(Dir::S);
+
+        assert_eq!(Ok(3), target.mmio_load(AliveBot::MEM_COMPASS));
+        assert_eq!(Ok(0), target.mmio_load(AliveBot::MEM_COMPASS));
+
+        // ---
+
+        for _ in 0..128_000 {
+            target.tick(Dir::N);
+        }
+
+        target.tick(Dir::W);
+
+        assert_eq!(Ok(4), target.mmio_load(AliveBot::MEM_COMPASS));
+        assert_eq!(Ok(0), target.mmio_load(AliveBot::MEM_COMPASS));
     }
 }
