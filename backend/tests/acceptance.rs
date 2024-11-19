@@ -212,7 +212,7 @@ impl TestContext {
         let stdout = self.stdout();
 
         if stdout.contains(text) {
-            panic!("not_see(\"{text}\") failed, stdout was:\n\n{stdout}");
+            panic!("dont_see(\"{text}\") failed, stdout was:\n\n{stdout}");
         }
     }
 
