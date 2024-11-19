@@ -211,10 +211,10 @@ impl State {
             event.handle(self, term).await?;
         }
 
-        if let Some(snapshots) = &mut self.snapshots {
-            if let Some(snapshot) = snapshots.next().now_or_never() {
-                self.update_snapshot(snapshot?);
-            }
+        if let Some(snapshots) = &mut self.snapshots
+            && let Some(snapshot) = snapshots.next().now_or_never()
+        {
+            self.update_snapshot(snapshot?);
         }
 
         Ok(())
