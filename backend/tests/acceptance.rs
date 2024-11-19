@@ -110,9 +110,7 @@ impl TestContext {
             .read_to_end(&mut stdout)
             .unwrap();
 
-        for input in stdout {
-            self.term.feed(input as char);
-        }
+        self.term.feed_str(&String::from_utf8_lossy(&stdout));
     }
 
     pub async fn press(&mut self, key: KeyCode) {
@@ -155,7 +153,7 @@ impl TestContext {
 
     #[track_caller]
     pub async fn wait_for_modal(&mut self, title: &str) {
-        self.wait_for(&format!("# {title} #")).await;
+        self.wait_for(&format!("─ {title} ─")).await;
     }
 
     #[track_caller]
@@ -177,7 +175,7 @@ impl TestContext {
 
     #[track_caller]
     pub async fn wait_while_modal(&mut self, title: &str) {
-        self.wait_while(&format!("# {title} #")).await;
+        self.wait_while(&format!("─ {title} ─")).await;
     }
 
     #[track_caller]
@@ -252,12 +250,7 @@ impl TestContext {
     }
 
     pub fn stdout(&self) -> String {
-        let stdout = self.term.text().join("\n");
-
-        // avt has some issues handling the special `-` and `|` characters used
-        // for building borders and says that both are `â` - to make tests more
-        // readable, let's replace that nasty character with just the hash sign
-        stdout.replace("â", "#")
+        self.term.text().join("\n")
     }
 }
 
