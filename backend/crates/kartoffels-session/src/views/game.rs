@@ -120,12 +120,15 @@ struct State {
 
 impl State {
     fn tick(&mut self, dt: f32, store: &Store) {
-        if let Some(bot) = &self.bot {
-            if bot.follow {
-                if let Some(bot) = self.snapshot.bots().alive().get(bot.id) {
-                    self.camera.move_at(bot.pos);
-                }
-            }
+        // If we're following a bot, adjust the camera to the bot's current
+        // position - unless we're under test, in which case we don't want to
+        // move the camera since that makes tests less reproducible.
+        if let Some(bot) = &self.bot
+            && bot.follow
+            && let Some(bot) = self.snapshot.bots().alive().get(bot.id)
+            && !store.testing()
+        {
+            self.camera.look_at(bot.pos);
         }
 
         self.camera.tick(dt, store);
