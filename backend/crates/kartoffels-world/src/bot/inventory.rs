@@ -53,13 +53,13 @@ mod tests {
             .add(ObjectId::new(255), Object::new(255))
             .unwrap_err();
 
+        assert_eq!(32, target.take(0).unwrap().1.kind);
         assert_eq!(31, target.take(0).unwrap().1.kind);
         assert_eq!(30, target.take(0).unwrap().1.kind);
-        assert_eq!(29, target.take(0).unwrap().1.kind);
 
         target.add(ObjectId::new(255), Object::new(255)).unwrap();
 
         assert_eq!(255, target.take(0).unwrap().1.kind);
-        assert_eq!(0, target.take(28).unwrap().1.kind);
+        assert_eq!(1, target.take(28).unwrap().1.kind);
     }
 }
