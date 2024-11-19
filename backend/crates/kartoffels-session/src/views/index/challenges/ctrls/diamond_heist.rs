@@ -71,8 +71,8 @@ static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" diamond-heist "),
     body: vec![MsgLine::new(
-        "ayy, you've killed a guard, alarming the entire facility — i told \
-         you: *spill no oil!*",
+        "ayy, you killed a guard, alarming the entire facility — i told you: \
+         *spill no oil!*",
     )],
     buttons: vec![MsgButton::confirm("ok", ())],
 });
