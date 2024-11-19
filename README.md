@@ -1,8 +1,10 @@
 # kartoffels 🥔
 
-[kartoffels](https://kartoffels.pwy.io) is a game where you're given a potato
-and your job is to implement [a firmware](https://github.com/patryk27/kartoffel)
-for it:
+<p align="center">
+    <a href="https://kartoffels.pwy.io">kartoffels</a> is a game where you're
+    given a potato and your job is to implement
+    <a href="https://github.com/patryk27/kartoffel">a firmware</a> for it:
+</p>
 
 ![](./readme/img-v01.png)
 ![](./readme/img-v02.png)
