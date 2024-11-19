@@ -113,10 +113,10 @@ impl GameCtrl {
         Ok(())
     }
 
-    pub async fn get_snapshot_version(&self) -> Result<u64> {
+    pub async fn get_world_version(&self) -> Result<u64> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(GameCtrlEvent::GetSnapshotVersion(tx)).await?;
+        self.send(GameCtrlEvent::GetWorldVersion(tx)).await?;
 
         rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
@@ -152,7 +152,7 @@ pub(super) enum GameCtrlEvent {
     SetHelp(Option<HelpMsgRef>),
     SetStatus(Option<String>),
     CopyToClipboard(String),
-    GetSnapshotVersion(oneshot::Sender<u64>),
+    GetWorldVersion(oneshot::Sender<u64>),
     WaitForRestart(oneshot::Sender<()>),
 }
 
@@ -201,7 +201,7 @@ impl GameCtrlEvent {
                 term.copy_to_clipboard(payload).await?;
             }
 
-            GameCtrlEvent::GetSnapshotVersion(tx) => {
+            GameCtrlEvent::GetWorldVersion(tx) => {
                 _ = tx.send(state.snapshot.version());
             }
 
