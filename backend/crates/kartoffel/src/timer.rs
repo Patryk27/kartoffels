@@ -20,7 +20,9 @@ pub fn timer_ticks() -> u32 {
 ///
 /// # Example
 ///
-/// ```
+/// ```no_run
+/// # use kartoffel::*;
+/// #
 /// timer_wait(64000); // waits for one second
 /// ```
 #[inline(always)]
