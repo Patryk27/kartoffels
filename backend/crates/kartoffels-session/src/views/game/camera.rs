@@ -20,7 +20,7 @@ impl Camera {
         self.t = 0.0;
     }
 
-    pub fn move_at(&mut self, pos: IVec2) {
+    pub fn look_at(&mut self, pos: IVec2) {
         if self.dst.distance(pos.as_vec2()) <= 3.0 {
             self.dst = pos.as_vec2();
         } else {
@@ -30,8 +30,8 @@ impl Camera {
         }
     }
 
-    pub fn move_by(&mut self, delta: IVec2) {
-        self.move_at((self.dst + delta.as_vec2()).as_ivec2());
+    pub fn nudge_by(&mut self, delta: IVec2) {
+        self.look_at((self.dst + delta.as_vec2()).as_ivec2());
     }
 
     pub fn screen_to_world(&self, pos: UVec2, map_area: Rect) -> IVec2 {

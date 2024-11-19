@@ -93,7 +93,7 @@ impl Event {
             }
 
             Event::MoveCamera { delta } => {
-                state.camera.move_by(delta);
+                state.camera.nudge_by(delta);
 
                 if let Some(bot) = &mut state.bot {
                     bot.follow = false;
