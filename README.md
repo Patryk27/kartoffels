@@ -4,11 +4,13 @@
 and your job is to implement [a firmware](https://github.com/patryk27/kartoffel)
 for it:
 
-![](./readme/intro-v5.png)
-![](./readme/intro-v6.png)
+![](./readme/img-v01.png)
+![](./readme/img-v02.png)
 
-[play it in your browser](https://kartoffels.pwy.io) or in your terminal -
-`ssh kartoffels.pwy.io`
+<p align="center">
+    <a href="https://kartoffels.pwy.io">play it in browser</a> or terminal:<br>
+    <code>ssh kartoffels.pwy.io</code>
+</p>
 
 ## name
 
