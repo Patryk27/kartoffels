@@ -12,14 +12,17 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
 
     body: vec![
+        MsgLine::new("welcome to the *online mode*!"),
+        MsgLine::new(""),
         MsgLine::new(
-            "welcome to the *online mode*! -- in here you're playing against \
-             bots programmed by other people, deathmatch-style",
+            "in here you're playing against bots programmed by other people, \
+             deathmatch-style",
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "if you want to learn how to create your own bot, go back to the \
-             main menu and press [`t`] - but here's the spirit:",
+            "i'm assuming you've already went through the tutorial — if not, \
+             feel free to go back to the main menu and press [`t`], but here's \
+             the spirit:",
         ),
         MsgLine::new(""),
         MsgLine::new("# rules"),

@@ -6,7 +6,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new(
             "as you can see, the code in `main.rs` just calls a couple of \
-             functions in a loop - let's see them in action!",
+             functions in a loop — let's see them in action!",
         ),
         MsgLine::new(""),
     ]
@@ -34,7 +34,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         ),
         MsgLine::web(""),
         MsgLine::web(
-            "when the file picker opens, choose a file called `kartoffel` - it \
+            "when the file picker opens, choose a file called `kartoffel` — it \
              should be located next to `README.md` etc.",
         ),
     ]

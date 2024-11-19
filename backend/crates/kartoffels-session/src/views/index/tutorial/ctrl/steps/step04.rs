@@ -13,7 +13,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "for, you see, writing a bot is similar to writing a regular rust \
-             program - but it's also different, _mucho_ different",
+             program — but it's also different, _mucho_ different",
         ),
         MsgLine::new(""),
         MsgLine::new(

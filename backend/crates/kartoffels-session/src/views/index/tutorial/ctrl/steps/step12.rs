@@ -5,8 +5,8 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "radar returns a scan of the environment around the robot - for \
-             starters, you need to know about these two functions:",
+            "radar returns a scan of the environment around the robot — to get \
+             started, you need to know about these two functions:",
         ),
         MsgLine::new(""),
         MsgLine::new("# radar_wait()"),

@@ -26,7 +26,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "a line follower does what its name says - it uses radar to check \
+            "a line follower does what its name says — it uses radar to check \
              where to go next and then goes there, like:",
         ),
         MsgLine::new(""),
@@ -55,7 +55,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
     body: vec![MsgLine::new(
-        "hmm, your robot seems to have died - delete it and upload anew",
+        "hmm, your robot seems to have died — delete it and upload something \
+         better",
     )],
     buttons: vec![MsgButton::confirm("try-again", ())],
 });

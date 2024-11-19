@@ -32,9 +32,9 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "waiting for readiness is important, because the cpu is much \
-             faster than motor, so - say - calling `motor_step()` two times in \
-             a row without `motor_wait()` in-between would actually move the \
-             bot just one tile forward",
+             faster than motor, so calling `motor_step()` two times in a row \
+             without `motor_wait()` in-between would actually move the bot \
+             just one tile forward",
         ),
     ],
 
