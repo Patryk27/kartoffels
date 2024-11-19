@@ -77,13 +77,13 @@ fn main() {
     // Cost of moving between nodes, used by the pathfinding algorithm.
     //
     // Same case as `nav_queue`, we keep it here for performance reasons.
-    let mut nav_costs = iter::repeat(0).take(map.tiles.len()).collect();
+    let mut nav_costs: Vec<_> = iter::repeat(0).take(map.tiles.len()).collect();
 
     // Parent nodes, used by the pathfinding algorithm to reconstruct the path
     // after we find a `Tile::Unknown` or `Tile::Flag`.
     //
     // Same case as `nav_queue`, we keep it here for performance reasons.
-    let mut nav_prevs = iter::repeat(I8Vec2::default())
+    let mut nav_prevs: Vec<_> = iter::repeat(I8Vec2::default())
         .take(map.tiles.len())
         .collect();
 
@@ -108,7 +108,10 @@ fn main() {
         }
 
         // 2a. If there's nothing left to find, call it a day.
-        let Some(next) = nav_path.pop() else { loop {} };
+        let Some(next) = nav_path.pop() else {
+            #[allow(clippy::empty_loop)]
+            loop {}
+        };
 
         // 3. Drive towards the next point on our path; if there's a flag there,
         //    pick it.
@@ -208,8 +211,8 @@ fn scan(map: &mut Map, pos: I8Vec2, dir: Dir) -> bool {
 fn navigate(
     path: &mut Vec<I8Vec2>,
     queue: &mut BinaryHeap<NavEntry>,
-    costs: &mut Vec<u8>,
-    prevs: &mut Vec<I8Vec2>,
+    costs: &mut [u8],
+    prevs: &mut [I8Vec2],
     map: &Map,
     head: I8Vec2,
 ) -> bool {
