@@ -60,7 +60,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
         let result = time::timeout(
             Duration::from_secs(10),
-            ctxt.snapshots.next_killed_bot(),
+            ctxt.events.next_killed_bot(),
         )
         .await;
 
@@ -69,13 +69,13 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
         match result {
             Ok(result) => {
-                return result;
+                return result.map(drop);
             }
 
             Err(_) => {
                 ctxt.game.msg(&MSG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.snapshots.next_uploaded_bot().await?;
+                ctxt.events.next_spawned_bot().await?;
                 ctxt.game.set_help(None).await?;
             }
         }

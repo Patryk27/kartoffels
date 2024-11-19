@@ -5,18 +5,18 @@
                                                        dead
 
                                                        serial port
+                            ...
+                    ......... .........
+                                      .
+                    .                 .
+                    ......... .........
+                            ...
 
 
 
 
 
 
-                          ...
-                  ......... .........
-                                    .
-                  .                 .
-                  ......... .........
-                          ...
 
 
 
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] go-back  [h] help  [spc] pause
+[esc] go-back  [h] help  [spc] pause                                  spd:faster

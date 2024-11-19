@@ -1,5 +1,4 @@
 use crate::{bots, Clock, KillBot, Request, Shutdown, World};
-use anyhow::anyhow;
 use itertools::Either;
 use std::ops::ControlFlow;
 use tokio::sync::mpsc::error::TryRecvError;
@@ -8,15 +7,11 @@ use tracing::debug;
 pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
     loop {
         let request = match world.clock {
-            Clock::Auto { .. } => world.rx.try_recv(),
-
-            Clock::Manual { .. } => {
-                if world.tick.is_some() {
-                    world.rx.try_recv()
-                } else {
-                    world.rx.blocking_recv().ok_or(TryRecvError::Disconnected)
-                }
+            Clock::Manual => {
+                world.rx.blocking_recv().ok_or(TryRecvError::Disconnected)
             }
+
+            _ => world.rx.try_recv(),
         };
 
         if let Ok(request) = &request {
@@ -43,7 +38,7 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
             }
 
             Ok(Request::Shutdown { tx }) => {
-                break ControlFlow::Break(Shutdown { tx: Some(tx) });
+                return ControlFlow::Break(Shutdown { tx: Some(tx) });
             }
 
             Ok(Request::CreateBot { req, tx }) => {
@@ -103,26 +98,23 @@ pub fn run(world: &mut World) -> ControlFlow<Shutdown, ()> {
                 _ = tx.send(result);
             }
 
-            Ok(Request::Overclock { speed, tx }) => {
-                if let Some(metronome) = &mut world.metronome {
-                    metronome.overclock(speed);
+            Ok(Request::Overclock { clock, tx }) => {
+                world.clock = clock;
 
-                    _ = tx.send(Ok(()));
-                } else {
-                    _ = tx.send(Err(anyhow!(
-                        "world's clock configuration doesn't allow for \
-                         overclocking",
-                    )));
-                }
+                _ = tx.send(());
             }
 
             Err(TryRecvError::Empty) => {
-                break ControlFlow::Continue(());
+                return ControlFlow::Continue(());
             }
 
             Err(TryRecvError::Disconnected) => {
-                break ControlFlow::Break(Shutdown { tx: None });
+                return ControlFlow::Break(Shutdown { tx: None });
             }
+        }
+
+        if let Clock::Manual = world.clock {
+            return ControlFlow::Continue(());
         }
     }
 }

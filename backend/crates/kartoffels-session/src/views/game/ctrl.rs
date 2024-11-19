@@ -129,6 +129,18 @@ impl GameCtrl {
         rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
 
+    /// Waits for the user interface to catch up with given version of the
+    /// world.
+    ///
+    /// This comes handy for tests so that our assertions are more reliable.
+    pub async fn sync(&self, version: u64) -> Result<()> {
+        loop {
+            if self.get_world_version().await? >= version {
+                return Ok(());
+            }
+        }
+    }
+
     async fn send(&self, event: GameCtrlEvent) -> Result<()> {
         self.tx
             .send(event)

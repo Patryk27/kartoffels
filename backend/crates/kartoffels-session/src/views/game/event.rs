@@ -9,7 +9,7 @@ use base64::Engine;
 use glam::IVec2;
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
-use kartoffels_world::prelude::{BotId, ClockSpeed, CreateBotRequest};
+use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
 use std::borrow::Cow;
 use std::ops::ControlFlow;
 
@@ -50,7 +50,9 @@ pub enum Event {
     DeleteBot,
     FollowBot,
     InspectBot,
-    Overclock(ClockSpeed),
+    Overclock {
+        clock: Clock,
+    },
     EnableDebugMode,
 }
 
@@ -198,9 +200,8 @@ impl Event {
                 }
             }
 
-            Event::Overclock(speed) => {
-                state.handle.as_ref().unwrap().overclock(speed).await?;
-                state.speed = speed;
+            Event::Overclock { clock } => {
+                state.handle.as_ref().unwrap().overclock(clock).await?;
             }
 
             Event::EnableDebugMode => {

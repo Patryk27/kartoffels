@@ -5,18 +5,18 @@
                                                        dead
 
                                                        serial port
+                            ...
+        ┌────────────────────── tutorial (13/16) ──────────────────────┐
+        │ hmm, your robot seems to have died — delete it and upload    │
+        │ something better                                             │
+        │                                                              │
+        │                                            [enter] try-again │
+        └──────────────────────────────────────────────────────────────┘
 
-        ####################### tutorial (13/16) #######################
-        # hmm, your robot seems to have died - delete it and upload    #
-        # anew                                                         #
-        #                                                              #
-        #                                            [enter] try-again #
-        ################################################################
-                  ......... .........
-                                    .
-                  .                 .
-                  ......... .........
-                          ...
+
+
+
+
 
 
 
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] go-back  [h] help  [spc] pause
+[esc] go-back  [h] help  [spc] pause                                  spd:faster

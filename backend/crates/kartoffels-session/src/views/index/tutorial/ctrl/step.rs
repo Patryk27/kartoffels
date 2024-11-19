@@ -3,12 +3,14 @@ use anyhow::Result;
 use glam::ivec2;
 use kartoffels_store::Store;
 use kartoffels_world::prelude::{
-    ArenaTheme, Config as WorldConfig, Handle, Policy, SnapshotStream, Theme,
+    ArenaTheme, Clock, Config as WorldConfig, EventStream, Handle, Policy,
+    SnapshotStream, Theme,
 };
 
 pub struct TutorialCtxt {
     pub game: GameCtrl,
     pub world: Handle,
+    pub events: EventStream,
     pub snapshots: SnapshotStream,
 }
 
@@ -30,41 +32,29 @@ impl TutorialCtxt {
         .await?;
 
         let world = store.create_private_world(WorldConfig {
-            name: "tutorial".into(),
+            clock: Clock::Normal,
             policy: Policy {
                 auto_respawn: false,
                 max_alive_bots: 16,
                 max_queued_bots: 16,
             },
             theme: Some(Theme::Arena(ArenaTheme::new(12))),
-            rng: if store.testing() {
-                Some(Default::default())
-            } else {
-                None
-            },
-            ..Default::default()
+            ..store.world_config("tutorial")
         })?;
 
         world.set_spawn(ivec2(12, 12), None).await?;
         game.join(world.clone()).await?;
 
         Ok(Self {
+            events: world.events()?,
             snapshots: world.snapshots(),
             game,
             world,
         })
     }
 
-    /// Waits for user interface to catch up with the latest snapshot of the
-    /// world.
     pub async fn sync(&mut self) -> Result<()> {
-        let latest_version = self.snapshots.next().await?.version();
-
-        loop {
-            if self.game.get_snapshot_version().await? >= latest_version {
-                break;
-            }
-        }
+        self.game.sync(self.world.version()).await?;
 
         Ok(())
     }
@@ -72,13 +62,25 @@ impl TutorialCtxt {
     pub async fn delete_bots(&mut self) -> Result<()> {
         let snapshot = self.snapshots.next().await?;
 
-        let alive_ids = snapshot.bots().alive().iter().map(|bot| bot.id);
-        let dead_ids = snapshot.bots().dead().ids();
+        let alive_ids: Vec<_> =
+            snapshot.bots().alive().iter().map(|bot| bot.id).collect();
 
-        for id in alive_ids.chain(dead_ids) {
-            self.world.delete_bot(id).await?;
+        let dead_ids: Vec<_> = snapshot.bots().dead().ids().collect();
+
+        for id in alive_ids.iter().chain(&dead_ids) {
+            self.world.delete_bot(*id).await?;
         }
 
-        Ok(())
+        loop {
+            let snapshot = self.snapshots.next().await?;
+
+            if !snapshot.bots().alive().has_any_of(&alive_ids) {
+                return Ok(());
+            }
+
+            if !snapshot.bots().dead().has_any_of(&dead_ids) {
+                return Ok(());
+            }
+        }
     }
 }

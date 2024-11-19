@@ -8,17 +8,17 @@ use tokio::sync::mpsc;
 #[derive(Debug)]
 pub struct MapBuilder {
     map: Map,
-    tx: Option<mpsc::Sender<Map>>,
+    tx: mpsc::Sender<Map>,
     updates: u32,
 }
 
 impl MapBuilder {
-    pub fn new(notify: bool) -> (Self, mpsc::Receiver<Map>) {
+    pub fn new() -> (Self, mpsc::Receiver<Map>) {
         let (tx, rx) = mpsc::channel(1);
 
         let this = Self {
             map: Default::default(),
-            tx: notify.then_some(tx),
+            tx,
             updates: 0,
         };
 
@@ -70,10 +70,8 @@ impl MapBuilder {
     }
 
     pub async fn notify(&mut self) {
-        if let Some(tx) = &self.tx
-            && self.updates % 10 == 0
-        {
-            _ = tx.send(self.map.clone()).await;
+        if self.updates % 10 == 0 {
+            _ = self.tx.send(self.map.clone()).await;
         }
 
         self.updates += 1;

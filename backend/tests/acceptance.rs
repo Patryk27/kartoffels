@@ -100,7 +100,7 @@ impl TestContext {
         }
     }
 
-    async fn recv(&mut self) {
+    pub async fn recv(&mut self) {
         let compressed_stdout =
             self.stdout.next().await.unwrap().unwrap().into_data();
 
@@ -132,6 +132,11 @@ impl TestContext {
         };
 
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
+    }
+
+    #[track_caller]
+    pub async fn sync(&mut self, version: u64) {
+        self.wait_for(&format!("v{version}")).await;
     }
 
     #[track_caller]

@@ -1,5 +1,4 @@
 use super::prelude::*;
-use kartoffels_bots::DUMMY;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
@@ -62,19 +61,23 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
     loop {
         let dummies = setup_map(ctxt).await?;
-        let player = ctxt.snapshots.next_uploaded_bot().await?;
+        let player = ctxt.events.next_spawned_bot().await?;
 
         ctxt.game.set_status(Some("watching".into())).await?;
 
-        let succeeded = wait(ctxt, &dummies, player).await?;
+        let result = wait(ctxt, dummies, player).await?;
 
         ctxt.sync().await?;
         ctxt.game.set_status(None).await?;
 
-        if succeeded {
-            break;
-        } else {
-            ctxt.game.msg(&MSG_RETRY).await?;
+        match result {
+            ControlFlow::Continue(_) => {
+                ctxt.game.msg(&MSG_RETRY).await?;
+            }
+
+            ControlFlow::Break(_) => {
+                break;
+            }
         }
     }
 
@@ -83,7 +86,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
+async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
     ctxt.delete_bots().await?;
 
     ctxt.world
@@ -119,27 +122,30 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<Vec<BotId>> {
                 .into_iter()
                 .map(|pos| CreateBotRequest::new(DUMMY).at(pos).instant()),
         )
-        .await?;
+        .await?
+        .into_iter()
+        .collect();
 
     ctxt.sync().await?;
+    ctxt.events.sync(ctxt.world.version()).await?;
 
     Ok(dummies)
 }
 
 async fn wait(
     ctxt: &mut TutorialCtxt,
-    dummies: &[BotId],
+    mut dummies: HashSet<BotId>,
     player: BotId,
-) -> Result<bool> {
+) -> Result<ControlFlow<(), ()>> {
     loop {
-        let snapshot = ctxt.snapshots.next().await?;
+        let id = ctxt.events.next_killed_bot().await?;
 
-        if !snapshot.bots().alive().has_any_of(dummies) {
-            return Ok(true);
+        if dummies.remove(&id) && dummies.is_empty() {
+            return Ok(ControlFlow::Break(()));
         }
 
-        if !snapshot.bots().alive().has(player) {
-            return Ok(false);
+        if id == player {
+            return Ok(ControlFlow::Continue(()));
         }
     }
 }

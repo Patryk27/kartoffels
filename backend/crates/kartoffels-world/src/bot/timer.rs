@@ -1,4 +1,4 @@
-use crate::{AliveBot, Clock};
+use crate::AliveBot;
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
@@ -21,11 +21,8 @@ impl BotTimer {
         self.ticks += 1;
     }
 
-    pub fn age(&self, clock: &Clock) -> u32 {
-        match clock {
-            Clock::Auto => self.ticks / Clock::HZ,
-            Clock::Manual { ticks } => self.ticks / ticks,
-        }
+    pub fn ticks(&self) -> u32 {
+        self.ticks
     }
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {

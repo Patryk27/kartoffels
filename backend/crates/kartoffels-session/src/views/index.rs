@@ -24,25 +24,21 @@ pub async fn run(
         match run_once(store, term, bg, fade_in).await? {
             Event::Play => {
                 play::run(store, sess, term, bg).await?;
-
                 fade_in = false;
             }
 
             Event::Sandbox => {
                 sandbox::run(store, sess, term, bg).await?;
-
                 fade_in = false;
             }
 
             Event::Tutorial => {
                 tutorial::run(store, sess, term).await?;
-
                 fade_in = true;
             }
 
             Event::Challenges => {
                 challenges::run(store, sess, term, bg).await?;
-
                 fade_in = false;
             }
 

@@ -93,7 +93,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         watch(&world, timmy).await?;
 
-        game.pause().await?;
+        game.sync(world.version()).await?;
         game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
@@ -106,13 +106,12 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     game.set_status(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
-        name: "challenge:acyclic-maze".into(),
         policy: Policy {
             auto_respawn: false,
             max_alive_bots: 2,
             max_queued_bots: 1,
         },
-        ..Default::default()
+        ..store.world_config("challenge:acyclic-maze")
     })?;
 
     world
@@ -134,6 +133,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
 
     utils::map::build(store, &world, create_map).await?;
 
+    game.sync(world.version()).await?;
     game.set_config(CONFIG).await?;
     game.set_status(None).await?;
 
@@ -181,15 +181,10 @@ async fn draw_entrance(map: &mut MapBuilder) {
 }
 
 async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
-    let mut snapshots = world.snapshots();
-
-    // Wait for Timmy to appear - that's required only for tests, because there
-    // we don't animate the map and so it might happen that the code is so quick
-    // we get here and don't see Timmy yet
-    snapshots.wait_for_bot(timmy).await?;
+    let mut events = world.events()?;
 
     loop {
-        if !snapshots.next().await?.bots().alive().has(timmy) {
+        if events.next_killed_bot().await? == timmy {
             return Ok(());
         }
     }
@@ -214,7 +209,7 @@ mod tests {
             .join("tests")
             .join("map");
 
-        let (map, _) = MapBuilder::new(false);
+        let (map, _) = MapBuilder::new();
         let rng = ChaCha8Rng::from_seed(Default::default());
         let map = create_map(map, rng).await.unwrap();
 

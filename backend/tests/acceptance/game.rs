@@ -20,7 +20,7 @@ async fn smoke() {
                 max_queued_bots: 1,
                 ..Default::default()
             },
-            rng: Some(Default::default()),
+            seed: Some(Default::default()),
             ..Default::default()
         });
 
@@ -121,7 +121,7 @@ async fn http_upload_ok() {
                 max_queued_bots: 1,
                 ..Default::default()
             },
-            rng: Some(Default::default()),
+            seed: Some(Default::default()),
             ..Default::default()
         });
 

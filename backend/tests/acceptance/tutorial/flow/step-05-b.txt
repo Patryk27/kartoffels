@@ -4,17 +4,17 @@
                       .........
                     .............
                    ...............
-        ############################# help #############################
-        # run this:                                                    #
-        #     ./build                                                  #
-        #                                                              #
-        # ... then close this message and press [u] to upload the bot  #
-        #                                                              #
-        # when the file picker opens, choose a file called kartoffel - #
-        # it should be located next to README.md etc.                  #
-        #                                                              #
-        #                                                  [esc] close #
-        ################################################################
+        ┌──────────────────────────── help ────────────────────────────┐
+        │ run this:                                                    │
+        │     ./build                                                  │
+        │                                                              │
+        │ ... then close this message and press [u] to upload the bot  │
+        │                                                              │
+        │ when the file picker opens, choose a file called kartoffel — │
+        │ it should be located next to README.md etc.                  │
+        │                                                              │
+        │                                                  [esc] close │
+        └──────────────────────────────────────────────────────────────┘
                .......................
                .......................
                 .....................

@@ -7,7 +7,7 @@ use glam::{ivec2, uvec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    Config, Handle, Object, ObjectId, ObjectKind, Policy,
+    Config, Event, Handle, Object, ObjectId, ObjectKind, Policy,
 };
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
@@ -64,7 +64,14 @@ static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" personal-roomba "),
 
-    body: vec![],
+    body: vec![
+        MsgLine::new("congrats!"),
+        MsgLine::new(""),
+        MsgLine::new(
+            "flags back at their place, peace in our brainmuscle — we are \
+             grateful",
+        ),
+    ],
 
     buttons: vec![MsgButton::confirm("ok", ())],
 });
@@ -81,23 +88,11 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         let (world, mut flags) = init(store, &game).await?;
 
-        loop {
-            match watch(&world).await? {
-                ControlFlow::Continue(_) => {
-                    game.set_status(Some("building".into())).await?;
-
-                    flags = reset(&world, Some(flags)).await?;
-
-                    game.set_status(None).await?;
-                }
-
-                ControlFlow::Break(_) => {
-                    break;
-                }
-            }
+        while let ControlFlow::Continue(_) = watch(&game, &world).await? {
+            flags = reset(store, &game, &world, Some(flags)).await?;
         }
 
-        game.pause().await?;
+        game.sync(world.version()).await?;
         game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
@@ -113,13 +108,12 @@ async fn init(
     game.set_status(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
-        name: "challenge:personal-roomba".into(),
         policy: Policy {
             auto_respawn: false,
             max_alive_bots: 1,
             max_queued_bots: 1,
         },
-        ..Default::default()
+        ..store.world_config("challenge:personal-roomba")
     })?;
 
     game.join(world.clone()).await?;
@@ -138,10 +132,11 @@ async fn init(
     })
     .await?;
 
-    let flags = reset(&world, None).await?;
+    let flags = reset(store, game, &world, None).await?;
 
     // ---
 
+    game.sync(world.version()).await?;
     game.set_config(CONFIG).await?;
     game.set_status(None).await?;
 
@@ -149,10 +144,14 @@ async fn init(
 }
 
 async fn reset(
+    store: &Store,
+    game: &GameCtrl,
     world: &Handle,
     flags: Option<Vec<ObjectId>>,
 ) -> Result<Vec<ObjectId>> {
     if let Some(flags) = flags {
+        game.set_status(Some("building".into())).await?;
+
         for flag in flags {
             world.delete_object(flag).await?;
         }
@@ -162,7 +161,9 @@ async fn reset(
 
     for x in [0, SIZE.x as i32 - 1] {
         for y in [0, SIZE.y as i32 - 1] {
-            time::sleep(theme::FRAME_TIME * 15).await;
+            if !store.testing() {
+                time::sleep(theme::FRAME_TIME * 15).await;
+            }
 
             let id = world
                 .create_object(Object::new(ObjectKind::FLAG), ivec2(x, y))
@@ -175,19 +176,28 @@ async fn reset(
     Ok(flags)
 }
 
-async fn watch(world: &Handle) -> Result<ControlFlow<(), ()>> {
-    let mut snapshots = world.snapshots();
-    let player = snapshots.next_uploaded_bot().await?;
+async fn watch(game: &GameCtrl, world: &Handle) -> Result<ControlFlow<(), ()>> {
+    let mut events = world.events()?;
+    let mut flags = 4;
+
+    game.sync(world.version()).await?;
+    game.set_status(None).await?;
 
     loop {
-        let snapshot = snapshots.next().await?;
+        match events.next().await?.event {
+            Event::BotKilled { .. } => {
+                return Ok(ControlFlow::Continue(()));
+            }
 
-        if !snapshot.bots().alive().has(player) {
-            return Ok(ControlFlow::Continue(()));
-        }
+            Event::ObjectPicked { .. } => {
+                flags -= 1;
 
-        if snapshot.objects().is_empty() {
-            return Ok(ControlFlow::Break(()));
+                if flags == 0 {
+                    return Ok(ControlFlow::Break(()));
+                }
+            }
+
+            _ => (),
         }
     }
 }

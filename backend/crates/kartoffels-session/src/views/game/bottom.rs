@@ -1,7 +1,7 @@
 use super::{Event, Mode, State};
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Button, Render, Ui};
-use kartoffels_world::prelude::ClockSpeed;
+use kartoffels_world::prelude::Clock;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -98,15 +98,19 @@ impl BottomPanel {
             Button::multi("overclock")
                 .option(
                     KeyCode::Char('1'),
-                    Event::Overclock(ClockSpeed::Normal),
+                    Event::Overclock {
+                        clock: Clock::Normal,
+                    },
                 )
                 .option(
                     KeyCode::Char('2'),
-                    Event::Overclock(ClockSpeed::Faster),
+                    Event::Overclock { clock: Clock::Fast },
                 )
                 .option(
                     KeyCode::Char('3'),
-                    Event::Overclock(ClockSpeed::Fastest),
+                    Event::Overclock {
+                        clock: Clock::Faster,
+                    },
                 )
                 .render(ui);
         }
@@ -134,11 +138,11 @@ impl BottomPanel {
                 Some(span.fg(theme::YELLOW))
             }
         } else {
-            let speed = match state.speed {
-                ClockSpeed::Normal => None,
-                ClockSpeed::Faster => Some("spd:fast"),
-                ClockSpeed::Fastest => Some("spd:faster"),
-                ClockSpeed::Unlimited => Some("spd:∞"),
+            let speed = match state.snapshot.clock() {
+                Clock::Normal | Clock::Manual => None,
+                Clock::Fast => Some("spd:fast"),
+                Clock::Faster => Some("spd:faster"),
+                Clock::Unlimited => Some("spd:∞"),
             };
 
             speed.map(|speed| Span::raw(speed).fg(theme::WASHED_PINK))

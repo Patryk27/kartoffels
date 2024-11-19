@@ -9,7 +9,7 @@ use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, Object, ObjectKind,
+    Config, CreateBotRequest, Dir, Event, Handle, Map, Object, ObjectKind,
     Policy, TileKind,
 };
 use ratatui::style::Stylize;
@@ -101,10 +101,13 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
             return Ok(());
         }
 
-        loop {
-            let (world, guards, finish) = init(store, &game).await?;
+        let mut world;
+        let mut finish;
 
-            match watch(&game, &world, &guards, finish).await? {
+        loop {
+            (world, finish) = init(store, &game).await?;
+
+            match watch(&game, &world, finish).await? {
                 ControlFlow::Continue(_) => {
                     game.wait_for_restart().await?;
                 }
@@ -113,29 +116,25 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
             }
         }
 
-        game.pause().await?;
+        game.sync(world.version()).await?;
         game.msg(&COMPLETED_MSG).await?;
 
         Ok(())
     })
 }
 
-async fn init(
-    store: &Store,
-    game: &GameCtrl,
-) -> Result<(Handle, Vec<BotId>, IVec2)> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, IVec2)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG).await?;
     game.set_status(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
-        name: "challenge:diamond-heist".into(),
         policy: Policy {
             auto_respawn: false,
             max_alive_bots: 16,
             max_queued_bots: 16,
         },
-        ..Default::default()
+        ..store.world_config("challenge:diamond-heist")
     })?;
 
     game.join(world.clone()).await?;
@@ -180,52 +179,56 @@ async fn init(
         (anchors.get('f'), Dir::W),
     ];
 
-    let guards = world
-        .create_bots(guards.into_iter().map(|(pos, dir)| {
-            CreateBotRequest::new(CHL_DIAMOND_HEIST_GUARD)
-                .at(pos)
-                .facing(dir)
-                .instant()
-        }))
-        .await?;
+    for (pos, dir) in guards {
+        world
+            .create_bot(
+                CreateBotRequest::new(CHL_DIAMOND_HEIST_GUARD)
+                    .at(pos)
+                    .facing(dir)
+                    .instant(),
+            )
+            .await?;
+    }
 
     // ---
 
     let finish = anchors.get('g');
 
-    Ok((world, guards, finish))
+    Ok((world, finish))
 }
 
 async fn watch(
     game: &GameCtrl,
     world: &Handle,
-    guards: &[BotId],
     finish: IVec2,
 ) -> Result<ControlFlow<()>> {
-    let mut snapshots = world.snapshots();
+    let mut events = world.events()?;
 
-    snapshots.wait_for_bots(guards).await?;
+    game.sync(world.version()).await?;
     game.set_status(None).await?;
+    events.sync(world.version()).await?;
 
-    let player = snapshots.next_uploaded_bot().await?;
+    let player = events.next_spawned_bot().await?;
 
     loop {
-        let snapshot = snapshots.next().await?;
+        match events.next().await?.event {
+            Event::BotKilled { id } => {
+                if id == player {
+                    game.msg(&PLAYER_KILLED_MSG).await?;
+                } else {
+                    game.msg(&GUARD_KILLED_MSG).await?;
+                }
 
-        if !snapshot.bots().alive().has_all_of(guards) {
-            game.msg(&GUARD_KILLED_MSG).await?;
+                return Ok(ControlFlow::Continue(()));
+            }
 
-            return Ok(ControlFlow::Continue(()));
-        }
+            Event::BotMoved { id, at } => {
+                if id == player && at == finish {
+                    return Ok(ControlFlow::Break(()));
+                }
+            }
 
-        let Some(player) = snapshot.bots().alive().get(player) else {
-            game.msg(&PLAYER_KILLED_MSG).await?;
-
-            return Ok(ControlFlow::Continue(()));
-        };
-
-        if player.pos == finish {
-            return Ok(ControlFlow::Break(()));
+            _ => (),
         }
     }
 }

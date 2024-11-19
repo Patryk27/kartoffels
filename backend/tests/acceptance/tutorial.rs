@@ -1,6 +1,6 @@
 use crate::TestContext;
 use kartoffels_bots::{TUT_01, TUT_02, TUT_03, TUT_04};
-use kartoffels_world::prelude::ClockSpeed;
+use kartoffels_world::prelude::Clock;
 use std::time::Duration;
 use termwiz::input::{KeyCode, Modifiers};
 use tokio::time;
@@ -169,7 +169,7 @@ async fn flow() {
 
     ctxt.store()
         .first_private_world()
-        .overclock(ClockSpeed::Fastest)
+        .overclock(Clock::Faster)
         .await
         .unwrap();
 
@@ -220,7 +220,7 @@ async fn flow() {
 
     ctxt.store()
         .first_private_world()
-        .overclock(ClockSpeed::Unlimited)
+        .overclock(Clock::Unlimited)
         .await
         .unwrap();
 
@@ -251,9 +251,6 @@ async fn flow() {
 
     ctxt.upload_bot(TUT_04).await;
     ctxt.wait_for("watching").await;
-
-    // ---
-
     ctxt.wait_for("yay, you made it!").await;
 
     // ---

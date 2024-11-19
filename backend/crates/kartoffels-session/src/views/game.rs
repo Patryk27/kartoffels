@@ -24,8 +24,7 @@ use glam::{IVec2, UVec2};
 use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::{Clear, Fade, FadeDir, Render, Term, Ui};
 use kartoffels_world::prelude::{
-    BotId, ClockSpeed, Handle as WorldHandle, Snapshot as WorldSnapshot,
-    SnapshotStream,
+    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::future::Future;
@@ -114,7 +113,6 @@ struct State {
     restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
-    speed: ClockSpeed,
     status: Option<(String, Instant)>,
 }
 
@@ -194,7 +192,7 @@ impl State {
                 });
             }
 
-            Overlay::render(ui, self);
+            Overlay::render(ui, store, self);
         });
 
         if let Some(modal) = &mut self.modal {

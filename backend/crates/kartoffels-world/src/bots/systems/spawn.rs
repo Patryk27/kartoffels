@@ -1,4 +1,4 @@
-use crate::{AliveBot, Bots, Dir, Map, Objects, QueuedBot, World};
+use crate::{AliveBot, Bots, Dir, Event, Map, Objects, QueuedBot, World};
 use anyhow::{anyhow, Context, Result};
 use glam::IVec2;
 use rand::{Rng, RngCore};
@@ -30,6 +30,7 @@ pub fn run(world: &mut World) {
 
     trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
 
+    world.events.add(Event::BotSpawned { id: bot.id });
     world.bots.alive.add(bot);
 }
 
@@ -53,6 +54,7 @@ pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
 
     trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
 
+    world.events.add(Event::BotSpawned { id: bot.id });
     world.bots.alive.add(bot);
 
     Ok(())

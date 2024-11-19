@@ -1,30 +1,30 @@
-        ####################### tutorial (12/16) #######################
-        # radar returns a scan of the environment around the robot -   #
-        # for starters, you need to know about these two functions:    #
-        #                                                              #
-        # # radar_wait()                                               #
-        #                                                              #
-       .# similarly to motor_wait(), this boi waits until the radar is #
-      ..# ready to accept another command                              #
-     ...#                                                              #
-     ...# # radar_scan_3x3()                                           #
-    ....#                                                              #
-    ....# this boi returns a scan representing the 3x3 square around   #
-    ....# your bot, allowing you to see tiles and other bots:          #
-    ....#                                                              #
-    ....#     let scan = radar_scan_3x3();                             #
-    ....#     let tile_in_front = scan.at(0, -1);                      #
-    ....#     let tile_in_back = scan.at(0, 1);                        #
-    ....#     let tile_to_left = scan.at(-1, 0);                       #
-    ....#     let tile_to_right = scan.at(1, 0);                       #
-     ...#                                                              #
-     ...#     if tile_in_front == '.' {                                #
-      ..#         // do something                                      #
-       .#     }                                                        #
-        #                                                              #
-        #     if tile_to_left == '@' || tile_to_right == '@' {         #
-        #         // do something else                                 #
-        #     }                                                        #
-        #                                                              #
-        #                                                 [enter] next #
-[esc] go################################################################
+        ┌────────────────────── tutorial (12/16) ──────────────────────┐
+        │ radar returns a scan of the environment around the robot —   │
+        │ to get started, you need to know about these two functions:  │
+        │                                                              │
+        │ # radar_wait()                                               │
+        │                                                              │
+        │ similarly to motor_wait(), this boi waits until the radar is │
+        │ ready to accept another command                              │
+        │                                                              │
+        │ # radar_scan_3x3()                                           │
+        │                                                              │
+        │ this boi returns a scan representing the 3x3 square around   │
+        │ your bot, allowing you to see tiles and other bots:          │
+        │                                                              │
+        │     let scan = radar_scan_3x3();                             │
+        │     let tile_in_front = scan.at(0, -1);                      │
+        │     let tile_in_back = scan.at(0, 1);                        │
+        │     let tile_to_left = scan.at(-1, 0);                       │
+        │     let tile_to_right = scan.at(1, 0);                       │
+        │                                                              │
+        │     if tile_in_front == '.' {                                │
+        │         // do something                                      │
+        │     }                                                        │
+        │                                                              │
+        │     if tile_to_left == '@' || tile_to_right == '@' {         │
+        │         // do something else                                 │
+        │     }                                                        │
+        │                                                              │
+        │                                                 [enter] next │
+[esc] go└──────────────────────────────────────────────────────────────┘d:faster

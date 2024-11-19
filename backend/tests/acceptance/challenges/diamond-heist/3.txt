@@ -1,0 +1,30 @@
+v4008                                                  id
+                                                       5084-8432-06c1-9968
+
+                                                       status
+                                                       alive
+                                                       > age: 64s
+                                                       > pos: [31, 2]
+                                                       > dir: e
+        ┌─────────────────────── diamond-heist ────────────────────────┐
+        │ congrats!                                                    │
+        │                                                              │
+        │ now give me my diamond back and go away                      │ce
+        │                                                              │
+        │                                                   [enter] ok │
+        └──────────────────────────────────────────────────────────────┘
+          |----------|↑........|                       blending in
+          +...........@........|                       running to the exit
+          |----------|....←@...|
+                     -----------
+
+
+
+
+
+
+
+                                                       [f] stop-following-bot
+                                                       [i] inspect-bot
+                                                       [D] delete-bot
+[esc] go-back  [h] help  [spc] pause  [1/2/3] overclock

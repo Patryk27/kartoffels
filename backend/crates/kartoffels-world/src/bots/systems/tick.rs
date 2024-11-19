@@ -1,15 +1,13 @@
-use crate::{AliveBot, BotAction, KillBot, TileKind, World};
+use crate::{AliveBot, BotAction, Event, KillBot, TileKind, World};
 use itertools::Either;
 
 pub fn run(world: &mut World) {
-    let ticks = world.clock.ticks();
-
-    for _ in 0..ticks {
-        world_tick(world);
+    for _ in 0..world.clock.steps() {
+        tick(world);
     }
 }
 
-fn world_tick(world: &mut World) {
+fn tick(world: &mut World) {
     let len = world.bots.alive.len();
     let mut idx = 0;
 
@@ -35,6 +33,7 @@ fn bot_tick(
             if let Some((id, obj)) = bot.inventory.take(idx) {
                 bot.log(format!("dropped {} at {},{}", obj.name(), at.x, at.y));
 
+                world.events.add(Event::ObjectDropped { id });
                 world.objects.add(id, obj, Some(at));
             } else {
                 bot.log("dropped nothing");
@@ -45,6 +44,8 @@ fn bot_tick(
             if let Some((id, obj)) = world.objects.remove_at(at) {
                 match bot.inventory.add(id, obj) {
                     Ok(_) => {
+                        world.events.add(Event::ObjectPicked { id });
+
                         bot.log(format!(
                             "picked {} from {},{}",
                             obj.name(),
@@ -103,6 +104,8 @@ fn bot_tick(
                     && world.objects.lookup_at(at).is_none()
                 {
                     bot.pos = at;
+
+                    world.events.add(Event::BotMoved { id: bot.id, at });
                 }
             }
 

@@ -26,14 +26,12 @@ async fn smoke() {
     }
 
     world.assert(&mut asserter, "1.md").await;
-    world.tick().await.unwrap();
-    world.assert(&mut asserter, "2.md").await;
 
     for _ in 0..256 {
         world.tick().await.unwrap();
     }
 
-    world.assert(&mut asserter, "3.md").await;
+    world.assert(&mut asserter, "2.md").await;
 }
 
 #[tokio::test]
@@ -361,15 +359,15 @@ async fn err_too_many_robots_queued() {
         ..config()
     });
 
-    for _ in 0..20 {
+    for _ in 0..30 {
         world
-            .create_bot(CreateBotRequest::new(ROBERTO))
+            .create_bot(CreateBotRequest::new(DUMMY))
             .await
             .unwrap();
     }
 
     let err = world
-        .create_bot(CreateBotRequest::new(ROBERTO))
+        .create_bot(CreateBotRequest::new(DUMMY))
         .await
         .unwrap_err()
         .to_string();
@@ -397,7 +395,8 @@ async fn err_couldnt_parse_firmware() {
 
 fn config() -> Config {
     Config {
-        clock: Clock::Manual { ticks: 1024 },
+        clock: Clock::Manual,
+        events: false,
         mode: Mode::Deathmatch(DeathmatchMode::default()),
         name: "world".into(),
         path: None,
@@ -406,7 +405,7 @@ fn config() -> Config {
             max_alive_bots: 16,
             max_queued_bots: 16,
         },
-        rng: Some(Default::default()),
+        seed: Some(Default::default()),
         theme: Some(Theme::Arena(ArenaTheme::new(12))),
     }
 }

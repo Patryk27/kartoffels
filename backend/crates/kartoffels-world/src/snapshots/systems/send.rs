@@ -27,30 +27,30 @@ pub fn run(world: &mut World, state: &mut State) {
         return;
     }
 
+    state.version += 1;
+
     let snapshot = {
         let bots = prepare_bots(world);
-        let raw_map = world.map.clone();
         let map = prepare_map(&bots, world);
         let objects = prepare_objects(world);
-        let version = state.version;
 
         Arc::new(Snapshot {
-            raw_map,
+            raw_map: world.map.clone(),
             map,
             bots,
             objects,
-            version,
+            clock: world.clock,
+            version: state.version,
         })
     };
 
     world.snapshots.send_replace(snapshot);
+    world.events.send(state.version);
 
     state.next_run_at = match world.clock {
-        Clock::Auto { .. } => Instant::now() + Duration::from_millis(33),
-        Clock::Manual { .. } => Instant::now(),
+        Clock::Manual => Instant::now(),
+        _ => Instant::now() + Duration::from_millis(33),
     };
-
-    state.version += 1;
 }
 
 fn prepare_bots(world: &mut World) -> SnapshotBots {
@@ -69,7 +69,7 @@ fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
         .alive
         .iter_mut()
         .map(|bot| SnapshotAliveBot {
-            age: bot.timer.age(&world.clock),
+            age: bot.timer.ticks(),
             dir: bot.dir,
             events: bot.events.snapshot(),
             id: bot.id,

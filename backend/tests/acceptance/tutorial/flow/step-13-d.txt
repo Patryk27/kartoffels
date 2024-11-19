@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [h] help  [spc] pause
+[esc] go-back  [h] help  [spc] pause                                  spd:faster

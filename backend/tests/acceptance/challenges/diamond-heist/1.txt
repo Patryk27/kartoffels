@@ -1,26 +1,26 @@
 
 
 
-
-        ######################## diamond-heist #########################
-        # a precious, rare diamond has been stolen from us and put     #
-        # under a guard watch in the nearby museum                     #
-        #                                                              #
-        #                         steal it back                        #
-        #                                                              #
-        # go inside the room, take the diamond (using arm_take()) and  #
-        # then drive away - you'll be starting in the bottom-left      #
-        # corner, the exit is on the right side                        #
-        #                                                              #
-        # do not kill any guards, we don't want no spilled oil - our   #
-        # intel says the guards scan only see the 3x3 area around      #
-        # them, use it to your advantage                               #
-        #                                                              #
-        #                                                         xoxo #
-        #                                               the architects #
-        #                                                              #
-        # [esc] go-back                                  [enter] start #
-        ################################################################
+        ┌─────────────────────── diamond-heist ────────────────────────┐
+        │ a precious, rare diamond has been stolen from us and put     │
+        │ under a guard watch in the nearby museum                     │
+        │                                                              │
+        │                         steal it back                        │
+        │                                                              │
+        │ go inside the room, take the diamond (using arm_take()) and  │
+        │ then drive away — you'll be starting in the bottom-left      │
+        │ corner, the exit is on the right side                        │
+        │                                                              │
+        │ do not kill any guards, we don't want no spilled oil — our   │
+        │ intel says the guards scan only see the 3x3 area around      │
+        │ them, use it to your advantage                               │
+        │                                                              │
+        │ difficulty: medium                                           │
+        │                                                         xoxo │
+        │                                               the architects │
+        │                                                              │
+        │ [esc] go-back                                  [enter] start │
+        └──────────────────────────────────────────────────────────────┘
 
 
 

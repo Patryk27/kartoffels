@@ -95,7 +95,7 @@ impl Render<Event> for BotsModalRow<'_> {
     fn render(self, ui: &mut Ui<Event>) {
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
-        let age = Span::raw(format!("{}s", self.bot.age));
+        let age = Span::raw(format!("{}s", self.bot.age_seconds()));
         let score = Span::raw(self.bot.score.to_string());
 
         let join = Button::new(None, "join")

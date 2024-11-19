@@ -3,21 +3,21 @@
 
 
 
-        ######################### acyclic-maze #########################
-        # timmy-bot went for a walk and got mugged by a perpetrator    #
-        # who took poor timmy-bot's wheels and ran away, leaving him   #
-        # stranded                                                     #
-        #                                                              #
-        #                          show mercy                          #
-        #                                                              #
-        # traverse the maze, find timmy and kill it - you'll be        #
-        # starting in the bottom-right corner                          #
-        #                                                              #
-        #                                                         xoxo #
-        #                                               the architects #
-        #                                                              #
-        # [esc] go-back                                  [enter] start #
-        ################################################################
+        ┌──────────────────────── acyclic-maze ────────────────────────┐
+        │ timmy-bot went for a walk and got mugged by a perpetrator    │
+        │ who took timmy-bot's wheels and ran away                     │
+        │                                                              │
+        │                          show mercy                          │
+        │                                                              │
+        │ traverse the maze, find timmy and kill it — you'll be        │
+        │ starting in the bottom-right corner                          │
+        │                                                              │
+        │ difficulty: easy                                             │
+        │                                                         xoxo │
+        │                                               the architects │
+        │                                                              │
+        │ [esc] go-back                                  [enter] start │
+        └──────────────────────────────────────────────────────────────┘
 
 
 

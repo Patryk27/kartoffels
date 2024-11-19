@@ -29,27 +29,29 @@ where
         ChaCha8Rng::from_seed(seed)
     };
 
-    let (map, mut rx) = MapBuilder::new(!store.testing());
+    let (map, mut rx) = MapBuilder::new();
     let map = (build)(map, rng);
 
-    let progress = async {
-        while let Some(map) = rx.recv().await {
-            if store.testing() {
-                continue;
+    if store.testing() {
+        drop(rx);
+
+        world.set_map(map.await?).await?;
+    } else {
+        let progress = async {
+            while let Some(map) = rx.recv().await {
+                world.set_map(map).await?;
+                time::sleep(theme::FRAME_TIME).await;
             }
 
-            world.set_map(map).await?;
-            time::sleep(theme::FRAME_TIME).await;
-        }
+            Ok(())
+        };
 
-        Ok(())
-    };
+        let (map, _) = try_join!(map, progress).map_err(|err: Error| err)?;
 
-    let (map, _) = try_join!(map, progress).map_err(|err: Error| err)?;
+        world.set_map(map).await?;
 
-    world.set_map(map).await?;
-
-    time::sleep(2 * theme::FRAME_TIME).await;
+        time::sleep(2 * theme::FRAME_TIME).await;
+    }
 
     Ok(())
 }

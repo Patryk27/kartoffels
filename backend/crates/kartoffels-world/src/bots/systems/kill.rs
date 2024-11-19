@@ -1,4 +1,4 @@
-use crate::{DeadBot, KillBot, QueuedBot, World};
+use crate::{DeadBot, Event, KillBot, QueuedBot, World};
 use itertools::Either;
 use tracing::trace;
 
@@ -32,7 +32,9 @@ pub fn run(world: &mut World, cmd: KillBot) {
         Either::Right(bot) => *bot,
     };
 
+    world.events.add(Event::BotKilled { id: killed.id });
     world.mode.on_bot_killed(killed.id, killer);
+
     killed.log(reason);
 
     let decision = if !killed.oneshot

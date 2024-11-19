@@ -3,22 +3,22 @@
 
                       .........
                     .............
-        ####################### tutorial (2/16) ########################
-        # lesson #1:                                                   #
-        # - you can navigate the interface using keyboard and/or mouse #
-        #                                                              #
-        # lesson #2, at any time:                                      #
-        # - press [Ctrl-a] to go back to the main menu                 #
-        #                                                              #
-        # lesson #3, during the game:                                  #
-        # - press [h] to get help (ambulance paid separately)          #
-        # - press [w/a/s/d] or arrow keys to move the camera           #
-        #                                                              #
-        # lesson #4:                                                   #
-        # - don't lick yellow snow                                     #
-        #                                                              #
-        #                                                 [enter] next #
-        ################################################################
+        ┌────────────────────── tutorial (2/16) ───────────────────────┐
+        │ lesson #1:                                                   │
+        │ - you can navigate the interface using keyboard and/or mouse │
+        │                                                              │
+        │ lesson #2, at any time:                                      │
+        │ - press [Ctrl-a] to go back to the main menu                 │
+        │                                                              │
+        │ lesson #3, during the game:                                  │
+        │ - press [h] to get help (ambulance paid separately)          │
+        │ - press [w/a/s/d] or arrow keys to move the camera           │
+        │                                                              │
+        │ lesson #4:                                                   │
+        │ - don't lick yellow snow                                     │
+        │                                                              │
+        │                                                 [enter] next │
+        └──────────────────────────────────────────────────────────────┘
                  ...................
                   .................
                    ...............

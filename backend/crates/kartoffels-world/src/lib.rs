@@ -8,6 +8,7 @@ mod bot;
 mod bots;
 mod clock;
 mod config;
+mod events;
 mod handle;
 mod map;
 mod mode;
@@ -21,16 +22,16 @@ mod theme;
 mod utils;
 
 mod cfg {
-    pub const MAX_REQUEST_BACKLOG: usize = 128;
+    pub const EVENT_STREAM_CAPACITY: usize = 128;
+    pub const REQUEST_STREAM_CAPACITY: usize = 128;
 }
 
 pub mod prelude {
     pub use crate::bot::BotId;
-    pub use crate::clock::{Clock, ClockSpeed};
+    pub use crate::clock::Clock;
     pub use crate::config::Config;
-    pub use crate::handle::{
-        CreateBotRequest, Handle, Request, SnapshotStream,
-    };
+    pub use crate::events::{Event, EventLetter, EventStream};
+    pub use crate::handle::{CreateBotRequest, Handle, Request};
     pub use crate::map::{Map, MapBuilder, Tile, TileKind};
     pub use crate::mode::{DeathmatchMode, Mode};
     pub use crate::object::{Object, ObjectId, ObjectKind};
@@ -38,7 +39,7 @@ pub mod prelude {
     pub use crate::snapshots::{
         Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBot,
         SnapshotBots, SnapshotDeadBot, SnapshotDeadBots, SnapshotObjects,
-        SnapshotQueuedBot, SnapshotQueuedBots,
+        SnapshotQueuedBot, SnapshotQueuedBots, SnapshotStream,
     };
     pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
@@ -48,6 +49,7 @@ pub(crate) use self::bot::*;
 pub(crate) use self::bots::*;
 pub(crate) use self::clock::*;
 pub(crate) use self::config::*;
+pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::map::*;
 pub(crate) use self::mode::*;
@@ -69,25 +71,25 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
-use tokio::sync::{mpsc, oneshot, watch};
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
 use tracing::{debug, info, info_span};
 
 pub fn create(config: Config) -> Handle {
     assert!(
-        !(config.path.is_some() && config.rng.is_some()),
-        "enabling path and rng at the same time is not supported, because rng \
-         state is currently not persisted"
+        !(config.path.is_some() && config.seed.is_some()),
+        "setting both `config.path` and `config.seed` is not supported, because \
+         prng state is currently not persisted"
     );
 
     let mut rng = config
-        .rng
+        .seed
         .map(SmallRng::from_seed)
         .unwrap_or_else(SmallRng::from_entropy);
 
     let clock = config.clock;
     let id = rng.gen();
     let mode = config.mode;
-    let name = Arc::new(config.name);
+    let name = config.name;
     let path = config.path;
     let policy = config.policy;
     let theme = config.theme;
@@ -97,11 +99,12 @@ pub fn create(config: Config) -> Handle {
         .map(|theme| theme.create_map(&mut rng).unwrap())
         .unwrap_or_default();
 
-    let (handle, rx) = handle(id, name.clone());
+    let (handle, rx) = create_handle(id, name.clone(), config.events);
 
     World {
         bots: Default::default(),
         clock,
+        events: Events::new(handle.shared.events.clone()),
         map,
         metronome: clock.metronome(),
         mode,
@@ -112,7 +115,7 @@ pub fn create(config: Config) -> Handle {
         policy,
         rng,
         rx,
-        snapshots: handle.inner.snapshots.clone(),
+        snapshots: handle.shared.snapshots.clone(),
         spawn: (None, None),
         theme,
         tick: None,
@@ -122,24 +125,25 @@ pub fn create(config: Config) -> Handle {
     handle
 }
 
-pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
+pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     let path = path.to_owned();
     let world = SerializedWorld::load(&path)?;
 
     let bots = world.bots.into_owned();
     let clock = Clock::default();
     let map = world.map.into_owned();
-    let metronome = if bench { None } else { clock.metronome() };
+    let metronome = clock.metronome();
     let mode = world.mode.into_owned();
-    let name = Arc::new(world.name.into_owned());
+    let name = world.name.into_owned();
     let policy = world.policy.into_owned();
     let theme = world.theme.map(|theme| theme.into_owned());
 
-    let (handle, rx) = handle(id, name.clone());
+    let (handle, rx) = create_handle(id, name.clone(), false);
 
     World {
         bots,
         clock,
+        events: Events::new(handle.shared.events.clone()),
         map,
         metronome,
         mode,
@@ -150,7 +154,7 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
         policy,
         rng: SmallRng::from_entropy(),
         rx,
-        snapshots: handle.inner.snapshots.clone(),
+        snapshots: handle.shared.snapshots.clone(),
         spawn: (None, None),
         theme,
         tick: None,
@@ -160,14 +164,22 @@ pub fn resume(id: Id, path: &Path, bench: bool) -> Result<Handle> {
     Ok(handle)
 }
 
-fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
-    let (tx, rx) = mpsc::channel(cfg::MAX_REQUEST_BACKLOG);
+fn create_handle(
+    id: Id,
+    name: String,
+    events: bool,
+) -> (Handle, mpsc::Receiver<Request>) {
+    let (tx, rx) = mpsc::channel(cfg::REQUEST_STREAM_CAPACITY);
+
+    let events =
+        events.then(|| broadcast::Sender::new(cfg::EVENT_STREAM_CAPACITY));
 
     let handle = Handle {
-        inner: Arc::new(HandleInner {
+        shared: Arc::new(HandleShared {
             id,
             tx,
             name,
+            events,
             snapshots: Default::default(),
         }),
         permit: None,
@@ -178,12 +190,13 @@ fn handle(id: Id, name: Arc<String>) -> (Handle, mpsc::Receiver<Request>) {
 
 struct World {
     bots: Bots,
-    objects: Objects,
     clock: Clock,
+    events: Events,
     map: Map,
-    metronome: Option<Metronome>,
+    metronome: Metronome,
     mode: Mode,
-    name: Arc<String>,
+    name: String,
+    objects: Objects,
     path: Option<PathBuf>,
     paused: bool,
     policy: Policy,
@@ -215,10 +228,8 @@ impl World {
             let shutdown = loop {
                 match self.tick(&mut systems) {
                     ControlFlow::Continue(_) => {
-                        if let Some(metronome) = &mut self.metronome {
-                            metronome.tick();
-                            metronome.wait();
-                        }
+                        self.metronome.tick(self.clock);
+                        self.metronome.wait(self.clock);
                     }
 
                     ControlFlow::Break(shutdown) => {
@@ -239,7 +250,7 @@ impl World {
             bots::tick::run(self);
         }
 
-        snapshots::broadcast::run(self, systems.get_mut());
+        snapshots::send::run(self, systems.get_mut());
         storage::save::run(self, systems.get_mut());
         stats::run(self, systems.get_mut());
 

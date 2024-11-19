@@ -41,9 +41,7 @@ impl MapBuilder {
                 }
             }
 
-            if let Some(tx) = &self.tx
-                && updates % 32 == 0
-            {
+            if updates % 32 == 0 {
                 let map = self.map.clone().map(|_, tile| {
                     if tile.meta[0] == NOT_VISITED {
                         TileKind::VOID.into()
@@ -52,7 +50,7 @@ impl MapBuilder {
                     }
                 });
 
-                _ = tx.send(map).await;
+                _ = self.tx.send(map).await;
             }
 
             updates += 1;

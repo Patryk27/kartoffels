@@ -4,10 +4,7 @@ use std::path::Path;
 use tokio::fs;
 use tracing::info;
 
-pub async fn load_worlds(
-    dir: Option<&Path>,
-    bench: bool,
-) -> Result<Vec<Handle>> {
+pub async fn load_worlds(dir: Option<&Path>) -> Result<Vec<Handle>> {
     let Some(dir) = dir else {
         return Ok(Default::default());
     };
@@ -35,7 +32,7 @@ pub async fn load_worlds(
                 .parse()
                 .context("couldn't extract world id from path")?;
 
-            let world = kartoffels_world::resume(id, &path, bench)?;
+            let world = kartoffels_world::resume(id, &path)?;
 
             worlds.push(world);
         };

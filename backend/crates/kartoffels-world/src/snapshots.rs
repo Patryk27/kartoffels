@@ -1,7 +1,9 @@
+mod stream;
 mod systems;
 
+pub use self::stream::*;
 pub use self::systems::*;
-use crate::{BotEvent, BotId, Dir, Map, Object, ObjectId};
+use crate::{BotEvent, BotId, Clock, Dir, Map, Object, ObjectId};
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Itertools;
@@ -17,6 +19,7 @@ pub struct Snapshot {
     map: Map,
     bots: SnapshotBots,
     objects: SnapshotObjects,
+    clock: Clock,
     version: u64,
 }
 
@@ -35,6 +38,10 @@ impl Snapshot {
 
     pub fn objects(&self) -> &SnapshotObjects {
         &self.objects
+    }
+
+    pub fn clock(&self) -> Clock {
+        self.clock
     }
 
     pub fn version(&self) -> u64 {
@@ -145,10 +152,6 @@ impl SnapshotAliveBots {
         self.get(id).is_some()
     }
 
-    pub fn has_all_of(&self, ids: &[BotId]) -> bool {
-        ids.iter().all(|id| self.has(*id))
-    }
-
     pub fn has_any_of(&self, ids: &[BotId]) -> bool {
         ids.iter().any(|id| self.has(*id))
     }
@@ -189,7 +192,13 @@ impl fmt::Display for SnapshotAliveBots {
         table.set_titles(row!["id", "pos", "dir", "age", "score"]);
 
         for bot in self.iter_sorted_by_scores() {
-            table.add_row(row![bot.id, bot.pos, bot.dir, bot.age, bot.score]);
+            table.add_row(row![
+                bot.id,
+                bot.pos,
+                bot.dir,
+                bot.age_seconds(),
+                bot.score
+            ]);
         }
 
         write!(f, "{table}")
@@ -207,6 +216,12 @@ pub struct SnapshotAliveBot {
     pub serial: Arc<VecDeque<u32>>,
 }
 
+impl SnapshotAliveBot {
+    pub fn age_seconds(&self) -> u32 {
+        self.age / Clock::HZ
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct SnapshotDeadBots {
     entries: AHashMap<BotId, SnapshotDeadBot>,
@@ -215,6 +230,14 @@ pub struct SnapshotDeadBots {
 impl SnapshotDeadBots {
     pub fn get(&self, id: BotId) -> Option<&SnapshotDeadBot> {
         self.entries.get(&id)
+    }
+
+    pub fn has(&self, id: BotId) -> bool {
+        self.get(id).is_some()
+    }
+
+    pub fn has_any_of(&self, ids: &[BotId]) -> bool {
+        ids.iter().any(|id| self.has(*id))
     }
 
     pub fn ids(&self) -> impl Iterator<Item = BotId> + '_ {

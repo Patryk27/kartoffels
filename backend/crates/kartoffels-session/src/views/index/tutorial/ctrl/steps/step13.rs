@@ -68,7 +68,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     setup_map(ctxt).await?;
 
     loop {
-        ctxt.snapshots.next_uploaded_bot().await?;
+        ctxt.events.next_spawned_bot().await?;
         ctxt.game.set_status(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt).await?;

@@ -6,7 +6,9 @@ use ahash::AHashMap;
 use anyhow::{anyhow, Result};
 use derivative::Derivative;
 use kartoffels_utils::Id;
-use kartoffels_world::prelude::{Config as WorldConfig, Handle as WorldHandle};
+use kartoffels_world::prelude::{
+    Clock, Config as WorldConfig, Handle as WorldHandle,
+};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map;
@@ -28,14 +30,10 @@ pub struct Store {
 }
 
 impl Store {
-    pub async fn open(
-        dir: Option<&Path>,
-        bench: bool,
-        debug: bool,
-    ) -> Result<Self> {
+    pub async fn open(dir: Option<&Path>, debug: bool) -> Result<Self> {
         info!("opening");
 
-        let public_worlds = open::load_worlds(dir, bench).await?;
+        let public_worlds = open::load_worlds(dir).await?;
 
         info!("ready");
 
@@ -51,7 +49,7 @@ impl Store {
     }
 
     pub async fn test(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
-        let mut this = Self::open(None, false, false).await.unwrap();
+        let mut this = Self::open(None, false).await.unwrap();
 
         this.public_worlds = worlds.into_iter().collect();
         this.testing = true;
@@ -129,6 +127,24 @@ impl Store {
 
     pub fn debugging(&self) -> bool {
         self.debugging
+    }
+
+    pub fn world_config(&self, name: &str) -> WorldConfig {
+        if self.testing() {
+            WorldConfig {
+                clock: Clock::Manual,
+                events: true,
+                name: name.into(),
+                seed: Some(Default::default()),
+                ..Default::default()
+            }
+        } else {
+            WorldConfig {
+                events: true,
+                name: name.into(),
+                ..Default::default()
+            }
+        }
     }
 
     pub async fn close(&self) -> Result<()> {

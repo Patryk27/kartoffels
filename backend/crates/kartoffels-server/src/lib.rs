@@ -8,6 +8,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use indoc::indoc;
 use kartoffels_store::Store;
+use kartoffels_world::prelude::Clock;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -91,11 +92,17 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!(?self, "starting");
 
-        let store = Store::open(Some(&self.data), self.bench, self.debug)
+        let store = Store::open(Some(&self.data), self.debug)
             .await
             .with_context(|| {
                 format!("couldn't load store from `{}`", self.data.display())
             })?;
+
+        if self.bench {
+            for world in store.public_worlds() {
+                world.overclock(Clock::Unlimited).await?;
+            }
+        }
 
         let store = Arc::new(store);
         let shutdown = CancellationToken::new();

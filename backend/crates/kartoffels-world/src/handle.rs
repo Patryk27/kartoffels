@@ -1,39 +1,51 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{BotId, ClockSpeed, Dir, Map, Object, ObjectId, Snapshot};
-use ahash::HashSet;
+use crate::{
+    BotId, Clock, Dir, EventLetter, EventStream, Map, Object, ObjectId,
+    Snapshot, SnapshotStream,
+};
 use anyhow::{anyhow, Context, Result};
 use derivative::Derivative;
 use glam::IVec2;
 use kartoffels_utils::Id;
 use std::borrow::Cow;
 use std::sync::Arc;
-use tokio::sync::{mpsc, oneshot, watch, OwnedSemaphorePermit};
-use tokio_stream::wrappers::WatchStream;
-use tokio_stream::StreamExt;
+use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
 
 #[derive(Clone, Debug)]
 pub struct Handle {
-    pub(super) inner: Arc<HandleInner>,
+    pub(super) shared: Arc<HandleShared>,
     pub(super) permit: Option<Arc<OwnedSemaphorePermit>>,
 }
 
 impl Handle {
-    const ERR: &'static str = "world has crashed";
+    pub(crate) const ERR: &'static str = "world has crashed";
 
     pub fn id(&self) -> Id {
-        self.inner.id
+        self.shared.id
     }
 
     pub fn name(&self) -> &str {
-        &self.inner.name
+        &self.shared.name
+    }
+
+    pub fn events(&self) -> Result<EventStream> {
+        let events = self
+            .shared
+            .events
+            .as_ref()
+            .context("world doesn't have events enabled")?;
+
+        Ok(EventStream::new(events))
     }
 
     pub fn snapshots(&self) -> SnapshotStream {
-        SnapshotStream {
-            rx: WatchStream::new(self.inner.snapshots.subscribe()),
-        }
+        SnapshotStream::new(&self.shared.snapshots)
+    }
+
+    pub fn version(&self) -> u64 {
+        self.shared.snapshots.borrow().version()
     }
 
     pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {
@@ -171,16 +183,16 @@ impl Handle {
         rx.await.context(Self::ERR)
     }
 
-    pub async fn overclock(&self, speed: ClockSpeed) -> Result<()> {
+    pub async fn overclock(&self, clock: Clock) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::Overclock { speed, tx }).await?;
+        self.send(Request::Overclock { clock, tx }).await?;
 
-        rx.await.context(Self::ERR)?
+        rx.await.context(Self::ERR)
     }
 
     async fn send(&self, request: Request) -> Result<()> {
-        self.inner
+        self.shared
             .tx
             .send(request)
             .await
@@ -191,10 +203,11 @@ impl Handle {
 }
 
 #[derive(Clone, Debug)]
-pub struct HandleInner {
+pub struct HandleShared {
     pub tx: RequestTx,
     pub id: Id,
-    pub name: Arc<String>,
+    pub name: String,
+    pub events: Option<broadcast::Sender<EventLetter>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
@@ -284,10 +297,10 @@ pub enum Request {
     },
 
     Overclock {
-        speed: ClockSpeed,
+        clock: Clock,
 
         #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<Result<()>>,
+        tx: oneshot::Sender<()>,
     },
 }
 
@@ -331,74 +344,5 @@ impl CreateBotRequest {
     pub fn oneshot(mut self) -> Self {
         self.oneshot = true;
         self
-    }
-}
-
-#[derive(Debug)]
-pub struct SnapshotStream {
-    rx: WatchStream<Arc<Snapshot>>,
-}
-
-impl SnapshotStream {
-    pub async fn next(&mut self) -> Result<Arc<Snapshot>> {
-        self.rx.next().await.context(Handle::ERR)
-    }
-
-    /// Waits until specified bot is spawned.
-    pub async fn wait_for_bot(&mut self, id: BotId) -> Result<()> {
-        loop {
-            if self.next().await?.bots().alive().has(id) {
-                return Ok(());
-            }
-        }
-    }
-
-    /// Waits until all specified bots are uploaded.
-    pub async fn wait_for_bots(&mut self, ids: &[BotId]) -> Result<()> {
-        loop {
-            if self.next().await?.bots().alive().has_all_of(ids) {
-                break;
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Waits until a bot is uploaded and returns its id.
-    pub async fn next_uploaded_bot(&mut self) -> Result<BotId> {
-        let known_bots: HashSet<_> = self
-            .next()
-            .await?
-            .bots()
-            .alive()
-            .iter()
-            .map(|bot| bot.id)
-            .collect();
-
-        loop {
-            let curr_bots: HashSet<_> = self
-                .next()
-                .await?
-                .bots()
-                .alive()
-                .iter()
-                .map(|bot| bot.id)
-                .collect();
-
-            if let Some(id) = curr_bots.difference(&known_bots).next() {
-                return Ok(*id);
-            }
-        }
-    }
-
-    /// Waits until a bot is killed.
-    pub async fn next_killed_bot(&mut self) -> Result<()> {
-        let known_bots = self.next().await?.bots().alive().len();
-
-        loop {
-            if self.next().await?.bots().alive().len() < known_bots {
-                return Ok(());
-            }
-        }
     }
 }
