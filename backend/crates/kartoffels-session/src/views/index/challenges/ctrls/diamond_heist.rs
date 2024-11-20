@@ -35,7 +35,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("*steal it back*").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "go inside the room, take the diamond (using `arm_take()`) and \
+            "go inside the room, take the diamond (using `arm_pick()`) and \
              then drive away — you'll be starting in the bottom-left corner, \
              the exit is on the right side",
         ),
