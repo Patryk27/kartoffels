@@ -177,7 +177,7 @@ impl State {
 
         ui.enable(self.modal.is_none(), |ui| {
             ui.clamp(bottom_area, |ui| {
-                BottomPanel::render(ui, self, store);
+                BottomPanel::render(ui, self);
             });
 
             if self.handle.is_some() {

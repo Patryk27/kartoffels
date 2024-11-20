@@ -1,7 +1,7 @@
 use super::{
-    BotPosition, BotSource, BotSourceType, BotsModal, Config, ErrorModal,
-    GoBackModal, InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal,
-    State, UploadBotModal, UploadBotRequest,
+    BotPosition, BotSource, BotSourceType, BotsModal, ErrorModal, GoBackModal,
+    InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, State,
+    UploadBotModal, UploadBotRequest,
 };
 use anyhow::{anyhow, Result};
 use base64::prelude::BASE64_STANDARD;
@@ -53,7 +53,6 @@ pub enum Event {
     Overclock {
         clock: Clock,
     },
-    EnableDebugMode,
 }
 
 impl Event {
@@ -202,10 +201,6 @@ impl Event {
 
             Event::Overclock { clock } => {
                 state.handle.as_ref().unwrap().overclock(clock).await?;
-            }
-
-            Event::EnableDebugMode => {
-                state.config = Config::DEBUG;
             }
         }
 

@@ -1,5 +1,4 @@
 use super::{Event, Mode, State};
-use kartoffels_store::Store;
 use kartoffels_ui::{theme, Button, Render, Ui};
 use kartoffels_world::prelude::Clock;
 use ratatui::prelude::Rect;
@@ -11,7 +10,7 @@ use termwiz::input::KeyCode;
 pub struct BottomPanel;
 
 impl BottomPanel {
-    pub fn render(ui: &mut Ui<Event>, state: &State, store: &Store) {
+    pub fn render(ui: &mut Ui<Event>, state: &State) {
         ui.row(|ui| {
             Self::render_go_back_btn(ui);
 
@@ -28,7 +27,6 @@ impl BottomPanel {
                             Self::render_pause_btn(ui, state);
                             Self::render_bots_btn(ui, state);
                             Self::render_overclock_btn(ui, state);
-                            Self::render_debug_btn(ui, store);
                         });
                     }
                 }
@@ -112,16 +110,6 @@ impl BottomPanel {
                         clock: Clock::Faster,
                     },
                 )
-                .render(ui);
-        }
-    }
-
-    fn render_debug_btn(ui: &mut Ui<Event>, store: &Store) {
-        if store.debugging() {
-            ui.space(2);
-
-            Button::new(KeyCode::Tab, "debug")
-                .throwing(Event::EnableDebugMode)
                 .render(ui);
         }
     }

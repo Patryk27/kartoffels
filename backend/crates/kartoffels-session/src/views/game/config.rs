@@ -25,20 +25,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub(super) const DEBUG: Self = Self {
-        enabled: true,
-        hero_mode: false,
-        sync_pause: true,
-
-        can_delete_bots: true,
-        can_join_bots: true,
-        can_overclock: true,
-        can_pause: true,
-        can_restart_bots: true,
-        can_spawn_bots: true,
-        can_upload_bots: true,
-    };
-
     pub fn disabled(mut self) -> Self {
         self.enabled = false;
         self
