@@ -3,6 +3,12 @@ name = "kartoffel"
 version.workspace = true
 edition.workspace = true
 
+[features]
+default = ["serial-panic"]
+
+# Enables printing of the panic message to the serial port
+serial-panic = []
+
 [dependencies]
 spin.workspace = true
 talc.workspace = true

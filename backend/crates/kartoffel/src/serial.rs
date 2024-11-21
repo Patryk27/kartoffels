@@ -1,7 +1,6 @@
-use core::fmt;
-
 use crate::{wri, MEM_SERIAL};
 use alloc::string::String;
+use core::fmt;
 
 /// Writes a character or a string to the serial port.
 ///

@@ -1,7 +1,6 @@
+use crate::SerialOutput;
 use core::fmt::Write;
 use core::panic::PanicInfo;
-
-use crate::SerialOutput;
 
 #[allow(dead_code)]
 #[allow(clippy::empty_loop)]
@@ -9,8 +8,10 @@ use crate::SerialOutput;
 fn panic(i: &PanicInfo) -> ! {
     let mut output = SerialOutput;
 
-    let _ = write!(&mut output, "\n- KERNEL PANIC -\n");
-    let _ = write!(&mut output, "{}", i);
+    // Only print the panic message if the `serial-panic` feature is enabled.
+    // Allows it to be disabled for smaller binaries.
+    #[cfg(feature = "serial-panic")]
+    let _ = write!(&mut output, "\n{}", i);
 
     loop {
         // Loop forever
