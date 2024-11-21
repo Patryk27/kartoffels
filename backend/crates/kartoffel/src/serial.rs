@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::{wri, MEM_SERIAL};
 use alloc::string::String;
 
@@ -98,5 +100,30 @@ impl SerialWritable for String {
 impl SerialWritable for SerialControlCode {
     fn write(self) {
         wri(MEM_SERIAL, 0, self.encode());
+    }
+}
+
+/// A dummy struct for writing formatted strings to the serial port.
+///
+/// Implements `fmt::Write` trait, so you can use it with `write!` to write
+/// formatted strings to the serial port, totally without any allocations.
+///
+/// # Example
+///
+/// ```no_run
+/// use kartoffel::*;
+/// use core::fmt::Write;
+///
+/// let mut serial = SerialOutput;
+/// write!(&mut serial, "Hello, {}!", "world").unwrap();
+/// ```
+pub struct SerialOutput;
+
+impl fmt::Write for SerialOutput {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        for c in s.chars() {
+            c.write();
+        }
+        Ok(())
     }
 }
