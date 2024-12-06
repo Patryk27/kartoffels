@@ -13,7 +13,7 @@
          │                                                            │
          │    ... and your job is to implement a firmware for it!     │
          │                                                            │
-         │   you've got 64 khz cpu & 128 kb ram at hand and you can   │
+         │  you've got a 64 kHz cpu & 128 kB ram at hand and you can  │
          │  either compete against other players in the online play   │
          │      or indulge yourself in single-player challenges       │
          │                                                            │

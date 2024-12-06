@@ -6,7 +6,7 @@
     <a href="https://github.com/patryk27/kartoffel">a firmware</a> for it:
 </p>
 
-![](./readme/img-v01.png)
+![](./readme/img-v03.png)
 ![](./readme/img-v02.png)
 
 <p align="center">
