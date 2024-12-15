@@ -52,9 +52,13 @@ document.fonts.ready.then(() => {
 
   const socket = new WebSocket(`${import.meta.env.VITE_API_URL}`);
 
+  socket.binaryType = "arraybuffer";
+
   socket.onopen = () => {
     isConnected = true;
 
+    // After connecting, send a "hello!" message so that the backend knows the
+    // size of our terminal
     socket.send(
       JSON.stringify({
         cols: term.cols,
@@ -153,15 +157,13 @@ class TermSocketAddon {
 
   activate(term) {
     this.socket.addEventListener("message", (event) => {
-      event.data.arrayBuffer().then((compressedData) => {
-        const data = pako.ungzip(compressedData);
+      const data = pako.ungzip(event.data);
 
-        if (data.length == 1 && data[0] == 0x04) {
-          this.onBotCreateRequested();
-        } else {
-          term.write(data);
-        }
-      });
+      if (data.length == 1 && data[0] == 0x04) {
+        this.onBotCreateRequested();
+      } else {
+        term.write(data);
+      }
     });
 
     term.onData((data) => {
