@@ -28,4 +28,6 @@ crane'.buildPackage {
   cargoExtraArgs = "-p kartoffels";
   CARGO_PROFILE = "dist";
   KARTOFFELS_REV = rev;
+
+  __darwinAllowLocalNetworking = true;
 }
