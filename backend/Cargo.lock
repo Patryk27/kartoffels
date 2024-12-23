@@ -1564,7 +1564,10 @@ dependencies = [
  "ciborium",
  "clap",
  "kartoffels-utils",
+ "kartoffels-world",
+ "rand",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

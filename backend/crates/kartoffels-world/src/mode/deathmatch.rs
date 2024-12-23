@@ -2,17 +2,17 @@ use crate::BotId;
 use ahash::AHashMap;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DeathmatchMode {
     scores: AHashMap<BotId, u32>,
 }
 
 impl DeathmatchMode {
-    pub fn scores(&self) -> &AHashMap<BotId, u32> {
+    pub(crate) fn scores(&self) -> &AHashMap<BotId, u32> {
         &self.scores
     }
 
-    pub fn on_bot_killed(
+    pub(crate) fn on_bot_killed(
         &mut self,
         killed_id: BotId,
         killer_id: Option<BotId>,

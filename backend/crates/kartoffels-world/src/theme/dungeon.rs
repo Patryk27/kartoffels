@@ -3,14 +3,14 @@ mod room;
 
 use self::corridor::*;
 use self::room::*;
-use crate::{Dir, Map, Tile, TileKind};
+use crate::{spec, Dir, Map, Tile, TileKind};
 use anyhow::{anyhow, Context, Result};
-use glam::{ivec2, UVec2};
+use glam::{ivec2, uvec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DungeonTheme {
     size: UVec2,
 }
@@ -18,6 +18,34 @@ pub struct DungeonTheme {
 impl DungeonTheme {
     pub fn new(size: UVec2) -> Self {
         Self { size }
+    }
+
+    pub fn create(spec: &str) -> Result<Self> {
+        let mut width = None;
+        let mut height = None;
+
+        for entry in spec::entries(spec) {
+            let entry = entry?;
+
+            match entry.key {
+                "width" => {
+                    width = Some(entry.value()?);
+                }
+
+                "height" => {
+                    height = Some(entry.value()?);
+                }
+
+                key => {
+                    return Err(anyhow!("unknown key: {key}"));
+                }
+            }
+        }
+
+        let width = width.context("missing key: width")?;
+        let height = height.context("missing key: height")?;
+
+        Ok(Self::new(uvec2(width, height)))
     }
 
     pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {

@@ -16,6 +16,7 @@ mod object;
 mod objects;
 mod policy;
 mod snapshots;
+mod spec;
 mod stats;
 mod storage;
 mod theme;
