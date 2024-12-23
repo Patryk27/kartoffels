@@ -3,7 +3,7 @@
 mod acceptance {
     mod challenges;
     mod game;
-    mod home;
+    mod index;
     mod tutorial;
 }
 

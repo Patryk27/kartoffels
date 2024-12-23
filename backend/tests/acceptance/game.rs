@@ -33,11 +33,11 @@ async fn smoke() {
     };
 
     ctxt.wait_for(TestContext::INDEX).await;
-    ctxt.see_frame("game/smoke/home-1.txt").await;
+    ctxt.see_frame("game/smoke/index-1.txt").await;
 
     ctxt.press(KeyCode::Char('p')).await;
     ctxt.wait_for("[1] first-world").await;
-    ctxt.see_frame("game/smoke/home-2.txt").await;
+    ctxt.see_frame("game/smoke/index-2.txt").await;
 
     ctxt.press(KeyCode::Char('2')).await;
     ctxt.wait_for("[j] join-bot").await;
