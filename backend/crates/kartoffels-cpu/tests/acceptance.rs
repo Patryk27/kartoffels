@@ -102,7 +102,8 @@ fn run_test(rs_path: PathBuf, elf_path: PathBuf) {
 
                 assert!(
                     reg_val_exp == reg_val_act,
-                    "assertion failed: x{} = {} != {} (0x{:x} != 0x{:x})",
+                    "assertion failed: x{} should equal {}, but it's actually \
+                     {} (0x{:x} != 0x{:x})",
                     reg_id,
                     reg_val_exp,
                     reg_val_act,

@@ -10,7 +10,7 @@ kartoffels_cpu_tests::test! {
         li x2, 0x12121212
         sw x2, 0(x1)
         li x3, 0x34343434
-        amoadd.w x2, x3, 0(x1)
+        amoswap.w x2, x3, 0(x1)
         lw x4, 0(x1)
         ebreak
     "#
@@ -20,5 +20,5 @@ kartoffels_cpu_tests::test! {
  * x1 = 0x00102000
  * x2 = 0x12121212
  * x3 = 0x34343434
- * x4 = 0x46464646
+ * x4 = 0x34343434
  */

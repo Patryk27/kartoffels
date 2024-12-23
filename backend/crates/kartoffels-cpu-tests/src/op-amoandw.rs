@@ -7,17 +7,18 @@ kartoffels_cpu_tests::test! {
 
     _start:
         li x1, 0x00102000
-        li x2, 123
-        sh x2, 0(x1)
-        li x2, 321
-        amoand.w x10, x2, 0(x1)
-        lh x11, 0(x1)
+        li x2, 0x12121212
+        sw x2, 0(x1)
+        li x3, 0x34343434
+        amoand.w x2, x3, 0(x1)
+        lw x4, 0(x1)
         ebreak
     "#
 }
 
 /*
- * x2 = 321
- * x10 = 123
- * x11 = 65
+ * x1 = 0x00102000
+ * x2 = 0x12121212
+ * x3 = 0x34343434
+ * x4 = 0x10101010
  */

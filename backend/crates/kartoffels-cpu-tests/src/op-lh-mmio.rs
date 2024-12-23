@@ -11,5 +11,5 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * err = invalid-sized mmio load on 0x08000000+2
+ * err = missized mmio load on 0x08000000+2
  */

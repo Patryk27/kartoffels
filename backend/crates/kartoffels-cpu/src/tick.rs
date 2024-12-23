@@ -1,8 +1,10 @@
 use super::{Cpu, Mmio};
+use std::cmp;
+use std::ops::{BitAnd, BitOr, BitXor};
 
 impl Cpu {
     pub(super) fn do_tick(&mut self, mmio: impl Mmio) -> Result<(), Box<str>> {
-        let word = self.mem_load_ram::<4>(self.pc as u32)? as u32;
+        let word = self.mem_load::<(), 4>(None, self.pc)? as u32;
 
         let op = word & 0x7f;
         let funct3 = (word >> 12) & 0x7;
@@ -506,7 +508,7 @@ impl Cpu {
             (0b0000011, 0b000, _) => op! {
                 fn lb(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<1>(mmio, addr)? as i8 as i64;
+                    let val = self.mem_load::<_, 1>(Some(mmio), addr)? as i8 as i64;
 
                     self.reg_store(rd, val);
                 }
@@ -515,7 +517,7 @@ impl Cpu {
             (0b0000011, 0b100, _) => op! {
                 fn lbu(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<1>(mmio, addr)?;
+                    let val = self.mem_load::<_, 1>(Some(mmio), addr)?;
 
                     self.reg_store(rd, val);
                 }
@@ -524,7 +526,7 @@ impl Cpu {
             (0b0000011, 0b001, _) => op! {
                 fn lh(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<2>(mmio, addr)? as i16 as i64;
+                    let val = self.mem_load::<_, 2>(Some(mmio), addr)? as i16 as i64;
 
                     self.reg_store(rd, val);
                 }
@@ -533,7 +535,7 @@ impl Cpu {
             (0b0000011, 0b101, _) => op! {
                 fn lhu(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<2>(mmio, addr)?;
+                    let val = self.mem_load::<_, 2>(Some(mmio), addr)?;
 
                     self.reg_store(rd, val);
                 }
@@ -542,7 +544,7 @@ impl Cpu {
             (0b0000011, 0b010, _) => op! {
                 fn lw(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<4>(mmio, addr)? as i32 as i64;
+                    let val = self.mem_load::<_, 4>(Some(mmio), addr)? as i32 as i64;
 
                     self.reg_store(rd, val);
                 }
@@ -551,7 +553,7 @@ impl Cpu {
             (0b0000011, 0b110, _) => op! {
                 fn lwu(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<4>(mmio, addr)?;
+                    let val = self.mem_load::<_, 4>(Some(mmio), addr)?;
 
                     self.reg_store(rd, val);
                 }
@@ -560,7 +562,7 @@ impl Cpu {
             (0b0000011, 0b011, _) => op! {
                 fn ld(rd, rs1, i_imm) {
                     let addr = (self.regs[rs1] + i_imm) as u64;
-                    let val = self.mem_load::<8>(mmio, addr)?;
+                    let val = self.mem_load::<_, 8>(Some(mmio), addr)?;
 
                     self.reg_store(rd, val);
                 }
@@ -568,46 +570,44 @@ impl Cpu {
 
             (0b0100011, 0b000, _) => op! {
                 fn sb(rs1, rs2, s_imm) {
-                    self.mem_store::<1>(
-                        mmio,
-                        self.regs[rs1].wrapping_add(s_imm) as u64,
-                        self.regs[rs2],
-                    )?;
+                    let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                    let val = self.regs[rs2];
+
+                    self.mem_store::<_, 1>(Some(mmio), addr, val)?;
                 }
             },
 
             (0b0100011, 0b001, _) => op! {
                 fn sh(rs1, rs2, s_imm) {
-                    self.mem_store::<2>(
-                        mmio,
-                        self.regs[rs1].wrapping_add(s_imm) as u64,
-                        self.regs[rs2],
-                    )?;
+                    let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                    let val = self.regs[rs2];
+
+                    self.mem_store::<_, 2>(Some(mmio), addr, val)?;
                 }
             },
 
             (0b0100011, 0b010, _) => op! {
                 fn sw(rs1, rs2, s_imm) {
-                    self.mem_store::<4>(
-                        mmio,
-                        self.regs[rs1].wrapping_add(s_imm) as u64,
-                        self.regs[rs2],
-                    )?;
+                    let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                    let val = self.regs[rs2];
+
+                    self.mem_store::<_, 4>(Some(mmio), addr, val)?;
                 }
             },
 
             (0b0100011, 0b011, _) => op! {
                 fn sd(rs1, rs2, s_imm) {
-                    self.mem_store::<8>(
-                        mmio,
-                        self.regs[rs1].wrapping_add(s_imm) as u64,
-                        self.regs[rs2],
-                    )?;
+                    let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                    let val = self.regs[rs2];
+
+                    self.mem_store::<_, 8>(Some(mmio), addr, val)?;
                 }
             },
 
             (0b0101111, 0b010, _) => {
-                let funct5 = word >> 27;
+                // funct7's low bits encode the ordering semantics (acquire
+                // and/or release) which we don't care about
+                let funct5 = funct7 >> 2;
 
                 match funct5 {
                     0b00000 => op! {
@@ -618,19 +618,58 @@ impl Cpu {
                         }
                     },
 
+                    0b00001 => op! {
+                        fn amoswapw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, |_, rhs| rhs)?;
+                        }
+                    },
+
+                    0b00010 => op! {
+                        fn lrw(rd, rs1) {
+                            let addr = self.regs[rs1] as u64;
+                            let val = self.mem_load::<(), 4>(None, addr)? as i32 as i64;
+
+                            self.reg_store(rd, val);
+                        }
+                    },
+
+                    0b00011 => op! {
+                        fn scw(rd, rs1, rs2, s_imm) {
+                            let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                            let val = self.regs[rs2];
+
+                            self.mem_store::<(), 4>(None, addr, val)?;
+                            self.regs[rd] = 0;
+                        }
+                    },
+
+                    0b00100 => op! {
+                        fn amoxorw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, BitXor::bitxor)?;
+                        }
+                    },
+
                     0b01100 => op! {
                         fn amoandw(rd, rs1, rs2) {
-                            self.do_atomic::<4>(rd, rs1, rs2, |lhs, rhs| {
-                                lhs & rhs
-                            })?;
+                            self.do_atomic::<4>(rd, rs1, rs2, BitAnd::bitand)?;
                         }
                     },
 
                     0b01000 => op! {
                         fn amoorw(rd, rs1, rs2) {
-                            self.do_atomic::<4>(rd, rs1, rs2, |lhs, rhs| {
-                                lhs | rhs
-                            })?;
+                            self.do_atomic::<4>(rd, rs1, rs2, BitOr::bitor)?;
+                        }
+                    },
+
+                    0b10000 => op! {
+                        fn amominw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, cmp::min)?;
+                        }
+                    },
+
+                    0b10100 => op! {
+                        fn amomaxw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, cmp::max)?;
                         }
                     },
 
@@ -711,7 +750,6 @@ impl Cpu {
                 let i_imm = op!(@arg i_imm);
 
                 match i_imm {
-                    // ebreak
                     0x01 => {
                         return Err("got `ebreak`".into());
                     }
@@ -752,20 +790,12 @@ impl Cpu {
         rs2: usize,
         op: fn(i64, i64) -> i64,
     ) -> Result<(), Box<str>> {
-        let addr = self.regs[rs1] as u32;
+        let addr = self.regs[rs1] as u64;
 
-        if addr >= Self::MMIO_BASE {
-            return Err(Self::mem_fault(
-                "unsupported atomic mmio operation",
-                addr,
-                SIZE,
-            ));
-        }
-
-        let old_val = self.mem_load_ram::<SIZE>(addr)?;
+        let old_val = self.mem_load::<(), SIZE>(None, addr)?;
         let new_val = op(old_val, self.regs[rs2]);
 
-        self.mem_store_ram::<SIZE>(addr, new_val as u64)?;
+        self.mem_store::<(), SIZE>(None, addr, new_val)?;
         self.reg_store(rd, old_val);
 
         Ok(())

@@ -6,12 +6,11 @@ kartoffels_cpu_tests::test! {
     .attribute arch, "rv64ia"
 
     _start:
-        li x1, 0x08000000
-        li x2, 1
-        amoor.w x10, x2, 0(x1)
+        li x1, 0x08000002
+        amoadd.w x0, x0, 0(x1)
     "#
 }
 
 /*
- * err = unsupported atomic mmio operation on 0x08000000+4
+ * err = atomic mmio load on 0x08000002+4
  */

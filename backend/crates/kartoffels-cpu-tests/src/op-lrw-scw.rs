@@ -6,19 +6,20 @@ kartoffels_cpu_tests::test! {
     .attribute arch, "rv64ia"
 
     _start:
-        li x1, 0x00102000
-        li x2, 0x12121212
+        li x1, 0x00101000
+        li x2, 125
+        li x4, 250
         sw x2, 0(x1)
-        li x3, 0x34343434
-        amoadd.w x2, x3, 0(x1)
+        lr.w x3, 0(x1)
+        sc.w x2, x4, 0(x1)
         lw x4, 0(x1)
         ebreak
     "#
 }
 
 /*
- * x1 = 0x00102000
- * x2 = 0x12121212
- * x3 = 0x34343434
- * x4 = 0x46464646
+ * x1 = 1052672
+ * x2 = 0
+ * x3 = 125
+ * x4 = 125
  */
