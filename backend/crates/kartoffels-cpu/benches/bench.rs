@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use kartoffels_cpu::{Cpu, Firmware, Mmio};
+use kartoffels_cpu::{Cpu, Firmware};
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -24,7 +24,7 @@ fn bench(b: &mut Bencher) {
     let mut cpu = Cpu::new(&fw);
 
     b.iter(|| {
-        while cpu.try_tick(TestMmio).unwrap() {
+        while cpu.try_tick(()).unwrap() {
             //
         }
 
@@ -42,18 +42,5 @@ fn build_tests() {
 
     if !status.success() {
         panic!("couldn't compile test fixtures");
-    }
-}
-
-#[derive(Debug, Default)]
-struct TestMmio;
-
-impl Mmio for TestMmio {
-    fn load(self, _: u32) -> Result<u32, ()> {
-        Err(())
-    }
-
-    fn store(self, _: u32, _: u32) -> Result<(), ()> {
-        Err(())
     }
 }
