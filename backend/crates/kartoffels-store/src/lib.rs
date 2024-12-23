@@ -55,9 +55,9 @@ impl Store {
     }
 
     pub fn dir(&self) -> &Path {
-        self.dir.as_deref().expect(
-            "this is Store::test() which is not backed by any directory",
-        )
+        self.dir
+            .as_deref()
+            .expect("Store::test() is not backed by any directory")
     }
 
     pub fn create_private_world(
