@@ -673,6 +673,22 @@ impl Cpu {
                         }
                     },
 
+                    0b11000 => op! {
+                        fn amominuw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, |lhs, rhs| {
+                                cmp::min(lhs as u32, rhs as u32) as u64 as i64
+                            })?;
+                        }
+                    },
+
+                    0b11100 => op! {
+                        fn amomaxuw(rd, rs1, rs2) {
+                            self.do_atomic::<4>(rd, rs1, rs2, |lhs, rhs| {
+                                cmp::max(lhs as u32, rhs as u32) as u64 as i64
+                            })?;
+                        }
+                    },
+
                     _ => {
                         return Err(unknown_instr!());
                     }
