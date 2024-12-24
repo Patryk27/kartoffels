@@ -21,14 +21,13 @@ fn bench(b: &mut Bencher) {
 
     let elf = fs::read(&elf_path).unwrap();
     let fw = Firmware::from_elf(&elf).unwrap();
-    let mut cpu = Cpu::new(&fw);
 
     b.iter(|| {
+        let mut cpu = Cpu::new(&fw);
+
         while cpu.try_tick(()).unwrap() {
             //
         }
-
-        cpu = Cpu::new(&fw);
     });
 }
 
