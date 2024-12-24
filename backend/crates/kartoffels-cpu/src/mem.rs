@@ -136,7 +136,7 @@ impl Cpu {
         }
 
         for offset in 0..SIZE {
-            self.ram[rel_addr + offset] = ((val >> (offset * 8)) & 0xff) as u8;
+            self.ram[rel_addr + offset] = (val >> (offset * 8)) as u8;
         }
 
         Ok(())
