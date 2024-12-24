@@ -634,8 +634,8 @@ impl Cpu {
                     },
 
                     0b00011 => op! {
-                        fn scw(rd, rs1, rs2, s_imm) {
-                            let addr = self.regs[rs1].wrapping_add(s_imm) as u64;
+                        fn scw(rd, rs1, rs2) {
+                            let addr = self.regs[rs1] as u64;
                             let val = self.regs[rs2];
 
                             self.mem_store::<(), 4>(None, addr, val)?;
