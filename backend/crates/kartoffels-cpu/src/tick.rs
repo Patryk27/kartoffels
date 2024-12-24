@@ -695,6 +695,95 @@ impl Cpu {
                 }
             }
 
+            (0b0101111, 0b011, _) => {
+                // funct7's low bits encode the ordering semantics (acquire
+                // and/or release) which we don't care about
+                let funct5 = funct7 >> 2;
+
+                match funct5 {
+                    0b00000 => op! {
+                        fn amoaddw(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, i64::wrapping_add)?;
+                        }
+                    },
+
+                    0b00001 => op! {
+                        fn amoswapd(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, |_, rhs| rhs)?;
+                        }
+                    },
+
+                    0b00010 => op! {
+                        fn lrd(rd, rs1) {
+                            let addr = self.regs[rs1] as u64;
+                            let val = self.mem_load::<(), 8>(None, addr)?;
+
+                            self.reg_store(rd, val);
+                        }
+                    },
+
+                    0b00011 => op! {
+                        fn scd(rd, rs1, rs2) {
+                            let addr = self.regs[rs1] as u64;
+                            let val = self.regs[rs2];
+
+                            self.mem_store::<(), 8>(None, addr, val)?;
+                            self.regs[rd] = 0;
+                        }
+                    },
+
+                    0b00100 => op! {
+                        fn amoxord(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, BitXor::bitxor)?;
+                        }
+                    },
+
+                    0b01100 => op! {
+                        fn amoandd(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, BitAnd::bitand)?;
+                        }
+                    },
+
+                    0b01000 => op! {
+                        fn amoord(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, BitOr::bitor)?;
+                        }
+                    },
+
+                    0b10000 => op! {
+                        fn amomind(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, cmp::min)?;
+                        }
+                    },
+
+                    0b10100 => op! {
+                        fn amomaxd(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, cmp::max)?;
+                        }
+                    },
+
+                    0b11000 => op! {
+                        fn amominud(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, |lhs, rhs| {
+                                cmp::min(lhs as u64, rhs as u64) as i64
+                            })?;
+                        }
+                    },
+
+                    0b11100 => op! {
+                        fn amomaxud(rd, rs1, rs2) {
+                            self.do_atomic::<8>(rd, rs1, rs2, |lhs, rhs| {
+                                cmp::max(lhs as u64, rhs as u64) as i64
+                            })?;
+                        }
+                    },
+
+                    _ => {
+                        return Err(unknown_instr!());
+                    }
+                }
+            }
+
             (0b0001111, 0b000, _) => {
                 // atomic fence
             }
