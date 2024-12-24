@@ -5,8 +5,8 @@ kartoffels_cpu_tests::test! {
     .global _start
 
     _start:
-        li x1, 0x00101000
-        li x2, 125
+        li x1, 0x00102000
+        li x2, 0x1234567890abcdef
         sd x2, 0(x1)
         ld x3, -1(x1)
         ld x4, 0(x1)
@@ -16,9 +16,9 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * x1 = 1052672
- * x2 = 125
- * x3 = 32000
- * x4 = 125
- * x5 = 2522015791327477760
+ * x1 = 0x00102000
+ * x2 = 0x1234567890abcdef
+ * x3 = 0x34567890abcdef00
+ * x4 = 0x1234567890abcdef
+ * x5 = 0x001234567890abcd
  */

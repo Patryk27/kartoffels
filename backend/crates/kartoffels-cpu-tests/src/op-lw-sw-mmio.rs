@@ -14,6 +14,6 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * x1 = 134217728
+ * x1 = 0x08000000
  * x2 = 15129
  */

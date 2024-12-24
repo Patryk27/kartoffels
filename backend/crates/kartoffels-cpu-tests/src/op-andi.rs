@@ -5,13 +5,13 @@ kartoffels_cpu_tests::test! {
     .global _start
 
     _start:
-        li x1, 123
-        andi x2, x1, 321
+        li x1, 0x1212121212121212
+        andi x2, x1, 0x34
         ebreak
     "#
 }
 
 /*
- * x1 = 123
- * x2 = 65
+ * x1 = 0x1212121212121212
+ * x2 = 0x0000000000000010
  */
