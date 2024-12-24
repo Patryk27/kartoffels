@@ -1479,6 +1479,8 @@ version = "0.6.0"
 dependencies = [
  "kartoffel",
  "num-traits",
+ "rand",
+ "rand_chacha",
  "spin",
  "talc",
 ]

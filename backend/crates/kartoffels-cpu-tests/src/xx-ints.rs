@@ -1,93 +1,128 @@
+//! This is the ultimate integer arithmetic test - it goes through most of the
+//! supported operators, like multiplication or shifts, executes them randomly
+//! and then compares with the final result.
+//!
+//! The final number was gotten by running this application on a x86_64
+//! machine.
+
 #![cfg_attr(target_arch = "riscv64", no_std, no_main)]
 
 extern crate alloc;
 extern crate kartoffel;
 
 use alloc::collections::BinaryHeap;
-use core::hint::black_box;
 use core::iter::Sum;
 use core::ops::{ShlAssign, ShrAssign};
-use num_traits::{FromPrimitive, Num, ToPrimitive};
+use num_traits::{
+    CheckedAdd, CheckedMul, CheckedSub, FromPrimitive, Num, ToPrimitive,
+};
+use rand::distributions::Standard;
+use rand::prelude::Distribution;
+use rand::{Rng, RngCore, SeedableRng};
+use rand_chacha::ChaCha8Rng;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
-    let mut rng = Rng { state: 0xcafebabe };
+    let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let out = run::<i8>(&mut rng, 37, 29, 61)
-        + run::<u8>(&mut rng, 47, 61, 17)
-        + run::<i16>(&mut rng, 4021, 9857, 1667)
-        + run::<u16>(&mut rng, 1607, 3187, 4801)
-        + run::<i32>(&mut rng, 921563, 989579, 112831)
-        + run::<u32>(&mut rng, 606791, 202949, 930737)
-        + run::<i64>(&mut rng, 60309923, 21697201, 92053769)
-        + run::<u64>(&mut rng, 60549949, 34133111, 35802097)
-        + run::<i128>(&mut rng, 3138769811, 1875370859, 4863270187)
-        + run::<u128>(&mut rng, 5836095589, 9761164103, 4784206519);
+    let out = run::<i8>(&mut rng)
+        + run::<u8>(&mut rng)
+        + run::<i16>(&mut rng)
+        + run::<u16>(&mut rng)
+        + run::<i32>(&mut rng)
+        + run::<u32>(&mut rng)
+        + run::<i64>(&mut rng)
+        + run::<u64>(&mut rng)
+        + run::<i128>(&mut rng)
+        + run::<u128>(&mut rng);
 
     kartoffels_cpu_tests::exit(out);
 }
 
-fn run<T>(rng: &mut Rng, p1: T, p2: T, p3: T) -> u32
+#[inline(never)]
+fn run<T>(rng: &mut dyn RngCore) -> u32
 where
     T: Num
         + ToPrimitive
         + FromPrimitive
+        + CheckedAdd
+        + CheckedSub
+        + CheckedMul
         + ShlAssign<u32>
         + ShrAssign<u32>
         + Sum
         + Ord
         + Copy,
+    Standard: Distribution<T>,
 {
-    let rng = black_box(rng);
+    // BinaryHeap was chosen for extra benchmarking juice for the memory
+    // allocator - Vec would be equally good for testing the operators, but
+    // seizing the day let's test everything
     let mut items = BinaryHeap::new();
 
-    for x in 0..128 {
-        for y in 25..=52 {
-            let mut val = p1 + T::from_u32(x).unwrap() * p2
-                - T::from_u32(y).unwrap() * p3;
+    for _ in 0..2048 {
+        let mut val = rng.gen::<T>();
 
-            match rng.next() % 6 {
-                0 => {}
-                1 => {
-                    val <<= rng.next() % 64;
-                }
-                2 => {
-                    val >>= rng.next() % 64;
-                }
-                3 => {
-                    val = val * T::from_u8((rng.next() % 123) as u8).unwrap();
-                }
-                4 => {
-                    val =
-                        val / T::from_u8((1 + rng.next() % 123) as u8).unwrap();
-                }
-                _ => {
-                    val =
-                        val % T::from_u8(1 + (rng.next() % 123) as u8).unwrap();
+        match rng.gen::<u8>() % 10 {
+            0 => {
+                if rng.gen_bool(0.33) {
+                    val = val.checked_add(&rng.gen()).unwrap_or(val);
+                } else {
+                    val = val + rng.gen::<T>();
                 }
             }
 
-            if rng.next() <= (u32::MAX / 2) {
-                items.push(val);
+            1 => {
+                if rng.gen_bool(0.33) {
+                    val = val.checked_sub(&rng.gen()).unwrap_or(val);
+                } else {
+                    val = val - rng.gen::<T>();
+                }
             }
+
+            2 => {
+                if rng.gen_bool(0.33) {
+                    val = val.checked_mul(&rng.gen()).unwrap_or(val);
+                } else {
+                    val = val * rng.gen::<T>();
+                }
+            }
+
+            3 => {
+                val = val / rng.gen::<T>().max(T::one());
+            }
+
+            4 => {
+                val = val % rng.gen::<T>().max(T::one());
+            }
+
+            5 => {
+                let rhs = rng.gen::<T>() % T::from_u32(16).unwrap();
+
+                if let Some(rhs) = rhs.to_u32() {
+                    val <<= rhs;
+                }
+            }
+
+            6 => {
+                let rhs = rng.gen::<T>() % T::from_u32(16).unwrap();
+
+                if let Some(rhs) = rhs.to_u32() {
+                    val >>= rhs;
+                }
+            }
+
+            _ => (),
+        }
+
+        if rng.gen::<bool>() {
+            items.push(val);
         }
     }
 
     items.drain().sum::<T>().to_u128().unwrap_or_default() as u32
 }
 
-#[derive(Clone, Debug)]
-struct Rng {
-    state: u32,
-}
-
-impl Rng {
-    fn next(&mut self) -> u32 {
-        self.state = 1664525 * self.state + 1013904223;
-        self.state
-    }
-}
-
 /*
- * x10 = 3113135538
+ * x10 = 1770358021
  */
