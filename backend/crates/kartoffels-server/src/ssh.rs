@@ -12,7 +12,8 @@ use kartoffels_store::Store;
 use rand::rngs::OsRng;
 use russh::server::{Config, Server as _};
 use russh::{compression, Preferred};
-use russh_keys::key::KeyPair;
+use russh_keys::ssh_key::private::{Ed25519PrivateKey, KeypairData};
+use russh_keys::PrivateKey;
 use std::borrow::Cow;
 use std::pin::pin;
 use std::sync::Arc;
@@ -43,6 +44,7 @@ pub async fn start(
             ..Default::default()
         },
         keys: vec![key],
+        nodelay: true,
         ..Default::default()
     });
 
@@ -76,7 +78,7 @@ pub async fn start(
     }
 }
 
-async fn load_key(store: &Store) -> Result<KeyPair> {
+async fn load_key(store: &Store) -> Result<PrivateKey> {
     let path = store.dir().join("ssh.key");
 
     if !path.exists() {
@@ -96,10 +98,10 @@ async fn load_key(store: &Store) -> Result<KeyPair> {
     })?;
 
     let key = key.try_into().map_err(|_| {
-        anyhow!("invalid server key found in `{}`", path.display())
+        anyhow!("couldn't parse server key from `{}`", path.display())
     })?;
 
-    let key = SigningKey::from_bytes(&key);
+    let key = Ed25519PrivateKey::from_bytes(&key);
 
-    Ok(KeyPair::Ed25519(key))
+    Ok(PrivateKey::new(KeypairData::Ed25519(key.into()), "")?)
 }

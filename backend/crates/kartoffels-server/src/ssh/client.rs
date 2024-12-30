@@ -5,7 +5,7 @@ use axum::async_trait;
 use kartoffels_store::Store;
 use russh::server::{self, Auth, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
-use russh_keys::key::PublicKey;
+use russh_keys::PublicKey;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, info_span, Span};
