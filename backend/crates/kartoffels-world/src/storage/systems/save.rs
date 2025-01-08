@@ -1,83 +1,130 @@
-use crate::{SerializedWorld, World};
-use anyhow::{Context, Result};
-use futures_util::FutureExt;
+use crate::storage::Header;
+use crate::{
+    Bots, Map, Metronome, Policy, SerializedWorld, Shutdown, Theme, WorldName,
+    WorldPath,
+};
+use anyhow::Context;
+use bevy_ecs::system::{Local, Res};
 use maybe_owned::MaybeOwned;
-use std::future::Future;
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
-use tokio::{runtime, task};
-use tracing::{debug, Instrument};
+use std::{fs, thread};
+use tracing::{debug, warn, Span};
 
 pub struct State {
-    task: Option<Box<dyn Future<Output = Result<()>> + Send + Unpin>>,
     next_run_at: Instant,
+    ongoing_save: Option<JoinHandle<()>>,
 }
 
 impl Default for State {
     fn default() -> Self {
         Self {
-            task: Default::default(),
             next_run_at: next_run_at(),
+            ongoing_save: Default::default(),
         }
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
-    if Instant::now() < state.next_run_at {
-        return;
-    }
-
-    state.next_run_at = next_run_at();
-
-    run_now(world, state, false);
-}
-
-pub fn run_now(world: &mut World, state: &mut State, wait: bool) {
-    let Some(path) = &world.path else {
+#[allow(clippy::too_many_arguments)]
+pub fn save(
+    mut state: Local<State>,
+    bots: Res<Bots>,
+    map: Res<Map>,
+    name: Res<WorldName>,
+    path: Option<Res<WorldPath>>,
+    policy: Res<Policy>,
+    shutdown: Option<Res<Shutdown>>,
+    theme: Option<Res<Theme>>,
+) {
+    let Some(path) = path else {
         return;
     };
+
+    if Instant::now() < state.next_run_at && shutdown.is_none() {
+        return;
+    }
 
     debug!("saving world");
 
-    if let Some(task) = state.task.take() {
-        if wait {
-            runtime::Handle::current().block_on(task).unwrap();
-        } else {
-            task.now_or_never()
-                .expect(
-                    "the previous save is still in progress - has the I/O \
-                     stalled?",
-                )
-                .unwrap();
+    if let Some(handle) = state.ongoing_save.take() {
+        if !handle.is_finished() {
+            warn!("cannot save world: the previous save is still in progress");
+
+            warn!(
+                "to avoid overwriting the ongoing save, the engine will now \
+                 block and wait for the previous save to complete",
+            );
+
+            warn!(
+                "this might indicate a problem with I/O, e.g. an unresponsive \
+                 disk",
+            );
         }
+
+        handle.join().expect("saving-thread crashed");
     }
 
+    // ---
+
     let world = SerializedWorld {
-        bots: MaybeOwned::Borrowed(&world.bots),
-        map: MaybeOwned::Borrowed(&world.map),
-        mode: MaybeOwned::Borrowed(&world.mode),
-        name: MaybeOwned::Borrowed(&world.name),
-        policy: MaybeOwned::Borrowed(&world.policy),
-        theme: world.theme.as_ref().map(MaybeOwned::Borrowed),
+        bots: MaybeOwned::Borrowed(&bots),
+        map: MaybeOwned::Borrowed(&map),
+        name: MaybeOwned::Borrowed(&name.0),
+        policy: MaybeOwned::Borrowed(&policy),
+        theme: theme.as_ref().map(|theme| MaybeOwned::Borrowed(&**theme)),
     };
 
-    let task = world.store(path).expect("couldn't save the world");
+    // Serializing directly into the file would be faster, but it also makes
+    // the event loop potentially I/O bound, so let's first serialize into a
+    // buffer and then move the I/O onto a thread pool.
+    let (buffer, tt_ser) = Metronome::try_measure(|| {
+        let mut buffer = Vec::new();
 
-    let task = task::spawn(
-        async move {
-            let (tt_ser, tt_io) = task.await?;
+        Header::default()
+            .write(&mut buffer)
+            .context("couldn't write header")?;
 
-            debug!(?tt_ser, ?tt_io, "saved");
+        ciborium::into_writer(&world, &mut buffer)
+            .context("couldn't write state")?;
+
+        Ok(buffer)
+    })
+    .expect("couldn't save the world");
+
+    let path = path.0.clone();
+    let path_new = path.with_extension("world.new");
+    let span = Span::current();
+
+    let handle = thread::spawn(move || {
+        let _span = span.entered();
+
+        let (_, tt_io) = Metronome::try_measure(|| {
+            fs::write(&path_new, &buffer).with_context(|| {
+                format!("couldn't write: {}", path_new.display())
+            })?;
+
+            fs::rename(&path_new, &path).with_context(|| {
+                format!(
+                    "couldn't rename {} to {}",
+                    path_new.display(),
+                    path.display()
+                )
+            })?;
 
             Ok(())
-        }
-        .in_current_span(),
-    )
-    .map(|result| result.context("task crashed")?);
+        })
+        .unwrap();
 
-    if wait {
-        runtime::Handle::current().block_on(task).unwrap();
+        debug!(?tt_ser, ?tt_io, "world saved");
+    });
+
+    // ---
+
+    if shutdown.is_some() {
+        handle.join().expect("saving-thread crashed");
     } else {
-        state.task = Some(Box::new(task));
+        state.ongoing_save = Some(handle);
+        state.next_run_at = next_run_at();
     }
 }
 

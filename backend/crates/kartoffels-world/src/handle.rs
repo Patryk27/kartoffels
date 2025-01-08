@@ -6,6 +6,7 @@ use crate::{
     Snapshot, SnapshotStream,
 };
 use anyhow::{anyhow, Context, Result};
+use bevy_ecs::system::Resource;
 use derivative::Derivative;
 use glam::IVec2;
 use kartoffels_utils::Id;
@@ -53,10 +54,10 @@ impl Handle {
         self
     }
 
-    pub async fn tick(&self) -> Result<()> {
+    pub async fn tick(&self, fuel: u32) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::Tick { tx }).await?;
+        self.send(Request::Tick { fuel, tx }).await?;
 
         rx.await.context(Self::ERR)
     }
@@ -91,21 +92,6 @@ impl Handle {
         self.send(Request::CreateBot { req, tx }).await?;
 
         rx.await.context(Self::ERR)?
-    }
-
-    pub async fn create_bots(
-        &self,
-        reqs: impl IntoIterator<Item = CreateBotRequest>,
-    ) -> Result<Vec<BotId>> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::CreateBots {
-            reqs: reqs.into_iter().collect(),
-            tx,
-        })
-        .await?;
-
-        rx.await.context(Self::ERR)?.into_iter().collect()
     }
 
     pub async fn kill_bot(
@@ -143,13 +129,13 @@ impl Handle {
 
     pub async fn set_spawn(
         &self,
-        point: impl Into<Option<IVec2>>,
+        pos: impl Into<Option<IVec2>>,
         dir: impl Into<Option<Dir>>,
     ) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::SetSpawn {
-            point: point.into(),
+            pos: pos.into(),
             dir: dir.into(),
             tx,
         })
@@ -204,20 +190,22 @@ impl Handle {
 
 #[derive(Clone, Debug)]
 pub struct HandleShared {
-    pub tx: RequestTx,
+    pub tx: mpsc::Sender<Request>,
     pub id: Id,
     pub name: String,
     pub events: Option<broadcast::Sender<EventLetter>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
-pub type RequestTx = mpsc::Sender<Request>;
-pub type RequestRx = mpsc::Receiver<Request>;
+#[derive(Debug, Resource)]
+pub struct HandleRx(pub mpsc::Receiver<Request>);
 
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub enum Request {
     Tick {
+        fuel: u32,
+
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
@@ -244,13 +232,6 @@ pub enum Request {
         tx: oneshot::Sender<Result<BotId>>,
     },
 
-    CreateBots {
-        reqs: Vec<CreateBotRequest>,
-
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<Vec<Result<BotId>>>,
-    },
-
     KillBot {
         id: BotId,
         reason: String,
@@ -274,7 +255,7 @@ pub enum Request {
     },
 
     SetSpawn {
-        point: Option<IVec2>,
+        pos: Option<IVec2>,
         dir: Option<Dir>,
 
         #[derivative(Debug = "ignore")]

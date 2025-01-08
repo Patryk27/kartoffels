@@ -35,9 +35,7 @@ async fn acyclic_maze() {
     ctxt.upload_bot(CHL_ACYCLIC_MAZE).await;
     ctxt.wait_while("[u] upload-bot").await;
 
-    for _ in 0..8000 {
-        world.tick().await.unwrap();
-    }
+    world.tick(10_000_000).await.unwrap();
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;
@@ -78,9 +76,7 @@ async fn diamond_heist() {
     ctxt.upload_bot(CHL_DIAMOND_HEIST).await;
     ctxt.wait_for("id").await;
 
-    for _ in 0..4000 {
-        world.tick().await.unwrap();
-    }
+    world.tick(1_500_000).await.unwrap();
 
     ctxt.sync(world.version()).await;
     ctxt.see_frame("challenges/diamond-heist/3.txt").await;
@@ -119,9 +115,7 @@ async fn personal_roomba() {
     ctxt.upload_bot(CHL_PERSONAL_ROOMBA).await;
     ctxt.wait_while("[u] upload-bot").await;
 
-    for _ in 0..8000 {
-        world.tick().await.unwrap();
-    }
+    world.tick(6_000_000).await.unwrap();
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;

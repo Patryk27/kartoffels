@@ -1,4 +1,5 @@
-use crate::{Clock, World};
+use crate::{Bots, Clock, Policy, Snapshots};
+use bevy_ecs::system::{Local, Res};
 use std::time::{Duration, Instant};
 use tracing::debug;
 
@@ -16,30 +17,26 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
-    if let Clock::Manual = world.clock {
+pub fn log(
+    mut state: Local<State>,
+    clock: Res<Clock>,
+    bots: Res<Bots>,
+    snapshots: Res<Snapshots>,
+    policy: Res<Policy>,
+) {
+    state.ticks += 1;
+
+    if let Clock::Manual = &*clock {
         return;
     }
-
-    state.ticks += Clock::STEPS;
 
     if Instant::now() < state.next_run_at {
         return;
     }
 
-    let alive = format!(
-        "{}/{}",
-        world.bots.alive.count(),
-        world.policy.max_alive_bots
-    );
-
-    let queued = format!(
-        "{}/{}",
-        world.bots.queued.len(),
-        world.policy.max_queued_bots
-    );
-
-    let conns = world.snapshots.receiver_count();
+    let alive = format!("{}/{}", bots.alive.count(), policy.max_alive_bots);
+    let queued = format!("{}/{}", bots.queued.len(), policy.max_queued_bots);
+    let conns = snapshots.tx.receiver_count();
     let vcpu = format!("{} khz", state.ticks / 1_000);
 
     debug!(?alive, ?queued, ?conns, ?vcpu);

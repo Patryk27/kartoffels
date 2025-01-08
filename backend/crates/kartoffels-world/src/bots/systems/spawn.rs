@@ -1,71 +1,88 @@
-use crate::{AliveBot, Bots, Dir, Event, Map, Objects, QueuedBot, World};
-use anyhow::{anyhow, Context, Result};
+use crate::{
+    AliveBot, AliveBots, Bots, Dir, Event, Map, Objects, Policy, QueuedBot,
+    Spawn, SpawnBot, WorldRng,
+};
+use anyhow::anyhow;
+use bevy_ecs::event::EventMutator;
+use bevy_ecs::system::{Commands, Res, ResMut};
 use glam::IVec2;
 use rand::{Rng, RngCore};
 use tracing::trace;
 
-pub fn run(world: &mut World) {
-    if world.bots.alive.count() >= world.policy.max_alive_bots {
+pub fn schedule_spawn(
+    mut cmds: Commands,
+    mut bots: ResMut<Bots>,
+    policy: Res<Policy>,
+) {
+    if bots.alive.count() >= policy.max_alive_bots {
         return;
     }
 
-    let Some(bot) = world.bots.queued.peek() else {
+    let Some(bot) = bots.queued.pop_front() else {
         return;
     };
 
-    let Some((pos, dir)) = determine_spawn_point(
-        &mut world.rng,
-        &world.map,
-        &world.bots,
-        &world.objects,
-        world.spawn,
-        bot,
-    ) else {
-        return;
-    };
-
-    // Unwrap-safety: We've just made sure that the queue is not empty
-    let bot = world.bots.queued.pop().unwrap();
-    let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
-
-    trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
-
-    world.events.add(Event::BotSpawned { id: bot.id });
-    world.bots.alive.add(bot);
+    cmds.send_event(SpawnBot {
+        bot: Some(bot),
+        tx: None,
+        requeue_if_cant_spawn: true,
+    });
 }
 
-// TODO parts of logic are duplicated with `run()`
-pub fn run_now(world: &mut World, bot: QueuedBot) -> Result<()> {
-    if world.bots.alive.count() >= world.policy.max_alive_bots {
-        return Err(anyhow!("too many alive bots"));
+pub fn spawn(
+    mut cmds: Commands,
+    mut bots: ResMut<Bots>,
+    map: Res<Map>,
+    objects: Res<Objects>,
+    mut rng: ResMut<WorldRng>,
+    spawn: Res<Spawn>,
+    mut events: EventMutator<SpawnBot>,
+) {
+    for event in events.read() {
+        let bot = event
+            .bot
+            .take()
+            .expect("bot is missing - maybe event has been already processed");
+
+        let Some((pos, dir)) = determine_spawn_point(
+            &mut rng.0,
+            &map,
+            &bots.alive,
+            &objects,
+            &spawn,
+            &bot,
+        ) else {
+            if let Some(tx) = event.tx.take() {
+                _ = tx.send(Err(anyhow!("couldn't determine spawn point")));
+            }
+
+            if event.requeue_if_cant_spawn {
+                bots.queued.push_front(bot);
+            }
+
+            continue;
+        };
+
+        let bot = AliveBot::new(&mut rng.0, pos, dir, *bot);
+        let id = bot.id;
+
+        trace!(?id, ?pos, ?dir, "spawning bot");
+
+        cmds.send_event(Event::BotSpawned { id });
+        bots.alive.add(bot);
+
+        if let Some(tx) = event.tx.take() {
+            _ = tx.send(Ok(id));
+        }
     }
-
-    let (pos, dir) = determine_spawn_point(
-        &mut world.rng,
-        &world.map,
-        &world.bots,
-        &world.objects,
-        world.spawn,
-        &bot,
-    )
-    .context("couldn't determine spawn point")?;
-
-    let bot = AliveBot::new(&mut world.rng, pos, dir, bot);
-
-    trace!(id=?bot.id, ?pos, ?dir, "spawning bot");
-
-    world.events.add(Event::BotSpawned { id: bot.id });
-    world.bots.alive.add(bot);
-
-    Ok(())
 }
 
 fn determine_spawn_point(
     rng: &mut impl RngCore,
     map: &Map,
-    bots: &Bots,
+    bots: &AliveBots,
     objs: &Objects,
-    spawn: (Option<IVec2>, Option<Dir>),
+    spawn: &Spawn,
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
     if let Some(pos) = bot.pos {
@@ -78,8 +95,8 @@ fn determine_spawn_point(
         };
     }
 
-    if let Some(pos) = spawn.0 {
-        let dir = spawn.1.unwrap_or_else(|| rng.gen());
+    if let Some(pos) = spawn.pos {
+        let dir = spawn.dir.unwrap_or_else(|| rng.gen());
 
         return if is_pos_legal(map, bots, objs, pos) {
             Some((pos, dir))
@@ -94,7 +111,7 @@ fn determine_spawn_point(
 fn sample_map(
     rng: &mut impl RngCore,
     map: &Map,
-    bots: &Bots,
+    bots: &AliveBots,
     objs: &Objects,
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
@@ -117,8 +134,13 @@ fn sample_map(
     }
 }
 
-fn is_pos_legal(map: &Map, bots: &Bots, objs: &Objects, pos: IVec2) -> bool {
+fn is_pos_legal(
+    map: &Map,
+    bots: &AliveBots,
+    objs: &Objects,
+    pos: IVec2,
+) -> bool {
     map.get(pos).is_floor()
-        && bots.alive.lookup_at(pos).is_none()
+        && bots.lookup_at(pos).is_none()
         && objs.lookup_at(pos).is_none()
 }

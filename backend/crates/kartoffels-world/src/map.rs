@@ -2,13 +2,14 @@ mod builder;
 
 pub use self::builder::*;
 use ahash::HashMap;
+use bevy_ecs::system::Resource;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;
 use std::{cmp, fmt};
 
-#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize, Resource)]
 pub struct Map {
     size: UVec2,
     tiles: Box<[Tile]>,
@@ -162,6 +163,8 @@ impl Map {
     }
 
     pub fn sample_pos(&self, rng: &mut impl RngCore) -> IVec2 {
+        assert!(self.size.x > 0 && self.size.y > 0);
+
         uvec2(rng.gen_range(0..self.size.x), rng.gen_range(0..self.size.y))
             .as_ivec2()
     }

@@ -23,7 +23,7 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
-use crate::{Dir, World};
+use crate::{AliveBots, Dir, Map, Objects, WorldRng};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
 use rand::RngCore;
@@ -94,7 +94,10 @@ impl AliveBot {
 
     pub fn tick(
         &mut self,
-        world: &mut World,
+        bots: &AliveBots,
+        map: &Map,
+        objects: &Objects,
+        rng: &mut WorldRng,
     ) -> Result<Option<BotAction>, Box<str>> {
         let mut action = None;
 
@@ -116,12 +119,12 @@ impl AliveBot {
 
             ctxt: BotMmioContext {
                 action: &mut action,
-                bots: &world.bots.alive,
+                bots,
                 dir: &mut self.dir,
-                map: &world.map,
-                objects: &world.objects,
+                map,
+                objects,
                 pos: self.pos,
-                rng: &mut world.rng,
+                rng: &mut rng.0,
             },
         })?;
 

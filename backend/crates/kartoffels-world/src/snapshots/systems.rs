@@ -1,1 +1,3 @@
-pub mod send;
+mod send;
+
+pub use self::send::*;

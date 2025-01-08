@@ -212,7 +212,7 @@ async fn watch(
 
     loop {
         match events.next().await?.event {
-            Event::BotKilled { id } => {
+            Event::BotDied { id } => {
                 if id == player {
                     game.msg(&PLAYER_KILLED_MSG).await?;
                 } else {

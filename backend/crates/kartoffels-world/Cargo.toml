@@ -6,26 +6,24 @@ edition.workspace = true
 [dependencies]
 ahash.workspace = true
 anyhow.workspace = true
+bevy_ecs.workspace = true
 chrono.workspace = true
 ciborium.workspace = true
 derivative.workspace = true
 futures-util.workspace = true
-glam.workspace = true
+glam = { workspace = true, features = ["serde"] }
 itertools.workspace = true
 kartoffels-cpu = { path = "../kartoffels-cpu" }
 kartoffels-utils = { path = "../kartoffels-utils" }
 maybe-owned.workspace = true
 prettytable-rs.workspace = true
-rand = { workspace = true, features = ["std"] }
+rand = { workspace = true, default-features = true }
 serde.workspace = true
 serde_json.workspace = true
 sha256.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-
-[target.'cfg(not(target_arch = "riscv64"))'.dependencies]
-glam = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 indoc.workspace = true

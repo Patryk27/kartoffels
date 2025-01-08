@@ -185,7 +185,7 @@ async fn watch(game: &GameCtrl, world: &Handle) -> Result<ControlFlow<(), ()>> {
 
     loop {
         match events.next().await?.event {
-            Event::BotKilled { .. } => {
+            Event::BotDied { .. } => {
                 return Ok(ControlFlow::Continue(()));
             }
 

@@ -127,14 +127,14 @@ impl Store {
         if self.testing() {
             WorldConfig {
                 clock: Clock::Manual,
-                events: true,
+                emit_events: true,
                 name: name.into(),
                 seed: Some(Default::default()),
                 ..Default::default()
             }
         } else {
             WorldConfig {
-                events: true,
+                emit_events: true,
                 name: name.into(),
                 ..Default::default()
             }
