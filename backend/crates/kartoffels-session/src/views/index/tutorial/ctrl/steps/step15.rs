@@ -102,7 +102,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
 
     // ---
 
-    let dummies = [
+    const DUMMIES: &[IVec2] = &[
         ivec2(10, 8),
         ivec2(10, 7),
         ivec2(10, 4),
@@ -115,16 +115,15 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
         ivec2(2, 9),
     ];
 
-    let dummies = ctxt
-        .world
-        .create_bots(
-            dummies
-                .into_iter()
-                .map(|pos| CreateBotRequest::new(DUMMY).at(pos).instant()),
-        )
-        .await?
-        .into_iter()
-        .collect();
+    let mut dummies = HashSet::new();
+
+    for &pos in DUMMIES {
+        dummies.insert(
+            ctxt.world
+                .create_bot(CreateBotRequest::new(DUMMY).at(pos).instant())
+                .await?,
+        );
+    }
 
     ctxt.sync().await?;
     ctxt.events.sync(ctxt.world.version()).await?;

@@ -5,7 +5,8 @@ use super::{
 use crate::{AliveBots, Dir, Map, Objects};
 use glam::IVec2;
 use kartoffels_cpu::Mmio;
-use rand::{Rng, RngCore};
+use rand::Rng;
+use rand_chacha::ChaCha8Rng;
 
 pub struct BotMmio<'a> {
     pub arm: &'a mut BotArm,
@@ -48,7 +49,7 @@ pub struct BotMmioContext<'a> {
     pub map: &'a Map,
     pub objects: &'a Objects,
     pub pos: IVec2,
-    pub rng: &'a mut dyn RngCore,
+    pub rng: &'a mut ChaCha8Rng,
 }
 
 impl BotMmioContext<'_> {

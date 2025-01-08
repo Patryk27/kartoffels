@@ -1,9 +1,11 @@
 use crate::{
-    Clock, Map, Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
+    AliveBots, Bots, Clock, DeadBots, Events, Map, Objects, QueuedBots, Scores,
+    Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
     SnapshotDeadBot, SnapshotDeadBots, SnapshotObject, SnapshotObjects,
-    SnapshotQueuedBot, SnapshotQueuedBots, Tile, TileKind, World,
+    SnapshotQueuedBot, SnapshotQueuedBots, Snapshots, Tile, TileKind,
 };
 use ahash::AHashMap;
+use bevy_ecs::system::{Local, Res, ResMut};
 use std::cmp::Reverse;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -22,7 +24,17 @@ impl Default for State {
     }
 }
 
-pub fn run(world: &mut World, state: &mut State) {
+#[allow(clippy::too_many_arguments)]
+pub fn send(
+    mut state: Local<State>,
+    clock: Res<Clock>,
+    map: Res<Map>,
+    objects: Res<Objects>,
+    scores: Res<Scores>,
+    mut bots: ResMut<Bots>,
+    mut events: Option<ResMut<Events>>,
+    snapshots: Res<Snapshots>,
+) {
     if Instant::now() < state.next_run_at {
         return;
     }
@@ -30,43 +42,42 @@ pub fn run(world: &mut World, state: &mut State) {
     state.version += 1;
 
     let snapshot = {
-        let bots = prepare_bots(world);
-        let map = prepare_map(&bots, world);
-        let objects = prepare_objects(world);
+        let bots = SnapshotBots {
+            alive: prepare_alive_bots(&mut bots.alive, &scores),
+            dead: prepare_dead_bots(&mut bots.dead),
+            queued: prepare_queued_bots(&mut bots.queued),
+        };
+
+        let map = prepare_map(&bots, &map, &objects);
+        let objects = prepare_objects(&objects);
 
         Arc::new(Snapshot {
-            raw_map: world.map.clone(),
+            raw_map: map.clone(),
             map,
             bots,
             objects,
-            clock: world.clock,
+            clock: *clock,
             version: state.version,
         })
     };
 
-    world.snapshots.send_replace(snapshot);
-    world.events.send(state.version);
+    snapshots.tx.send_replace(snapshot);
 
-    state.next_run_at = match world.clock {
+    if let Some(events) = &mut events {
+        events.send(state.version);
+    }
+
+    state.next_run_at = match *clock {
         Clock::Manual => Instant::now(),
         _ => Instant::now() + Duration::from_millis(33),
     };
 }
 
-fn prepare_bots(world: &mut World) -> SnapshotBots {
-    SnapshotBots {
-        alive: prepare_alive_bots(world),
-        dead: prepare_dead_bots(world),
-        queued: prepare_queued_bots(world),
-    }
-}
-
-fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
-    let scores = world.mode.scores();
-
-    let entries: Vec<_> = world
-        .bots
-        .alive
+fn prepare_alive_bots(
+    bots: &mut AliveBots,
+    scores: &Scores,
+) -> SnapshotAliveBots {
+    let entries: Vec<_> = bots
         .iter_mut()
         .map(|bot| SnapshotAliveBot {
             age: bot.timer.ticks(),
@@ -74,7 +85,7 @@ fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
             events: bot.events.snapshot(),
             id: bot.id,
             pos: bot.pos,
-            score: scores.get(&bot.id).copied().unwrap_or_default(),
+            score: scores.get(bot.id),
             serial: bot.serial.snapshot(),
         })
         .collect();
@@ -104,10 +115,8 @@ fn prepare_alive_bots(world: &mut World) -> SnapshotAliveBots {
     }
 }
 
-fn prepare_dead_bots(world: &mut World) -> SnapshotDeadBots {
-    let entries = world
-        .bots
-        .dead
+fn prepare_dead_bots(bots: &mut DeadBots) -> SnapshotDeadBots {
+    let entries = bots
         .iter_mut()
         .map(|entry| {
             let bot = SnapshotDeadBot {
@@ -122,10 +131,8 @@ fn prepare_dead_bots(world: &mut World) -> SnapshotDeadBots {
     SnapshotDeadBots { entries }
 }
 
-fn prepare_queued_bots(world: &mut World) -> SnapshotQueuedBots {
-    let entries = world
-        .bots
-        .queued
+fn prepare_queued_bots(bots: &mut QueuedBots) -> SnapshotQueuedBots {
+    let entries = bots
         .iter_mut()
         .map(|entry| {
             let bot = SnapshotQueuedBot {
@@ -142,8 +149,8 @@ fn prepare_queued_bots(world: &mut World) -> SnapshotQueuedBots {
     SnapshotQueuedBots { entries }
 }
 
-fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
-    let mut map = world.map.clone();
+fn prepare_map(bots: &SnapshotBots, map: &Map, objects: &Objects) -> Map {
+    let mut map = map.clone();
 
     for (idx, bot) in bots.alive().iter().enumerate() {
         let tile = Tile {
@@ -165,7 +172,7 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
         }
     }
 
-    for obj in world.objects.iter() {
+    for obj in objects.iter() {
         if let Some(pos) = obj.pos {
             map.set(pos, obj.obj.kind);
         }
@@ -174,9 +181,8 @@ fn prepare_map(bots: &SnapshotBots, world: &World) -> Map {
     map
 }
 
-fn prepare_objects(world: &World) -> SnapshotObjects {
-    let objects = world
-        .objects
+fn prepare_objects(objects: &Objects) -> SnapshotObjects {
+    let objects = objects
         .iter()
         .map(|obj| SnapshotObject {
             id: obj.id,

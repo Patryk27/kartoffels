@@ -5,10 +5,11 @@ pub use self::arena::*;
 pub use self::dungeon::*;
 use crate::Map;
 use anyhow::{anyhow, Result};
+use bevy_ecs::system::Resource;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Resource)]
 #[serde(tag = "type")]
 pub enum Theme {
     #[serde(rename = "arena")]

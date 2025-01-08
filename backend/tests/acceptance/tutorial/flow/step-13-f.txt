@@ -1,5 +1,5 @@
                                                        id
-                                                       22c6-5ce9-77dd-39cb
+                                                       ffb1-e77f-aa68-1e82
 
                                                        status
                                                        dead
@@ -27,4 +27,4 @@
                                                        [f] stop-following-bot
                                                        [i] inspect-bot
                                                        [D] delete-bot
-[esc] go-back  [h] help  [spc] pause                                  spd:faster
+[esc] go-back  [h] help  [spc] pause                                     spd:∞

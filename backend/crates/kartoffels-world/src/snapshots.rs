@@ -5,6 +5,7 @@ pub use self::stream::*;
 pub use self::systems::*;
 use crate::{BotEvent, BotId, Clock, Dir, Map, Object, ObjectId};
 use ahash::AHashMap;
+use bevy_ecs::system::Resource;
 use glam::IVec2;
 use itertools::Itertools;
 use prettytable::{row, Table};
@@ -12,6 +13,7 @@ use std::cmp::Reverse;
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::Arc;
+use tokio::sync::watch;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Snapshot {
@@ -298,4 +300,9 @@ pub struct SnapshotObject {
     pub id: ObjectId,
     pub obj: Object,
     pub pos: Option<IVec2>,
+}
+
+#[derive(Debug, Resource)]
+pub struct Snapshots {
+    pub tx: watch::Sender<Arc<Snapshot>>,
 }

@@ -1,1 +1,3 @@
-pub mod process_requests;
+mod communicate;
+
+pub use self::communicate::*;

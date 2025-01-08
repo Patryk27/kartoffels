@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use kartoffels_utils::Id;
-use kartoffels_world::prelude::{Config, Mode, Policy, Theme};
+use kartoffels_world::prelude::{Config, Policy, Theme};
 use rand::Rng;
 use std::path::PathBuf;
 
@@ -11,9 +11,6 @@ pub struct CreateWorldCmd {
 
     #[clap(long)]
     name: String,
-
-    #[clap(long)]
-    mode: String,
 
     #[clap(long, default_value = "")]
     policy: String,
@@ -33,9 +30,6 @@ impl CreateWorldCmd {
 
         let id = rand::thread_rng().gen::<Id>();
         let path = self.data.join(format!("{id}.world"));
-
-        let mode = Mode::create(&self.mode).context("couldn't parse mode")?;
-
         let name = self.name;
 
         let policy =
@@ -45,7 +39,6 @@ impl CreateWorldCmd {
             Theme::create(&self.theme).context("couldn't parse theme")?;
 
         let config = Config {
-            mode,
             name,
             path: Some(path),
             policy,
@@ -57,9 +50,7 @@ impl CreateWorldCmd {
             .enable_all()
             .build()?
             .block_on(async move {
-                let world = kartoffels_world::create(config);
-
-                world.shutdown().await?;
+                kartoffels_world::create(config).shutdown().await?;
 
                 println!("created world `{id}`");
 

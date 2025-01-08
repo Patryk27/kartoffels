@@ -7,11 +7,16 @@ pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
 pub use self::systems::*;
-use crate::{AliveBot, BotId};
+use crate::{AliveBot, BotId, CreateBotRequest, Dir, QueuedBot};
+use anyhow::Result;
+use bevy_ecs::event::Event;
+use bevy_ecs::system::Resource;
+use glam::IVec2;
 use itertools::Either;
 use serde::{Deserialize, Serialize};
+use tokio::sync::oneshot;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Resource, Serialize, Deserialize)]
 pub struct Bots {
     pub alive: AliveBots,
     pub dead: DeadBots,
@@ -32,9 +37,28 @@ impl Bots {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Default, Resource)]
+pub struct Spawn {
+    pub pos: Option<IVec2>,
+    pub dir: Option<Dir>,
+}
+
+#[derive(Debug, Event)]
+pub struct CreateBot {
+    pub req: Option<CreateBotRequest>,
+    pub tx: Option<oneshot::Sender<Result<BotId>>>,
+}
+
+#[derive(Debug, Event)]
+pub struct SpawnBot {
+    pub bot: Option<Box<QueuedBot>>,
+    pub tx: Option<oneshot::Sender<Result<BotId>>>,
+    pub requeue_if_cant_spawn: bool,
+}
+
+#[derive(Debug, Event)]
 pub struct KillBot {
-    pub killed: Either<BotId, Box<AliveBot>>,
+    pub killed: Either<BotId, Option<Box<AliveBot>>>,
     pub reason: String,
     pub killer: Option<BotId>,
 }

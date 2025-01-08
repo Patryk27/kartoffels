@@ -9,6 +9,7 @@ pub struct AliveBots {
     entries: Vec<Option<Box<AliveBot>>>,
     id_to_idx: AHashMap<BotId, u8>,
     pos_to_id: AHashMap<IVec2, BotId>,
+    count: usize,
 }
 
 impl AliveBots {
@@ -19,6 +20,7 @@ impl AliveBots {
             if slot.is_none() {
                 self.id_to_idx.insert(bot.id, idx);
                 self.pos_to_id.insert(bot.pos, bot.id);
+                self.count += 1;
 
                 *slot = Some(Box::new(bot));
                 return;
@@ -31,6 +33,7 @@ impl AliveBots {
         self.id_to_idx.insert(bot.id, idx);
         self.pos_to_id.insert(bot.pos, bot.id);
         self.entries.push(Some(Box::new(bot)));
+        self.count += 1;
     }
 
     pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
@@ -38,6 +41,7 @@ impl AliveBots {
         let bot = self.entries[idx as usize].take().unwrap();
 
         self.pos_to_id.remove(&bot.pos).unwrap();
+        self.count -= 1;
 
         Some(*bot)
     }
@@ -67,6 +71,7 @@ impl AliveBots {
         } else {
             self.id_to_idx.remove(&id);
             self.pos_to_id.remove(&pos);
+            self.count -= 1;
         }
     }
 
@@ -83,7 +88,7 @@ impl AliveBots {
     }
 
     pub fn count(&self) -> usize {
-        self.entries.iter().flatten().count()
+        self.count
     }
 }
 
