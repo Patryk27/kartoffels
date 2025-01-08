@@ -37,7 +37,7 @@ futures = "0.3.30"
 futures-util = { version = "0.3.30", features = ["sink"] }
 glam = { version = "0.29.2", default-features = false }
 indoc = "2.0.5"
-itertools = "0.12.1"
+itertools = "0.13.0"
 maybe-owned = { version = "0.3.4", features = ["serde"] }
 num-traits = { version = "0.2.19", default-features = false }
 ordinal = "0.3.2"
@@ -45,7 +45,7 @@ pretty_assertions = "1.4.0"
 prettytable-rs = "0.10.0"
 rand = { version = "0.8.5", features = ["small_rng"], default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false, features = ["serde1"] }
-ratatui = { git = "https://github.com/ratatui/ratatui", features = ["unstable-backend-writer", "unstable-rendered-line-info", "unstable-widget-ref"] }
+ratatui = { version = "0.29.0", features = ["unstable-backend-writer", "unstable-rendered-line-info", "unstable-widget-ref", "palette"] }
 reqwest = { version = "0.12.8", default-features = false }
 russh = "0.50.0-beta.2"
 russh-keys = "0.50.0-beta.2"
@@ -101,9 +101,3 @@ tungstenite.workspace = true
 [profile.dist]
 inherits = "release"
 lto = true
-
-# ---
-
-[patch."crates-io"]
-russh = { git = "https://github.com/Patryk27/russh", branch = "nodelay" }
-russh-keys = { git = "https://github.com/Patryk27/russh", branch = "nodelay" }
