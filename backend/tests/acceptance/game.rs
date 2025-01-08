@@ -1,6 +1,6 @@
 use crate::TestContext;
 use kartoffels_bots::DUMMY;
-use kartoffels_world::prelude::{Config, Policy};
+use kartoffels_world::prelude::{ArenaTheme, Config, Policy, Theme};
 use std::time::Duration;
 use termwiz::input::KeyCode;
 use tokio::time;
@@ -10,6 +10,7 @@ async fn smoke() {
     let mut ctxt = {
         let first = kartoffels_world::create(Config {
             name: "first-world".into(),
+            theme: Some(Theme::Arena(ArenaTheme::new(4))),
             ..Default::default()
         });
 
@@ -21,11 +22,13 @@ async fn smoke() {
                 ..Default::default()
             },
             seed: Some(Default::default()),
+            theme: Some(Theme::Arena(ArenaTheme::new(4))),
             ..Default::default()
         });
 
         let third = kartoffels_world::create(Config {
             name: "third-world".into(),
+            theme: Some(Theme::Arena(ArenaTheme::new(4))),
             ..Default::default()
         });
 
@@ -45,7 +48,7 @@ async fn smoke() {
 
     ctxt.press(KeyCode::Char('u')).await;
     ctxt.upload_bot(DUMMY).await;
-    ctxt.wait_for("[l] leave").await;
+    ctxt.wait_for("> score: 0").await;
     ctxt.see_frame("game/smoke/game-2.txt").await;
 
     // ---

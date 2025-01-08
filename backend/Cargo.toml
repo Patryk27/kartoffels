@@ -44,7 +44,7 @@ ordinal = "0.3.2"
 pretty_assertions = "1.4.0"
 prettytable-rs = "0.10.0"
 rand = { version = "0.8.5", features = ["small_rng"], default-features = false }
-rand_chacha = { version = "0.3.1", default-features = false }
+rand_chacha = { version = "0.3.1", default-features = false, features = ["serde1"] }
 ratatui = { git = "https://github.com/ratatui/ratatui", features = ["unstable-backend-writer", "unstable-rendered-line-info", "unstable-widget-ref"] }
 reqwest = { version = "0.12.8", default-features = false }
 russh = "0.50.0-beta.2"
@@ -55,6 +55,7 @@ serde_json = "1.0.117"
 sha256 = "1.5.0"
 spin = "0.9.8"
 talc = "4.4.1"
+tempfile = "3.15.0"
 termwiz = "0.22.0"
 test-case = "3.3.1"
 tokio = { version = "1.37.0", features = ["full", "test-util"] }

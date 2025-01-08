@@ -18,6 +18,7 @@ kartoffels-utils = { path = "../kartoffels-utils" }
 maybe-owned.workspace = true
 prettytable-rs.workspace = true
 rand = { workspace = true, default-features = true }
+rand_chacha.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha256.workspace = true
@@ -30,5 +31,5 @@ indoc.workspace = true
 itertools.workspace = true
 kartoffels-bots = { path = "../kartoffels-bots" }
 pretty_assertions.workspace = true
-rand_chacha.workspace = true
+tempfile.workspace = true
 test-case.workspace = true

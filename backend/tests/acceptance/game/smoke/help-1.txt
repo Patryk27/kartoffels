@@ -1,5 +1,5 @@
         ┌──────────────────────────── help ────────────────────────────┐
-        │ welcome to the online mode!                                  │07
+        │ welcome to the online mode!                                  │7f
         │                                                              │
         │ in here you're playing against bots programmed by other      │
         │ people, deathmatch-style                                     │

@@ -5,6 +5,7 @@ use kartoffels_world::prelude::*;
 use std::future::Future;
 use std::path::Path;
 use std::sync::Arc;
+use tempfile::NamedTempFile;
 
 #[tokio::test]
 async fn smoke() {
@@ -226,7 +227,7 @@ async fn set_spawn() {
         .collect();
 
     let expected =
-        vec![ivec2(21, 7), ivec2(10, 9), ivec2(15, 19), ivec2(16, 1)];
+        vec![ivec2(19, 13), ivec2(10, 9), ivec2(15, 19), ivec2(16, 1)];
 
     assert_eq!(expected, actual);
 }
@@ -311,6 +312,49 @@ async fn without_auto_respawn() {
         .iter()
         .map(|event| event.msg.clone())
         .collect();
+
+    assert_eq!(expected, actual);
+}
+
+#[tokio::test]
+async fn resume() {
+    let file = NamedTempFile::new().unwrap();
+
+    let world = kartoffels_world::create(Config {
+        path: Some(file.path().to_owned()),
+        ..config()
+    });
+
+    let bot = world
+        .create_bot(CreateBotRequest::new(DUMMY))
+        .await
+        .unwrap();
+
+    // ---
+
+    world.shutdown().await.unwrap();
+
+    assert_eq!(
+        "world has crashed",
+        world.pause().await.unwrap_err().to_string()
+    );
+
+    // ---
+
+    let world = kartoffels_world::resume(world.id(), file.path()).unwrap();
+
+    world.tick(1).await.unwrap();
+
+    let actual: Vec<_> = world
+        .snapshot()
+        .await
+        .bots()
+        .alive()
+        .iter()
+        .map(|bot| bot.id)
+        .collect();
+
+    let expected = vec![bot];
 
     assert_eq!(expected, actual);
 }

@@ -5,7 +5,7 @@ use crate::{
 use anyhow::anyhow;
 use bevy_ecs::event::EventMutator;
 use bevy_ecs::system::{Commands, Res, ResMut};
-use glam::IVec2;
+use glam::{IVec2, UVec2};
 use rand::{Rng, RngCore};
 use tracing::trace;
 
@@ -115,6 +115,10 @@ fn sample_map(
     objs: &Objects,
     bot: &QueuedBot,
 ) -> Option<(IVec2, Dir)> {
+    if map.size() == UVec2::ZERO {
+        return None;
+    }
+
     let mut nth = 0;
 
     loop {

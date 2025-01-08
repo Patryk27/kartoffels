@@ -70,8 +70,8 @@ use bevy_ecs::schedule::{ExecutorKind, IntoSystemConfigs, Schedule};
 use bevy_ecs::system::Res;
 use bevy_ecs::world::World;
 use kartoffels_utils::Id;
-use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha8Rng;
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
@@ -84,8 +84,8 @@ pub fn create(config: Config) -> Handle {
 
     let mut rng = config
         .seed
-        .map(SmallRng::from_seed)
-        .unwrap_or_else(SmallRng::from_entropy);
+        .map(ChaCha8Rng::from_seed)
+        .unwrap_or_else(ChaCha8Rng::from_entropy);
 
     let id = rng.gen();
 
@@ -121,7 +121,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         name: WorldName(world.name.into_owned()),
         path: Some(WorldPath(path.to_owned())),
         policy: world.policy.into_owned(),
-        rng: WorldRng(SmallRng::from_entropy()),
+        rng: WorldRng(ChaCha8Rng::from_entropy()),
         theme: world.theme.map(|theme| theme.into_owned()),
     };
 

@@ -165,8 +165,10 @@ impl Map {
     pub fn sample_pos(&self, rng: &mut impl RngCore) -> IVec2 {
         assert!(self.size.x > 0 && self.size.y > 0);
 
-        uvec2(rng.gen_range(0..self.size.x), rng.gen_range(0..self.size.y))
-            .as_ivec2()
+        let x = rng.gen_range(0..self.size.x);
+        let y = rng.gen_range(0..self.size.y);
+
+        uvec2(x, y).as_ivec2()
     }
 
     pub fn contains(&self, pos: IVec2) -> bool {

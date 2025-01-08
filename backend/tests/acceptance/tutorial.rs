@@ -162,14 +162,13 @@ async fn flow() {
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_while_modal("tutorial (10/16)").await;
-    ctxt.wait_while("0543-c377-57f0-8d9a").await;
     ctxt.see_frame("tutorial/flow/step-10-c.txt").await;
 
     ctxt.upload_bot(TUT_02).await;
 
     ctxt.store()
         .first_private_world()
-        .overclock(Clock::Faster)
+        .overclock(Clock::Unlimited)
         .await
         .unwrap();
 
