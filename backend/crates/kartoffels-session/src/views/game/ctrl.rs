@@ -180,7 +180,7 @@ impl GameCtrlEvent {
 
                 state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
-                state.camera.set(state.snapshot.raw_map().center());
+                state.camera.set(state.snapshot.tiles.center());
                 state.handle = Some(handle);
                 state.bot = None;
             }
@@ -214,7 +214,7 @@ impl GameCtrlEvent {
             }
 
             GameCtrlEvent::GetWorldVersion(tx) => {
-                _ = tx.send(state.snapshot.version());
+                _ = tx.send(state.snapshot.version);
             }
 
             GameCtrlEvent::WaitForRestart(tx) => {

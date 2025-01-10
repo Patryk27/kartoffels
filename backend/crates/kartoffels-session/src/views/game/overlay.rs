@@ -10,10 +10,10 @@ pub struct Overlay;
 
 impl Overlay {
     pub fn render(ui: &mut Ui<Event>, store: &Store, state: &State) {
-        if let Clock::Manual = state.snapshot.clock()
+        if let Clock::Manual = state.snapshot.clock
             && store.testing()
         {
-            Span::raw(format!("v{}", state.snapshot.version())).render(ui);
+            Span::raw(format!("v{}", state.snapshot.version)).render(ui);
         }
 
         match &state.mode {

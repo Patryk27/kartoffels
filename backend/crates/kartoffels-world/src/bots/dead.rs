@@ -13,7 +13,9 @@ pub struct DeadBots {
 impl DeadBots {
     const MAX_ENTRIES: usize = 4 * 1024;
 
-    pub fn add(&mut self, bot: DeadBot) {
+    pub fn add(&mut self, bot: DeadBot) -> Option<BotId> {
+        let mut forgotten = None;
+
         if self.entries.len() >= Self::MAX_ENTRIES {
             // Unwrap-safety: We've just checked that `self.entries` is not
             // empty
@@ -21,11 +23,14 @@ impl DeadBots {
 
             trace!(id=?entry.id, "forgetting bot");
 
+            forgotten = Some(entry.id);
             self.index.remove(&entry.id);
         }
 
         self.index.insert(bot.id);
         self.entries.push_back(bot);
+
+        forgotten
     }
 
     pub fn remove(&mut self, id: BotId) {

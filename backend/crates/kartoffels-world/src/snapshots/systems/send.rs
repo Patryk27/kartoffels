@@ -1,8 +1,9 @@
 use crate::{
-    AliveBots, Bots, Clock, DeadBots, Events, Map, Objects, QueuedBots, Scores,
-    Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBots,
-    SnapshotDeadBot, SnapshotDeadBots, SnapshotObject, SnapshotObjects,
-    SnapshotQueuedBot, SnapshotQueuedBots, Snapshots, Tile, TileKind,
+    AliveBotSnapshot, AliveBots, AliveBotsSnapshot, Bots, BotsSnapshot, Clock,
+    DeadBotSnapshot, DeadBots, DeadBotsSnapshot, Events, Map, ObjectSnapshot,
+    Objects, ObjectsSnapshot, QueuedBotSnapshot, QueuedBots,
+    QueuedBotsSnapshot, Runs, RunsSnapshot, Snapshot, Snapshots, Tile,
+    TileKind,
 };
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut};
@@ -30,7 +31,7 @@ pub fn send(
     clock: Res<Clock>,
     map: Res<Map>,
     objects: Res<Objects>,
-    scores: Res<Scores>,
+    runs: Res<Runs>,
     mut bots: ResMut<Bots>,
     mut events: Option<ResMut<Events>>,
     snapshots: Res<Snapshots>,
@@ -42,21 +43,27 @@ pub fn send(
     state.version += 1;
 
     let snapshot = {
-        let bots = SnapshotBots {
-            alive: prepare_alive_bots(&mut bots.alive, &scores),
+        let bots = BotsSnapshot {
+            alive: prepare_alive_bots(&mut bots.alive, &runs),
             dead: prepare_dead_bots(&mut bots.dead),
             queued: prepare_queued_bots(&mut bots.queued),
         };
 
+        let runs = RunsSnapshot {
+            entries: runs.entries.clone(),
+        };
+
         let map = prepare_map(&bots, &map, &objects);
         let objects = prepare_objects(&objects);
+        let tiles = map.clone();
 
         Arc::new(Snapshot {
-            raw_map: map.clone(),
-            map,
             bots,
-            objects,
             clock: *clock,
+            map,
+            objects,
+            runs,
+            tiles,
             version: state.version,
         })
     };
@@ -73,19 +80,16 @@ pub fn send(
     };
 }
 
-fn prepare_alive_bots(
-    bots: &mut AliveBots,
-    scores: &Scores,
-) -> SnapshotAliveBots {
+fn prepare_alive_bots(bots: &mut AliveBots, runs: &Runs) -> AliveBotsSnapshot {
     let entries: Vec<_> = bots
         .iter_mut()
-        .map(|bot| SnapshotAliveBot {
+        .map(|bot| AliveBotSnapshot {
             age: bot.timer.ticks(),
             dir: bot.dir,
             events: bot.events.snapshot(),
             id: bot.id,
             pos: bot.pos,
-            score: scores.get(bot.id),
+            score: runs.score(bot.id),
             serial: bot.serial.snapshot(),
         })
         .collect();
@@ -108,18 +112,18 @@ fn prepare_alive_bots(
         idx
     };
 
-    SnapshotAliveBots {
+    AliveBotsSnapshot {
         entries,
         id_to_idx,
         idx_by_scores,
     }
 }
 
-fn prepare_dead_bots(bots: &mut DeadBots) -> SnapshotDeadBots {
+fn prepare_dead_bots(bots: &mut DeadBots) -> DeadBotsSnapshot {
     let entries = bots
         .iter_mut()
         .map(|entry| {
-            let bot = SnapshotDeadBot {
+            let bot = DeadBotSnapshot {
                 events: entry.events.clone(),
                 serial: entry.serial.clone(),
             };
@@ -128,14 +132,14 @@ fn prepare_dead_bots(bots: &mut DeadBots) -> SnapshotDeadBots {
         })
         .collect();
 
-    SnapshotDeadBots { entries }
+    DeadBotsSnapshot { entries }
 }
 
-fn prepare_queued_bots(bots: &mut QueuedBots) -> SnapshotQueuedBots {
+fn prepare_queued_bots(bots: &mut QueuedBots) -> QueuedBotsSnapshot {
     let entries = bots
         .iter_mut()
         .map(|entry| {
-            let bot = SnapshotQueuedBot {
+            let bot = QueuedBotSnapshot {
                 events: entry.bot.events.snapshot(),
                 place: entry.place + 1,
                 requeued: entry.bot.requeued,
@@ -146,13 +150,13 @@ fn prepare_queued_bots(bots: &mut QueuedBots) -> SnapshotQueuedBots {
         })
         .collect();
 
-    SnapshotQueuedBots { entries }
+    QueuedBotsSnapshot { entries }
 }
 
-fn prepare_map(bots: &SnapshotBots, map: &Map, objects: &Objects) -> Map {
+fn prepare_map(bots: &BotsSnapshot, map: &Map, objects: &Objects) -> Map {
     let mut map = map.clone();
 
-    for (idx, bot) in bots.alive().iter().enumerate() {
+    for (idx, bot) in bots.alive.iter().enumerate() {
         let tile = Tile {
             kind: TileKind::BOT,
             meta: [idx as u8, 0, 0],
@@ -181,15 +185,15 @@ fn prepare_map(bots: &SnapshotBots, map: &Map, objects: &Objects) -> Map {
     map
 }
 
-fn prepare_objects(objects: &Objects) -> SnapshotObjects {
+fn prepare_objects(objects: &Objects) -> ObjectsSnapshot {
     let objects = objects
         .iter()
-        .map(|obj| SnapshotObject {
+        .map(|obj| ObjectSnapshot {
             id: obj.id,
             pos: obj.pos,
             obj: obj.obj,
         })
         .collect();
 
-    SnapshotObjects { objects }
+    ObjectsSnapshot { objects }
 }

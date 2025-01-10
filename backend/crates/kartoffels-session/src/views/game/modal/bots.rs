@@ -3,7 +3,7 @@ use crate::BotIdExt;
 use kartoffels_ui::{
     Button, RectExt, Render, Ui, VirtualRow, WidgetList, WidgetListState,
 };
-use kartoffels_world::prelude::{BotId, Snapshot, SnapshotAliveBot};
+use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -38,8 +38,8 @@ impl BotsModal {
             ui.space(1);
 
             let rows = world
-                .bots()
-                .alive()
+                .bots
+                .alive
                 .iter_sorted_by_scores()
                 .enumerate()
                 .map(|(nth, bot)| BotsModalRow { nth, bot });
@@ -88,7 +88,7 @@ impl BotsModal {
 #[derive(Clone, Debug)]
 struct BotsModalRow<'a> {
     nth: usize,
-    bot: &'a SnapshotAliveBot,
+    bot: &'a AliveBotSnapshot,
 }
 
 impl Render<Event> for BotsModalRow<'_> {

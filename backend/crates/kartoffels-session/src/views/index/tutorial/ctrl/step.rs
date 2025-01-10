@@ -63,9 +63,9 @@ impl TutorialCtxt {
         let snapshot = self.snapshots.next().await?;
 
         let alive_ids: Vec<_> =
-            snapshot.bots().alive().iter().map(|bot| bot.id).collect();
+            snapshot.bots.alive.iter().map(|bot| bot.id).collect();
 
-        let dead_ids: Vec<_> = snapshot.bots().dead().ids().collect();
+        let dead_ids: Vec<_> = snapshot.bots.dead.ids().collect();
 
         for id in alive_ids.iter().chain(&dead_ids) {
             self.world.delete_bot(*id).await?;
@@ -74,11 +74,11 @@ impl TutorialCtxt {
         loop {
             let snapshot = self.snapshots.next().await?;
 
-            if !snapshot.bots().alive().has_any_of(&alive_ids) {
+            if !snapshot.bots.alive.has_any_of(&alive_ids) {
                 return Ok(());
             }
 
-            if !snapshot.bots().dead().has_any_of(&dead_ids) {
+            if !snapshot.bots.dead.has_any_of(&dead_ids) {
                 return Ok(());
             }
         }

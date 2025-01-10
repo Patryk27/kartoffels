@@ -97,7 +97,7 @@ impl JoinBotModal {
             return;
         };
 
-        if !world.bots().has(id) {
+        if !world.bots.has(id) {
             ui.throw(Event::OpenErrorModal {
                 error: format!("bot `{id}` was not found"),
             });

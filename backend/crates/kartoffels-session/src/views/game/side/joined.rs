@@ -2,7 +2,7 @@ use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
 use kartoffels_ui::{theme, Button, Render, Ui};
 use kartoffels_world::prelude::{
-    SnapshotAliveBot, SnapshotBot, SnapshotDeadBot, SnapshotQueuedBot,
+    AliveBotSnapshot, BotSnapshot, DeadBotSnapshot, QueuedBotSnapshot,
 };
 use ordinal::Ordinal;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -15,7 +15,7 @@ pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
     pub fn render(ui: &mut Ui<Event>, state: &State, jbot: &JoinedBot) {
-        let bot = state.snapshot.bots().get(jbot.id);
+        let bot = state.snapshot.bots.get(jbot.id);
         let btns = Self::btns(state, jbot);
 
         let [bot_area, _, btns_area] = Layout::vertical([
@@ -39,27 +39,27 @@ impl JoinedSidePanel {
     fn render_bot(
         ui: &mut Ui<Event>,
         jbot: &JoinedBot,
-        bot: Option<SnapshotBot>,
+        bot: Option<BotSnapshot>,
     ) {
         ui.line("id".underlined());
         ui.line(jbot.id.to_string().fg(jbot.id.color()));
         ui.space(1);
 
         match bot {
-            Some(SnapshotBot::Alive(bot)) => {
+            Some(BotSnapshot::Alive(bot)) => {
                 Self::render_alive_bot(ui, bot);
             }
-            Some(SnapshotBot::Dead(bot)) => {
+            Some(BotSnapshot::Dead(bot)) => {
                 Self::render_dead_bot(ui, bot);
             }
-            Some(SnapshotBot::Queued(bot)) => {
+            Some(BotSnapshot::Queued(bot)) => {
                 Self::render_queued_bot(ui, bot);
             }
             _ => (),
         }
     }
 
-    fn render_alive_bot(ui: &mut Ui<Event>, bot: &SnapshotAliveBot) {
+    fn render_alive_bot(ui: &mut Ui<Event>, bot: &AliveBotSnapshot) {
         ui.line("status".underlined());
         ui.line("alive".fg(theme::GREEN));
         ui.line(format!("> age: {}s", bot.age_seconds()).fg(theme::GRAY));
@@ -71,7 +71,7 @@ impl JoinedSidePanel {
         Self::render_bot_serial(ui, &bot.serial);
     }
 
-    fn render_dead_bot(ui: &mut Ui<Event>, bot: &SnapshotDeadBot) {
+    fn render_dead_bot(ui: &mut Ui<Event>, bot: &DeadBotSnapshot) {
         ui.line("status".underlined());
         ui.line("dead".fg(theme::RED));
         ui.space(1);
@@ -79,7 +79,7 @@ impl JoinedSidePanel {
         Self::render_bot_serial(ui, &bot.serial);
     }
 
-    fn render_queued_bot(ui: &mut Ui<Event>, bot: &SnapshotQueuedBot) {
+    fn render_queued_bot(ui: &mut Ui<Event>, bot: &QueuedBotSnapshot) {
         ui.line("status".underlined());
 
         ui.line(if bot.requeued {

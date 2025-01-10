@@ -3,9 +3,10 @@ mod systems;
 
 pub use self::stream::*;
 pub use self::systems::*;
-use crate::{BotEvent, BotId, Clock, Dir, Map, Object, ObjectId};
+use crate::{BotEvent, BotId, BotRuns, Clock, Dir, Map, Object, ObjectId};
 use ahash::AHashMap;
 use bevy_ecs::system::Resource;
+use chrono::{DateTime, Utc};
 use glam::IVec2;
 use itertools::Itertools;
 use prettytable::{row, Table};
@@ -17,38 +18,13 @@ use tokio::sync::watch;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Snapshot {
-    raw_map: Map,
-    map: Map,
-    bots: SnapshotBots,
-    objects: SnapshotObjects,
-    clock: Clock,
-    version: u64,
-}
-
-impl Snapshot {
-    pub fn raw_map(&self) -> &Map {
-        &self.raw_map
-    }
-
-    pub fn map(&self) -> &Map {
-        &self.map
-    }
-
-    pub fn bots(&self) -> &SnapshotBots {
-        &self.bots
-    }
-
-    pub fn objects(&self) -> &SnapshotObjects {
-        &self.objects
-    }
-
-    pub fn clock(&self) -> Clock {
-        self.clock
-    }
-
-    pub fn version(&self) -> u64 {
-        self.version
-    }
+    pub bots: BotsSnapshot,
+    pub clock: Clock,
+    pub map: Map,
+    pub objects: ObjectsSnapshot,
+    pub runs: RunsSnapshot,
+    pub tiles: Map,
+    pub version: u64,
 }
 
 impl fmt::Display for Snapshot {
@@ -71,40 +47,28 @@ impl fmt::Display for Snapshot {
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct SnapshotBots {
-    alive: SnapshotAliveBots,
-    dead: SnapshotDeadBots,
-    queued: SnapshotQueuedBots,
+pub struct BotsSnapshot {
+    pub alive: AliveBotsSnapshot,
+    pub dead: DeadBotsSnapshot,
+    pub queued: QueuedBotsSnapshot,
 }
 
-impl SnapshotBots {
-    pub fn alive(&self) -> &SnapshotAliveBots {
-        &self.alive
-    }
-
-    pub fn dead(&self) -> &SnapshotDeadBots {
-        &self.dead
-    }
-
-    pub fn queued(&self) -> &SnapshotQueuedBots {
-        &self.queued
-    }
-
+impl BotsSnapshot {
     pub fn has(&self, id: BotId) -> bool {
         self.get(id).is_some()
     }
 
-    pub fn get(&self, id: BotId) -> Option<SnapshotBot> {
+    pub fn get(&self, id: BotId) -> Option<BotSnapshot> {
         if let Some(bot) = self.alive.get(id) {
-            return Some(SnapshotBot::Alive(bot));
+            return Some(BotSnapshot::Alive(bot));
         }
 
         if let Some(bot) = self.dead.get(id) {
-            return Some(SnapshotBot::Dead(bot));
+            return Some(BotSnapshot::Dead(bot));
         }
 
         if let Some(bot) = self.queued.get(id) {
-            return Some(SnapshotBot::Queued(bot));
+            return Some(BotSnapshot::Queued(bot));
         }
 
         None
@@ -115,7 +79,7 @@ impl SnapshotBots {
     }
 }
 
-impl fmt::Display for SnapshotBots {
+impl fmt::Display for BotsSnapshot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if !self.alive.is_empty() {
             writeln!(f, "## alive")?;
@@ -128,25 +92,25 @@ impl fmt::Display for SnapshotBots {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SnapshotBot<'a> {
-    Alive(&'a SnapshotAliveBot),
-    Dead(&'a SnapshotDeadBot),
-    Queued(&'a SnapshotQueuedBot),
+pub enum BotSnapshot<'a> {
+    Alive(&'a AliveBotSnapshot),
+    Dead(&'a DeadBotSnapshot),
+    Queued(&'a QueuedBotSnapshot),
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct SnapshotAliveBots {
-    entries: Vec<SnapshotAliveBot>,
+pub struct AliveBotsSnapshot {
+    entries: Vec<AliveBotSnapshot>,
     id_to_idx: AHashMap<BotId, u8>,
     idx_by_scores: Vec<u8>,
 }
 
-impl SnapshotAliveBots {
-    pub fn get(&self, id: BotId) -> Option<&SnapshotAliveBot> {
+impl AliveBotsSnapshot {
+    pub fn get(&self, id: BotId) -> Option<&AliveBotSnapshot> {
         self.get_by_idx(*self.id_to_idx.get(&id)?)
     }
 
-    pub fn get_by_idx(&self, idx: u8) -> Option<&SnapshotAliveBot> {
+    pub fn get_by_idx(&self, idx: u8) -> Option<&AliveBotSnapshot> {
         self.entries.get(idx as usize)
     }
 
@@ -158,13 +122,13 @@ impl SnapshotAliveBots {
         ids.iter().any(|id| self.has(*id))
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &SnapshotAliveBot> {
+    pub fn iter(&self) -> impl Iterator<Item = &AliveBotSnapshot> {
         self.entries.iter()
     }
 
     pub fn iter_sorted_by_birth(
         &self,
-    ) -> impl Iterator<Item = &SnapshotAliveBot> {
+    ) -> impl Iterator<Item = &AliveBotSnapshot> {
         self.entries
             .iter()
             .sorted_unstable_by_key(|bot| (Reverse(bot.age), bot.id))
@@ -172,7 +136,7 @@ impl SnapshotAliveBots {
 
     pub fn iter_sorted_by_scores(
         &self,
-    ) -> impl Iterator<Item = &SnapshotAliveBot> + '_ {
+    ) -> impl Iterator<Item = &AliveBotSnapshot> + '_ {
         self.idx_by_scores
             .iter()
             .filter_map(|idx| self.get_by_idx(*idx))
@@ -187,7 +151,7 @@ impl SnapshotAliveBots {
     }
 }
 
-impl fmt::Display for SnapshotAliveBots {
+impl fmt::Display for AliveBotsSnapshot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut table = Table::init(vec![]);
 
@@ -208,29 +172,29 @@ impl fmt::Display for SnapshotAliveBots {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SnapshotAliveBot {
+pub struct AliveBotSnapshot {
     pub age: u32,
     pub dir: Dir,
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub id: BotId,
     pub pos: IVec2,
-    pub score: u32,
+    pub score: u32, // TODO duplicated with top-level `runs`
     pub serial: Arc<VecDeque<u32>>,
 }
 
-impl SnapshotAliveBot {
+impl AliveBotSnapshot {
     pub fn age_seconds(&self) -> u32 {
         self.age / Clock::HZ
     }
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct SnapshotDeadBots {
-    entries: AHashMap<BotId, SnapshotDeadBot>,
+pub struct DeadBotsSnapshot {
+    entries: AHashMap<BotId, DeadBotSnapshot>,
 }
 
-impl SnapshotDeadBots {
-    pub fn get(&self, id: BotId) -> Option<&SnapshotDeadBot> {
+impl DeadBotsSnapshot {
+    pub fn get(&self, id: BotId) -> Option<&DeadBotSnapshot> {
         self.entries.get(&id)
     }
 
@@ -252,18 +216,18 @@ impl SnapshotDeadBots {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SnapshotDeadBot {
+pub struct DeadBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub serial: Arc<VecDeque<u32>>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct SnapshotQueuedBots {
-    entries: AHashMap<BotId, SnapshotQueuedBot>,
+pub struct QueuedBotsSnapshot {
+    entries: AHashMap<BotId, QueuedBotSnapshot>,
 }
 
-impl SnapshotQueuedBots {
-    pub fn get(&self, id: BotId) -> Option<&SnapshotQueuedBot> {
+impl QueuedBotsSnapshot {
+    pub fn get(&self, id: BotId) -> Option<&QueuedBotSnapshot> {
         self.entries.get(&id)
     }
 
@@ -273,7 +237,7 @@ impl SnapshotQueuedBots {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SnapshotQueuedBot {
+pub struct QueuedBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub place: u8,
     pub requeued: bool,
@@ -281,12 +245,12 @@ pub struct SnapshotQueuedBot {
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub struct SnapshotObjects {
-    objects: Vec<SnapshotObject>,
+pub struct ObjectsSnapshot {
+    objects: Vec<ObjectSnapshot>,
 }
 
-impl SnapshotObjects {
-    pub fn iter(&self) -> impl Iterator<Item = &SnapshotObject> + '_ {
+impl ObjectsSnapshot {
+    pub fn iter(&self) -> impl Iterator<Item = &ObjectSnapshot> + '_ {
         self.objects.iter()
     }
 
@@ -296,10 +260,42 @@ impl SnapshotObjects {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SnapshotObject {
+pub struct ObjectSnapshot {
     pub id: ObjectId,
     pub obj: Object,
     pub pos: Option<IVec2>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct RunsSnapshot {
+    entries: AHashMap<BotId, Arc<BotRuns>>,
+}
+
+impl RunsSnapshot {
+    pub fn get(&self, id: BotId) -> impl Iterator<Item = BotRunSnapshot> + '_ {
+        self.entries.get(&id).into_iter().flat_map(|runs| {
+            let curr = runs.curr.is_some().then(|| BotRunSnapshot {
+                score: runs.curr.score,
+                spawned_at: runs.curr.spawned_at,
+                killed_at: None,
+            });
+
+            let prev = runs.prev.iter().map(|run| BotRunSnapshot {
+                score: run.score,
+                spawned_at: run.spawned_at,
+                killed_at: Some(run.killed_at),
+            });
+
+            curr.into_iter().chain(prev)
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct BotRunSnapshot {
+    pub score: u32,
+    pub spawned_at: DateTime<Utc>,
+    pub killed_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Resource)]

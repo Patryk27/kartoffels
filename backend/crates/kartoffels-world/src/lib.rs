@@ -16,7 +16,6 @@ mod object;
 mod objects;
 mod policy;
 mod runs;
-mod scores;
 mod snapshots;
 mod spec;
 mod stats;
@@ -39,9 +38,9 @@ pub mod prelude {
     pub use crate::object::{Object, ObjectId, ObjectKind};
     pub use crate::policy::Policy;
     pub use crate::snapshots::{
-        Snapshot, SnapshotAliveBot, SnapshotAliveBots, SnapshotBot,
-        SnapshotBots, SnapshotDeadBot, SnapshotDeadBots, SnapshotObjects,
-        SnapshotQueuedBot, SnapshotQueuedBots, SnapshotStream,
+        AliveBotSnapshot, AliveBotsSnapshot, BotSnapshot, BotsSnapshot,
+        DeadBotSnapshot, DeadBotsSnapshot, ObjectsSnapshot, QueuedBotSnapshot,
+        QueuedBotsSnapshot, Snapshot, SnapshotStream,
     };
     pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
@@ -59,7 +58,6 @@ pub(crate) use self::object::*;
 pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::runs::*;
-pub(crate) use self::scores::*;
 pub(crate) use self::snapshots::*;
 pub(crate) use self::storage::*;
 pub(crate) use self::theme::*;
@@ -104,6 +102,7 @@ pub fn create(config: Config) -> Handle {
         path: config.path.map(WorldPath),
         policy: config.policy,
         rng: WorldRng(rng),
+        runs: Default::default(),
         theme: config.theme,
     };
 
@@ -122,6 +121,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         path: Some(WorldPath(path.to_owned())),
         policy: world.policy.into_owned(),
         rng: WorldRng(ChaCha8Rng::from_entropy()),
+        runs: world.runs.into_owned(),
         theme: world.theme.map(|theme| theme.into_owned()),
     };
 
@@ -137,6 +137,7 @@ struct Resources {
     path: Option<WorldPath>,
     policy: Policy,
     rng: WorldRng,
+    runs: Runs,
     theme: Option<Theme>,
 }
 
@@ -160,6 +161,7 @@ fn create_world(res: Resources) -> World {
     world.insert_resource(res.name);
     world.insert_resource(res.policy);
     world.insert_resource(res.rng);
+    world.insert_resource(res.runs);
 
     if let Some(path) = res.path {
         world.insert_resource(path);
@@ -171,8 +173,6 @@ fn create_world(res: Resources) -> World {
 
     world.insert_resource(Objects::default()); // TODO persist
     world.insert_resource(Paused::default());
-    world.insert_resource(Runs::default()); // TODO persist
-    world.insert_resource(Scores::default()); // TODO persist
     world.insert_resource(Spawn::default());
     world.insert_resource(TickFuel::default());
 
@@ -259,7 +259,6 @@ fn create_schedule() -> Schedule {
         bots::tick.run_if(active),
         bots::kill,
         events::track,
-        scores::update,
         runs::update,
         snapshots::send,
         storage::save,

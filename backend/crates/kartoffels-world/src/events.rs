@@ -29,6 +29,7 @@ pub enum Event {
     BotDied { id: BotId },
     BotMoved { id: BotId, at: IVec2 },
     BotScored { id: BotId },
+    BotForgotten { id: BotId },
     ObjectPicked { id: ObjectId },
     ObjectDropped { id: ObjectId },
 }

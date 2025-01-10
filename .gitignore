@@ -1,4 +1,5 @@
 *.new
 .tmp
 /data
+/data.*
 /result

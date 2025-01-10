@@ -84,6 +84,7 @@ impl fmt::Debug for Id {
     }
 }
 
+// TODO serialize as integers, not strings
 impl<'de> Deserialize<'de> for Id {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where

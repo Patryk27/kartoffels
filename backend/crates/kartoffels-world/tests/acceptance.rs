@@ -62,14 +62,14 @@ async fn pause_and_resume() {
 
     // ---
 
-    assert_ne!(snap1.map(), snap2.map());
-    assert_ne!(snap1.bots(), snap2.bots());
+    assert_ne!(snap1.map, snap2.map);
+    assert_ne!(snap1.bots, snap2.bots);
 
-    assert_eq!(snap2.map(), snap3.map());
-    assert_eq!(snap2.bots(), snap3.bots());
+    assert_eq!(snap2.map, snap3.map);
+    assert_eq!(snap2.bots, snap3.bots);
 
-    assert_ne!(snap3.map(), snap4.map());
-    assert_ne!(snap3.bots(), snap4.bots());
+    assert_ne!(snap3.map, snap4.map);
+    assert_ne!(snap3.bots, snap4.bots);
 }
 
 #[tokio::test]
@@ -103,9 +103,9 @@ async fn kill_bot() {
 
     let snap = world.snapshot().await;
 
-    assert!(snap.bots().alive().get(bot1).is_some());
-    assert!(snap.bots().alive().get(bot2).is_none());
-    assert!(snap.bots().alive().get(bot3).is_some());
+    assert!(snap.bots.alive.get(bot1).is_some());
+    assert!(snap.bots.alive.get(bot2).is_none());
+    assert!(snap.bots.alive.get(bot3).is_some());
 }
 
 #[tokio::test]
@@ -140,40 +140,44 @@ async fn delete_bot() {
 
     // ---
 
-    assert!(snap1.bots().alive().get(bot1).is_some());
-    assert!(snap1.bots().alive().get(bot2).is_some());
-    assert!(snap1.bots().alive().get(bot3).is_some());
+    assert!(snap1.bots.alive.get(bot1).is_some());
+    assert!(snap1.bots.alive.get(bot2).is_some());
+    assert!(snap1.bots.alive.get(bot3).is_some());
 
-    assert!(snap2.bots().alive().get(bot1).is_some());
-    assert!(snap2.bots().alive().get(bot2).is_none());
-    assert!(snap2.bots().alive().get(bot3).is_some());
+    assert!(snap2.bots.alive.get(bot1).is_some());
+    assert!(snap2.bots.alive.get(bot2).is_none());
+    assert!(snap2.bots.alive.get(bot3).is_some());
 }
 
 #[tokio::test]
 async fn set_map() {
     let world = kartoffels_world::create(config());
 
-    assert_eq!(uvec2(0, 0), world.snapshot().await.raw_map().size());
+    assert_eq!(uvec2(0, 0), world.snapshot().await.map.size());
+    assert_eq!(uvec2(0, 0), world.snapshot().await.tiles.size());
 
     // ---
 
     world.tick(1).await.unwrap();
 
-    assert_eq!(uvec2(25, 25), world.snapshot().await.raw_map().size());
+    assert_eq!(uvec2(25, 25), world.snapshot().await.map.size());
+    assert_eq!(uvec2(25, 25), world.snapshot().await.tiles.size());
 
     // ---
 
     world.set_map(Map::new(uvec2(11, 22))).await.unwrap();
     world.tick(1).await.unwrap();
 
-    assert_eq!(uvec2(11, 22), world.snapshot().await.raw_map().size());
+    assert_eq!(uvec2(11, 22), world.snapshot().await.map.size());
+    assert_eq!(uvec2(11, 22), world.snapshot().await.tiles.size());
 
     // ---
 
     world.set_map(Map::new(uvec2(22, 11))).await.unwrap();
     world.tick(1).await.unwrap();
 
-    assert_eq!(uvec2(22, 11), world.snapshot().await.raw_map().size());
+    assert_eq!(uvec2(22, 11), world.snapshot().await.map.size());
+    assert_eq!(uvec2(22, 11), world.snapshot().await.tiles.size());
 }
 
 #[tokio::test]
@@ -220,8 +224,8 @@ async fn set_spawn() {
         .next()
         .await
         .unwrap()
-        .bots()
-        .alive()
+        .bots
+        .alive
         .iter_sorted_by_birth()
         .map(|bot| bot.pos)
         .collect();
@@ -252,9 +256,9 @@ async fn with_auto_respawn() {
 
     let snapshot = world.snapshot().await;
 
-    assert!(snapshot.bots().alive().get(bot).is_some());
-    assert!(snapshot.bots().dead().get(bot).is_none());
-    assert!(snapshot.bots().queued().get(bot).is_none());
+    assert!(snapshot.bots.alive.get(bot).is_some());
+    assert!(snapshot.bots.dead.get(bot).is_none());
+    assert!(snapshot.bots.queued.get(bot).is_none());
 
     let expected = vec![
         "respawned",
@@ -265,8 +269,8 @@ async fn with_auto_respawn() {
     ];
 
     let actual: Vec<_> = snapshot
-        .bots()
-        .alive()
+        .bots
+        .alive
         .get(bot)
         .unwrap()
         .events
@@ -297,15 +301,15 @@ async fn without_auto_respawn() {
 
     let snapshot = world.snapshot().await;
 
-    assert!(snapshot.bots().alive().get(bot).is_none());
-    assert!(snapshot.bots().dead().get(bot).is_some());
-    assert!(snapshot.bots().queued().get(bot).is_none());
+    assert!(snapshot.bots.alive.get(bot).is_none());
+    assert!(snapshot.bots.dead.get(bot).is_some());
+    assert!(snapshot.bots.queued.get(bot).is_none());
 
     let expected = vec!["killed manually", "spawned", "uploaded and queued"];
 
     let actual: Vec<_> = snapshot
-        .bots()
-        .dead()
+        .bots
+        .dead
         .get(bot)
         .unwrap()
         .events
@@ -348,8 +352,8 @@ async fn resume() {
     let actual: Vec<_> = world
         .snapshot()
         .await
-        .bots()
-        .alive()
+        .bots
+        .alive
         .iter()
         .map(|bot| bot.id)
         .collect();

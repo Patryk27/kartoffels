@@ -1,7 +1,7 @@
 use crate::storage::Header;
 use crate::{
-    Bots, Map, Metronome, Policy, SerializedWorld, Shutdown, Theme, WorldName,
-    WorldPath, WorldRng,
+    Bots, Map, Metronome, Policy, Runs, SerializedWorld, Shutdown, Theme,
+    WorldName, WorldPath, WorldRng,
 };
 use anyhow::Context;
 use bevy_ecs::system::{Local, Res};
@@ -34,6 +34,7 @@ pub fn save(
     path: Option<Res<WorldPath>>,
     policy: Res<Policy>,
     rng: Res<WorldRng>,
+    runs: Res<Runs>,
     shutdown: Option<Res<Shutdown>>,
     theme: Option<Res<Theme>>,
 ) {
@@ -73,6 +74,7 @@ pub fn save(
         name: MaybeOwned::Borrowed(&name.0),
         policy: MaybeOwned::Borrowed(&policy),
         rng: MaybeOwned::Borrowed(&rng.0),
+        runs: MaybeOwned::Borrowed(&runs),
         theme: theme.as_ref().map(|theme| MaybeOwned::Borrowed(&**theme)),
     };
 

@@ -76,11 +76,15 @@ pub fn kill(
             }
 
             Decision::Discard => {
-                bots.dead.add(DeadBot {
+                let bot = DeadBot {
                     events: killed.events.snapshot(),
                     id: killed.id,
                     serial: killed.serial.snapshot(),
-                });
+                };
+
+                if let Some(id) = bots.dead.add(bot) {
+                    cmds.send_event(Event::BotForgotten { id });
+                }
             }
         }
     }

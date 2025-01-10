@@ -123,7 +123,7 @@ impl State {
         // move the camera since that makes tests less reproducible.
         if let Some(bot) = &self.bot
             && bot.follow
-            && let Some(bot) = self.snapshot.bots().alive().get(bot.id)
+            && let Some(bot) = self.snapshot.bots.alive.get(bot.id)
             && !store.testing()
         {
             self.camera.look_at(bot.pos);
@@ -161,7 +161,7 @@ impl State {
             }
 
             if let Some(pos) = cursor_world {
-                *cursor_valid = self.snapshot.raw_map().get(*pos).is_floor();
+                *cursor_valid = self.snapshot.tiles.get(*pos).is_floor();
 
                 if ui.mouse_pressed() && *cursor_valid {
                     ui.throw(Event::CreateBot {
@@ -221,14 +221,14 @@ impl State {
     fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
         // If map size's changed, recenter the camera - this comes handy for
         // controllers which call `world.set_map()`, e.g. the tutorial
-        if snapshot.raw_map().size() != self.snapshot.raw_map().size() {
-            self.camera.set(snapshot.raw_map().center());
+        if snapshot.tiles.size() != self.snapshot.tiles.size() {
+            self.camera.set(snapshot.tiles.center());
         }
 
         self.snapshot = snapshot;
 
         if let Some(bot) = &mut self.bot {
-            let exists_now = self.snapshot.bots().has(bot.id);
+            let exists_now = self.snapshot.bots.has(bot.id);
 
             bot.exists |= exists_now;
 

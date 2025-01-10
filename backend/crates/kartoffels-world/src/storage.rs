@@ -4,7 +4,7 @@ mod systems;
 
 use self::header::*;
 pub use self::systems::*;
-use crate::{Bots, Map, Policy, Theme};
+use crate::{Bots, Map, Policy, Runs, Theme};
 use maybe_owned::MaybeOwned;
 use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
@@ -16,5 +16,6 @@ pub struct SerializedWorld<'a> {
     pub name: MaybeOwned<'a, String>,
     pub policy: MaybeOwned<'a, Policy>,
     pub rng: MaybeOwned<'a, ChaCha8Rng>,
+    pub runs: MaybeOwned<'a, Runs>,
     pub theme: Option<MaybeOwned<'a, Theme>>,
 }

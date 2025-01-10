@@ -122,8 +122,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
 
 async fn wait(ctxt: &mut TutorialCtxt) -> Result<bool> {
     loop {
-        if let Some(bot) =
-            ctxt.snapshots.next().await?.bots().alive().iter().next()
+        if let Some(bot) = ctxt.snapshots.next().await?.bots.alive.iter().next()
         {
             if bot.pos == ivec2(10, 12) {
                 return Ok(true);

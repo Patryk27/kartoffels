@@ -126,7 +126,7 @@ impl BottomPanel {
                 Some(span.fg(theme::YELLOW))
             }
         } else {
-            let speed = match state.snapshot.clock() {
+            let speed = match state.snapshot.clock {
                 Clock::Normal | Clock::Manual => None,
                 Clock::Fast => Some("spd:fast"),
                 Clock::Faster => Some("spd:faster"),

@@ -46,7 +46,7 @@ impl Handle {
     }
 
     pub fn version(&self) -> u64 {
-        self.shared.snapshots.borrow().version()
+        self.shared.snapshots.borrow().version
     }
 
     pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {

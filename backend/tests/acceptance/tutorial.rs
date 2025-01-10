@@ -241,7 +241,7 @@ async fn flow() {
     loop {
         let snapshot = snapshots.next().await.unwrap();
 
-        if snapshot.bots().alive().len() == 10 {
+        if snapshot.bots.alive.len() == 10 {
             break;
         }
     }

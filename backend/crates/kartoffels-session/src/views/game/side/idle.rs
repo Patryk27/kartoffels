@@ -32,7 +32,7 @@ impl IdleSidePanel {
                     btns.push(
                         Button::new(KeyCode::Char('j'), "join-bot")
                             .throwing(Event::OpenJoinBotModal)
-                            .enabled(!state.snapshot.bots().is_empty()),
+                            .enabled(!state.snapshot.bots.is_empty()),
                     );
                 }
 
