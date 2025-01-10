@@ -17,8 +17,8 @@ kartoffels-cpu = { path = "../kartoffels-cpu" }
 kartoffels-utils = { path = "../kartoffels-utils" }
 maybe-owned.workspace = true
 prettytable-rs.workspace = true
-rand = { workspace = true, default-features = true }
-rand_chacha.workspace = true
+rand.workspace = true
+rand_chacha = { workspace = true, features = ["serde1"] }
 serde.workspace = true
 serde_json.workspace = true
 sha256.workspace = true
