@@ -20,9 +20,9 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "i'm assuming you've already went through the tutorial — if not, \
-             feel free to go back to the main menu and press [`t`], but here's \
-             the spirit:",
+            "i'm assuming you already went through the tutorial — if not, feel \
+             free to go back to the main menu and press [`t`], but here's the \
+             spirit:",
         ),
         MsgLine::new(""),
         MsgLine::new("# rules"),
@@ -30,6 +30,9 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgLine::new("- your bot gets a point for each bot killed"),
         MsgLine::new("- unless the upload queue is full, each killed bot gets"),
         MsgLine::new("  auto-respawned upon death, to keep the party going"),
+        MsgLine::new(
+            "- pressing [`spc`] pauses only your view, not the actual game",
+        ),
         MsgLine::new(""),
         MsgLine::new("# controls"),
         MsgLine::new(""),
