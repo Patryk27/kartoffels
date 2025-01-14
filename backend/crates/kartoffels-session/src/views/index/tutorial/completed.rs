@@ -1,6 +1,6 @@
 use anyhow::Result;
 use kartoffels_ui::{
-    theme, Clear, Fade, FadeDir, Msg, MsgButton, MsgLine, Render, Term,
+    theme, Clear, Fade, FadeDir, Msg, MsgButton, MsgLine, Term, UiWidget,
 };
 use ratatui::style::Stylize;
 use std::sync::LazyLock;

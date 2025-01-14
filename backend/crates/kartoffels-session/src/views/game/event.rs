@@ -49,7 +49,9 @@ pub enum Event {
     RestartBot,
     DeleteBot,
     FollowBot,
-    InspectBot,
+    InspectBot {
+        id: Option<BotId>,
+    },
     Overclock {
         clock: Clock,
     },
@@ -192,8 +194,12 @@ impl Event {
                 }
             }
 
-            Event::InspectBot => {
-                if let Some(bot) = &state.bot {
+            Event::InspectBot { id } => {
+                if let Some(id) = id {
+                    // TODO back to bot list
+                    state.modal =
+                        Some(Modal::InspectBot(InspectBotModal::new(id)));
+                } else if let Some(bot) = &state.bot {
                     state.modal =
                         Some(Modal::InspectBot(InspectBotModal::new(bot.id)));
                 }

@@ -1,6 +1,6 @@
 use super::{Event, Mode, State};
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, FromMarkdown, Render, Ui};
+use kartoffels_ui::{theme, FromMarkdown, Ui, UiWidget};
 use kartoffels_world::prelude::Clock;
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};

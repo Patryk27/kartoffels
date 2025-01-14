@@ -5,7 +5,7 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, Render, Term};
+use kartoffels_ui::{Button, Fade, FadeDir, Term, UiWidget};
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;

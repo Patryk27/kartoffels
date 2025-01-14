@@ -15,4 +15,8 @@ pub const WASHED_PINK: Color = Color::Rgb(200, 107, 133);
 pub const WHITE: Color = Color::Rgb(255, 255, 255);
 pub const YELLOW: Color = Color::Rgb(255, 212, 80);
 
+pub const TIME_FORMAT: &str = "%H:%M:%S";
+pub const DATETIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+pub const DATETIME_LENGTH: u16 = 19;
+
 pub const FRAME_TIME: Duration = Duration::from_millis(1000 / 30);

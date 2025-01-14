@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use kartoffels_ui::{Button, Render, Ui};
+use kartoffels_ui::{Button, Ui, UiWidget};
 use std::fmt;
 use termwiz::input::KeyCode;
 

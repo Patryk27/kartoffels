@@ -2,7 +2,7 @@ use super::{BotCount, BotPosition};
 use crate::views::game::{BotSource, Event};
 use kartoffels_store::{SessionId, SessionUploadInterest, Store};
 use kartoffels_ui::{
-    theme, Button, FromMarkdown, Render, Spinner, TermEndpoint, Ui,
+    theme, Button, FromMarkdown, Spinner, TermEndpoint, Ui, UiWidget,
 };
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};

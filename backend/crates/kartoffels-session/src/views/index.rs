@@ -8,7 +8,7 @@ use self::widgets::*;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Fade, FadeDir, Render, Term};
+use kartoffels_ui::{Fade, FadeDir, Term, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 

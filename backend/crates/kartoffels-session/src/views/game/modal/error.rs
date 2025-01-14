@@ -1,5 +1,5 @@
 use crate::views::game::Event;
-use kartoffels_ui::{Button, RectExt, Render, Ui};
+use kartoffels_ui::{Button, RectExt, Ui, UiWidget};
 use ratatui::widgets::Paragraph;
 use termwiz::input::KeyCode;
 

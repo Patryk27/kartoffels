@@ -35,10 +35,10 @@ static MIGRATIONS: &[fn(&mut Value)] = &[
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
-    for nth in old..new {
-        info!("migrating: v{} -> v{}", nth, nth + 1);
+    for idx in old..new {
+        info!("migrating: v{} -> v{}", idx, idx + 1);
 
-        MIGRATIONS[(nth - 1) as usize](&mut world);
+        MIGRATIONS[(idx - 1) as usize](&mut world);
     }
 
     Ok(world)
@@ -53,14 +53,14 @@ mod tests {
     use kartoffels_utils::{cbor_to_json, json_to_cbor};
     use pretty_assertions as pa;
 
-    pub fn run(nth: u32, given: &str, expected: &str) {
+    pub fn run(idx: u32, given: &str, expected: &str) {
         let given = serde_json::from_str(given).unwrap();
         let given = json_to_cbor(given);
 
         let expected = serde_json::from_str(expected).unwrap();
         let expected = json_to_cbor(expected);
 
-        let actual = super::run(nth - 1, nth, given).unwrap();
+        let actual = super::run(idx - 1, idx, given).unwrap();
 
         if expected != actual {
             let actual = cbor_to_json(actual, false);

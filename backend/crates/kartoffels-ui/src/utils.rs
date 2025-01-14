@@ -7,7 +7,7 @@ mod from_markdown;
 mod msg;
 mod rect_ext;
 mod spinner;
-mod virtual_row;
+mod vtable;
 mod widget_list;
 
 pub use self::backdrop::*;
@@ -19,5 +19,5 @@ pub use self::from_markdown::*;
 pub use self::msg::*;
 pub use self::rect_ext::*;
 pub use self::spinner::*;
-pub use self::virtual_row::*;
+pub use self::vtable::*;
 pub use self::widget_list::*;

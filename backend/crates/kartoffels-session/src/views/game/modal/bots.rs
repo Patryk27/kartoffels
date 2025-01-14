@@ -1,7 +1,8 @@
 use crate::views::game::Event;
 use crate::BotIdExt;
 use kartoffels_ui::{
-    Button, RectExt, Render, Ui, VirtualRow, WidgetList, WidgetListState,
+    Button, FnUiWidget, RectExt, Ui, UiWidget, VRow, WidgetList,
+    WidgetListState,
 };
 use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
 use ratatui::layout::Rect;
@@ -19,8 +20,8 @@ impl BotsModal {
         5,                        // nth
         BotId::LENGTH as u16 + 1, // id
         7,                        // age
-        8,                        // score
-        6,                        // action
+        6,                        // score
+        6 + 1 + 9,                // actions
     ];
 
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
@@ -28,7 +29,7 @@ impl BotsModal {
         let height = ui.area.height - 2;
 
         ui.info_window(width, height, Some(" bots "), |ui| {
-            VirtualRow::new(ui, Self::WIDTHS)
+            VRow::new(ui, Self::WIDTHS)
                 .add(Span::raw("nth"))
                 .add(Span::raw("id"))
                 .add(Span::raw("age"))
@@ -91,21 +92,36 @@ struct BotsModalRow<'a> {
     bot: &'a AliveBotSnapshot,
 }
 
-impl Render<Event> for BotsModalRow<'_> {
+impl UiWidget<Event> for BotsModalRow<'_> {
     fn render(self, ui: &mut Ui<Event>) {
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
+
+        // TODO support minutes
+        // TODO can be different than what inspect.runs shows
         let age = Span::raw(format!("{}s", self.bot.age_seconds()));
+
         let score = Span::raw(self.bot.score.to_string());
 
         let join = Button::new(None, "join")
             .throwing(Event::JoinBot { id: self.bot.id });
 
-        VirtualRow::new(ui, BotsModal::WIDTHS)
+        let inspect =
+            Button::new(None, "inspect").throwing(Event::InspectBot {
+                id: Some(self.bot.id),
+            });
+
+        VRow::new(ui, BotsModal::WIDTHS)
             .add(nth)
             .add(id)
             .add(age)
             .add(score)
-            .add(join);
+            .add(FnUiWidget::new(|ui| {
+                ui.row(|ui| {
+                    ui.render(join);
+                    ui.space(1);
+                    ui.render(inspect);
+                });
+            }));
     }
 }

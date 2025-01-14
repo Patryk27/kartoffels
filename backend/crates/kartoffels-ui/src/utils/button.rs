@@ -1,6 +1,6 @@
-use crate::{theme, Render, Ui};
+use crate::{theme, Ui, UiWidget};
 use ratatui::layout::{Alignment, Rect};
-use ratatui::style::{Style, Stylize};
+use ratatui::style::{Style, Styled, Stylize};
 use ratatui::text::{Span, Text};
 use std::borrow::Cow;
 use termwiz::input::{KeyCode, Modifiers};
@@ -12,6 +12,7 @@ pub struct Button<'a, T> {
     help: Option<Cow<'a, str>>,
     alignment: Alignment,
     enabled: bool,
+    style: Style,
 }
 
 impl<'a, T> Button<'a, T> {
@@ -25,6 +26,7 @@ impl<'a, T> Button<'a, T> {
             help: None,
             alignment: Alignment::Left,
             enabled: true,
+            style: Default::default(),
         }
     }
 
@@ -35,6 +37,7 @@ impl<'a, T> Button<'a, T> {
             help: None,
             alignment: Alignment::Left,
             enabled: true,
+            style: Default::default(),
         }
     }
 
@@ -182,7 +185,23 @@ impl<'a, T> Button<'a, T> {
     }
 }
 
-impl<T> Render<T> for Button<'_, T> {
+impl<T> Styled for Button<'_, T> {
+    type Item = Self;
+
+    fn style(&self) -> Style {
+        self.style
+    }
+
+    fn set_style<S>(mut self, style: S) -> Self::Item
+    where
+        S: Into<Style>,
+    {
+        self.style = style.into();
+        self
+    }
+}
+
+impl<T> UiWidget<T> for Button<'_, T> {
     type Response = ButtonResponse;
 
     fn render(mut self, ui: &mut Ui<T>) -> Self::Response {
@@ -212,7 +231,11 @@ impl<T> Render<T> for Button<'_, T> {
                     }
 
                     ui.span(Span::styled("] ", label_style));
-                    ui.span(Span::styled(self.label, label_style));
+
+                    ui.span(Span::styled(
+                        self.label,
+                        label_style.patch(self.style),
+                    ));
                 }
             });
         });

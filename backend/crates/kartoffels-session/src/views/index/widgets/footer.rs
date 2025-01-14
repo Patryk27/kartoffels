@@ -1,5 +1,5 @@
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, RectExt, Render, Ui};
+use kartoffels_ui::{theme, RectExt, Ui, UiWidget};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;

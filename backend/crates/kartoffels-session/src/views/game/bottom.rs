@@ -1,5 +1,5 @@
 use super::{Event, Mode, State};
-use kartoffels_ui::{theme, Button, Render, Ui};
+use kartoffels_ui::{theme, Button, Ui, UiWidget};
 use kartoffels_world::prelude::Clock;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;

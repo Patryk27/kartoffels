@@ -119,7 +119,7 @@ fn sample_map(
         return None;
     }
 
-    let mut nth = 0;
+    let mut idx = 0;
 
     loop {
         let pos = map.sample_pos(rng);
@@ -130,9 +130,9 @@ fn sample_map(
             return Some((pos, dir));
         }
 
-        nth += 1;
+        idx += 1;
 
-        if nth >= 1024 {
+        if idx >= 1024 {
             return None;
         }
     }

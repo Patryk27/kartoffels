@@ -1,5 +1,5 @@
 use crate::views::game::{Event, Mode, State, UploadBotRequest};
-use kartoffels_ui::{Button, Render, Ui};
+use kartoffels_ui::{Button, Ui, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
 

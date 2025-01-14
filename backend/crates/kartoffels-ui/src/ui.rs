@@ -1,10 +1,10 @@
-use crate::{theme, Clear, TermEndpoint};
+use crate::{theme, Clear, TermEndpoint, UiWidget};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
-use ratatui::widgets::{Block, Padding, Paragraph, Widget, WidgetRef, Wrap};
+use ratatui::widgets::{Block, Padding, Paragraph, WidgetRef, Wrap};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -85,7 +85,7 @@ impl<T> Ui<'_, T> {
         let para = Paragraph::new(line).wrap(Wrap::default());
         let height = para.line_count(self.area.width) as u16;
 
-        para.render(self.area, self.buf);
+        self.render(para);
         self.space(height);
 
         height
@@ -95,8 +95,7 @@ impl<T> Ui<'_, T> {
         let span = span.into();
         let width = span.width() as u16;
 
-        span.render(self.area, self.buf);
-
+        self.render(span);
         self.space(width);
     }
 
@@ -201,6 +200,10 @@ impl<T> Ui<'_, T> {
 
     pub fn copy(&mut self, payload: impl AsRef<str>) {
         self.clipboard.push(payload.as_ref().to_owned());
+    }
+
+    pub fn render(&mut self, widget: impl UiWidget<T>) {
+        widget.render(self);
     }
 
     pub fn throw(&mut self, event: T) {

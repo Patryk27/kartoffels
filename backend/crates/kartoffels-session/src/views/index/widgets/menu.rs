@@ -1,6 +1,6 @@
 use super::super::Event;
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Button, Render, Ui};
+use kartoffels_ui::{theme, Button, Ui, UiWidget};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
 use termwiz::input::KeyCode;

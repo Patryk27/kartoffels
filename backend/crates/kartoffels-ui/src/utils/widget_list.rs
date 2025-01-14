@@ -1,4 +1,4 @@
-use crate::{Render, Ui};
+use crate::{Ui, UiWidget};
 
 #[derive(Debug)]
 pub struct WidgetList<'a, T> {
@@ -18,9 +18,9 @@ impl<'a, T> WidgetList<'a, T> {
     }
 }
 
-impl<E, T> Render<E> for WidgetList<'_, T>
+impl<E, T> UiWidget<E> for WidgetList<'_, T>
 where
-    T: Render<E>,
+    T: UiWidget<E>,
 {
     fn render(self, ui: &mut Ui<E>) {
         self.state.offset = self

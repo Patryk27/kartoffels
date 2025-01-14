@@ -22,7 +22,7 @@ use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Clear, Fade, FadeDir, Render, Term, Ui};
+use kartoffels_ui::{Clear, Fade, FadeDir, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{
     BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
 };

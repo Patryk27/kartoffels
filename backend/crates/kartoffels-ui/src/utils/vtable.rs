@@ -1,26 +1,26 @@
-use crate::{Render, Ui};
+use crate::{Ui, UiWidget};
 use ratatui::prelude::Rect;
 
 #[derive(Debug)]
-pub struct VirtualRow<'a, 'b, T> {
+pub struct VRow<'a, 'b, T> {
     ui: &'a mut Ui<'b, T>,
     widths: &'static [u16],
-    nth: usize,
+    col: usize,
     offset: u16,
 }
 
-impl<'a, 'b, T> VirtualRow<'a, 'b, T> {
+impl<'a, 'b, T> VRow<'a, 'b, T> {
     pub fn new(ui: &'a mut Ui<'b, T>, widths: &'static [u16]) -> Self {
         Self {
             ui,
             widths,
-            nth: 0,
+            col: 0,
             offset: 0,
         }
     }
 
-    pub fn add(&mut self, widget: impl Render<T>) -> &mut Self {
-        let width = self.widths[self.nth];
+    pub fn add(&mut self, widget: impl UiWidget<T>) -> &mut Self {
+        let width = self.widths[self.col];
 
         let area = Rect {
             x: self.ui.area.x + self.offset,
@@ -33,7 +33,7 @@ impl<'a, 'b, T> VirtualRow<'a, 'b, T> {
             widget.render(ui);
         });
 
-        self.nth += 1;
+        self.col += 1;
         self.offset += width;
         self
     }

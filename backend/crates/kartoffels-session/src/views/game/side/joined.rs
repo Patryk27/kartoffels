@@ -1,6 +1,6 @@
 use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
-use kartoffels_ui::{theme, Button, Render, Ui};
+use kartoffels_ui::{theme, Button, Ui, UiWidget};
 use kartoffels_world::prelude::{
     AliveBotSnapshot, BotSnapshot, DeadBotSnapshot, QueuedBotSnapshot,
 };
@@ -120,7 +120,7 @@ impl JoinedSidePanel {
 
         btns.push(
             Button::new(KeyCode::Char('i'), "inspect-bot")
-                .throwing(Event::InspectBot),
+                .throwing(Event::InspectBot { id: None }),
         );
 
         if state.config.can_restart_bots {

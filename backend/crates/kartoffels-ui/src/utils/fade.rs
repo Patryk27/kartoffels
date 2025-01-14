@@ -1,4 +1,4 @@
-use crate::{Render, Ui};
+use crate::{Ui, UiWidget};
 use ratatui::style::Color;
 use std::time::Instant;
 
@@ -27,7 +27,7 @@ impl Fade {
     }
 }
 
-impl<T> Render<T> for &Fade {
+impl<T> UiWidget<T> for &Fade {
     type Response = FadeStatus;
 
     fn render(self, ui: &mut Ui<T>) -> Self::Response {

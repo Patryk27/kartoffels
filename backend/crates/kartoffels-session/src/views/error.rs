@@ -1,6 +1,6 @@
 use crate::Background;
 use anyhow::{Error, Result};
-use kartoffels_ui::{Button, RectExt, Render, Term};
+use kartoffels_ui::{Button, RectExt, Term, UiWidget};
 use ratatui::widgets::{Paragraph, WidgetRef};
 use termwiz::input::KeyCode;
 use tracing::debug;

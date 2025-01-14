@@ -1,5 +1,5 @@
 use super::FromMarkdown;
-use crate::{Button, Render, Ui};
+use crate::{Button, Ui, UiWidget};
 use ratatui::style::{Style, Styled};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Paragraph, WidgetRef};
