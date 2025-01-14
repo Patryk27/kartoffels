@@ -1,11 +1,10 @@
 use super::{Event, Mode, State};
 use crate::BotIdExt;
 use glam::ivec2;
-use kartoffels_ui::{theme, Ui};
+use kartoffels_ui::{theme, KeyCode, Modifiers, Ui};
 use kartoffels_world::prelude::{Dir, ObjectKind, Tile, TileKind};
 use ratatui::layout::Rect;
 use std::time::Instant;
-use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct Map {

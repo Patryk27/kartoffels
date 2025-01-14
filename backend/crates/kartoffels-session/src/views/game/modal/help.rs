@@ -1,5 +1,4 @@
-use kartoffels_ui::{Msg, MsgButton};
-use termwiz::input::KeyCode;
+use kartoffels_ui::{KeyCode, Msg, MsgButton};
 
 pub type HelpMsg = Msg<HelpMsgResponse>;
 pub type HelpMsgRef = &'static HelpMsg;

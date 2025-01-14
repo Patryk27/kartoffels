@@ -1,6 +1,6 @@
 use crate::views::game::{Event, JoinedBot, State};
 use crate::BotIdExt;
-use kartoffels_ui::{theme, Button, Ui, UiWidget};
+use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use kartoffels_world::prelude::{
     AliveBotSnapshot, BotSnapshot, DeadBotSnapshot, QueuedBotSnapshot,
 };
@@ -8,7 +8,6 @@ use ordinal::Ordinal;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Stylize;
 use std::collections::VecDeque;
-use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct JoinedSidePanel;

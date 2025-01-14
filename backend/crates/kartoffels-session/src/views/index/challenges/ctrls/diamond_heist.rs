@@ -7,7 +7,7 @@ use glam::IVec2;
 use indoc::indoc;
 use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
-use kartoffels_ui::{Msg, MsgButton, MsgLine};
+use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     Config, CreateBotRequest, Dir, Event, Handle, Map, Object, ObjectKind,
     Policy, TileKind,
@@ -15,7 +15,6 @@ use kartoffels_world::prelude::{
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
-use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {

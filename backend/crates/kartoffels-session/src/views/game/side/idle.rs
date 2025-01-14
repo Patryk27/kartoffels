@@ -1,7 +1,6 @@
 use crate::views::game::{Event, Mode, State, UploadBotRequest};
-use kartoffels_ui::{Button, Ui, UiWidget};
+use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 use ratatui::layout::{Constraint, Layout};
-use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct IdleSidePanel;

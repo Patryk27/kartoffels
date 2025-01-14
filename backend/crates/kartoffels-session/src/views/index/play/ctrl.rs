@@ -1,10 +1,9 @@
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
 use anyhow::Result;
-use kartoffels_ui::{Msg, MsgButton, MsgLine};
+use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::Handle;
 use std::future;
 use std::sync::LazyLock;
-use termwiz::input::KeyCode;
 
 const CMD: &str = "git clone https://github.com/Patryk27/kartoffel";
 

@@ -5,14 +5,13 @@ use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, UVec2};
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Msg, MsgButton, MsgLine};
+use kartoffels_ui::{theme, KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     Config, Event, Handle, Object, ObjectId, ObjectKind, Policy,
 };
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
-use termwiz::input::KeyCode;
 use tokio::time;
 use tracing::debug;
 

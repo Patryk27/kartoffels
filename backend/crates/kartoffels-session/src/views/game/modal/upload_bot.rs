@@ -2,14 +2,14 @@ use super::{BotCount, BotPosition};
 use crate::views::game::{BotSource, Event};
 use kartoffels_store::{SessionId, SessionUploadInterest, Store};
 use kartoffels_ui::{
-    theme, Button, FromMarkdown, Spinner, TermEndpoint, Ui, UiWidget,
+    theme, Button, FromMarkdown, InputEvent, KeyCode, Modifiers, Spinner,
+    TermFrontend, Ui, UiWidget,
 };
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, WidgetRef, Wrap};
 use std::cmp;
 use std::time::Instant;
-use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct UploadBotModal {
@@ -36,12 +36,12 @@ impl UploadBotModal {
     }
 
     pub fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
-        match ui.endpoint {
-            TermEndpoint::Ssh => {
+        match ui.frontend {
+            TermFrontend::Ssh => {
                 self.render_ssh(ui, sess);
             }
 
-            TermEndpoint::Web => {
+            TermFrontend::Web => {
                 // We don't render anything for the web terminal, since it opens
                 // a file picker instead
             }

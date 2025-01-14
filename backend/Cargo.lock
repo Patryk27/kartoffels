@@ -2063,7 +2063,6 @@ dependencies = [
  "rand",
  "rand_chacha",
  "ratatui",
- "termwiz",
  "tokio",
  "tokio-stream",
  "tracing",

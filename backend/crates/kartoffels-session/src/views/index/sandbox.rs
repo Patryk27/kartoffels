@@ -9,10 +9,9 @@ use crate::Background;
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, Term, Ui, UiWidget};
+use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{ArenaTheme, DungeonTheme, Theme};
 use std::ops::ControlFlow;
-use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub async fn run(

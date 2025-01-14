@@ -17,9 +17,8 @@ pub use self::spawn_bot::*;
 pub use self::upload_bot::*;
 use super::Event;
 use kartoffels_store::SessionId;
-use kartoffels_ui::{Backdrop, Ui};
+use kartoffels_ui::{Backdrop, KeyCode, Modifiers, Ui};
 use kartoffels_world::prelude::Snapshot;
-use termwiz::input::{KeyCode, Modifiers};
 
 #[allow(clippy::type_complexity)]
 pub enum Modal {

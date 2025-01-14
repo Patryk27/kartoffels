@@ -20,7 +20,7 @@ mod prelude {
     pub(super) use anyhow::Result;
     pub(super) use glam::*;
     pub(super) use kartoffels_bots::DUMMY;
-    pub(super) use kartoffels_ui::{theme, Msg, MsgButton, MsgLine};
+    pub(super) use kartoffels_ui::{theme, KeyCode, Msg, MsgButton, MsgLine};
     pub(super) use kartoffels_world::prelude::*;
     pub(super) use ratatui::style::Stylize;
     pub(super) use ratatui::text::Span;
@@ -28,6 +28,5 @@ mod prelude {
     pub(super) use std::ops::ControlFlow;
     pub(super) use std::sync::LazyLock;
     pub(super) use std::time::Duration;
-    pub(super) use termwiz::input::KeyCode;
     pub(super) use tokio::time;
 }

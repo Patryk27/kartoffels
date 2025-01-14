@@ -6,7 +6,7 @@ use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_bots::DUMMY;
 use kartoffels_store::Store;
-use kartoffels_ui::{Msg, MsgButton, MsgLine};
+use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     BotId, Config, CreateBotRequest, Dir, Handle, Map, MapBuilder, Policy,
     TileKind,
@@ -14,7 +14,6 @@ use kartoffels_world::prelude::{
 use rand::RngCore;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
-use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub static CHALLENGE: Challenge = Challenge {

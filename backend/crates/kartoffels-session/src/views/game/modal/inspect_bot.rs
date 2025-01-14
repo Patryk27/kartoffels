@@ -1,12 +1,11 @@
 use crate::views::game::Event as ParentEvent;
 use chrono::Utc;
-use kartoffels_ui::{theme, Button, RectExt, Ui, UiWidget};
+use kartoffels_ui::{theme, Button, KeyCode, RectExt, Ui, UiWidget};
 use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
 use ratatui::layout::Constraint;
 use ratatui::style::Stylize;
 use ratatui::widgets::{Cell, Row, Table};
 use std::fmt;
-use termwiz::input::KeyCode;
 
 #[derive(Clone, Debug)]
 pub struct InspectBotModal {
@@ -54,7 +53,7 @@ impl InspectBotModal {
         ui.row(|ui| {
             for (idx, tab) in Tab::all().enumerate() {
                 if idx > 0 {
-                    ui.space(2);
+                    ui.span(" • ");
                 }
 
                 ui.render(if self.tab == tab {

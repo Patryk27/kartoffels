@@ -13,3 +13,4 @@ pub use self::render::*;
 pub use self::term::*;
 pub use self::ui::*;
 pub use self::utils::*;
+pub use termwiz::input::{InputEvent, KeyCode, Modifiers};

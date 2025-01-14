@@ -6,7 +6,7 @@ use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
 use futures_util::future::BoxFuture;
 use kartoffels_store::Store;
-use termwiz::input::KeyCode;
+use kartoffels_ui::KeyCode;
 
 const CONFIG: Config = Config {
     enabled: true,

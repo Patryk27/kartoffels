@@ -1,10 +1,9 @@
 use super::{Event, Mode, State};
-use kartoffels_ui::{theme, Button, Ui, UiWidget};
+use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use kartoffels_world::prelude::Clock;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
-use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct BottomPanel;

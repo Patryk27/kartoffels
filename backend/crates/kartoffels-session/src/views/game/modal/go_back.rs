@@ -1,7 +1,6 @@
 use crate::views::game::Event;
-use kartoffels_ui::{theme, Button, Ui, UiWidget};
+use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use ratatui::text::Line;
-use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct GoBackModal;

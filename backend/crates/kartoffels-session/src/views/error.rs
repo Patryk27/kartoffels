@@ -1,8 +1,7 @@
 use crate::Background;
 use anyhow::{Error, Result};
-use kartoffels_ui::{Button, RectExt, Term, UiWidget};
+use kartoffels_ui::{Button, KeyCode, RectExt, Term, UiWidget};
 use ratatui::widgets::{Paragraph, WidgetRef};
-use termwiz::input::KeyCode;
 use tracing::debug;
 
 pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {

@@ -1,14 +1,13 @@
 use crate::views::game::Event;
 use crate::BotIdExt;
 use kartoffels_ui::{
-    Button, FnUiWidget, RectExt, Ui, UiWidget, VRow, WidgetList,
+    Button, FnUiWidget, KeyCode, RectExt, Ui, UiWidget, VRow, WidgetList,
     WidgetListState,
 };
 use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
-use termwiz::input::KeyCode;
 
 #[derive(Debug, Default)]
 pub struct BotsModal {
@@ -33,8 +32,7 @@ impl BotsModal {
                 .add(Span::raw("nth"))
                 .add(Span::raw("id"))
                 .add(Span::raw("age"))
-                .add(Span::raw("score"))
-                .add(Span::raw("action"));
+                .add(Span::raw("score"));
 
             ui.space(1);
 

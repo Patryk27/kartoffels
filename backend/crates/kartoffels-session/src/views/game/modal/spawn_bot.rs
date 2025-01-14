@@ -6,8 +6,7 @@ pub use self::bot_count::*;
 pub use self::bot_position::*;
 pub use self::bot_source::*;
 use super::{Event as ParentEvent, UploadBotRequest};
-use kartoffels_ui::{Button, Ui, UiWidget};
-use termwiz::input::KeyCode;
+use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 
 #[derive(Debug, Default)]
 pub struct SpawnBotModal {

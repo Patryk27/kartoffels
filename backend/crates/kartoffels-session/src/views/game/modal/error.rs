@@ -1,7 +1,6 @@
 use crate::views::game::Event;
-use kartoffels_ui::{Button, RectExt, Ui, UiWidget};
+use kartoffels_ui::{Button, KeyCode, RectExt, Ui, UiWidget};
 use ratatui::widgets::Paragraph;
-use termwiz::input::KeyCode;
 
 #[derive(Debug)]
 pub struct ErrorModal {
