@@ -13,7 +13,6 @@ use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
 use std::borrow::Cow;
 use std::ops::ControlFlow;
 
-#[derive(Debug)]
 pub enum Event {
     GoBack {
         needs_confirmation: bool,
@@ -27,6 +26,9 @@ pub enum Event {
     },
     TogglePause,
     CloseModal,
+    OpenModal {
+        modal: Box<Modal>,
+    },
     OpenBotsModal,
     OpenErrorModal {
         error: String,
@@ -50,7 +52,7 @@ pub enum Event {
     DeleteBot,
     FollowBot,
     InspectBot {
-        id: Option<BotId>,
+        id: BotId,
     },
     Overclock {
         clock: Clock,
@@ -69,7 +71,8 @@ impl Event {
             Event::GoBack { needs_confirmation } => match &state.mode {
                 Mode::Default => {
                     if needs_confirmation {
-                        state.modal = Some(Modal::GoBack(GoBackModal));
+                        state.modal =
+                            Some(Box::new(Modal::GoBack(GoBackModal)));
                     } else {
                         return Ok(ControlFlow::Break(()));
                     }
@@ -115,24 +118,31 @@ impl Event {
                 state.modal = None;
             }
 
+            Event::OpenModal { modal } => {
+                state.modal = Some(modal);
+            }
+
             Event::OpenBotsModal => {
-                state.modal = Some(Modal::Bots(BotsModal::default()));
+                state.modal = Some(Box::new(Modal::Bots(BotsModal::default())));
             }
 
             Event::OpenHelpModal => {
-                state.modal = Some(Modal::Help(state.help.unwrap()));
+                state.modal = Some(Box::new(Modal::Help(state.help.unwrap())));
             }
 
             Event::OpenErrorModal { error } => {
-                state.modal = Some(Modal::Error(ErrorModal::new(error)));
+                state.modal =
+                    Some(Box::new(Modal::Error(ErrorModal::new(error))));
             }
 
             Event::OpenJoinBotModal => {
-                state.modal = Some(Modal::JoinBot(JoinBotModal::default()));
+                state.modal =
+                    Some(Box::new(Modal::JoinBot(JoinBotModal::default())));
             }
 
             Event::OpenSpawnBotModal => {
-                state.modal = Some(Modal::SpawnBot(SpawnBotModal::default()));
+                state.modal =
+                    Some(Box::new(Modal::SpawnBot(SpawnBotModal::default())));
             }
 
             Event::OpenUploadBotModal { request } => match request.source {
@@ -143,8 +153,8 @@ impl Event {
                         term.send(vec![0x04]).await?;
                     }
 
-                    state.modal = Some(Modal::UploadBot(UploadBotModal::new(
-                        request, store, sess,
+                    state.modal = Some(Box::new(Modal::UploadBot(
+                        UploadBotModal::new(request, store, sess),
                     )));
                 }
 
@@ -195,14 +205,9 @@ impl Event {
             }
 
             Event::InspectBot { id } => {
-                if let Some(id) = id {
-                    // TODO back to bot list
-                    state.modal =
-                        Some(Modal::InspectBot(InspectBotModal::new(id)));
-                } else if let Some(bot) = &state.bot {
-                    state.modal =
-                        Some(Modal::InspectBot(InspectBotModal::new(bot.id)));
-                }
+                state.modal = Some(Box::new(Modal::InspectBot(
+                    InspectBotModal::new(id, state.modal.take()),
+                )));
             }
 
             Event::Overclock { clock } => {
@@ -254,8 +259,10 @@ impl State {
                     Ok(src) => Cow::Owned(src),
 
                     Err(err) => {
-                        self.modal = Some(Modal::Error(ErrorModal::new(
-                            format!("couldn't decode pasted content:\n\n{err}"),
+                        self.modal = Some(Box::new(Modal::Error(
+                            ErrorModal::new(format!(
+                                "couldn't decode pasted content:\n\n{err}"
+                            )),
                         )));
 
                         return Ok(());
@@ -278,8 +285,9 @@ impl State {
             Ok(id) => id,
 
             Err(err) => {
-                self.modal =
-                    Some(Modal::Error(ErrorModal::new(format!("{err:?}"))));
+                self.modal = Some(Box::new(Modal::Error(ErrorModal::new(
+                    format!("{err:?}"),
+                ))));
 
                 return Ok(());
             }

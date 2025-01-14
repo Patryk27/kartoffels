@@ -108,7 +108,7 @@ struct State {
     handle: Option<WorldHandle>,
     help: Option<HelpMsgRef>,
     map: Map,
-    modal: Option<Modal>,
+    modal: Option<Box<Modal>>,
     mode: Mode,
     paused: bool,
     restart: Option<oneshot::Sender<()>>,

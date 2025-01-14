@@ -19,7 +19,7 @@ impl<'a, 'b, T> VRow<'a, 'b, T> {
         }
     }
 
-    pub fn add(&mut self, widget: impl UiWidget<T>) -> &mut Self {
+    pub fn column(mut self, widget: impl UiWidget<T>) -> Self {
         let width = self.widths[self.col];
 
         let area = Rect {

@@ -119,7 +119,7 @@ impl JoinedSidePanel {
 
         btns.push(
             Button::new(KeyCode::Char('i'), "inspect-bot")
-                .throwing(Event::InspectBot { id: None }),
+                .throwing(Event::InspectBot { id: bot.id }),
         );
 
         if state.config.can_restart_bots {

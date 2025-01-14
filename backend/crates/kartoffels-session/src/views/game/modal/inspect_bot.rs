@@ -1,3 +1,4 @@
+use super::Modal;
 use crate::views::game::Event as ParentEvent;
 use chrono::Utc;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
@@ -7,17 +8,18 @@ use ratatui::style::Stylize;
 use ratatui::widgets::{Cell, Row, Table};
 use std::fmt;
 
-#[derive(Clone, Debug)]
 pub struct InspectBotModal {
     id: BotId,
     tab: Tab,
+    parent: Option<Box<Modal>>,
 }
 
 impl InspectBotModal {
-    pub fn new(id: BotId) -> Self {
+    pub fn new(id: BotId, parent: Option<Box<Modal>>) -> Self {
         Self {
             id,
             tab: Default::default(),
+            parent,
         }
     }
 
@@ -192,7 +194,13 @@ impl InspectBotModal {
 
     fn handle(&mut self, event: Event) -> Option<ParentEvent> {
         match event {
-            Event::GoBack => Some(ParentEvent::CloseModal),
+            Event::GoBack => {
+                if let Some(modal) = self.parent.take() {
+                    Some(ParentEvent::OpenModal { modal })
+                } else {
+                    Some(ParentEvent::CloseModal)
+                }
+            }
 
             Event::ChangeTab(tab) => {
                 self.tab = tab;

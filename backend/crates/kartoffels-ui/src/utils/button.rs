@@ -78,7 +78,7 @@ impl<'a, T> Button<'a, T> {
             let keys = self
                 .options
                 .iter()
-                .map(|(key, _)| Self::key_name(key.unwrap()).len() as u16)
+                .map(|(key, _)| Self::key_name_len(key.unwrap()))
                 .sum::<u16>();
 
             let slashes = (self.options.len() - 1) as u16;
@@ -172,13 +172,29 @@ impl<'a, T> Button<'a, T> {
         (key, label)
     }
 
-    fn key_name(key: KeyCode) -> String {
+    fn key_name(key: KeyCode) -> Cow<'static, str> {
         match key {
-            KeyCode::Char(' ') => "spc".into(),
-            KeyCode::Char(ch) => ch.to_string(),
-            KeyCode::Tab => "tab".into(),
-            KeyCode::Enter => "enter".into(),
-            KeyCode::Escape => "esc".into(),
+            KeyCode::Char(' ') => Cow::Borrowed("spc"),
+            KeyCode::Char(ch) => Cow::Owned(ch.to_string()),
+            KeyCode::Tab => Cow::Borrowed("tab"),
+            KeyCode::Enter => Cow::Borrowed("enter"),
+            KeyCode::Escape => Cow::Borrowed("esc"),
+            KeyCode::UpArrow => Cow::Borrowed("↑"),
+            KeyCode::DownArrow => Cow::Borrowed("↓"),
+
+            key => unimplemented!("{:?}", key),
+        }
+    }
+
+    fn key_name_len(key: KeyCode) -> u16 {
+        match key {
+            KeyCode::Char(' ') => 3,
+            KeyCode::Char(_) => 1,
+            KeyCode::Tab => 3,
+            KeyCode::Enter => 5,
+            KeyCode::Escape => 3,
+            KeyCode::UpArrow => 1,
+            KeyCode::DownArrow => 1,
 
             key => unimplemented!("{:?}", key),
         }

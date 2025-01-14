@@ -198,7 +198,7 @@ impl GameCtrlEvent {
             }
 
             GameCtrlEvent::SetModal(modal) => {
-                state.modal = modal.map(Modal::Custom);
+                state.modal = modal.map(Modal::Custom).map(Box::new);
             }
 
             GameCtrlEvent::SetHelp(help) => {
