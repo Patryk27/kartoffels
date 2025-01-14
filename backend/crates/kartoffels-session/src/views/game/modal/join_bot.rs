@@ -90,6 +90,11 @@ impl JoinBotModal {
     fn handle_confirm(&self, ui: &mut Ui<Event>, world: &Snapshot) {
         let id = self.id.trim();
 
+        if id.is_empty() {
+            ui.throw(Event::CloseModal);
+            return;
+        }
+
         let Ok(id) = id.parse() else {
             ui.throw(Event::OpenErrorModal {
                 error: format!("`{}` is not a valid bot id", self.id),
