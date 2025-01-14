@@ -1,11 +1,11 @@
 use crate::views::game::Event;
 use crate::BotIdExt;
 use kartoffels_ui::{
-    Button, FnUiWidget, KeyCode, RectExt, Ui, UiWidget, VRow, WidgetList,
+    Button, FnUiWidget, KeyCode, Ui, UiWidget, VRow, WidgetList,
     WidgetListState,
 };
 use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
-use ratatui::layout::Rect;
+use ratatui::layout::{Constraint, Layout};
 use ratatui::style::Stylize;
 use ratatui::text::Span;
 
@@ -28,58 +28,66 @@ impl BotsModal {
         let height = ui.area.height - 2;
 
         ui.info_window(width, height, Some(" bots "), |ui| {
-            VRow::new(ui, Self::WIDTHS)
-                .add(Span::raw("nth"))
-                .add(Span::raw("id"))
-                .add(Span::raw("age"))
-                .add(Span::raw("score"));
+            let [body_area, _, footer_area] = Layout::vertical([
+                Constraint::Fill(1),
+                Constraint::Length(1),
+                Constraint::Length(1),
+            ])
+            .areas(ui.area);
 
-            ui.space(1);
-
-            let rows = world
-                .bots
-                .alive
-                .iter_sorted_by_scores()
-                .enumerate()
-                .map(|(nth, bot)| BotsModalRow { nth, bot });
-
-            let area = Rect {
-                height: ui.area.height - 2,
-                ..ui.area
-            };
-
-            ui.clamp(area, |ui| {
-                WidgetList::new(rows, &mut self.state).render(ui);
+            ui.clamp(body_area, |ui| {
+                self.render_body(ui, world);
             });
+
+            ui.clamp(footer_area, |ui| {
+                self.render_footer(ui);
+            });
+        });
+    }
+
+    fn render_body(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
+        VRow::new(ui, Self::WIDTHS)
+            .add(Span::raw("nth"))
+            .add(Span::raw("id"))
+            .add(Span::raw("age"))
+            .add(Span::raw("score"));
+
+        ui.space(1);
+
+        let rows = world
+            .bots
+            .alive
+            .iter_sorted_by_scores()
+            .enumerate()
+            .map(|(nth, bot)| BotsModalRow { nth, bot });
+
+        WidgetList::new(rows, &mut self.state).render(ui);
+    }
+
+    fn render_footer(&mut self, ui: &mut Ui<Event>) {
+        ui.row(|ui| {
+            if Button::new(KeyCode::Char('w'), "scroll-up")
+                .render(ui)
+                .pressed
+            {
+                self.state.offset = self.state.offset.saturating_sub(8);
+            }
 
             ui.space(2);
 
-            ui.clamp(ui.area.footer(1), |ui| {
-                ui.row(|ui| {
-                    if Button::new(KeyCode::Char('w'), "scroll-up")
-                        .render(ui)
-                        .pressed
-                    {
-                        self.state.offset = self.state.offset.saturating_sub(8);
-                    }
+            if Button::new(KeyCode::Char('s'), "scroll-down")
+                .render(ui)
+                .pressed
+            {
+                self.state.offset = self.state.offset.saturating_add(8);
+            }
 
-                    ui.space(2);
+            ui.space(2);
 
-                    if Button::new(KeyCode::Char('s'), "scroll-down")
-                        .render(ui)
-                        .pressed
-                    {
-                        self.state.offset = self.state.offset.saturating_add(8);
-                    }
-
-                    ui.space(2);
-
-                    Button::new(KeyCode::Escape, "close")
-                        .throwing(Event::CloseModal)
-                        .right_aligned()
-                        .render(ui);
-                });
-            });
+            Button::new(KeyCode::Escape, "close")
+                .throwing(Event::CloseModal)
+                .right_aligned()
+                .render(ui);
         });
     }
 }

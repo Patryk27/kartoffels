@@ -1,8 +1,8 @@
 use crate::views::game::Event as ParentEvent;
 use chrono::Utc;
-use kartoffels_ui::{theme, Button, KeyCode, RectExt, Ui, UiWidget};
+use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
-use ratatui::layout::Constraint;
+use ratatui::layout::{Constraint, Layout};
 use ratatui::style::Stylize;
 use ratatui::widgets::{Cell, Row, Table};
 use std::fmt;
@@ -28,15 +28,18 @@ impl InspectBotModal {
             let title = format!(" bots › {} › {} ", self.id, self.tab);
 
             ui.info_window(width, height, Some(&title), |ui| {
-                ui.clamp(ui.area.header(1), |ui| {
-                    self.render_header(ui);
+                let [body_area, _, footer_area] = Layout::vertical([
+                    Constraint::Fill(1),
+                    Constraint::Length(1),
+                    Constraint::Length(1),
+                ])
+                .areas(ui.area);
+
+                ui.clamp(body_area, |ui| {
+                    self.render_body(ui, world);
                 });
 
-                ui.space(2);
-
-                self.render_body(ui, world);
-
-                ui.clamp(ui.area.footer(1), |ui| {
+                ui.clamp(footer_area, |ui| {
                     self.render_footer(ui);
                 });
             });
@@ -47,22 +50,6 @@ impl InspectBotModal {
                 ui.throw(event);
             }
         }
-    }
-
-    fn render_header(&self, ui: &mut Ui<Event>) {
-        ui.row(|ui| {
-            for (idx, tab) in Tab::all().enumerate() {
-                if idx > 0 {
-                    ui.span(" • ");
-                }
-
-                ui.render(if self.tab == tab {
-                    tab.btn().bold()
-                } else {
-                    tab.btn()
-                });
-            }
-        });
     }
 
     fn render_body(&self, ui: &mut Ui<Event>, world: &Snapshot) {
@@ -163,10 +150,24 @@ impl InspectBotModal {
     }
 
     fn render_footer(&self, ui: &mut Ui<Event>) {
-        Button::new(KeyCode::Escape, "close")
-            .throwing(Event::GoBack)
-            .right_aligned()
-            .render(ui);
+        ui.row(|ui| {
+            for (idx, tab) in Tab::all().enumerate() {
+                if idx > 0 {
+                    ui.span(" • ");
+                }
+
+                ui.render(if self.tab == tab {
+                    tab.btn().bold()
+                } else {
+                    tab.btn()
+                });
+            }
+
+            Button::new(KeyCode::Escape, "close")
+                .throwing(Event::GoBack)
+                .right_aligned()
+                .render(ui);
+        });
     }
 
     fn handle(&mut self, event: Event) -> Option<ParentEvent> {

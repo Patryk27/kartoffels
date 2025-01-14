@@ -2,7 +2,7 @@ use super::FromMarkdown;
 use crate::{Button, Ui, UiWidget};
 use ratatui::style::{Style, Styled};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{Paragraph, WidgetRef};
+use ratatui::widgets::Paragraph;
 use std::cmp;
 use termwiz::input::KeyCode;
 
@@ -33,7 +33,7 @@ where
         let height = body.line_count(width) as u16 + 2;
 
         ui.info_window(width, height, self.title, |ui| {
-            body.render_ref(ui.area, ui.buf);
+            ui.render(&body);
             ui.space(height - 1);
 
             ui.row(|ui| {

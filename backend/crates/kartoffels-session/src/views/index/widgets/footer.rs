@@ -1,5 +1,5 @@
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, RectExt, Ui, UiWidget};
+use kartoffels_ui::{theme, Ui, UiWidget};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -17,8 +17,9 @@ impl Footer {
 
         let area = Rect {
             x: ui.area.width - text.len() as u16,
+            y: ui.area.height - 1,
             width: text.len() as u16,
-            ..ui.area.footer(1)
+            height: 1,
         };
 
         ui.clamp(area, |ui| {

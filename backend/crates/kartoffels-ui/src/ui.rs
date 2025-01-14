@@ -4,7 +4,7 @@ use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
-use ratatui::widgets::{Block, Padding, Paragraph, WidgetRef, Wrap};
+use ratatui::widgets::{Block, Padding, Paragraph, Wrap};
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -101,8 +101,8 @@ impl<T> Ui<'_, T> {
 
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         Clear::render(self);
-        block.render_ref(self.area, self.buf);
 
+        self.render(&block);
         self.clamp(block.inner(self.area), f);
     }
 

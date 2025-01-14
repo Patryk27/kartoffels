@@ -7,7 +7,7 @@ use kartoffels_ui::{
 };
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Paragraph, WidgetRef, Wrap};
+use ratatui::widgets::{Paragraph, Wrap};
 use std::cmp;
 use std::time::Instant;
 
@@ -87,7 +87,7 @@ impl UploadBotModal {
         let height = body_height + 4;
 
         ui.info_window(width, height, Some(" upload-bot "), |ui| {
-            body.render_ref(ui.area, ui.buf);
+            ui.render(&body);
             ui.space(body_height + 1);
 
             if let Some(alert) = &self.alert {
