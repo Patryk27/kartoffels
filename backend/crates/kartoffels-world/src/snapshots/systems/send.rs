@@ -2,8 +2,8 @@ use crate::{
     AliveBotSnapshot, AliveBots, AliveBotsSnapshot, Bots, BotsSnapshot, Clock,
     DeadBotSnapshot, DeadBots, DeadBotsSnapshot, Events, Map, ObjectSnapshot,
     Objects, ObjectsSnapshot, QueuedBotSnapshot, QueuedBots,
-    QueuedBotsSnapshot, Runs, RunsSnapshot, Snapshot, Snapshots, Tile,
-    TileKind,
+    QueuedBotsSnapshot, Runs, RunsSnapshot, Snapshot, Snapshots, Stats,
+    StatsSnapshot, Tile, TileKind,
 };
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut};
@@ -32,6 +32,7 @@ pub fn send(
     map: Res<Map>,
     objects: Res<Objects>,
     runs: Res<Runs>,
+    stats: Res<Stats>,
     mut bots: ResMut<Bots>,
     mut events: Option<ResMut<Events>>,
     snapshots: Res<Snapshots>,
@@ -53,6 +54,10 @@ pub fn send(
             entries: runs.entries.clone(),
         };
 
+        let stats = StatsSnapshot {
+            entries: stats.entries.clone(),
+        };
+
         let map = prepare_map(&bots, &map, &objects);
         let objects = prepare_objects(&objects);
         let tiles = map.clone();
@@ -63,6 +68,7 @@ pub fn send(
             map,
             objects,
             runs,
+            stats,
             tiles,
             version: state.version,
         })

@@ -59,6 +59,7 @@ pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::runs::*;
 pub(crate) use self::snapshots::*;
+pub(crate) use self::stats::*;
 pub(crate) use self::storage::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
@@ -174,6 +175,7 @@ fn create_world(res: Resources) -> World {
     world.insert_resource(Objects::default()); // TODO persist
     world.insert_resource(Paused::default());
     world.insert_resource(Spawn::default());
+    world.insert_resource(Stats::default());
     world.insert_resource(TickFuel::default());
 
     // ---
@@ -260,9 +262,10 @@ fn create_schedule() -> Schedule {
         bots::kill,
         events::track,
         runs::update,
+        stats::update,
         snapshots::send,
         storage::save,
-        stats::log,
+        lifecycle::log,
         clock::sleep,
         bevy_ecs::event::event_update_system,
     );

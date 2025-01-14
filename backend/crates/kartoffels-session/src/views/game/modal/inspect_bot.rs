@@ -17,7 +17,7 @@ impl InspectBotModal {
     pub fn new(id: BotId) -> Self {
         Self {
             id,
-            tab: Tab::Events,
+            tab: Default::default(),
         }
     }
 
@@ -25,7 +25,7 @@ impl InspectBotModal {
         let event = ui.catch(|ui| {
             let width = ui.area.width - 8;
             let height = ui.area.height - 4;
-            let title = format!(" bots › {} › {} ", self.id, self.tab);
+            let title = format!(" bots › {} ", self.id);
 
             ui.info_window(width, height, Some(&title), |ui| {
                 let [body_area, _, footer_area] = Layout::vertical([
@@ -54,6 +54,9 @@ impl InspectBotModal {
 
     fn render_body(&self, ui: &mut Ui<Event>, world: &Snapshot) {
         match self.tab {
+            Tab::Stats => {
+                self.render_body_stats(ui, world);
+            }
             Tab::Events => {
                 self.render_body_events(ui, world);
             }
@@ -61,6 +64,23 @@ impl InspectBotModal {
                 self.render_body_runs(ui, world);
             }
         }
+    }
+
+    fn render_body_stats(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+        if let Some(BotSnapshot::Alive(bot)) = world.bots.get(self.id) {
+            ui.line(format!("age = {} vcpu-cycles", bot.age));
+            ui.line(format!("    = {}s", bot.age_seconds()));
+            ui.space(1);
+        }
+
+        let Some(stats) = world.stats.get(self.id) else {
+            return;
+        };
+
+        ui.line(format!("sum(scores) = {}", stats.scores_sum));
+        ui.line(format!("len(scores) = {}", stats.scores_len));
+        ui.line(format!("avg(scores) = {:.2}", stats.scores_avg));
+        ui.line(format!("max(scores) = {}", stats.scores_max));
     }
 
     fn render_body_events(&self, ui: &mut Ui<Event>, world: &Snapshot) {
@@ -191,29 +211,31 @@ enum Event {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 enum Tab {
     #[default]
+    Stats,
     Events,
     Runs,
 }
 
 impl Tab {
     fn all() -> impl Iterator<Item = Self> {
-        [Self::Events, Self::Runs].into_iter()
+        [Self::Stats, Self::Events, Self::Runs].into_iter()
     }
 
     fn btn(&self) -> Button<Event> {
-        match self {
-            Tab::Events => Button::new(KeyCode::Char('e'), "events")
-                .throwing(Event::ChangeTab(Self::Events)),
+        let btn = match self {
+            Tab::Stats => Button::new(KeyCode::Char('s'), "stats"),
+            Tab::Events => Button::new(KeyCode::Char('e'), "events"),
+            Tab::Runs => Button::new(KeyCode::Char('r'), "runs"),
+        };
 
-            Tab::Runs => Button::new(KeyCode::Char('r'), "runs")
-                .throwing(Event::ChangeTab(Self::Runs)),
-        }
+        btn.throwing(Event::ChangeTab(*self))
     }
 }
 
 impl fmt::Display for Tab {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Stats => write!(f, "stats"),
             Self::Events => write!(f, "events"),
             Self::Runs => write!(f, "runs"),
         }

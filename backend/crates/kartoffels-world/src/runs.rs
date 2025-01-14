@@ -38,6 +38,7 @@ pub fn update(mut runs: ResMut<Runs>, mut events: EventReader<Event>) {
                             spawned_at: Utc::now(),
                         },
                         prev: Default::default(),
+                        len: 0,
                     }));
                 }
             },
@@ -71,6 +72,7 @@ pub fn update(mut runs: ResMut<Runs>, mut events: EventReader<Event>) {
 pub struct BotRuns {
     pub curr: CurrBotRun,
     pub prev: VecDeque<PrevBotRun>,
+    pub len: u32, // TODO not used
 }
 
 impl BotRuns {
@@ -90,7 +92,31 @@ impl BotRuns {
         });
 
         self.curr = Default::default();
+        self.len += 1;
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = BotRun> + '_ {
+        let curr = self.curr.is_some().then_some(BotRun {
+            score: self.curr.score,
+            spawned_at: self.curr.spawned_at,
+            killed_at: None,
+        });
+
+        let prev = self.prev.iter().map(|run| BotRun {
+            score: run.score,
+            spawned_at: run.spawned_at,
+            killed_at: Some(run.killed_at),
+        });
+
+        curr.into_iter().chain(prev)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BotRun {
+    pub score: u32,
+    pub spawned_at: DateTime<Utc>,
+    pub killed_at: Option<DateTime<Utc>>,
 }
 
 #[derive(

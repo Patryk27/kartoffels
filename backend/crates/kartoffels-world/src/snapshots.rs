@@ -3,7 +3,9 @@ mod systems;
 
 pub use self::stream::*;
 pub use self::systems::*;
-use crate::{BotEvent, BotId, BotRuns, Clock, Dir, Map, Object, ObjectId};
+use crate::{
+    BotEvent, BotId, BotRuns, BotStats, Clock, Dir, Map, Object, ObjectId,
+};
 use ahash::AHashMap;
 use bevy_ecs::system::Resource;
 use chrono::{DateTime, Utc};
@@ -16,13 +18,14 @@ use std::fmt;
 use std::sync::Arc;
 use tokio::sync::watch;
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default)]
 pub struct Snapshot {
     pub bots: BotsSnapshot,
     pub clock: Clock,
     pub map: Map,
     pub objects: ObjectsSnapshot,
     pub runs: RunsSnapshot,
+    pub stats: StatsSnapshot,
     pub tiles: Map,
     pub version: u64,
 }
@@ -91,7 +94,7 @@ impl fmt::Display for BotsSnapshot {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug)]
 pub enum BotSnapshot<'a> {
     Alive(&'a AliveBotSnapshot),
     Dead(&'a DeadBotSnapshot),
@@ -244,7 +247,7 @@ pub struct QueuedBotSnapshot {
     pub serial: Arc<VecDeque<u32>>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default)]
 pub struct ObjectsSnapshot {
     objects: Vec<ObjectSnapshot>,
 }
@@ -259,14 +262,14 @@ impl ObjectsSnapshot {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct ObjectSnapshot {
     pub id: ObjectId,
     pub obj: Object,
     pub pos: Option<IVec2>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default)]
 pub struct RunsSnapshot {
     entries: AHashMap<BotId, Arc<BotRuns>>,
 }
@@ -274,19 +277,11 @@ pub struct RunsSnapshot {
 impl RunsSnapshot {
     pub fn get(&self, id: BotId) -> impl Iterator<Item = BotRunSnapshot> + '_ {
         self.entries.get(&id).into_iter().flat_map(|runs| {
-            let curr = runs.curr.is_some().then(|| BotRunSnapshot {
-                score: runs.curr.score,
-                spawned_at: runs.curr.spawned_at,
-                killed_at: None,
-            });
-
-            let prev = runs.prev.iter().map(|run| BotRunSnapshot {
+            runs.iter().map(|run| BotRunSnapshot {
                 score: run.score,
                 spawned_at: run.spawned_at,
-                killed_at: Some(run.killed_at),
-            });
-
-            curr.into_iter().chain(prev)
+                killed_at: run.killed_at,
+            })
         })
     }
 }
@@ -296,6 +291,30 @@ pub struct BotRunSnapshot {
     pub score: u32,
     pub spawned_at: DateTime<Utc>,
     pub killed_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Default)]
+pub struct StatsSnapshot {
+    entries: Arc<AHashMap<BotId, BotStats>>,
+}
+
+impl StatsSnapshot {
+    pub fn get(&self, id: BotId) -> Option<BotStatsSnapshot> {
+        self.entries.get(&id).map(|stats| BotStatsSnapshot {
+            scores_sum: stats.scores_sum,
+            scores_len: stats.scores_len,
+            scores_avg: stats.scores_avg,
+            scores_max: stats.scores_max,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct BotStatsSnapshot {
+    pub scores_sum: u32,
+    pub scores_len: u32,
+    pub scores_avg: f32,
+    pub scores_max: u32,
 }
 
 #[derive(Debug, Resource)]

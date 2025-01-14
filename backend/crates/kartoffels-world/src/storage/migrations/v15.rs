@@ -41,7 +41,8 @@ pub fn run(world: &mut Value) {
                             .with_entry("spawned_at", now.clone()),
                     ),
                 )
-                .with_entry("prev", Value::Array(Vec::default()));
+                .with_entry("prev", Value::Array(Vec::default()))
+                .with_entry("len", Value::Integer(1.into()));
 
             (id, Value::Map(run))
         })
@@ -67,7 +68,8 @@ pub fn run(world: &mut Value) {
                         .with_entry("spawned_at", now.clone()),
                 ),
             )
-            .with_entry("prev", Value::Array(Vec::default()));
+            .with_entry("prev", Value::Array(Vec::default()))
+            .with_entry("len", Value::Integer(1.into()));
 
         runs.push((alive_bot_id.clone(), Value::Map(run)));
     }
@@ -137,28 +139,32 @@ mod tests {
                   "score": 100,
                   "spawned_at": "1970-01-01T00:00:00Z"
                 },
-                "prev": []
+                "prev": [],
+                "len": 1
               },
               "0000-0000-0000-0002": {
                 "curr": {
                   "score": 200,
                   "spawned_at": "1970-01-01T00:00:00Z"
                 },
-                "prev": []
+                "prev": [],
+                "len": 1
               },
               "0000-0000-0000-0004": {
                 "curr": {
                   "score": 300,
                   "spawned_at": "1970-01-01T00:00:00Z"
                 },
-                "prev": []
+                "prev": [],
+                "len": 1
               },
               "0000-0000-0000-0003": {
                 "curr": {
                   "score": 0,
                   "spawned_at": "1970-01-01T00:00:00Z"
                 },
-                "prev": []
+                "prev": [],
+                "len": 1
               }
             }
           }
