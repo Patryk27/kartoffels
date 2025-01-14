@@ -2,7 +2,7 @@ use crate::common;
 use anyhow::{anyhow, Result};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Term, TermEndpoint};
+use kartoffels_ui::{Term, TermFrontend};
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
@@ -143,7 +143,7 @@ impl AppChannel {
         };
 
         let size = uvec2(width, height);
-        let term = Term::new(TermEndpoint::Ssh, stdin_rx, stdout, size)?;
+        let term = Term::new(TermFrontend::Ssh, stdin_rx, stdout, size)?;
 
         Ok((term, stdin_tx))
     }

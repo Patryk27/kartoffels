@@ -13,7 +13,7 @@ impl Menu {
     }
 
     pub fn height<T>(store: &Store, ui: &Ui<T>) -> u16 {
-        let height = if ui.endpoint.is_ssh() { 7 } else { 5 };
+        let height = if ui.frontend.is_ssh() { 7 } else { 5 };
 
         if store.public_worlds().is_empty() {
             height
@@ -50,7 +50,7 @@ impl Menu {
                 .centered()
                 .render(ui);
 
-            if ui.endpoint.is_ssh() {
+            if ui.frontend.is_ssh() {
                 ui.space(1);
 
                 Button::new(KeyCode::Escape, "quit")

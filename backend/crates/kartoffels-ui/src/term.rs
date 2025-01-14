@@ -27,7 +27,7 @@ pub type Stdout = mpsc::Sender<Vec<u8>>;
 
 #[derive(Debug)]
 pub struct Term {
-    endpoint: TermEndpoint,
+    frontend: TermFrontend,
     stdin: Stdin,
     stdin_parser: InputParser,
     stdout: Stdout,
@@ -42,7 +42,7 @@ impl Term {
     pub const CMD_RESIZE: u8 = 0x04;
 
     pub fn new(
-        endpoint: TermEndpoint,
+        frontend: TermFrontend,
         stdin: Stdin,
         stdout: Stdout,
         size: UVec2,
@@ -61,7 +61,7 @@ impl Term {
         term.clear()?;
 
         Ok(Self {
-            endpoint,
+            frontend,
             stdin,
             stdin_parser: Default::default(),
             stdout,
@@ -73,8 +73,8 @@ impl Term {
         })
     }
 
-    pub fn endpoint(&self) -> TermEndpoint {
-        self.endpoint
+    pub fn frontend(&self) -> TermFrontend {
+        self.frontend
     }
 
     pub fn size(&self) -> UVec2 {
@@ -97,15 +97,15 @@ impl Term {
     pub async fn finalize(&mut self) -> Result<()> {
         let mut cmds = String::new();
 
-        match self.endpoint {
-            TermEndpoint::Ssh => {
+        match self.frontend {
+            TermFrontend::Ssh => {
                 _ = DisableMouseCapture.write_ansi(&mut cmds);
                 _ = DisableBracketedPaste.write_ansi(&mut cmds);
                 _ = LeaveAlternateScreen.write_ansi(&mut cmds);
                 _ = cursor::Show.write_ansi(&mut cmds);
             }
 
-            TermEndpoint::Web => {
+            TermFrontend::Web => {
                 _ = terminal::Clear(terminal::ClearType::All)
                     .write_ansi(&mut cmds);
 
@@ -155,7 +155,7 @@ impl Term {
                 let area = frame.area();
 
                 render(&mut Ui {
-                    endpoint: self.endpoint,
+                    frontend: self.frontend,
                     buf: frame.buffer_mut(),
                     area,
                     mouse: self.mouse.report().as_ref(),
@@ -226,7 +226,7 @@ impl Term {
                             return Err(Error::new(Abort { soft: true }));
                         }
 
-                        Abort::HARD_BINDING if self.endpoint.is_ssh() => {
+                        Abort::HARD_BINDING if self.frontend.is_ssh() => {
                             return Err(Error::new(Abort { soft: false }));
                         }
 
@@ -282,18 +282,18 @@ impl Term {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum TermEndpoint {
+pub enum TermFrontend {
     Ssh,
     Web,
 }
 
-impl TermEndpoint {
+impl TermFrontend {
     pub fn is_ssh(&self) -> bool {
-        matches!(self, TermEndpoint::Ssh)
+        matches!(self, TermFrontend::Ssh)
     }
 
     pub fn is_web(&self) -> bool {
-        matches!(self, TermEndpoint::Web)
+        matches!(self, TermFrontend::Web)
     }
 }
 

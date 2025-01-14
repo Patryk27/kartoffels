@@ -9,7 +9,7 @@ use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Stdin, Stdout, Term, TermEndpoint};
+use kartoffels_ui::{Stdin, Stdout, Term, TermFrontend};
 use serde::Deserialize;
 use std::io::Write;
 use std::net::SocketAddr;
@@ -84,7 +84,7 @@ fn create_term(socket: WebSocket, hello: HelloMsg) -> Result<Term> {
     let stdin = create_term_stdin(stdin);
     let stdout = create_term_stdout(stdout);
     let size = uvec2(hello.cols, hello.rows);
-    let term = Term::new(TermEndpoint::Web, stdin, stdout, size)?;
+    let term = Term::new(TermFrontend::Web, stdin, stdout, size)?;
 
     Ok(term)
 }

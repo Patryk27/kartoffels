@@ -139,7 +139,7 @@ impl Event {
                 BotSourceType::Upload => {
                     let request = request.with_source(());
 
-                    if term.endpoint().is_web() {
+                    if term.frontend().is_web() {
                         term.send(vec![0x04]).await?;
                     }
 

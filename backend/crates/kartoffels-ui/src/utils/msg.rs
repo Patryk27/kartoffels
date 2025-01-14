@@ -85,8 +85,8 @@ impl MsgLine {
 
     fn matches<E>(&self, ui: &Ui<E>) -> bool {
         match self.cond {
-            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.endpoint.is_ssh(),
-            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.endpoint.is_web(),
+            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.frontend.is_ssh(),
+            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.frontend.is_web(),
             None => true,
         }
     }
