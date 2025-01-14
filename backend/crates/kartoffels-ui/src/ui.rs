@@ -166,13 +166,14 @@ impl<T> Ui<'_, T> {
     }
 
     pub fn key(&self, key: KeyCode, mods: Modifiers) -> bool {
-        if let Some(InputEvent::Key(event)) = &self.event {
-            if event.key == key && event.modifiers == mods {
-                return true;
-            }
+        if let Some(InputEvent::Key(event)) = &self.event
+            && event.key == key
+            && event.modifiers == mods
+        {
+            true
+        } else {
+            false
         }
-
-        false
     }
 
     pub fn mouse_pos(&self) -> Option<UVec2> {

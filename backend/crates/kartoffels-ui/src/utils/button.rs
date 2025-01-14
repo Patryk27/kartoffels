@@ -257,12 +257,11 @@ impl<T> UiWidget<T> for Button<'_, T> {
             ui.space(1);
         }
 
-        if resp.pressed {
-            if let Some(idx) = resp.option {
-                if let Some(event) = self.options.swap_remove(idx).1 {
-                    ui.throw(event);
-                }
-            }
+        if resp.pressed
+            && let Some(idx) = resp.option
+            && let Some(event) = self.options.swap_remove(idx).1
+        {
+            ui.throw(event);
         }
 
         resp

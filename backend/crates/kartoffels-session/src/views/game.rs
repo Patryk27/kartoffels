@@ -91,10 +91,11 @@ async fn run_once(
 
         state.poll(term, &mut ctrl).await?;
 
-        if let Some(fade) = &fade {
-            if fade.dir() == FadeDir::Out && fade.is_completed() {
-                return Ok(());
-            }
+        if let Some(fade) = &fade
+            && fade.dir() == FadeDir::Out
+            && fade.is_completed()
+        {
+            return Ok(());
         }
     }
 }

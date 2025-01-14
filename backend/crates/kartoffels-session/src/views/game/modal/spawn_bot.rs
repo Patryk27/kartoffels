@@ -29,10 +29,10 @@ impl SpawnBotModal {
             });
         });
 
-        if let Some(event) = event {
-            if let Some(event) = self.handle(event) {
-                ui.throw(event);
-            }
+        if let Some(event) = event
+            && let Some(event) = self.handle(event)
+        {
+            ui.throw(event);
         }
     }
 

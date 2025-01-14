@@ -103,10 +103,10 @@ async fn run_once(
 
                 Footer::render(store, ui);
 
-                if let Some(fade) = &fade_in {
-                    if fade.render(ui).is_completed() {
-                        fade_in = None;
-                    }
+                if let Some(fade) = &fade_in
+                    && fade.render(ui).is_completed()
+                {
+                    fade_in = None;
                 }
 
                 if let Some((fade, _)) = &fade_out {
@@ -115,10 +115,10 @@ async fn run_once(
             })
             .await?;
 
-        if let Some((fade, resp)) = &fade_out {
-            if fade.is_completed() {
-                return Ok(*resp);
-            }
+        if let Some((fade, resp)) = &fade_out
+            && fade.is_completed()
+        {
+            return Ok(*resp);
         }
 
         if let Some(resp) = resp {

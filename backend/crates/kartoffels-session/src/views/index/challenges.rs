@@ -90,10 +90,10 @@ async fn run_once(
                         .render(ui);
                 });
 
-                if let Some(fade) = &fade_in {
-                    if fade.render(ui).is_completed() {
-                        fade_in = None;
-                    }
+                if let Some(fade) = &fade_in
+                    && fade.render(ui).is_completed()
+                {
+                    fade_in = None;
                 }
 
                 if let Some((fade, _)) = &fade_out {

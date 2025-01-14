@@ -39,10 +39,10 @@ pub async fn run(term: &mut Term) -> Result<()> {
                 Clear::render(ui);
                 MSG.render(ui);
 
-                if let Some(fade) = &fade_in {
-                    if fade.render(ui).is_completed() {
-                        fade_in = None;
-                    }
+                if let Some(fade) = &fade_in
+                    && fade.render(ui).is_completed()
+                {
+                    fade_in = None;
                 }
 
                 if let Some(fade) = &fade_out {

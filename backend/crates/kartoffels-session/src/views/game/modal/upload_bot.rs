@@ -61,12 +61,12 @@ impl UploadBotModal {
             }
         }
 
-        if let Some(upload) = &mut self.interest {
-            if let Some(src) = upload.try_recv() {
-                ui.throw(Event::UploadBot {
-                    request: self.request.with_source(BotSource::Binary(src)),
-                });
-            }
+        if let Some(upload) = &mut self.interest
+            && let Some(src) = upload.try_recv()
+        {
+            ui.throw(Event::UploadBot {
+                request: self.request.with_source(BotSource::Binary(src)),
+            });
         }
     }
 

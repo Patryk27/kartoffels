@@ -1,4 +1,5 @@
 #![feature(associated_type_defaults)]
+#![feature(let_chains)]
 
 mod abort;
 mod render;

@@ -85,10 +85,10 @@ async fn run_once(
             continue;
         }
 
-        if let Some(event) = event {
-            if let ControlFlow::Break(_) = view.handle(event) {
-                return Ok(None);
-            }
+        if let Some(event) = event
+            && let ControlFlow::Break(_) = view.handle(event)
+        {
+            return Ok(None);
         }
     }
 }
@@ -106,10 +106,10 @@ impl View<'_> {
         self.bg.render(ui);
         self.form.render(ui);
 
-        if let Some(fade) = &self.fade_in {
-            if fade.render(ui).is_completed() {
-                self.fade_in = None;
-            }
+        if let Some(fade) = &self.fade_in
+            && fade.render(ui).is_completed()
+        {
+            self.fade_in = None;
         }
 
         if let Some((fade, _)) = &self.fade_out {

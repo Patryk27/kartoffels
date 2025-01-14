@@ -74,10 +74,10 @@ impl GameCtrl {
                 msg.render(ui);
             });
 
-            if let Some(resp) = resp {
-                if let Some(tx) = tx.take() {
-                    _ = tx.send(resp);
-                }
+            if let Some(resp) = resp
+                && let Some(tx) = tx.take()
+            {
+                _ = tx.send(resp);
             }
         })
         .await?;
