@@ -12,11 +12,11 @@ mod config;
 mod events;
 mod handle;
 mod lifecycle;
+mod lives;
 mod map;
 mod object;
 mod objects;
 mod policy;
-mod runs;
 mod snapshots;
 mod spec;
 mod stats;
@@ -27,7 +27,7 @@ mod utils;
 pub mod cfg {
     pub const EVENT_STREAM_CAPACITY: usize = 128;
     pub const REQUEST_STREAM_CAPACITY: usize = 128;
-    pub const MAX_RUNS_PER_BOT: usize = 128;
+    pub const MAX_LIVES_PER_BOT: usize = 128;
 }
 
 pub mod prelude {
@@ -55,11 +55,11 @@ pub(crate) use self::config::*;
 pub(crate) use self::events::*;
 pub(crate) use self::handle::*;
 pub(crate) use self::lifecycle::*;
+pub(crate) use self::lives::*;
 pub(crate) use self::map::*;
 pub(crate) use self::object::*;
 pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
-pub(crate) use self::runs::*;
 pub(crate) use self::snapshots::*;
 pub(crate) use self::stats::*;
 pub(crate) use self::storage::*;
@@ -100,12 +100,12 @@ pub fn create(config: Config) -> Handle {
         bots: Default::default(),
         clock: config.clock,
         id: WorldId(id),
+        lives: Default::default(),
         map,
         name: WorldName(config.name),
         path: config.path.map(WorldPath),
         policy: config.policy,
         rng: WorldRng(rng),
-        runs: Default::default(),
         theme: config.theme,
     };
 
@@ -119,12 +119,12 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         bots: world.bots.into_owned(),
         clock: Default::default(),
         id: WorldId(id),
+        lives: world.lives.into_owned(),
         map: world.map.into_owned(),
         name: WorldName(world.name.into_owned()),
         path: Some(WorldPath(path.to_owned())),
         policy: world.policy.into_owned(),
         rng: WorldRng(ChaCha8Rng::from_entropy()),
-        runs: world.runs.into_owned(),
         theme: world.theme.map(|theme| theme.into_owned()),
     };
 
@@ -135,12 +135,12 @@ struct Resources {
     bots: Bots,
     clock: Clock,
     id: WorldId,
+    lives: Lives,
     map: Map,
     name: WorldName,
     path: Option<WorldPath>,
     policy: Policy,
     rng: WorldRng,
-    runs: Runs,
     theme: Option<Theme>,
 }
 
@@ -164,7 +164,7 @@ fn create_world(res: Resources) -> World {
     world.insert_resource(res.name);
     world.insert_resource(res.policy);
     world.insert_resource(res.rng);
-    world.insert_resource(res.runs);
+    world.insert_resource(res.lives);
 
     if let Some(path) = res.path {
         world.insert_resource(path);
@@ -240,22 +240,26 @@ fn spawn(world: World) {
     thread::spawn(move || {
         let _rt = rt.enter();
         let _span = span.enter();
-        let schedule = create_schedule();
+        let schedule = main_schedule();
 
         main(world, schedule);
     });
 }
 
-fn create_schedule() -> Schedule {
+fn schedule<M>(systems: impl IntoSystemConfigs<M>) -> Schedule {
     let mut schedule = Schedule::default();
 
     schedule.set_executor_kind(ExecutorKind::SingleThreaded);
+    schedule.add_systems(systems.chain());
+    schedule
+}
 
+fn main_schedule() -> Schedule {
     fn active(paused: Res<Paused>) -> bool {
         !paused.get()
     }
 
-    let systems = (
+    schedule((
         handle::communicate,
         bots::create,
         bots::schedule_spawn.run_if(active),
@@ -263,17 +267,14 @@ fn create_schedule() -> Schedule {
         bots::tick.run_if(active),
         bots::kill,
         events::track,
-        runs::update,
+        lives::update,
         stats::update,
         snapshots::send,
         storage::save,
         lifecycle::log,
         clock::sleep,
         bevy_ecs::event::event_update_system,
-    );
-
-    schedule.add_systems(systems.chain());
-    schedule
+    ))
 }
 
 fn main(mut world: World, mut schedule: Schedule) {

@@ -27,4 +27,4 @@ v4
 
 
                                                        [u] upload-bot
-[esc] go-back  [h] help  [spc] pause  [1/2/3] overclock
+[esc] go-back  [spc] pause  [h] help  [1/2/3] overclock

@@ -4,15 +4,14 @@
         │ in here you're playing against bots programmed by other      │
         │ people, deathmatch-style                                     │
         │                                                              │
-        │ i'm assuming you already went through the tutorial — if not, │
-        │ feel free to go back to the main menu and press [t], but     │
-        │ here's the spirit:                                           │
+        │ i assume you already went through the tutorial — if not,     │
+        │ feel free to go back to the main menu and press [t]          │
         │                                                              │
         │ # rules                                                      │
         │                                                              │
-        │ - your bot gets a point for each bot killed                  │
-        │ - unless the upload queue is full, each killed bot gets      │
-        │   auto-respawned upon death, to keep the party going         │
+        │ - your bot gets a point for each bot it kills                │
+        │ - unless the upload queue is full, each bot gets             │
+        │   reincarnated upon death, to keep the party going           │
         │ - pressing [spc] pauses only your view, not the actual game  │
         │                                                              │
         │ # controls                                                   │
@@ -20,11 +19,12 @@
         │ - use mouse and/or keyboard                                  │
         │ - press [u] to upload a bot                                  │
         │ - press [w/a/s/d] or arrow keys to move the camera           │
-        │ - click on any bot visible on map to join it                 │
+        │ - click on any bot on the map to join it                     │
         │                                                              │
         │ # uploading a bot                                            │
         │                                                              │
-        │ run git clone https://github.com/Patryk27/kartoffel and      │g-bot
-        │ consult README.md for further instructions                   │
-        │                                                              │
+        │ run git clone https://github.com/Patryk27/kartoffel and      │
+        │ consult README.md                                            │
+        │                                                              │g-bot
+        │ [c] copy-command                                 [esc] close │
 [esc] go└──────────────────────────────────────────────────────────────┘

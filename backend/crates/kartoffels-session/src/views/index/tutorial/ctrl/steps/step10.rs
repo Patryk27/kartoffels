@@ -28,8 +28,8 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "make sure you've removed the call to `motor_turn_right()` and \
-             upload the bot again",
+            "make sure you removed the call to `motor_turn_right()` and upload \
+             the bot again",
         ),
     ],
 
@@ -41,8 +41,8 @@ static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "make sure you've removed the call to `motor_turn_right()` and \
-             upload the bot again",
+            "make sure you removed the call to `motor_turn_right()` and upload \
+             the bot again",
         ),
         MsgLine::web(""),
         MsgLine::web("!! don't forget to re-run `./build` !!"),
@@ -58,11 +58,9 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     loop {
         ctxt.game.set_status(Some("watching".into())).await?;
 
-        let result = time::timeout(
-            Duration::from_secs(10),
-            ctxt.events.next_killed_bot(),
-        )
-        .await;
+        let result =
+            time::timeout(Duration::from_secs(10), ctxt.events.next_died_bot())
+                .await;
 
         ctxt.delete_bots().await?;
         ctxt.game.set_status(None).await?;
@@ -75,7 +73,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
             Err(_) => {
                 ctxt.game.msg(&MSG_RETRY).await?;
                 ctxt.game.set_help(Some(&HELP_RETRY)).await?;
-                ctxt.events.next_spawned_bot().await?;
+                ctxt.events.next_born_bot().await?;
                 ctxt.game.set_help(None).await?;
             }
         }

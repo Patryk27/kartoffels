@@ -14,6 +14,7 @@ use flate2::read::GzDecoder;
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
 use kartoffels_store::{SessionId, Store};
 use kartoffels_world::prelude::Handle as WorldHandle;
+use std::env;
 use std::io::{Cursor, Read};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -195,7 +196,6 @@ impl TestContext {
     #[track_caller]
     pub async fn see_frame(&mut self, expected_path: &str) {
         let actual = self.stdout();
-
         let expected_path = format!("tests/acceptance/{expected_path}");
 
         let expected =
@@ -206,9 +206,14 @@ impl TestContext {
         if actual == expected {
             _ = fs::remove_file(&new_path).await;
         } else {
-            fs::write(&new_path, actual).await.unwrap();
+            #[allow(clippy::collapsible_else_if)]
+            if env::var("BLESS").is_ok() {
+                fs::write(&expected_path, actual).await.unwrap();
+            } else {
+                fs::write(&new_path, actual).await.unwrap();
 
-            panic!("see_frame(\"{expected_path}\") failed");
+                panic!("see_frame(\"{expected_path}\") failed");
+            }
         }
     }
 

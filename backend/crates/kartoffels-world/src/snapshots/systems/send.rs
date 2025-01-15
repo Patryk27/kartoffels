@@ -1,9 +1,9 @@
 use crate::{
     AliveBotSnapshot, AliveBots, AliveBotsSnapshot, Bots, BotsSnapshot, Clock,
-    DeadBotSnapshot, DeadBots, DeadBotsSnapshot, Events, Map, ObjectSnapshot,
-    Objects, ObjectsSnapshot, QueuedBotSnapshot, QueuedBots,
-    QueuedBotsSnapshot, Runs, RunsSnapshot, Snapshot, Snapshots, Stats,
-    StatsSnapshot, Tile, TileKind,
+    DeadBotSnapshot, DeadBots, DeadBotsSnapshot, Events, Lives, LivesSnapshot,
+    Map, ObjectSnapshot, Objects, ObjectsSnapshot, QueuedBotSnapshot,
+    QueuedBots, QueuedBotsSnapshot, Snapshot, Snapshots, Stats, StatsSnapshot,
+    Tile, TileKind,
 };
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut};
@@ -28,14 +28,14 @@ impl Default for State {
 #[allow(clippy::too_many_arguments)]
 pub fn send(
     mut state: Local<State>,
-    clock: Res<Clock>,
-    map: Res<Map>,
-    objects: Res<Objects>,
-    runs: Res<Runs>,
-    stats: Res<Stats>,
     mut bots: ResMut<Bots>,
     mut events: Option<ResMut<Events>>,
+    clock: Res<Clock>,
+    lives: Res<Lives>,
+    map: Res<Map>,
+    objects: Res<Objects>,
     snapshots: Res<Snapshots>,
+    stats: Res<Stats>,
 ) {
     if Instant::now() < state.next_run_at {
         return;
@@ -45,17 +45,17 @@ pub fn send(
 
     let snapshot = {
         let bots = BotsSnapshot {
-            alive: prepare_alive_bots(&mut bots.alive, &runs),
+            alive: prepare_alive_bots(&mut bots.alive, &lives),
             dead: prepare_dead_bots(&mut bots.dead),
             queued: prepare_queued_bots(&mut bots.queued),
         };
 
-        let runs = RunsSnapshot {
-            entries: runs.entries.clone(),
-        };
-
         let stats = StatsSnapshot {
             entries: stats.entries.clone(),
+        };
+
+        let lives = LivesSnapshot {
+            entries: lives.entries.clone(),
         };
 
         let map = prepare_map(&bots, &map, &objects);
@@ -65,9 +65,9 @@ pub fn send(
         Arc::new(Snapshot {
             bots,
             clock: *clock,
+            lives,
             map,
             objects,
-            runs,
             stats,
             tiles,
             version: state.version,
@@ -86,7 +86,10 @@ pub fn send(
     };
 }
 
-fn prepare_alive_bots(bots: &mut AliveBots, runs: &Runs) -> AliveBotsSnapshot {
+fn prepare_alive_bots(
+    bots: &mut AliveBots,
+    lives: &Lives,
+) -> AliveBotsSnapshot {
     let entries: Vec<_> = bots
         .iter_mut()
         .map(|bot| AliveBotSnapshot {
@@ -95,7 +98,7 @@ fn prepare_alive_bots(bots: &mut AliveBots, runs: &Runs) -> AliveBotsSnapshot {
             events: bot.events.snapshot(),
             id: bot.id,
             pos: bot.pos,
-            score: runs.score(bot.id),
+            score: lives.curr_score(bot.id),
             serial: bot.serial.snapshot(),
         })
         .collect();
@@ -148,7 +151,7 @@ fn prepare_queued_bots(bots: &mut QueuedBots) -> QueuedBotsSnapshot {
             let bot = QueuedBotSnapshot {
                 events: entry.bot.events.snapshot(),
                 place: entry.place + 1,
-                requeued: entry.bot.requeued,
+                reincarnated: entry.bot.requeued,
                 serial: entry.bot.serial.snapshot(),
             };
 

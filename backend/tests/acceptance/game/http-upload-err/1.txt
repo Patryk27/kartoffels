@@ -27,4 +27,4 @@
 
                                                        [j] join-bot
                                                        [u] upload-bot
-[esc] go-back  [h] help  [spc] pause  [b] bots
+[esc] go-back  [spc] pause  [h] help  [b] bots

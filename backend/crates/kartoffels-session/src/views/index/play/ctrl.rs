@@ -19,16 +19,15 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "i'm assuming you already went through the tutorial — if not, feel \
-             free to go back to the main menu and press [`t`], but here's the \
-             spirit:",
+            "i assume you already went through the tutorial — if not, feel \
+             free to go back to the main menu and press [`t`]",
         ),
         MsgLine::new(""),
         MsgLine::new("# rules"),
         MsgLine::new(""),
-        MsgLine::new("- your bot gets a point for each bot killed"),
-        MsgLine::new("- unless the upload queue is full, each killed bot gets"),
-        MsgLine::new("  auto-respawned upon death, to keep the party going"),
+        MsgLine::new("- your bot gets a point for each bot it kills"),
+        MsgLine::new("- unless the upload queue is full, each bot gets"),
+        MsgLine::new("  reincarnated upon death, to keep the party going"),
         MsgLine::new(
             "- pressing [`spc`] pauses only your view, not the actual game",
         ),
@@ -40,13 +39,11 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgLine::new(
             "- press [`w`/`a`/`s`/`d`] or arrow keys to move the camera",
         ),
-        MsgLine::new("- click on any bot visible on map to join it"),
+        MsgLine::new("- click on any bot on the map to join it"),
         MsgLine::new(""),
         MsgLine::new("# uploading a bot"),
         MsgLine::new(""),
-        MsgLine::new(format!(
-            "run `{CMD}` and consult `README.md` for further instructions",
-        )),
+        MsgLine::new(format!("run `{CMD}` and consult `README.md`")),
     ],
 
     buttons: vec![

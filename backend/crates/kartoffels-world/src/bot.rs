@@ -67,7 +67,7 @@ impl AliveBot {
         mut bot: QueuedBot,
     ) -> Self {
         bot.events
-            .add(if bot.requeued { "respawned" } else { "spawned" });
+            .add(if bot.requeued { "reincarnated" } else { "born" });
 
         Self {
             arm: Default::default(),
@@ -147,6 +147,6 @@ pub struct QueuedBot {
     pub id: BotId,
     pub oneshot: bool,
     pub pos: Option<IVec2>,
-    pub requeued: bool,
+    pub requeued: bool, // TODO rename to `reincarnated`
     pub serial: BotSerial,
 }

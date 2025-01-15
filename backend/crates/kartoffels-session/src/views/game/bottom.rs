@@ -22,8 +22,8 @@ impl BottomPanel {
                 Mode::Default => {
                     if state.handle.is_some() {
                         ui.enable(state.config.enabled, |ui| {
-                            Self::render_help_btn(ui, state);
                             Self::render_pause_btn(ui, state);
+                            Self::render_help_btn(ui, state);
                             Self::render_bots_btn(ui, state);
                             Self::render_overclock_btn(ui, state);
                         });
@@ -49,14 +49,6 @@ impl BottomPanel {
             .render(ui);
     }
 
-    fn render_restart_btn(ui: &mut Ui<Event>) {
-        ui.space(2);
-
-        Button::new(KeyCode::Char('r'), "restart")
-            .throwing(Event::Restart)
-            .render(ui);
-    }
-
     fn render_pause_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
@@ -66,6 +58,14 @@ impl BottomPanel {
         Button::new(KeyCode::Char(' '), label)
             .throwing(Event::TogglePause)
             .enabled(enabled)
+            .render(ui);
+    }
+
+    fn render_restart_btn(ui: &mut Ui<Event>) {
+        ui.space(2);
+
+        Button::new(KeyCode::Char('r'), "restart")
+            .throwing(Event::Restart)
             .render(ui);
     }
 

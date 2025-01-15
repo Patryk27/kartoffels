@@ -10,7 +10,7 @@ pub fn timer_seed() -> u32 {
     rdi(MEM_TIMER, 0)
 }
 
-/// Returns the number of ticks that have passed since the bot's been spawned.
+/// Returns the number of ticks that have passed since the bot's been born.
 #[inline(always)]
 pub fn timer_ticks() -> u32 {
     rdi(MEM_TIMER, 1)

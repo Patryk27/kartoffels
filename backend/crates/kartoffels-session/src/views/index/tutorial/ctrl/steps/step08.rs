@@ -6,9 +6,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new("cool!").fg(theme::GREEN),
         MsgLine::new(""),
-        MsgLine::new(
-            "now let's try to unwrap what the code in `main.rs` does:",
-        ),
+        MsgLine::new("now let's try to unwrap what the code does:"),
         MsgLine::new(""),
         MsgLine::new("# motor_step()"),
         MsgLine::new(""),

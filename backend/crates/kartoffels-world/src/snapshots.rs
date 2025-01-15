@@ -4,11 +4,11 @@ mod systems;
 pub use self::stream::*;
 pub use self::systems::*;
 use crate::{
-    BotEvent, BotId, BotRuns, BotStats, Clock, Dir, Map, Object, ObjectId,
+    BotEvent, BotId, BotLife, BotLives, BotStats, Clock, Dir, Map, Object,
+    ObjectId,
 };
 use ahash::AHashMap;
 use bevy_ecs::system::Resource;
-use chrono::{DateTime, Utc};
 use glam::IVec2;
 use itertools::Itertools;
 use prettytable::{row, Table};
@@ -22,9 +22,9 @@ use tokio::sync::watch;
 pub struct Snapshot {
     pub bots: BotsSnapshot,
     pub clock: Clock,
+    pub lives: LivesSnapshot,
     pub map: Map,
     pub objects: ObjectsSnapshot,
-    pub runs: RunsSnapshot,
     pub stats: StatsSnapshot,
     pub tiles: Map,
     pub version: u64,
@@ -181,7 +181,7 @@ pub struct AliveBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub id: BotId,
     pub pos: IVec2,
-    pub score: u32, // TODO duplicated with top-level `runs`
+    pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
 }
 
@@ -243,7 +243,7 @@ impl QueuedBotsSnapshot {
 pub struct QueuedBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub place: u8,
-    pub requeued: bool,
+    pub reincarnated: bool,
     pub serial: Arc<VecDeque<u32>>,
 }
 
@@ -270,19 +270,19 @@ pub struct ObjectSnapshot {
 }
 
 #[derive(Debug, Default)]
-pub struct RunsSnapshot {
-    entries: AHashMap<BotId, Arc<BotRuns>>,
+pub struct LivesSnapshot {
+    entries: AHashMap<BotId, Arc<BotLives>>,
 }
 
-impl RunsSnapshot {
-    pub fn iter(&self, id: BotId) -> impl Iterator<Item = BotRunSnapshot> + '_ {
-        self.entries.get(&id).into_iter().flat_map(|runs| {
-            runs.iter().map(|run| BotRunSnapshot {
-                score: run.score,
-                spawned_at: run.spawned_at,
-                killed_at: run.killed_at,
-            })
-        })
+impl LivesSnapshot {
+    pub fn iter(
+        &self,
+        id: BotId,
+    ) -> impl Iterator<Item = BotLifeSnapshot> + '_ {
+        self.entries
+            .get(&id)
+            .into_iter()
+            .flat_map(|lives| lives.iter())
     }
 
     pub fn len(&self, id: BotId) -> u32 {
@@ -293,12 +293,7 @@ impl RunsSnapshot {
     }
 }
 
-#[derive(Debug)]
-pub struct BotRunSnapshot {
-    pub score: u32,
-    pub spawned_at: DateTime<Utc>,
-    pub killed_at: Option<DateTime<Utc>>,
-}
+pub type BotLifeSnapshot = BotLife;
 
 #[derive(Debug, Default)]
 pub struct StatsSnapshot {
@@ -306,23 +301,12 @@ pub struct StatsSnapshot {
 }
 
 impl StatsSnapshot {
-    pub fn get(&self, id: BotId) -> Option<BotStatsSnapshot> {
-        self.entries.get(&id).map(|stats| BotStatsSnapshot {
-            scores_sum: stats.scores_sum,
-            scores_len: stats.scores_len,
-            scores_avg: stats.scores_avg,
-            scores_max: stats.scores_max,
-        })
+    pub fn get(&self, id: BotId) -> Option<&BotStatsSnapshot> {
+        self.entries.get(&id)
     }
 }
 
-#[derive(Debug)]
-pub struct BotStatsSnapshot {
-    pub scores_sum: u32,
-    pub scores_len: u32,
-    pub scores_avg: f32,
-    pub scores_max: u32,
-}
+pub type BotStatsSnapshot = BotStats;
 
 #[derive(Debug, Resource)]
 pub struct Snapshots {

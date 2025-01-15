@@ -184,19 +184,19 @@ async fn set_map() {
 async fn set_spawn() {
     let world = kartoffels_world::create(config());
 
-    // First bot gets spawned at a random place
+    // First bot gets born at a random place
     world
         .create_bot(CreateBotRequest::new(DUMMY))
         .await
         .unwrap();
 
-    // Second bot gets spawned at (10,9)
+    // Second bot gets born at (10,9)
     world
         .create_bot(CreateBotRequest::new(DUMMY).at(ivec2(10, 9)))
         .await
         .unwrap();
 
-    // Third bot gets spawned at (15,19)
+    // Third bot gets born at (15,19)
     world.set_spawn(ivec2(15, 19), Dir::W).await.unwrap();
 
     world
@@ -204,14 +204,14 @@ async fn set_spawn() {
         .await
         .unwrap();
 
-    // Fourth bot gets spawned at (16,1), since specifying a bot position
+    // Fourth bot gets born at (16,1), since specifying a bot position
     // overrides the default spawn configuration
     world
         .create_bot(CreateBotRequest::new(DUMMY).at(ivec2(16, 1)))
         .await
         .unwrap();
 
-    // Fifth bot doesn't get spawned, because the spawn-point is taken
+    // Fifth bot doesn't get born, because the spawn-point is taken
     world
         .create_bot(CreateBotRequest::new(DUMMY).at(ivec2(16, 1)))
         .await
@@ -251,7 +251,7 @@ async fn with_auto_respawn() {
         .await
         .unwrap();
 
-    world.kill_bot(bot, "killed manually").await.unwrap();
+    world.kill_bot(bot, "oopsie").await.unwrap();
     world.tick(1).await.unwrap();
 
     let snapshot = world.snapshot().await;
@@ -261,11 +261,11 @@ async fn with_auto_respawn() {
     assert!(snapshot.bots.queued.get(bot).is_none());
 
     let expected = vec![
-        "respawned",
-        "requeued",
-        "killed manually",
-        "spawned",
-        "uploaded and queued",
+        "reincarnated",
+        "awaiting reincarnation",
+        "oopsie",
+        "born",
+        "uploaded",
     ];
 
     let actual: Vec<_> = snapshot
@@ -296,7 +296,7 @@ async fn without_auto_respawn() {
         .await
         .unwrap();
 
-    world.kill_bot(bot, "killed manually").await.unwrap();
+    world.kill_bot(bot, "oopsie").await.unwrap();
     world.tick(1).await.unwrap();
 
     let snapshot = world.snapshot().await;
@@ -305,7 +305,7 @@ async fn without_auto_respawn() {
     assert!(snapshot.bots.dead.get(bot).is_some());
     assert!(snapshot.bots.queued.get(bot).is_none());
 
-    let expected = vec!["killed manually", "spawned", "uploaded and queued"];
+    let expected = vec!["oopsie", "born", "uploaded"];
 
     let actual: Vec<_> = snapshot
         .bots

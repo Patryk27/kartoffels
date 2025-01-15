@@ -13,18 +13,18 @@
         │                                                              │
         │ like, you-dont-have-access-to-standard-library different     │
         │                                                              │
-        │ this means there's no println!(), no std::fs, everything the │
-        │ robot has access to is a bit of memory, motor, radar and     │
-        │ serial port                                                  │
+        │ there's no println!(), no std::fs - everything the robot has │
+        │ access to is a bit of memory, motor, radar, and serial port  │
         │                                                              │
-        │ you know, like people in ancient rome did                    │
+        │ you know, like the people in ancient rome did                │
         │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
+                  .................
                    ...............
                     .............
                       .........
 
 
                                                        [u] upload-bot
-[esc] go-back  [h] help  [spc] pause
+[esc] go-back  [spc] pause  [h] help

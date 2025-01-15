@@ -1,4 +1,4 @@
-use crate::{BotId, Runs};
+use crate::{BotId, Lives};
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut, Resource};
 use std::sync::Arc;
@@ -11,7 +11,7 @@ pub struct Stats {
 
 pub fn update(
     mut stats: ResMut<Stats>,
-    runs: Res<Runs>,
+    lives: Res<Lives>,
     mut prev_run_at: Local<Option<Instant>>,
 ) {
     if prev_run_at.map_or(false, |run| run.elapsed().as_secs() < 1) {
@@ -20,16 +20,16 @@ pub fn update(
 
     let entries = Arc::make_mut(&mut stats.entries);
 
-    *entries = runs
+    *entries = lives
         .entries
         .iter()
-        .map(|(id, runs)| {
+        .map(|(id, lives)| {
             let mut scores_sum = 0;
             let mut scores_len = 0;
             let mut scores_avg = 0;
             let mut scores_max = 0;
 
-            for run in runs.iter() {
+            for run in lives.iter() {
                 scores_sum += run.score;
                 scores_len += 1;
                 scores_avg += run.score;

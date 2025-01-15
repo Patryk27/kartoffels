@@ -7,9 +7,9 @@ pub fn run(world: &mut Value) {
         let now = chrono::DateTime::from_timestamp(0, 0);
 
         // Since we didn't store anything that would allow us to recover
-        // `spawned_at` timestamps, pretend all bots got spawned now.
+        // `born_at` timestamps, pretend all bots got born now.
         //
-        // No biggie, all bots get killed eventually and then they'll get
+        // No biggie, all bots get killed eventually and then they'll get the
         // correct, updated timestamps.
         #[cfg(not(test))]
         let now = chrono::Utc::now();
@@ -29,55 +29,55 @@ pub fn run(world: &mut Value) {
         .into_map()
         .unwrap();
 
-    let mut runs: Vec<_> = scores
+    let mut lives: Vec<_> = scores
         .into_iter()
         .map(|(id, score)| {
-            let run = Vec::default()
+            let life = Vec::default()
                 .with_entry(
                     "curr",
                     Value::Map(
                         Vec::default()
                             .with_entry("score", score)
-                            .with_entry("spawned_at", now.clone()),
+                            .with_entry("born_at", now.clone()),
                     ),
                 )
                 .with_entry("prev", Value::Array(Vec::default()))
                 .with_entry("len", Value::Integer(1.into()));
 
-            (id, Value::Map(run))
+            (id, Value::Map(life))
         })
         .collect();
 
     // `mode.scores` only kept positive data, i.e. bots with zero kills were not
-    // present there - but our `runs` table must contain entries for all alive
-    // bots, so to avoid crashes lets's go through `/bots/alive/*/id` and add
-    // zeroed-out scores for bots that weren't present in `mode.scores`.
+    // present there - but our `lives` table must contain entries for all alive
+    // bots as well; so to avoid crashes, lets's go through `/bots/alive/*/id`
+    // and add zeroed-out scores for bots that weren't present in `mode.scores`.
     for alive_bot_id in world.query_mut("/bots/alive/*/id") {
-        if runs.iter().any(|(bot_id, _)| {
+        if lives.iter().any(|(bot_id, _)| {
             bot_id.as_text().unwrap() == alive_bot_id.as_text().unwrap()
         }) {
             continue;
         }
 
-        let run = Vec::default()
+        let life = Vec::default()
             .with_entry(
                 "curr",
                 Value::Map(
                     Vec::default()
                         .with_entry("score", Value::Integer(0.into()))
-                        .with_entry("spawned_at", now.clone()),
+                        .with_entry("born_at", now.clone()),
                 ),
             )
             .with_entry("prev", Value::Array(Vec::default()))
             .with_entry("len", Value::Integer(1.into()));
 
-        runs.push((alive_bot_id.clone(), Value::Map(run)));
+        lives.push((alive_bot_id.clone(), Value::Map(life)));
     }
 
     world
         .as_map_mut()
         .unwrap()
-        .add_entry("runs", Value::Map(runs));
+        .add_entry("lives", Value::Map(lives));
 }
 
 #[cfg(test)]
@@ -133,11 +133,11 @@ mod tests {
                 }
               ]
             },
-            "runs": {
+            "lives": {
               "0000-0000-0000-0001": {
                 "curr": {
                   "score": 100,
-                  "spawned_at": "1970-01-01T00:00:00Z"
+                  "born_at": "1970-01-01T00:00:00Z"
                 },
                 "prev": [],
                 "len": 1
@@ -145,7 +145,7 @@ mod tests {
               "0000-0000-0000-0002": {
                 "curr": {
                   "score": 200,
-                  "spawned_at": "1970-01-01T00:00:00Z"
+                  "born_at": "1970-01-01T00:00:00Z"
                 },
                 "prev": [],
                 "len": 1
@@ -153,7 +153,7 @@ mod tests {
               "0000-0000-0000-0004": {
                 "curr": {
                   "score": 300,
-                  "spawned_at": "1970-01-01T00:00:00Z"
+                  "born_at": "1970-01-01T00:00:00Z"
                 },
                 "prev": [],
                 "len": 1
@@ -161,7 +161,7 @@ mod tests {
               "0000-0000-0000-0003": {
                 "curr": {
                   "score": 0,
-                  "spawned_at": "1970-01-01T00:00:00Z"
+                  "born_at": "1970-01-01T00:00:00Z"
                 },
                 "prev": [],
                 "len": 1

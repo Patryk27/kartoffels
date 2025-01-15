@@ -81,8 +81,8 @@ impl JoinedSidePanel {
     fn render_queued_bot(ui: &mut Ui<Event>, bot: &QueuedBotSnapshot) {
         ui.line("status".underlined());
 
-        ui.line(if bot.requeued {
-            "killed, requeued".fg(theme::PINK)
+        ui.line(if bot.reincarnated {
+            "awaiting reincarnation".fg(theme::PINK)
         } else {
             "queued".fg(theme::PINK)
         });
@@ -107,6 +107,11 @@ impl JoinedSidePanel {
     fn btns(state: &State, bot: &JoinedBot) -> Vec<Button<'static, Event>> {
         let mut btns = Vec::new();
 
+        btns.push(
+            Button::new(KeyCode::Char('i'), "inspect-bot")
+                .throwing(Event::InspectBot { id: bot.id }),
+        );
+
         btns.push({
             let label = if bot.follow {
                 "stop-following-bot"
@@ -116,11 +121,6 @@ impl JoinedSidePanel {
 
             Button::new(KeyCode::Char('f'), label).throwing(Event::FollowBot)
         });
-
-        btns.push(
-            Button::new(KeyCode::Char('i'), "inspect-bot")
-                .throwing(Event::InspectBot { id: bot.id }),
-        );
 
         if state.config.can_restart_bots {
             btns.push(

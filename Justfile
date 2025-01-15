@@ -43,6 +43,9 @@ test:
     cd backend \
     && cargo test --release --workspace
 
+test-bless:
+    BLESS=1 just test
+
 bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
 

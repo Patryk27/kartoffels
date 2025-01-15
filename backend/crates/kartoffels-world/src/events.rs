@@ -25,11 +25,11 @@ impl Events {
 
 #[derive(Clone, Copy, Debug, BevyEvent)]
 pub enum Event {
-    BotSpawned { id: BotId },
+    BotBorn { id: BotId },
     BotDied { id: BotId },
     BotMoved { id: BotId, at: IVec2 },
     BotScored { id: BotId },
-    BotForgotten { id: BotId },
+    BotDiscarded { id: BotId },
     ObjectPicked { id: ObjectId },
     ObjectDropped { id: ObjectId },
 }

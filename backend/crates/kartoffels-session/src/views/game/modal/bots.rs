@@ -24,7 +24,7 @@ impl BotsModal {
         BotId::LENGTH as u16 + 1, // id
         7,                        // age
         6,                        // score
-        22,                       // actions
+        26,                       // actions
     ];
 
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &Snapshot) {
@@ -340,7 +340,7 @@ impl UiWidget<Event> for Row<'_> {
         };
 
         let inspect = {
-            let key = is_selected.then_some(KeyCode::Char('i'));
+            let key = is_selected.then_some(KeyCode::Enter);
 
             Button::new(key, "inspect").throwing(Event::Parent(
                 ParentEvent::InspectBot { id: self.bot.id },

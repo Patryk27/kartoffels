@@ -76,7 +76,7 @@ static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     buttons: vec![MsgButton::confirm("ok", ())],
 });
 
-static PLAYER_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" diamond-heist "),
     body: vec![MsgLine::new("ayy, you've died!")],
     buttons: vec![MsgButton::confirm("ok", ())],
@@ -207,13 +207,13 @@ async fn watch(
     game.set_status(None).await?;
     events.sync(world.version()).await?;
 
-    let player = events.next_spawned_bot().await?;
+    let player = events.next_born_bot().await?;
 
     loop {
         match events.next().await?.event {
             Event::BotDied { id } => {
                 if id == player {
-                    game.msg(&PLAYER_KILLED_MSG).await?;
+                    game.msg(&PLAYER_DIED_MSG).await?;
                 } else {
                     game.msg(&GUARD_KILLED_MSG).await?;
                 }

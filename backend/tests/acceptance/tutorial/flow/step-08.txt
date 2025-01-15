@@ -2,7 +2,7 @@
         ┌────────────────────── tutorial (8/16) ───────────────────────┐
         │ cool!                                                        │
         │                                                              │
-        │ now let's try to unwrap what the code in main.rs does:       │
+        │ now let's try to unwrap what the code does:                  │
         │                                                              │
         │ # motor_step()                                               │
         │                                                              │
@@ -27,4 +27,4 @@
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
                                                        [u] upload-bot
-[esc] go-back  [h] help  [spc] pause
+[esc] go-back  [spc] pause  [h] help

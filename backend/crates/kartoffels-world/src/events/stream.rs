@@ -53,15 +53,15 @@ impl EventStream {
         }
     }
 
-    pub async fn next_spawned_bot(&mut self) -> Result<BotId> {
+    pub async fn next_born_bot(&mut self) -> Result<BotId> {
         loop {
-            if let Event::BotSpawned { id } = self.next().await?.event {
+            if let Event::BotBorn { id } = self.next().await?.event {
                 return Ok(id);
             }
         }
     }
 
-    pub async fn next_killed_bot(&mut self) -> Result<BotId> {
+    pub async fn next_died_bot(&mut self) -> Result<BotId> {
         loop {
             if let Event::BotDied { id, .. } = self.next().await?.event {
                 return Ok(id);

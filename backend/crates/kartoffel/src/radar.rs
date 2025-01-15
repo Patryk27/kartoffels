@@ -199,8 +199,7 @@ impl<const R: usize> RadarScan<R> {
     /// there.
     ///
     /// Bot ids are random, unique, non-zero 64-bit numbers assigned to each bot
-    /// during its upload; ids are preserved when a bot is auto-respawned after
-    /// death.
+    /// during its upload; ids are preserved when a bot is reincarnated.
     ///
     /// # Coordinate system
     ///

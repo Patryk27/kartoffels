@@ -24,7 +24,7 @@
                    ...............
                     .............
                       .........
-                                                       [f] stop-following-bot
                                                        [i] inspect-bot
+                                                       [f] stop-following-bot
                                                        [D] delete-bot
-[esc] go-back  [h] help  [spc] resume                                     paused
+[esc] go-back  [spc] resume  [h] help                                     paused

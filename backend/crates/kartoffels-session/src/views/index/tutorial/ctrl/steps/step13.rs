@@ -5,9 +5,11 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "so, how about we implement a *line follower* to solidify all this \
-             knowledge, eh?",
+            "so, how about we solidify all this knowledge by implementing a \
+             good-old *line follower*, eh?",
         ),
+        MsgLine::new(""),
+        MsgLine::new("ekhm, i'm sorry for my sudden canadian accent"),
         MsgLine::new(""),
     ]
     .into_iter()
@@ -26,8 +28,8 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "a line follower does what its name says — it uses radar to check \
-             where to go next and then goes there, like:",
+            "a line follower uses radar to check where to go next and then \
+             goes there, like:",
         ),
         MsgLine::new(""),
         MsgLine::new("\t1. scan the area"),
@@ -56,7 +58,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
     body: vec![MsgLine::new(
         "hmm, your robot seems to have died — delete it and upload something \
-         better",
+         better, i know you have it in you",
     )],
     buttons: vec![MsgButton::confirm("try-again", ())],
 });
@@ -68,7 +70,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     setup_map(ctxt).await?;
 
     loop {
-        ctxt.events.next_spawned_bot().await?;
+        ctxt.events.next_born_bot().await?;
         ctxt.game.set_status(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt).await?;

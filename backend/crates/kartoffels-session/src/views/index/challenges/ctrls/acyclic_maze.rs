@@ -183,7 +183,7 @@ async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
     let mut events = world.events()?;
 
     loop {
-        if events.next_killed_bot().await? == timmy {
+        if events.next_died_bot().await? == timmy {
             return Ok(());
         }
     }

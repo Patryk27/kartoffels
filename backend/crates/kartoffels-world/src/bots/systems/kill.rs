@@ -61,7 +61,7 @@ pub fn kill(
 
         match decision {
             Decision::Requeue => {
-                killed.log("requeued");
+                killed.log("awaiting reincarnation");
 
                 bots.queued.push_back(Box::new(QueuedBot {
                     dir: None,
@@ -83,7 +83,7 @@ pub fn kill(
                 };
 
                 if let Some(id) = bots.dead.add(bot) {
-                    cmds.send_event(Event::BotForgotten { id });
+                    cmds.send_event(Event::BotDiscarded { id });
                 }
             }
         }

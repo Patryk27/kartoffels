@@ -68,7 +68,7 @@ pub fn spawn(
 
         trace!(?id, ?pos, ?dir, "spawning bot");
 
-        cmds.send_event(Event::BotSpawned { id });
+        cmds.send_event(Event::BotBorn { id });
         bots.alive.add(bot);
 
         if let Some(tx) = event.tx.take() {

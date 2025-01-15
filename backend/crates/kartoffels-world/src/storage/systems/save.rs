@@ -1,6 +1,6 @@
 use crate::storage::Header;
 use crate::{
-    Bots, Map, Metronome, Policy, Runs, SerializedWorld, Shutdown, Theme,
+    Bots, Lives, Map, Metronome, Policy, SerializedWorld, Shutdown, Theme,
     WorldName, WorldPath, WorldRng,
 };
 use anyhow::Context;
@@ -29,12 +29,12 @@ impl Default for State {
 pub fn save(
     mut state: Local<State>,
     bots: Res<Bots>,
+    lives: Res<Lives>,
     map: Res<Map>,
     name: Res<WorldName>,
     path: Option<Res<WorldPath>>,
     policy: Res<Policy>,
     rng: Res<WorldRng>,
-    runs: Res<Runs>,
     shutdown: Option<Res<Shutdown>>,
     theme: Option<Res<Theme>>,
 ) {
@@ -74,7 +74,7 @@ pub fn save(
         name: MaybeOwned::Borrowed(&name.0),
         policy: MaybeOwned::Borrowed(&policy),
         rng: MaybeOwned::Borrowed(&rng.0),
-        runs: MaybeOwned::Borrowed(&runs),
+        lives: MaybeOwned::Borrowed(&lives),
         theme: theme.as_ref().map(|theme| MaybeOwned::Borrowed(&**theme)),
     };
 

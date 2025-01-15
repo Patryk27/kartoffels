@@ -21,12 +21,11 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "this means there's no `println!()`, no `std::fs`, everything the \
-             robot has access to is a bit of memory, motor, radar and serial \
-             port",
+            "there's no `println!()`, no `std::fs` - everything the robot has \
+             access to is a bit of memory, motor, radar, and serial port",
         ),
         MsgLine::new(""),
-        MsgLine::new("you know, like people in ancient rome did"),
+        MsgLine::new("you know, like the people in ancient rome did"),
     ],
 
     buttons: vec![MsgButton::confirm("next", ())],

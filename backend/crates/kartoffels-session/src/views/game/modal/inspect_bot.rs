@@ -63,37 +63,37 @@ impl InspectBotModal {
             Tab::Events => {
                 self.render_body_events(ui, world);
             }
-            Tab::Runs => {
-                self.render_body_runs(ui, world);
+            Tab::Lives => {
+                self.render_body_lives(ui, world);
             }
         }
     }
 
     fn render_body_stats(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+        if let Some(stats) = world.stats.get(self.id) {
+            ui.line(format!("sum(scores) = {}", stats.scores_sum));
+            ui.line(format!("len(scores) = {}", stats.scores_len));
+            ui.line(format!("avg(scores) = {:.2}", stats.scores_avg));
+            ui.line(format!("max(scores) = {}", stats.scores_max));
+
+            if stats.scores_len >= (cfg::MAX_LIVES_PER_BOT as u32) {
+                ui.line("");
+
+                ui.line(format!(
+                    "note: only {} recent lives (scores) are stored — \
+                     overall, your bot has gone through {} lives",
+                    cfg::MAX_LIVES_PER_BOT,
+                    world.lives.len(self.id),
+                ));
+            }
+
+            ui.space(1);
+        }
+
         if let Some(BotSnapshot::Alive(bot)) = world.bots.get(self.id) {
             ui.line(format!("age = {} vcpu-cycles", bot.age));
             ui.line(format!("    = {}s", bot.age_seconds()));
             ui.space(1);
-        }
-
-        let Some(stats) = world.stats.get(self.id) else {
-            return;
-        };
-
-        ui.line(format!("sum(scores) = {}", stats.scores_sum));
-        ui.line(format!("len(scores) = {}", stats.scores_len));
-        ui.line(format!("avg(scores) = {:.2}", stats.scores_avg));
-        ui.line(format!("max(scores) = {}", stats.scores_max));
-
-        if stats.scores_len >= (cfg::MAX_RUNS_PER_BOT as u32) {
-            ui.line("");
-
-            ui.line(format!(
-                "note: only {} recent scores are saved - overall, your bot has \
-                 been alive for {} rounds",
-                cfg::MAX_RUNS_PER_BOT,
-                world.runs.len(self.id),
-            ));
         }
     }
 
@@ -133,33 +133,32 @@ impl InspectBotModal {
     }
 
     // TODO support custom sorting
-    fn render_body_runs(&self, ui: &mut Ui<Event>, world: &Snapshot) {
-        let rows = world.runs.iter(self.id).map(|run| {
-            let spawned_at = run
-                .spawned_at
+    fn render_body_lives(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+        let rows = world.lives.iter(self.id).map(|life| {
+            let born_at = life
+                .born_at
                 .format(theme::DATETIME_FORMAT)
                 .to_string()
                 .fg(theme::GRAY);
 
-            let killed_at = run
-                .killed_at
+            let died_at = life
+                .died_at
                 .map(|at| at.format(theme::DATETIME_FORMAT).to_string())
                 .unwrap_or_else(|| "-".into())
                 .fg(theme::GRAY);
 
-            let age = run
-                .killed_at
+            let age = life
+                .died_at
                 .unwrap_or_else(Utc::now)
-                .signed_duration_since(run.spawned_at);
+                .signed_duration_since(life.born_at);
 
             // TODO support minutes
             let age = format!("{}s", age.num_seconds());
-
-            let score = run.score.to_string();
+            let score = life.score.to_string();
 
             Row::new(vec![
-                Cell::new(spawned_at),
-                Cell::new(killed_at),
+                Cell::new(born_at),
+                Cell::new(died_at),
                 Cell::new(age),
                 Cell::new(score),
             ])
@@ -173,8 +172,8 @@ impl InspectBotModal {
         ];
 
         let header = Row::new(vec![
-            Cell::new("spawned-at"),
-            Cell::new("killed-at"),
+            Cell::new("born-at"),
+            Cell::new("died-at"),
             Cell::new("age"),
             Cell::new("score"),
         ])
@@ -233,19 +232,19 @@ enum Tab {
     #[default]
     Stats,
     Events,
-    Runs,
+    Lives,
 }
 
 impl Tab {
     fn all() -> impl Iterator<Item = Self> {
-        [Self::Stats, Self::Events, Self::Runs].into_iter()
+        [Self::Stats, Self::Events, Self::Lives].into_iter()
     }
 
     fn btn(&self) -> Button<Event> {
         let btn = match self {
             Tab::Stats => Button::new(KeyCode::Char('s'), "stats"),
             Tab::Events => Button::new(KeyCode::Char('e'), "events"),
-            Tab::Runs => Button::new(KeyCode::Char('r'), "runs"),
+            Tab::Lives => Button::new(KeyCode::Char('l'), "lives"),
         };
 
         btn.throwing(Event::ChangeTab(*self))
@@ -257,7 +256,7 @@ impl fmt::Display for Tab {
         match self {
             Self::Stats => write!(f, "stats"),
             Self::Events => write!(f, "events"),
-            Self::Runs => write!(f, "runs"),
+            Self::Lives => write!(f, "lives"),
         }
     }
 }

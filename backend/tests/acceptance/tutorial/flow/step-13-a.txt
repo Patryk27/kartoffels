@@ -1,10 +1,11 @@
-
         ┌────────────────────── tutorial (13/16) ──────────────────────┐
-        │ so, how about we implement a line follower to solidify all   │
-        │ this knowledge, eh?                                          │
+        │ so, how about we solidify all this knowledge by implementing │
+        │ a good-old line follower, eh?                                │
         │                                                              │
-        │ a line follower does what its name says — it uses radar to   │
-        │ check where to go next and then goes there, like:            │
+        │ ekhm, i'm sorry for my sudden canadian accent                │
+        │                                                              │
+        │ a line follower uses radar to check where to go next and     │
+        │ then goes there, like:                                       │
         │                                                              │
         │     1. scan the area                                         │
         │     2a. if there's '.' in front you, move there              │
@@ -26,5 +27,4 @@
         │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
-                                                       [u] upload-bot
-[esc] go-back  [h] help  [spc] pause                                     spd:∞
+[esc] go-back  [spc] pause  [h] help                                     spd:∞

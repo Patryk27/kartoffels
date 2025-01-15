@@ -42,7 +42,7 @@ pub fn create(
             let mut events = BotEvents::default();
 
             if !instant {
-                events.add("uploaded and queued");
+                events.add("uploaded");
             }
 
             events

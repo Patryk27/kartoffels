@@ -61,7 +61,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
     loop {
         let dummies = setup_map(ctxt).await?;
-        let player = ctxt.events.next_spawned_bot().await?;
+        let player = ctxt.events.next_born_bot().await?;
 
         ctxt.game.set_status(Some("watching".into())).await?;
 
@@ -137,7 +137,7 @@ async fn wait(
     player: BotId,
 ) -> Result<ControlFlow<(), ()>> {
     loop {
-        let id = ctxt.events.next_killed_bot().await?;
+        let id = ctxt.events.next_died_bot().await?;
 
         if dummies.remove(&id) && dummies.is_empty() {
             return Ok(ControlFlow::Break(()));

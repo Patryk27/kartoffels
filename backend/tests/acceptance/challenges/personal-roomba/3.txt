@@ -24,7 +24,7 @@ v6000008                                               id
       -....-----.|...|...|.....--|.|.------ .-.        drv:^
       ...|.........|...|.|.|.....|.|.......|...        drv:^
 
-                                                       [f] stop-following-bot
                                                        [i] inspect-bot
+                                                       [f] stop-following-bot
                                                        [D] delete-bot
-[esc] go-back  [h] help  [spc] pause  [1/2/3] overclock
+[esc] go-back  [spc] pause  [h] help  [1/2/3] overclock
