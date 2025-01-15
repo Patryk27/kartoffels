@@ -133,5 +133,5 @@ pub fn save(
 }
 
 fn next_run_at() -> Instant {
-    Instant::now() + Duration::from_secs(60)
+    Instant::now() + Duration::from_mins(15)
 }

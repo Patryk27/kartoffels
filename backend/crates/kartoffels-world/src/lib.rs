@@ -1,4 +1,5 @@
 #![feature(cmp_minmax)]
+#![feature(duration_constructors)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
 #![feature(type_alias_impl_trait)]
