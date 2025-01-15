@@ -1,4 +1,4 @@
-use crate::{BotId, Event};
+use crate::{cfg, BotId, Event};
 use ahash::AHashMap;
 use bevy_ecs::event::EventReader;
 use bevy_ecs::system::{ResMut, Resource};
@@ -72,16 +72,16 @@ pub fn update(mut runs: ResMut<Runs>, mut events: EventReader<Event>) {
 pub struct BotRuns {
     pub curr: CurrBotRun,
     pub prev: VecDeque<PrevBotRun>,
-    pub len: u32, // TODO not used
+    pub len: u32,
 }
 
 impl BotRuns {
     fn on_bot_scored(&mut self) {
-        self.curr.score += 1;
+        self.curr.score = self.curr.score.saturating_add(1);
     }
 
     fn on_bot_died(&mut self) {
-        if self.prev.len() >= 128 {
+        if self.prev.len() >= cfg::MAX_RUNS_PER_BOT {
             self.prev.pop_front();
         }
 
@@ -92,7 +92,7 @@ impl BotRuns {
         });
 
         self.curr = Default::default();
-        self.len += 1;
+        self.len = self.len.saturating_add(1);
     }
 
     pub fn iter(&self) -> impl Iterator<Item = BotRun> + '_ {

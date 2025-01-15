@@ -2,6 +2,7 @@ use super::Modal;
 use crate::views::game::Event as ParentEvent;
 use chrono::Utc;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
+use kartoffels_world::cfg;
 use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::Stylize;
@@ -83,6 +84,17 @@ impl InspectBotModal {
         ui.line(format!("len(scores) = {}", stats.scores_len));
         ui.line(format!("avg(scores) = {:.2}", stats.scores_avg));
         ui.line(format!("max(scores) = {}", stats.scores_max));
+
+        if stats.scores_len >= (cfg::MAX_RUNS_PER_BOT as u32) {
+            ui.line("");
+
+            ui.line(format!(
+                "note: only {} recent scores are saved - overall, your bot has \
+                 been alive for {} rounds",
+                cfg::MAX_RUNS_PER_BOT,
+                world.runs.len(self.id),
+            ));
+        }
     }
 
     fn render_body_events(&self, ui: &mut Ui<Event>, world: &Snapshot) {
@@ -122,7 +134,7 @@ impl InspectBotModal {
 
     // TODO support custom sorting
     fn render_body_runs(&self, ui: &mut Ui<Event>, world: &Snapshot) {
-        let rows = world.runs.get(self.id).map(|run| {
+        let rows = world.runs.iter(self.id).map(|run| {
             let spawned_at = run
                 .spawned_at
                 .format(theme::DATETIME_FORMAT)

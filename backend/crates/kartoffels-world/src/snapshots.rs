@@ -275,7 +275,7 @@ pub struct RunsSnapshot {
 }
 
 impl RunsSnapshot {
-    pub fn get(&self, id: BotId) -> impl Iterator<Item = BotRunSnapshot> + '_ {
+    pub fn iter(&self, id: BotId) -> impl Iterator<Item = BotRunSnapshot> + '_ {
         self.entries.get(&id).into_iter().flat_map(|runs| {
             runs.iter().map(|run| BotRunSnapshot {
                 score: run.score,
@@ -283,6 +283,13 @@ impl RunsSnapshot {
                 killed_at: run.killed_at,
             })
         })
+    }
+
+    pub fn len(&self, id: BotId) -> u32 {
+        self.entries
+            .get(&id)
+            .map(|entry| entry.len)
+            .unwrap_or_default()
     }
 }
 

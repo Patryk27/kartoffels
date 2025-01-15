@@ -24,9 +24,10 @@ mod storage;
 mod theme;
 mod utils;
 
-mod cfg {
+pub mod cfg {
     pub const EVENT_STREAM_CAPACITY: usize = 128;
     pub const REQUEST_STREAM_CAPACITY: usize = 128;
+    pub const MAX_RUNS_PER_BOT: usize = 128;
 }
 
 pub mod prelude {
