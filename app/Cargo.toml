@@ -3,11 +3,11 @@ resolver = "2"
 
 members = [
     "crates/kartoffel",
-    "crates/kartoffels-prefabs",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
+    "crates/kartoffels-frontend",
+    "crates/kartoffels-prefabs",
     "crates/kartoffels-server",
-    "crates/kartoffels-session",
     "crates/kartoffels-store",
     "crates/kartoffels-toolbox",
     "crates/kartoffels-ui",

@@ -14,7 +14,7 @@ futures-util.workspace = true
 glam.workspace = true
 indoc.workspace = true
 itertools.workspace = true
-kartoffels-session = { path = "../kartoffels-session" }
+kartoffels-frontend = { path = "../kartoffels-frontend" }
 kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-ui = { path = "../kartoffels-ui" }
 kartoffels-world = { path = "../kartoffels-world" }

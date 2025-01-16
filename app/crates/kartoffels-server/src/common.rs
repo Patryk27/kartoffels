@@ -18,7 +18,7 @@ pub async fn start_session(
     let sess = store.create_session();
 
     let result = {
-        let sess = kartoffels_session::main(&store, &sess, &mut term);
+        let sess = kartoffels_frontend::main(&store, &sess, &mut term);
         let sess = AssertUnwindSafe(sess).catch_unwind();
         let sess = pin!(sess);
 

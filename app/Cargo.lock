@@ -2004,46 +2004,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kartoffels-prefabs"
-version = "0.6.0"
-dependencies = [
- "glam",
- "kartoffel",
-]
-
-[[package]]
-name = "kartoffels-server"
-version = "0.6.0"
-dependencies = [
- "ahash",
- "anyhow",
- "axum",
- "clap",
- "ed25519-dalek",
- "flate2",
- "futures-util",
- "glam",
- "indoc",
- "itertools",
- "kartoffels-session",
- "kartoffels-store",
- "kartoffels-ui",
- "kartoffels-world",
- "rand",
- "russh",
- "russh-keys",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tokio-util",
- "tower-http",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "kartoffels-session"
+name = "kartoffels-frontend"
 version = "0.6.0"
 dependencies = [
  "anyhow",
@@ -2066,6 +2027,45 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tracing",
+]
+
+[[package]]
+name = "kartoffels-prefabs"
+version = "0.6.0"
+dependencies = [
+ "glam",
+ "kartoffel",
+]
+
+[[package]]
+name = "kartoffels-server"
+version = "0.6.0"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "axum",
+ "clap",
+ "ed25519-dalek",
+ "flate2",
+ "futures-util",
+ "glam",
+ "indoc",
+ "itertools",
+ "kartoffels-frontend",
+ "kartoffels-store",
+ "kartoffels-ui",
+ "kartoffels-world",
+ "rand",
+ "russh",
+ "russh-keys",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

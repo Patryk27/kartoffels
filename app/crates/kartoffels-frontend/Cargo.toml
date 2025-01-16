@@ -1,5 +1,5 @@
 [package]
-name = "kartoffels-session"
+name = "kartoffels-frontend"
 version.workspace = true
 edition.workspace = true
 
