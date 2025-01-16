@@ -1966,7 +1966,7 @@ dependencies = [
  "clap",
  "flate2",
  "futures-util",
- "kartoffels-bots",
+ "kartoffels-prefabs",
  "kartoffels-server",
  "kartoffels-store",
  "kartoffels-toolbox",
@@ -1978,14 +1978,6 @@ dependencies = [
  "tokio-util",
  "tracing-subscriber",
  "tungstenite 0.21.0",
-]
-
-[[package]]
-name = "kartoffels-bots"
-version = "0.6.0"
-dependencies = [
- "glam",
- "kartoffel",
 ]
 
 [[package]]
@@ -2009,6 +2001,14 @@ dependencies = [
  "rand_chacha",
  "spin",
  "talc",
+]
+
+[[package]]
+name = "kartoffels-prefabs"
+version = "0.6.0"
+dependencies = [
+ "glam",
+ "kartoffel",
 ]
 
 [[package]]
@@ -2054,7 +2054,7 @@ dependencies = [
  "glam",
  "indoc",
  "itertools",
- "kartoffels-bots",
+ "kartoffels-prefabs",
  "kartoffels-store",
  "kartoffels-ui",
  "kartoffels-utils",
@@ -2139,8 +2139,8 @@ dependencies = [
  "glam",
  "indoc",
  "itertools",
- "kartoffels-bots",
  "kartoffels-cpu",
+ "kartoffels-prefabs",
  "kartoffels-utils",
  "maybe-owned",
  "pretty_assertions",

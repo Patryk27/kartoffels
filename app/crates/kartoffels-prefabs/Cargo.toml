@@ -12,7 +12,7 @@ bin = [
 ]
 
 [package]
-name = "kartoffels-bots"
+name = "kartoffels-prefabs"
 version.workspace = true
 edition.workspace = true
 

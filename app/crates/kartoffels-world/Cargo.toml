@@ -29,7 +29,7 @@ tracing.workspace = true
 [dev-dependencies]
 indoc.workspace = true
 itertools.workspace = true
-kartoffels-bots = { path = "../kartoffels-bots" }
+kartoffels-prefabs = { path = "../kartoffels-prefabs" }
 pretty_assertions.workspace = true
 tempfile.workspace = true
 test-case.workspace = true

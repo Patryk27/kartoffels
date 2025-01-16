@@ -1,5 +1,5 @@
 use crate::TestContext;
-use kartoffels_bots::{TUT_01, TUT_02, TUT_03, TUT_04};
+use kartoffels_prefabs::{TUT_01, TUT_02, TUT_03, TUT_04};
 use kartoffels_world::prelude::Clock;
 use std::time::Duration;
 use termwiz::input::{KeyCode, Modifiers};

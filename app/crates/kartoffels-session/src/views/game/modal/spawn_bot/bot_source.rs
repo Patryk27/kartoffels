@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use kartoffels_bots::{DUMMY, ROBERTO};
+use kartoffels_prefabs::{DUMMY, ROBERTO};
 use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 use std::fmt;
 

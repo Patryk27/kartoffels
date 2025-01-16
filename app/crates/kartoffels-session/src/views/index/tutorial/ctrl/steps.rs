@@ -19,7 +19,7 @@ mod prelude {
     pub(super) use crate::views::game::{HelpMsg, HelpMsgResponse};
     pub(super) use anyhow::Result;
     pub(super) use glam::*;
-    pub(super) use kartoffels_bots::DUMMY;
+    pub(super) use kartoffels_prefabs::DUMMY;
     pub(super) use kartoffels_ui::{theme, KeyCode, Msg, MsgButton, MsgLine};
     pub(super) use kartoffels_world::prelude::*;
     pub(super) use ratatui::style::Stylize;

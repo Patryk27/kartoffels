@@ -1,5 +1,5 @@
 use crate::TestContext;
-use kartoffels_bots::{
+use kartoffels_prefabs::{
     CHL_ACYCLIC_MAZE, CHL_DIAMOND_HEIST, CHL_PERSONAL_ROOMBA,
 };
 use kartoffels_world::prelude::Clock;

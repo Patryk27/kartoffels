@@ -23,7 +23,7 @@ fn main() {
         .args([
             "build",
             "-p",
-            "kartoffels-bots",
+            "kartoffels-prefabs",
             "--bins",
             "--release",
             "--target",

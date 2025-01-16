@@ -1,5 +1,5 @@
 use crate::TestContext;
-use kartoffels_bots::DUMMY;
+use kartoffels_prefabs::DUMMY;
 use kartoffels_world::prelude::{ArenaTheme, Config, Policy, Theme};
 use std::time::Duration;
 use termwiz::input::KeyCode;

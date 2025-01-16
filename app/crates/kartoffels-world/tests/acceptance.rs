@@ -1,5 +1,5 @@
 use glam::{ivec2, uvec2};
-use kartoffels_bots::{DUMMY, ROBERTO};
+use kartoffels_prefabs::{DUMMY, ROBERTO};
 use kartoffels_utils::Asserter;
 use kartoffels_world::prelude::*;
 use std::future::Future;

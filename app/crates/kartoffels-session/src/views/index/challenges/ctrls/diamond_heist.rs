@@ -5,7 +5,7 @@ use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::IVec2;
 use indoc::indoc;
-use kartoffels_bots::CHL_DIAMOND_HEIST_GUARD;
+use kartoffels_prefabs::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::Store;
 use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
