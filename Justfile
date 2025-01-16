@@ -1,5 +1,5 @@
 run *args:
-    cd backend \
+    cd app \
     && cargo run --release -- \
            serve \
            ../data \
@@ -8,19 +8,19 @@ run *args:
            {{ args }}
 
 toolbox *args:
-    cd backend \
+    cd app \
     && cargo run --release -- \
            toolbox \
            {{ args }}
 
 web:
-    cd frontend \
+    cd web \
     && npm run dev
 
 # ---
 
 check:
-    cd backend \
+    cd app \
     && cargo check --workspace \
     && cargo check --workspace --tests \
     && cargo clippy --workspace \
@@ -28,19 +28,19 @@ check:
     && cargo doc -p kartoffel
 
 clean:
-    cd backend \
+    cd app \
     && cargo clean
 
 doc *args:
-    cd backend \
+    cd app \
     && cargo doc -p kartoffel {{ args }}
 
 fmt:
-    cd backend \
+    cd app \
     && cargo fmt
 
 test:
-    cd backend \
+    cd app \
     && cargo test --release --workspace
 
 test-bless:
@@ -50,7 +50,7 @@ bless:
     fd -e new --no-ignore-vcs --full-path --exec mv {} {.}
 
 perf:
-    cd backend \
+    cd app \
     && cargo build --release \
     && perf record --call-graph dwarf \
            ./target/release/kartoffels \

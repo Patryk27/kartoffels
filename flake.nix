@@ -54,29 +54,29 @@
             ];
           };
 
-          backend = import ./backend {
+          app = import ./app {
             inherit crane pkgs;
 
             rev = builtins.substring 0 7 (self.rev or "dirty");
           };
 
-          frontend = import ./frontend {
+          web = import ./web {
             inherit napalm pkgs;
           };
 
         in
         {
           packages = {
-            inherit backend frontend;
+            inherit app web;
 
             default = pkgs.linkFarm "kartoffels" [
               {
                 name = "kartoffels";
-                path = backend;
+                path = app;
               }
               {
                 name = "kartoffels-web";
-                path = frontend;
+                path = web;
               }
             ];
           };
