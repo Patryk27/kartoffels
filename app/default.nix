@@ -32,10 +32,6 @@ crane'.buildPackage {
         drv;
   };
 
-  nativeBuildInputs = with pkgs; [
-    just
-  ];
-
   cargoExtraArgs = "-p kartoffels";
   CARGO_PROFILE = "dist";
   KARTOFFELS_REV = rev;
