@@ -1,6 +1,6 @@
 use crate::Background;
 use anyhow::{Error, Result};
-use kartoffels_ui::{Button, KeyCode, Term, UiWidget};
+use kartoffels_ui::{Button, KeyCode, Term};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::Paragraph;
 use tracing::debug;
@@ -26,15 +26,12 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
                     ])
                     .areas(ui.area);
 
-                    ui.clamp(text_area, |ui| {
-                        ui.render(&err);
-                    });
+                    ui.render_at(text_area, &err);
 
-                    ui.clamp(footer_area, |ui| {
+                    ui.render_at(footer_area, {
                         Button::new(KeyCode::Enter, "close")
                             .throwing(())
                             .right_aligned()
-                            .render(ui);
                     });
                 });
             })

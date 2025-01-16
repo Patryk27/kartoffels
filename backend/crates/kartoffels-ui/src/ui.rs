@@ -207,6 +207,12 @@ impl<T> Ui<'_, T> {
         widget.render(self);
     }
 
+    pub fn render_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
+        self.clamp(area, |ui| {
+            ui.render(widget);
+        });
+    }
+
     pub fn throw(&mut self, event: T) {
         *self.thrown = Some(event);
     }

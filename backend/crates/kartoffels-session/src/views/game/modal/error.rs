@@ -1,5 +1,5 @@
 use crate::views::game::Event;
-use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
+use kartoffels_ui::{Button, KeyCode, Ui};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::Paragraph;
 
@@ -27,15 +27,12 @@ impl ErrorModal {
             ])
             .areas(ui.area);
 
-            ui.clamp(text_area, |ui| {
-                ui.render(&self.error);
-            });
+            ui.render_at(text_area, &self.error);
 
-            ui.clamp(footer_area, |ui| {
+            ui.render_at(footer_area, {
                 Button::new(KeyCode::Enter, "close")
                     .throwing(Event::CloseModal)
                     .right_aligned()
-                    .render(ui);
             });
         });
     }

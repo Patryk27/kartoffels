@@ -196,15 +196,34 @@ impl InspectBotModal {
                 });
             }
 
-            Button::new(KeyCode::Escape, "close")
-                .throwing(Event::GoBack)
-                .right_aligned()
-                .render(ui);
+            let join =
+                Button::new(KeyCode::Enter, "join").throwing(Event::JoinBot);
+
+            let close =
+                Button::new(KeyCode::Escape, "close").throwing(Event::GoBack);
+
+            let [_, join_area, _, close_area] = Layout::horizontal([
+                Constraint::Fill(1),
+                Constraint::Length(join.width()),
+                Constraint::Length(2),
+                Constraint::Length(close.width()),
+            ])
+            .areas(ui.area);
+
+            ui.render_at(join_area, join);
+            ui.render_at(close_area, close);
         });
     }
 
     fn handle(&mut self, event: Event) -> Option<ParentEvent> {
         match event {
+            Event::ChangeTab(tab) => {
+                self.tab = tab;
+                None
+            }
+
+            Event::JoinBot => Some(ParentEvent::JoinBot { id: self.id }),
+
             Event::GoBack => {
                 if let Some(modal) = self.parent.take() {
                     Some(ParentEvent::OpenModal { modal })
@@ -212,19 +231,15 @@ impl InspectBotModal {
                     Some(ParentEvent::CloseModal)
                 }
             }
-
-            Event::ChangeTab(tab) => {
-                self.tab = tab;
-                None
-            }
         }
     }
 }
 
 #[derive(Clone, Copy, Debug)]
 enum Event {
-    GoBack,
     ChangeTab(Tab),
+    JoinBot,
+    GoBack,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

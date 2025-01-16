@@ -1,5 +1,5 @@
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Ui, UiWidget};
+use kartoffels_ui::{theme, Ui};
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;
 use ratatui::text::Span;
@@ -22,9 +22,7 @@ impl Footer {
             height: 1,
         };
 
-        ui.clamp(area, |ui| {
-            Span::raw(text).fg(theme::GRAY).render(ui);
-        });
+        ui.render_at(area, Span::raw(text).fg(theme::GRAY));
     }
 }
 

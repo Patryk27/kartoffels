@@ -148,8 +148,6 @@ impl BottomPanel {
             height: 1,
         };
 
-        ui.clamp(area, |ui| {
-            span.render(ui);
-        });
+        ui.render_at(area, span);
     }
 }

@@ -1,7 +1,7 @@
 use crate::views::game::Event as ParentEvent;
 use crate::BotIdExt;
 use itertools::Itertools;
-use kartoffels_ui::{theme, Button, FnUiWidget, KeyCode, Ui, UiWidget, VRow};
+use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget, VRow};
 use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::{Style, Stylize};
@@ -24,7 +24,7 @@ impl BotsModal {
         BotId::LENGTH as u16 + 1, // id
         7,                        // age
         6,                        // score
-        26,                       // actions
+        18,                       // actions
     ];
 
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &Snapshot) {
@@ -131,9 +131,7 @@ impl BotsModal {
                 });
 
             for (row, area) in rows.zip(ui.area.rows()) {
-                ui.clamp(area, |ui| {
-                    row.render(ui);
-                });
+                ui.render_at(area, row);
             }
         });
 
@@ -161,6 +159,18 @@ impl BotsModal {
                 .throwing(Event::SelectUp)
                 .enabled(self.selected.is_nth())
                 .render(ui);
+
+            if self.selected.is_nth() {
+                Button::new(KeyCode::Char('t'), "track-id")
+                    .throwing(Event::TrackId)
+                    .right_aligned()
+                    .render(ui);
+            } else {
+                Button::new(KeyCode::Char('t'), "track-nth")
+                    .throwing(Event::TrackNth)
+                    .right_aligned()
+                    .render(ui);
+            }
         });
 
         ui.space(1);
@@ -177,18 +187,6 @@ impl BotsModal {
                 .throwing(Event::SelectDown)
                 .enabled(self.selected.is_nth())
                 .render(ui);
-
-            ui.space(2);
-
-            if self.selected.is_nth() {
-                Button::new(KeyCode::Char('t'), "track id")
-                    .throwing(Event::TrackId)
-                    .render(ui);
-            } else {
-                Button::new(KeyCode::Char('t'), "track nth")
-                    .throwing(Event::TrackNth)
-                    .render(ui);
-            }
 
             Button::new(KeyCode::Escape, "close")
                 .throwing(Event::Parent(ParentEvent::CloseModal))
@@ -324,20 +322,10 @@ impl UiWidget<Event> for Row<'_> {
     fn render(self, ui: &mut Ui<Event>) {
         let is_selected = self.selected.matches(self.nth, self.bot);
 
-        // ---
-
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
         let age = Span::raw(format!("{}s", self.bot.age_seconds()));
         let score = Span::raw(self.bot.score.to_string());
-
-        let join = {
-            let key = is_selected.then_some(KeyCode::Char('j'));
-
-            Button::new(key, "join").throwing(Event::Parent(
-                ParentEvent::JoinBot { id: self.bot.id },
-            ))
-        };
 
         let inspect = {
             let key = is_selected.then_some(KeyCode::Enter);
@@ -352,13 +340,7 @@ impl UiWidget<Event> for Row<'_> {
             .column(id)
             .column(age)
             .column(score)
-            .column(FnUiWidget::new(|ui| {
-                ui.row(|ui| {
-                    ui.render(join);
-                    ui.space(1);
-                    ui.render(inspect);
-                });
-            }));
+            .column(inspect);
 
         if is_selected {
             ui.buf.set_style(ui.area, Style::new().bg(theme::DARK_GRAY));
