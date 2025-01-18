@@ -80,10 +80,10 @@ impl InspectBotModal {
                 ui.line("");
 
                 ui.line(format!(
-                    "note: only {} recent lives (scores) are stored — \
-                     overall, your bot has gone through {} lives",
-                    cfg::MAX_LIVES_PER_BOT,
+                    "note: your bot has gone through {} lives, but only the \
+                     recent {} are stored",
                     world.lives.len(self.id),
+                    cfg::MAX_LIVES_PER_BOT,
                 ));
             }
 
