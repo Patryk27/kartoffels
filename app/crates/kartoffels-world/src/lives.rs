@@ -103,7 +103,7 @@ impl BotLives {
             died_at: None,
         });
 
-        let prev = self.prev.iter().map(|life| BotLife {
+        let prev = self.prev.iter().rev().map(|life| BotLife {
             score: life.score,
             born_at: life.born_at,
             died_at: Some(life.died_at),
