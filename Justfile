@@ -43,7 +43,7 @@ test:
     cd app \
     && cargo test --release --workspace
 
-test-bless:
+test-and-bless:
     BLESS=1 just test
 
 bless:
