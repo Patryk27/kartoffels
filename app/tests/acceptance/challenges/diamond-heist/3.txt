@@ -4,7 +4,7 @@ v1500009                                               id
                                                        status
                                                        alive
                                                        > age: 23s
-                                                       > pos: [31, 2]
+                                                       > pos: 31,2
                                                        > dir: e
         ┌─────────────────────── diamond-heist ────────────────────────┐
         │ congrats!                                                    │

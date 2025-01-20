@@ -4,7 +4,7 @@
                       .........                        status
                     .............                      alive
                    ...............                     > age: 0s
-                  .................                    > pos: [11, 12]
+                  .................                    > pos: 11,12
         ┌────────────────────── tutorial (7/16) ───────────────────────┐
         │ anyway, close this message to resume the game and let's see  │
         │ the robot in action                                          │

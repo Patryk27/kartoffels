@@ -4,7 +4,7 @@
                                                        status
                                                        alive
                                                        > age: 0s
-                                                       > pos: [2, 1]
+                                                       > pos: 2,1
                                                        > dir: e
                                                        > score: 0
 
