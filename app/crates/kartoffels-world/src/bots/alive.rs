@@ -36,6 +36,13 @@ impl AliveBots {
         self.count += 1;
     }
 
+    pub fn get(&self, id: BotId) -> Option<&AliveBot> {
+        let idx = *self.id_to_idx.get(&id)?;
+        let bot = self.entries[idx as usize].as_ref().unwrap();
+
+        Some(bot)
+    }
+
     pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
         let idx = self.id_to_idx.remove(&id)?;
         let bot = self.entries[idx as usize].take().unwrap();

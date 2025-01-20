@@ -1,4 +1,4 @@
-use crate::{BotId, Lives};
+use crate::{BotId, Bots, Clock, Lives};
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut, Resource};
 use std::sync::Arc;
@@ -11,6 +11,7 @@ pub struct Stats {
 
 pub fn update(
     mut stats: ResMut<Stats>,
+    bots: Res<Bots>,
     lives: Res<Lives>,
     mut prev_run_at: Local<Option<Instant>>,
 ) {
@@ -24,26 +25,27 @@ pub fn update(
         .entries
         .iter()
         .map(|(id, lives)| {
-            let mut scores_sum = 0;
-            let mut scores_len = 0;
-            let mut scores_avg = 0;
-            let mut scores_max = 0;
+            let ages = {
+                let mut ages: BotStatsPart = lives
+                    .iter()
+                    .filter_map(|life| {
+                        life.age.or_else(|| {
+                            bots.alive.get(*id).map(|bot| bot.age())
+                        })
+                    })
+                    .map(|age| age.ticks() as u32)
+                    .collect();
 
-            for run in lives.iter() {
-                scores_sum += run.score;
-                scores_len += 1;
-                scores_avg += run.score;
-                scores_max = scores_max.max(run.score);
-            }
-
-            let stats = BotStats {
-                scores_sum,
-                scores_len,
-                scores_avg: (scores_avg as f32) / (scores_len as f32),
-                scores_max,
+                ages.sum /= Clock::HZ;
+                ages.avg /= Clock::HZ as f32;
+                ages.min /= Clock::HZ;
+                ages.max /= Clock::HZ;
+                ages
             };
 
-            (*id, stats)
+            let scores = lives.iter().map(|life| life.score).collect();
+
+            (*id, BotStats { ages, scores })
         })
         .collect();
 
@@ -52,8 +54,43 @@ pub fn update(
 
 #[derive(Clone, Debug)]
 pub struct BotStats {
-    pub scores_sum: u32,
-    pub scores_len: u32,
-    pub scores_avg: f32,
-    pub scores_max: u32,
+    pub ages: BotStatsPart,
+    pub scores: BotStatsPart,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct BotStatsPart {
+    pub len: u32,
+    pub sum: u32,
+    pub avg: f32,
+    pub min: u32,
+    pub max: u32,
+}
+
+impl FromIterator<u32> for BotStatsPart {
+    fn from_iter<T>(items: T) -> Self
+    where
+        T: IntoIterator<Item = u32>,
+    {
+        let mut this = Self {
+            min: u32::MAX,
+            ..Self::default()
+        };
+
+        for item in items {
+            this.len += 1;
+            this.sum += item;
+            this.avg += item as f32;
+            this.min = this.min.min(item);
+            this.max = this.max.max(item);
+        }
+
+        if this.len == 0 {
+            this.min = 0;
+        } else {
+            this.avg /= this.len as f32;
+        }
+
+        this
+    }
 }
