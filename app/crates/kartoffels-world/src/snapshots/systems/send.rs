@@ -93,7 +93,7 @@ fn prepare_alive_bots(
     let entries: Vec<_> = bots
         .iter_mut()
         .map(|bot| AliveBotSnapshot {
-            age: bot.timer.ticks(),
+            age: bot.age(),
             dir: bot.dir,
             events: bot.events.snapshot(),
             id: bot.id,

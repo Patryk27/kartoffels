@@ -23,7 +23,7 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
-use crate::{AliveBots, Dir, Map, Objects, WorldRng};
+use crate::{AliveBots, Dir, Map, Objects, Ticks, WorldRng};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
 use rand::RngCore;
@@ -90,6 +90,10 @@ impl AliveBot {
 
     pub fn log(&mut self, msg: impl Into<String>) {
         self.events.add(msg);
+    }
+
+    pub fn age(&self) -> Ticks {
+        Ticks::new(self.timer.ticks())
     }
 
     pub fn tick(

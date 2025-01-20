@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(test, derive(Default))]
 pub struct BotTimer {
     seed: u32,
-    ticks: u32, // TOOD overflows after ~18h
+    ticks: u64,
 }
 
 impl BotTimer {
@@ -21,14 +21,14 @@ impl BotTimer {
         self.ticks += 1;
     }
 
-    pub fn ticks(&self) -> u32 {
+    pub fn ticks(&self) -> u64 {
         self.ticks
     }
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
             AliveBot::MEM_TIMER => Ok(self.seed),
-            const { AliveBot::MEM_TIMER + 4 } => Ok(self.ticks),
+            const { AliveBot::MEM_TIMER + 4 } => Ok(self.ticks as u32),
 
             _ => Err(()),
         }

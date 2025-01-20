@@ -1,4 +1,4 @@
-use crate::{cfg, BotId, Event};
+use crate::{cfg, BotId, Event, Ticks};
 use ahash::AHashMap;
 use bevy_ecs::event::EventReader;
 use bevy_ecs::system::{ResMut, Resource};
@@ -51,13 +51,13 @@ pub fn update(mut lives: ResMut<Lives>, mut events: EventReader<Event>) {
                     .on_bot_scored();
             }
 
-            Event::BotDied { id, .. } => {
+            Event::BotDied { id, age } => {
                 lives
                     .entries
                     .get_mut(&id)
                     .map(Arc::make_mut)
                     .unwrap()
-                    .on_bot_died();
+                    .on_bot_died(age);
             }
 
             Event::BotDiscarded { id } => {
@@ -81,12 +81,13 @@ impl BotLives {
         self.curr.score = self.curr.score.saturating_add(1);
     }
 
-    fn on_bot_died(&mut self) {
+    fn on_bot_died(&mut self, age: Ticks) {
         if self.prev.len() >= cfg::MAX_LIVES_PER_BOT {
             self.prev.pop_front();
         }
 
         self.prev.push_back(PrevBotLife {
+            age,
             score: self.curr.score,
             born_at: self.curr.born_at,
             died_at: Utc::now(),
@@ -98,12 +99,14 @@ impl BotLives {
 
     pub fn iter(&self) -> impl Iterator<Item = BotLife> + '_ {
         let curr = self.curr.is_some().then_some(BotLife {
+            age: None,
             score: self.curr.score,
             born_at: self.curr.born_at,
             died_at: None,
         });
 
         let prev = self.prev.iter().rev().map(|life| BotLife {
+            age: Some(life.age),
             score: life.score,
             born_at: life.born_at,
             died_at: Some(life.died_at),
@@ -115,6 +118,7 @@ impl BotLives {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BotLife {
+    pub age: Option<Ticks>,
     pub score: u32,
     pub born_at: DateTime<Utc>,
     pub died_at: Option<DateTime<Utc>>,
@@ -136,6 +140,7 @@ impl CurrBotLife {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrevBotLife {
+    pub age: Ticks,
     pub score: u32,
     pub born_at: DateTime<Utc>,
     pub died_at: DateTime<Utc>,

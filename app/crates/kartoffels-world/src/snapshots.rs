@@ -5,7 +5,7 @@ pub use self::stream::*;
 pub use self::systems::*;
 use crate::{
     BotEvent, BotId, BotLife, BotLives, BotStats, Clock, Dir, Map, Object,
-    ObjectId,
+    ObjectId, Ticks,
 };
 use ahash::AHashMap;
 use bevy_ecs::system::Resource;
@@ -165,7 +165,7 @@ impl fmt::Display for AliveBotsSnapshot {
                 bot.id,
                 bot.pos,
                 bot.dir,
-                bot.age_seconds(),
+                bot.age.seconds(),
                 bot.score
             ]);
         }
@@ -176,19 +176,13 @@ impl fmt::Display for AliveBotsSnapshot {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct AliveBotSnapshot {
-    pub age: u32,
+    pub age: Ticks,
     pub dir: Dir,
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub id: BotId,
     pub pos: IVec2,
     pub score: u32,
     pub serial: Arc<VecDeque<u32>>,
-}
-
-impl AliveBotSnapshot {
-    pub fn age_seconds(&self) -> u32 {
-        self.age / Clock::HZ
-    }
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]

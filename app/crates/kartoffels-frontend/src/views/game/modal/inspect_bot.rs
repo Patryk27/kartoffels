@@ -1,6 +1,5 @@
 use super::Modal;
 use crate::views::game::Event as ParentEvent;
-use chrono::Utc;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use kartoffels_world::cfg;
 use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
@@ -91,8 +90,8 @@ impl InspectBotModal {
         }
 
         if let Some(BotSnapshot::Alive(bot)) = world.bots.get(self.id) {
-            ui.line(format!("age = {} vcpu-cycles", bot.age));
-            ui.line(format!("    = {}s", bot.age_seconds()));
+            ui.line(format!("age = {} ticks", bot.age.ticks()));
+            ui.line(format!("    = {}", bot.age.time()));
             ui.space(1);
         }
     }
@@ -134,6 +133,13 @@ impl InspectBotModal {
 
     // TODO support custom sorting
     fn render_body_lives(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+        let age = world
+            .bots
+            .alive
+            .get(self.id)
+            .map(|bot| bot.age)
+            .unwrap_or_default();
+
         let rows = world.lives.iter(self.id).map(|life| {
             let born_at = life
                 .born_at
@@ -147,20 +153,13 @@ impl InspectBotModal {
                 .unwrap_or_else(|| "-".into())
                 .fg(theme::GRAY);
 
-            let age = life
-                .died_at
-                .unwrap_or_else(Utc::now)
-                .signed_duration_since(life.born_at);
-
-            // TODO support minutes
-            let age = format!("{}s", age.num_seconds());
-            let score = life.score.to_string();
+            let age = life.age.unwrap_or(age);
 
             Row::new(vec![
                 Cell::new(born_at),
                 Cell::new(died_at),
-                Cell::new(age),
-                Cell::new(score),
+                Cell::new(age.time().to_string()),
+                Cell::new(life.score.to_string()),
             ])
         });
 

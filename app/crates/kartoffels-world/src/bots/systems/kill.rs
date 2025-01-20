@@ -42,7 +42,10 @@ pub fn kill(
             ),
         };
 
-        cmds.send_event(Event::BotDied { id: killed.id });
+        cmds.send_event(Event::BotDied {
+            id: killed.id,
+            age: killed.age(),
+        });
 
         if let Some(id) = killer {
             cmds.send_event(Event::BotScored { id: *id });

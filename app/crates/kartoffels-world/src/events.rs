@@ -3,7 +3,7 @@ mod systems;
 
 pub use self::stream::*;
 pub use self::systems::*;
-use crate::{BotId, ObjectId};
+use crate::{BotId, ObjectId, Ticks};
 use bevy_ecs::event::Event as BevyEvent;
 use bevy_ecs::system::Resource;
 use glam::IVec2;
@@ -26,7 +26,7 @@ impl Events {
 #[derive(Clone, Copy, Debug, BevyEvent)]
 pub enum Event {
     BotBorn { id: BotId },
-    BotDied { id: BotId },
+    BotDied { id: BotId, age: Ticks },
     BotMoved { id: BotId, at: IVec2 },
     BotScored { id: BotId },
     BotDiscarded { id: BotId },

@@ -324,7 +324,7 @@ impl UiWidget<Event> for Row<'_> {
 
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
-        let age = Span::raw(format!("{}s", self.bot.age_seconds()));
+        let age = Span::raw(self.bot.age.time().to_string());
         let score = Span::raw(self.bot.score.to_string());
 
         let inspect = {
