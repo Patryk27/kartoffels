@@ -70,19 +70,19 @@ impl InspectBotModal {
 
     fn render_body_stats(&self, ui: &mut Ui<Event>, world: &Snapshot) {
         if let Some(stats) = world.stats.get(self.id) {
-            ui.line(format!("len(ages) = {}", stats.ages.len));
+            ui.line(format!("lives = {}", stats.lives));
+            ui.space(1);
             ui.line(format!("sum(ages) = {}s", stats.ages.sum));
             ui.line(format!("avg(ages) = {:.2}s", stats.ages.avg));
             ui.line(format!("min(ages) = {}s", stats.ages.min));
             ui.line(format!("max(ages) = {}s", stats.ages.max));
             ui.space(1);
-            ui.line(format!("len(scores) = {}", stats.scores.len));
             ui.line(format!("sum(scores) = {}", stats.scores.sum));
             ui.line(format!("avg(scores) = {:.2}", stats.scores.avg));
             ui.line(format!("min(scores) = {}", stats.scores.min));
             ui.line(format!("max(scores) = {}", stats.scores.max));
 
-            if stats.scores.len >= (cfg::MAX_LIVES_PER_BOT as u32) {
+            if stats.lives >= (cfg::MAX_LIVES_PER_BOT as u32) {
                 ui.line("");
 
                 ui.line(format!(

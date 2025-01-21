@@ -1,4 +1,4 @@
-use crate::{BotId, Bots, Clock, Lives};
+use crate::{BotId, BotLives, Bots, Clock, Lives};
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut, Resource};
 use std::sync::Arc;
@@ -24,29 +24,7 @@ pub fn update(
     *entries = lives
         .entries
         .iter()
-        .map(|(id, lives)| {
-            let ages = {
-                let mut ages: BotStatsPart = lives
-                    .iter()
-                    .filter_map(|life| {
-                        life.age.or_else(|| {
-                            bots.alive.get(*id).map(|bot| bot.age())
-                        })
-                    })
-                    .map(|age| age.ticks() as u32)
-                    .collect();
-
-                ages.sum /= Clock::HZ;
-                ages.avg /= Clock::HZ as f32;
-                ages.min /= Clock::HZ;
-                ages.max /= Clock::HZ;
-                ages
-            };
-
-            let scores = lives.iter().map(|life| life.score).collect();
-
-            (*id, BotStats { ages, scores })
-        })
+        .map(|(id, lives)| (*id, BotStats::new(&bots, lives, *id)))
         .collect();
 
     *prev_run_at = Some(Instant::now());
@@ -56,11 +34,39 @@ pub fn update(
 pub struct BotStats {
     pub ages: BotStatsPart,
     pub scores: BotStatsPart,
+    pub lives: u32,
 }
 
-#[derive(Clone, Debug, Default)]
+impl BotStats {
+    fn new(bots: &Bots, lives: &BotLives, id: BotId) -> Self {
+        let ages = {
+            let mut ages: BotStatsPart = lives
+                .iter()
+                .filter_map(|life| {
+                    life.age.or_else(|| bots.alive.get(id).map(|bot| bot.age()))
+                })
+                .map(|age| age.ticks() as u32)
+                .collect();
+
+            ages.sum /= Clock::HZ;
+            ages.avg /= Clock::HZ as f32;
+            ages.min /= Clock::HZ;
+            ages.max /= Clock::HZ;
+            ages
+        };
+
+        let scores = lives.iter().map(|life| life.score).collect();
+
+        Self {
+            ages,
+            scores,
+            lives: lives.len() as u32,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct BotStatsPart {
-    pub len: u32,
     pub sum: u32,
     pub avg: f32,
     pub min: u32,
@@ -72,25 +78,47 @@ impl FromIterator<u32> for BotStatsPart {
     where
         T: IntoIterator<Item = u32>,
     {
-        let mut this = Self {
-            min: u32::MAX,
-            ..Self::default()
-        };
+        let mut len = 0;
+        let mut sum = 0;
+        let mut min = u32::MAX;
+        let mut max = 0;
 
         for item in items {
-            this.len += 1;
-            this.sum += item;
-            this.avg += item as f32;
-            this.min = this.min.min(item);
-            this.max = this.max.max(item);
+            len += 1;
+            sum += item;
+            min = min.min(item);
+            max = max.max(item);
         }
 
-        if this.len == 0 {
-            this.min = 0;
+        if len == 0 {
+            Self::default()
         } else {
-            this.avg /= this.len as f32;
+            Self {
+                sum,
+                avg: (sum as f32) / (len as f32),
+                min,
+                max,
+            }
         }
+    }
+}
 
-        this
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stats() {
+        let given =
+            BotStatsPart::from_iter([10, 20, 30, 40, 50, 60, 70, 80, 90]);
+
+        let expected = BotStatsPart {
+            sum: 450,
+            avg: 50.0,
+            min: 10,
+            max: 90,
+        };
+
+        assert_eq!(expected, given);
     }
 }

@@ -114,6 +114,10 @@ impl BotLives {
 
         curr.into_iter().chain(prev)
     }
+
+    pub fn len(&self) -> usize {
+        self.prev.len() + self.curr.is_some() as usize
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
