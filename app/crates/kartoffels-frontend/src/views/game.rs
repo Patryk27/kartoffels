@@ -22,7 +22,7 @@ use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
 use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Clear, Fade, FadeDir, Term, Ui, UiWidget};
+use kartoffels_ui::{theme, Clear, Fade, FadeDir, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{
     BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
 };
@@ -175,6 +175,14 @@ impl State {
         }
 
         Clear::render(ui);
+
+        for area in [side_area, bottom_area] {
+            for y in area.top()..area.bottom() {
+                for x in area.left()..area.right() {
+                    ui.buf[(x, y)].set_bg(theme::DARKER_GRAY);
+                }
+            }
+        }
 
         ui.enable(self.modal.is_none(), |ui| {
             ui.clamp(bottom_area, |ui| {

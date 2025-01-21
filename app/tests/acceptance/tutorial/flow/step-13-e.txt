@@ -5,7 +5,7 @@
                                                        dead
 
                                                        serial port
-                            ...
+                             ...
         ┌────────────────────── tutorial (13/16) ──────────────────────┐
         │ hmm, your robot seems to have died — delete it and upload    │
         │ something better, i know you have it in you                  │

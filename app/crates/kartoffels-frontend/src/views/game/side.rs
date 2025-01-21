@@ -4,21 +4,17 @@ mod joined;
 use self::idle::*;
 use self::joined::*;
 use super::{Event, State};
-use kartoffels_ui::{theme, Ui};
+use kartoffels_ui::Ui;
 
 #[derive(Debug)]
 pub struct SidePanel;
 
 impl SidePanel {
-    pub const WIDTH: u16 = 27;
+    pub const WIDTH: u16 = 26;
 
     pub fn render(ui: &mut Ui<Event>, state: &State) {
-        for y in ui.area.top()..ui.area.bottom() {
-            ui.buf[(ui.area.x, y)].set_bg(theme::DARKER_GRAY);
-        }
-
-        ui.area.x += 2;
-        ui.area.width -= 3;
+        ui.area.x += 1;
+        ui.area.width -= 1;
 
         ui.enable(state.handle.is_some(), |ui| {
             if let Some(bot) = &state.bot {
