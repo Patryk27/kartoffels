@@ -24,7 +24,7 @@ pub fn log(
     snapshots: Res<Snapshots>,
     policy: Res<Policy>,
 ) {
-    state.ticks += 1;
+    state.ticks += clock.ticks();
 
     if let Clock::Manual = &*clock {
         return;

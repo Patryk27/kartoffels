@@ -1,9 +1,8 @@
 use crate::{
-    Bots, Clock, CreateBot, HandleRx, KillBot, Map, Objects, Paused, Request,
-    Shutdown, Spawn, TickFuel, WorldRng,
+    Bots, Clock, CreateBot, Fuel, HandleRx, KillBot, Map, Objects, Paused,
+    Request, Shutdown, Spawn, WorldRng,
 };
 use bevy_ecs::system::{Commands, ResMut};
-use itertools::Either;
 use tokio::sync::mpsc::error::TryRecvError;
 use tracing::debug;
 
@@ -12,27 +11,27 @@ pub fn communicate(
     mut bots: ResMut<Bots>,
     mut clock: ResMut<Clock>,
     mut cmds: Commands,
+    mut fuel: ResMut<Fuel>,
     mut map: ResMut<Map>,
     mut objects: ResMut<Objects>,
     mut paused: ResMut<Paused>,
     mut rng: ResMut<WorldRng>,
     mut rx: ResMut<HandleRx>,
     mut spawn: ResMut<Spawn>,
-    mut tick_fuel: ResMut<TickFuel>,
 ) {
-    let rx = &mut rx.0;
-
-    if tick_fuel.dec() {
-        return;
-    }
+    fuel.tick(*clock);
 
     loop {
         let request = match *clock {
             Clock::Manual => {
-                rx.blocking_recv().ok_or(TryRecvError::Disconnected)
+                if !fuel.is_empty() {
+                    return;
+                }
+
+                rx.0.blocking_recv().ok_or(TryRecvError::Disconnected)
             }
 
-            _ => rx.try_recv(),
+            _ => rx.0.try_recv(),
         };
 
         if let Ok(request) = &request {
@@ -40,8 +39,11 @@ pub fn communicate(
         }
 
         match request {
-            Ok(Request::Tick { fuel, tx }) => {
-                tick_fuel.set(fuel, tx);
+            Ok(Request::Tick {
+                fuel: fuel_to_add,
+                tx,
+            }) => {
+                fuel.set(fuel_to_add, tx);
             }
 
             Ok(Request::Pause { tx }) => {
@@ -69,11 +71,13 @@ pub fn communicate(
             }
 
             Ok(Request::KillBot { id, reason, tx }) => {
-                cmds.send_event(KillBot {
-                    killed: Either::Left(id),
-                    reason,
-                    killer: None,
-                });
+                if let Some(bot) = bots.alive.remove(id) {
+                    cmds.send_event(KillBot {
+                        killed: Some(bot),
+                        reason,
+                        killer: None,
+                    });
+                }
 
                 _ = tx.send(());
             }

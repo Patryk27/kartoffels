@@ -1,37 +1,40 @@
 use crate::{
-    AliveBot, BotAction, Bots, Event, KillBot, Map, Objects, TileKind, WorldRng,
+    AliveBot, BotAction, Bots, Clock, Event, KillBot, Map, Objects, TileKind,
+    WorldRng,
 };
 use bevy_ecs::system::{Commands, Res, ResMut};
-use itertools::Either;
 
 pub fn tick(
     mut cmds: Commands,
+    clock: Res<Clock>,
     map: Res<Map>,
     mut bots: ResMut<Bots>,
     mut objects: ResMut<Objects>,
     mut rng: ResMut<WorldRng>,
 ) {
-    let mut idx = 0;
-    let len = bots.alive.len();
+    for _ in 0..clock.ticks() {
+        let mut idx = 0;
+        let len = bots.alive.len();
 
-    while idx < len {
-        if let Some(bot) = bots.alive.take(idx) {
-            let id = bot.id;
-            let pos = bot.pos;
+        while idx < len {
+            if let Some(bot) = bots.alive.take(idx) {
+                let id = bot.id;
+                let pos = bot.pos;
 
-            let bot = tick_bot(
-                &mut cmds,
-                &map,
-                &mut bots,
-                &mut objects,
-                &mut rng,
-                bot,
-            );
+                let bot = tick_bot(
+                    &mut cmds,
+                    &map,
+                    &mut bots,
+                    &mut objects,
+                    &mut rng,
+                    bot,
+                );
 
-            bots.alive.insert(idx, id, pos, bot);
+                bots.alive.insert(idx, id, pos, bot);
+            }
+
+            idx += 1;
         }
-
-        idx += 1;
     }
 }
 
@@ -85,11 +88,11 @@ fn tick_bot(
         }
 
         Ok(Some(BotAction::ArmStab { at })) => {
-            if let Some(killed_id) = bots.alive.lookup_at(at) {
-                bot.log(format!("killed {killed_id} (knife)"));
+            if let Some(killed) = bots.alive.remove_at(at) {
+                bot.log(format!("killed {} (knife)", killed.id));
 
                 cmds.send_event(KillBot {
-                    killed: Either::Left(killed_id),
+                    killed: Some(killed),
                     reason: format!("killed by {} (knife)", bot.id),
                     killer: Some(bot.id),
                 });
@@ -101,7 +104,7 @@ fn tick_bot(
         Ok(Some(BotAction::MotorMove { at })) => match map.get(at).kind {
             TileKind::VOID => {
                 cmds.send_event(KillBot {
-                    killed: Either::Right(Some(bot)),
+                    killed: Some(bot),
                     reason: "fell into the void".into(),
                     killer: None,
                 });
@@ -128,7 +131,7 @@ fn tick_bot(
 
         Err(err) => {
             cmds.send_event(KillBot {
-                killed: Either::Right(Some(bot)),
+                killed: Some(bot),
                 reason: format!("firmware crashed: {err}"),
                 killer: None,
             });

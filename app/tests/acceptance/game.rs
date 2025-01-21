@@ -146,7 +146,7 @@ async fn http_upload_ok() {
     let sess = ctxt.store().first_session_id();
 
     ctxt.upload_bot_http(sess, DUMMY).await;
-    ctxt.wait_for("[l] leave").await;
+    ctxt.wait_for("queued").await;
     ctxt.see_frame("game/http-upload-ok/1.txt").await;
 }
 

@@ -175,11 +175,11 @@ fn create_world(res: Resources) -> World {
         world.insert_resource(theme);
     }
 
+    world.insert_resource(Fuel::default());
     world.insert_resource(Objects::default()); // TODO persist
     world.insert_resource(Paused::default());
     world.insert_resource(Spawn::default());
     world.insert_resource(Stats::default());
-    world.insert_resource(TickFuel::default());
 
     // ---
 
@@ -267,9 +267,9 @@ fn main_schedule() -> Schedule {
         bots::spawn,
         bots::tick.run_if(active),
         bots::kill,
-        events::track,
         lives::update,
         stats::update,
+        events::track,
         snapshots::send,
         storage::save,
         lifecycle::log,

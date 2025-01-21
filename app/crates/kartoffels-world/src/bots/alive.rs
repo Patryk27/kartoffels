@@ -43,14 +43,18 @@ impl AliveBots {
         Some(bot)
     }
 
-    pub fn remove(&mut self, id: BotId) -> Option<AliveBot> {
+    pub fn remove(&mut self, id: BotId) -> Option<Box<AliveBot>> {
         let idx = self.id_to_idx.remove(&id)?;
         let bot = self.entries[idx as usize].take().unwrap();
 
         self.pos_to_id.remove(&bot.pos).unwrap();
         self.count -= 1;
 
-        Some(*bot)
+        Some(bot)
+    }
+
+    pub fn remove_at(&mut self, pos: IVec2) -> Option<Box<AliveBot>> {
+        self.remove(self.lookup_at(pos)?)
     }
 
     pub fn lookup_at(&self, pos: IVec2) -> Option<BotId> {

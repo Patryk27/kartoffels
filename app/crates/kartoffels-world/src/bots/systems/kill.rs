@@ -1,7 +1,6 @@
 use crate::{Bots, DeadBot, Event, KillBot, Policy, QueuedBot};
 use bevy_ecs::event::EventMutator;
 use bevy_ecs::system::{Commands, Res, ResMut};
-use itertools::Either;
 use tracing::trace;
 
 pub fn kill(
@@ -17,30 +16,11 @@ pub fn kill(
             killer,
         } = event;
 
-        match &killed {
-            Either::Left(id) => {
-                trace!(killed=?id, ?reason, ?killer, "killing bot");
-            }
-            Either::Right(bot) => {
-                trace!(killed=?bot, ?reason, ?killer, "killing bot");
-            }
-        }
+        let mut killed = *killed
+            .take()
+            .expect("bot is missing - maybe event has been already processed");
 
-        let mut killed = match killed {
-            Either::Left(id) => {
-                let Some(bot) = bots.alive.remove(*id) else {
-                    // Mildly sus, but not fatal - can happen when user tries to
-                    // restart a queued bot
-                    continue;
-                };
-
-                bot
-            }
-
-            Either::Right(bot) => *bot.take().expect(
-                "bot is missing - maybe event has been already processed",
-            ),
-        };
+        trace!(id=?killed.id, ?reason, ?killer, "killing bot");
 
         cmds.send_event(Event::BotDied {
             id: killed.id,

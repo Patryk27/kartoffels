@@ -31,6 +31,19 @@ impl Clock {
         Metronome::new(Self::HZ)
     }
 
+    /// How many bot-ticks to simulate at once.
+    ///
+    /// This is a performance optimization that allows us to amortize the cost
+    /// of other systems in relation to `bots::tick()` - i.e. in practice it
+    /// makes sense to run `bots::tick()` more than once, since this allows us
+    /// to utilize CPU caches etc. better.
+    pub(crate) fn ticks(&self) -> u32 {
+        match self {
+            Clock::Manual => 1,
+            _ => 32,
+        }
+    }
+
     fn speed(&self) -> Option<u32> {
         match self {
             Clock::Normal => Some(1),
@@ -60,7 +73,7 @@ impl Metronome {
             return;
         };
 
-        self.deadline += self.interval / speed;
+        self.deadline += clock.ticks() * self.interval / speed;
 
         let now = Instant::now();
 
@@ -86,34 +99,31 @@ impl Metronome {
 }
 
 #[derive(Debug, Default, Resource)]
-pub struct TickFuel {
-    fuel: u32,
+pub struct Fuel {
+    remaining: u32,
     callback: Option<oneshot::Sender<()>>,
 }
 
-impl TickFuel {
+impl Fuel {
     pub fn set(&mut self, fuel: u32, callback: oneshot::Sender<()>) {
-        assert!(self.fuel == 0 && self.callback.is_none());
+        assert!(self.remaining == 0 && self.callback.is_none());
 
-        self.fuel = fuel;
+        self.remaining = fuel;
         self.callback = Some(callback);
     }
 
-    pub fn dec(&mut self) -> bool {
-        if self.is_empty() {
-            if let Some(callback) = self.callback.take() {
-                _ = callback.send(());
-            }
+    pub fn tick(&mut self, clock: Clock) {
+        self.remaining = self.remaining.saturating_sub(clock.ticks());
 
-            false
-        } else {
-            self.fuel -= 1;
-            true
+        if self.is_empty()
+            && let Some(callback) = self.callback.take()
+        {
+            _ = callback.send(());
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.fuel == 0
+        self.remaining == 0
     }
 }
 

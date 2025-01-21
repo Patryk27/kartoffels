@@ -12,7 +12,6 @@ use anyhow::Result;
 use bevy_ecs::event::Event;
 use bevy_ecs::system::Resource;
 use glam::IVec2;
-use itertools::Either;
 use serde::{Deserialize, Serialize};
 use tokio::sync::oneshot;
 
@@ -58,7 +57,7 @@ pub struct SpawnBot {
 
 #[derive(Debug, Event)]
 pub struct KillBot {
-    pub killed: Either<BotId, Option<Box<AliveBot>>>,
+    pub killed: Option<Box<AliveBot>>,
     pub reason: String,
     pub killer: Option<BotId>,
 }
