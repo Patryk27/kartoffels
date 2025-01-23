@@ -269,14 +269,15 @@ pub struct LivesSnapshot {
 }
 
 impl LivesSnapshot {
+    pub fn get(&self, id: BotId) -> Option<&BotLives> {
+        Some(self.entries.get(&id)?)
+    }
+
     pub fn iter(
         &self,
         id: BotId,
     ) -> impl Iterator<Item = BotLifeSnapshot> + '_ {
-        self.entries
-            .get(&id)
-            .into_iter()
-            .flat_map(|lives| lives.iter())
+        self.get(id).into_iter().flat_map(|lives| lives.iter())
     }
 
     pub fn len(&self, id: BotId) -> u32 {

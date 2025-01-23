@@ -97,7 +97,7 @@ impl BotLives {
         self.len = self.len.saturating_add(1);
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = BotLife> + '_ {
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = BotLife> + '_ {
         let curr = self.curr.is_some().then_some(BotLife {
             age: None,
             score: self.curr.score,

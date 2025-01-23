@@ -3,9 +3,11 @@ use crate::views::game::Event as ParentEvent;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use kartoffels_world::cfg;
 use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
-use ratatui::layout::{Constraint, Layout};
-use ratatui::style::Stylize;
-use ratatui::widgets::{Cell, Row, Table};
+use ordinal::Ordinal;
+use ratatui::layout::{Alignment, Constraint, Layout};
+use ratatui::style::{Style, Stylize};
+use ratatui::symbols;
+use ratatui::widgets::{Axis, Cell, Chart, Dataset, GraphType, Row, Table};
 use std::fmt;
 
 pub struct InspectBotModal {
@@ -69,38 +71,109 @@ impl InspectBotModal {
     }
 
     fn render_body_stats(&self, ui: &mut Ui<Event>, world: &Snapshot) {
-        if let Some(stats) = world.stats.get(self.id) {
-            ui.line(format!("lives = {}", stats.lives));
+        let Some(stats) = world.stats.get(self.id) else {
+            return;
+        };
+
+        let Some(lives) = world.lives.get(self.id) else {
+            return;
+        };
+
+        // ---
+
+        let [col1, col2, col3] =
+            Layout::horizontal([Constraint::Fill(1); 3]).areas(ui.area);
+
+        ui.clamp(col1, |ui| {
+            ui.line(format!("curr-life = #{}", stats.lives));
             ui.space(1);
-            ui.line(format!("sum(ages) = {}s", stats.ages.sum));
+
+            match world.bots.get(self.id) {
+                Some(BotSnapshot::Alive(bot)) => {
+                    ui.line(format!("age = {} ticks", bot.age.ticks()));
+                    ui.line(format!("    = {}", bot.age.time()));
+                }
+
+                Some(BotSnapshot::Queued(bot)) => {
+                    ui.line(format!(
+                        "status = queued ({})",
+                        Ordinal(bot.place)
+                    ));
+                }
+
+                Some(BotSnapshot::Dead(_)) => {
+                    ui.line("status = dead");
+                }
+
+                None => (),
+            }
+        });
+
+        ui.clamp(col2, |ui| {
             ui.line(format!("avg(ages) = {:.2}s", stats.ages.avg));
+            ui.line(format!("sum(ages) = {}s", stats.ages.sum));
             ui.line(format!("min(ages) = {}s", stats.ages.min));
             ui.line(format!("max(ages) = {}s", stats.ages.max));
-            ui.space(1);
-            ui.line(format!("sum(scores) = {}", stats.scores.sum));
+        });
+
+        ui.clamp(col3, |ui| {
             ui.line(format!("avg(scores) = {:.2}", stats.scores.avg));
+            ui.line(format!("sum(scores) = {}", stats.scores.sum));
             ui.line(format!("min(scores) = {}", stats.scores.min));
             ui.line(format!("max(scores) = {}", stats.scores.max));
+        });
 
-            if stats.lives >= (cfg::MAX_LIVES_PER_BOT as u32) {
-                ui.line("");
+        ui.space(5);
 
-                ui.line(format!(
-                    "note: your bot has gone through {} lives, but only the \
-                     recent {} are stored",
-                    world.lives.len(self.id),
-                    cfg::MAX_LIVES_PER_BOT,
-                ));
-            }
+        if stats.lives >= (cfg::MAX_LIVES_PER_BOT as u32) {
+            ui.line(format!(
+                "note: your bot has gone through {} lives, showing only the \
+                 recent {} ones",
+                world.lives.len(self.id),
+                cfg::MAX_LIVES_PER_BOT,
+            ));
 
             ui.space(1);
         }
 
-        if let Some(BotSnapshot::Alive(bot)) = world.bots.get(self.id) {
-            ui.line(format!("age = {} ticks", bot.age.ticks()));
-            ui.line(format!("    = {}", bot.age.time()));
-            ui.space(1);
-        }
+        // ---
+
+        let dataset: Vec<_> = lives
+            .iter()
+            .rev()
+            .enumerate()
+            .map(|(idx, life)| (idx as f64, life.score as f64))
+            .collect();
+
+        let dataset = Dataset::default()
+            .name("scores")
+            .marker(symbols::Marker::Braille)
+            .graph_type(GraphType::Line)
+            .style(Style::default().fg(theme::YELLOW))
+            .data(&dataset);
+
+        let x_axis = Axis::default()
+            .title("life".fg(theme::GRAY))
+            .style(Style::default().white())
+            .bounds([0.0, lives.len() as f64])
+            .labels(["past-lives".fg(theme::GRAY), "curr-life".fg(theme::GRAY)])
+            .labels_alignment(Alignment::Right);
+
+        let y_axis = Axis::default()
+            .title("score".fg(theme::GRAY))
+            .style(Style::default().white())
+            .bounds([0.0, stats.scores.max as f64])
+            .labels([
+                "0".fg(theme::GRAY),
+                stats.scores.max.to_string().fg(theme::GRAY),
+            ]);
+
+        Chart::new(vec![dataset])
+            .x_axis(x_axis)
+            .y_axis(y_axis)
+            .style(Style::default().bg(theme::BG))
+            .legend_position(None)
+            .render(ui);
     }
 
     fn render_body_events(&self, ui: &mut Ui<Event>, world: &Snapshot) {
