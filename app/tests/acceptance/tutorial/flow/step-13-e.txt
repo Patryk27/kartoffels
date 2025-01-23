@@ -1,0 +1,30 @@
+                                                       id
+                                                       ffb1-e77f-aa68-1e82
+
+                                                       status
+                                                       dead
+
+                                                       serial port
+                             ...
+        ┌────────────────────── tutorial (13/16) ──────────────────────┐
+        │ hmm, your robot seems to have died — delete it and upload    │
+        │ something better, i know you have it in you                  │
+        │                                                              │
+        │                                            [enter] try-again │
+        └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+                                                       [i] inspect-bot
+                                                       [f] stop-following-bot
+                                                       [D] delete-bot
+[esc] go-back  [spc] pause  [h] help                                     spd:∞

@@ -1,0 +1,30 @@
+        ┌────────────────────── tutorial (13/16) ──────────────────────┐
+        │ so, how about we solidify all this knowledge by implementing │
+        │ a good-old line follower, eh?                                │
+        │                                                              │
+        │ ekhm, i'm sorry for my sudden canadian accent                │
+        │                                                              │
+        │ a line follower uses radar to check where to go next and     │
+        │ then goes there, like:                                       │
+        │                                                              │
+        │     1. scan the area                                         │
+        │     2a. if there's '.' in front you, move there              │
+        │     2b. or, if there's '.' to your left, turn left           │
+        │     2c. or, if there's '.' to your right, turn right         │
+        │     2d. otherwise stop                                       │
+        │     3. go to 1                                               │
+        │                                                              │
+        │ overall, all of those functions should be used:              │
+        │                                                              │
+        │     - motor_wait()                                           │
+        │     - motor_step()                                           │
+        │     - motor_turn_left()                                      │
+        │     - motor_turn_right()                                     │
+        │     - radar_wait()                                           │
+        │     - radar_scan_3x3()                                       │
+        │                                                              │
+        │ ... and serial_write() might come handy for debugging!       │
+        │                                                              │
+        │                                                 [enter] next │
+        └──────────────────────────────────────────────────────────────┘
+[esc] go-back  [spc] pause  [h] help                                     spd:∞

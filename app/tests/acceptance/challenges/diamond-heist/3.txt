@@ -1,0 +1,30 @@
+v1500008                                               id
+                                                       51c1-a5ea-0dfa-aed2
+
+                                                       status
+                                                       alive
+                                                       > age: 23s
+                                                       > pos: 31,2
+                                                       > dir: e
+        ┌─────────────────────── diamond-heist ────────────────────────┐
+        │ congrats!                                                    │
+        │                                                              │
+        │ now give me my diamond back and go away                      │ce
+        │                                                              │
+        │                                                   [enter] ok │
+        └──────────────────────────────────────────────────────────────┘
+           |----------|.........|                      blending in
+           +....................|                      running to the exit
+           |----------|.....←@..|
+                      -----------
+
+
+
+
+
+
+
+                                                       [i] inspect-bot
+                                                       [f] stop-following-bot
+                                                       [D] delete-bot
+[esc] go-back  [spc] pause  [h] help  [1/2/3] overclock

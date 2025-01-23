@@ -1,0 +1,30 @@
+                                                       id
+                                                       a1a5-091f-e8b8-5b7f
+
+                                                       status
+                                                       alive
+                                                       > age: 0s
+                                                       > pos: 2,1
+                                                       > dir: e
+                                                       > score: 0
+
+                                                       serial port
+                         @→...
+                        .......
+                        .......
+                        .......
+                        .......
+                        .......
+                         .....
+
+
+
+
+
+
+
+
+                                                       [i] inspect-bot
+                                                       [f] stop-following-bot
+                                                       [l] leave-bot
+[esc] go-back  [spc] pause  [h] help  [b] bots

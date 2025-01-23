@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+             ┌─────────────────────── ouch ───────────────────────┐
+             │ too many robots queued, try again in a moment      │
+             │                                                    │
+             │                                      [enter] close │
+             └────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                       [j] join-bot
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help  [b] bots

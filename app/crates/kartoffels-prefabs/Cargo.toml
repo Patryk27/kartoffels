@@ -1,0 +1,21 @@
+bin = [
+    { name = "chl-acyclic-maze", path = "src/chl-acyclic-maze.rs" },
+    { name = "chl-diamond-heist", path = "src/chl-diamond-heist.rs" },
+    { name = "chl-diamond-heist-guard", path = "src/chl-diamond-heist-guard.rs" },
+    { name = "chl-personal-roomba", path = "src/chl-personal-roomba.rs" },
+    { name = "dummy", path = "src/dummy.rs" },
+    { name = "roberto", path = "src/roberto.rs" },
+    { name = "tut-01", path = "src/tut-01.rs" },
+    { name = "tut-02", path = "src/tut-02.rs" },
+    { name = "tut-03", path = "src/tut-03.rs" },
+    { name = "tut-04", path = "src/tut-04.rs" },
+]
+
+[package]
+name = "kartoffels-prefabs"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+glam = { workspace = true, features = ["libm"] }
+kartoffel = { path = "../../crates/kartoffel" }

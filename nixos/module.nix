@@ -16,10 +16,10 @@ in
     services.kartoffels = {
       enable = mkEnableOption "kartoffels";
 
-      backend = {
+      app = {
         package = mkOption {
           type = types.package;
-          default = self.packages.${pkgs.system}.backend;
+          default = self.packages.${pkgs.system}.app;
         };
 
         data = mkOption {
@@ -43,10 +43,10 @@ in
         };
       };
 
-      frontend = {
+      web = {
         package = mkOption {
           type = types.package;
-          default = self.packages.${pkgs.system}.frontend;
+          default = self.packages.${pkgs.system}.web;
         };
       };
 
@@ -75,7 +75,7 @@ in
 
   config = mkIf cfg.enable {
     environment.systemPackages = [
-      cfg.backend.package
+      cfg.app.package
     ];
 
     services.nginx = mkIf cfg.nginx.enable {
@@ -94,16 +94,16 @@ in
 
           locations = {
             "/" = {
-              root = "${cfg.frontend.package}";
+              root = "${cfg.web.package}";
             };
 
             "/api" = {
-              proxyPass = "http://${cfg.backend.http}/";
+              proxyPass = "http://${cfg.app.http}/";
               proxyWebsockets = true;
             };
 
             "/api/" = {
-              proxyPass = "http://${cfg.backend.http}/";
+              proxyPass = "http://${cfg.app.http}/";
               proxyWebsockets = true;
             };
           };
@@ -113,13 +113,13 @@ in
 
     systemd.services.kartoffels = {
       script = ''
-        mkdir -p "${cfg.backend.data}"
+        mkdir -p "${cfg.app.data}"
 
-        ${cfg.backend.package}/bin/kartoffels serve \
-            '${cfg.backend.data}' \
-            ${optionalString (cfg.backend.http != null) "--http ${cfg.backend.http}"} \
-            ${optionalString (cfg.backend.ssh != null) "--ssh ${cfg.backend.ssh}"} \
-            ${optionalString cfg.backend.debug "--debug"}
+        ${cfg.app.package}/bin/kartoffels serve \
+            '${cfg.app.data}' \
+            ${optionalString (cfg.app.http != null) "--http ${cfg.app.http}"} \
+            ${optionalString (cfg.app.ssh != null) "--ssh ${cfg.app.ssh}"} \
+            ${optionalString cfg.app.debug "--debug"}
       '';
 
       wantedBy = [ "multi-user.target" ];

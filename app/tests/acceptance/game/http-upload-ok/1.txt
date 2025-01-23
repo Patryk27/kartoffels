@@ -1,0 +1,30 @@
+                                                       id
+                                                       a1a5-091f-e8b8-5b7f
+
+                                                       status
+                                                       queued
+                                                       > place: 2nd
+
+                                                       serial port
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                       [i] inspect-bot
+                                                       [f] stop-following-bot
+                                                       [l] leave-bot
+[esc] go-back  [spc] pause  [h] help  [b] bots
