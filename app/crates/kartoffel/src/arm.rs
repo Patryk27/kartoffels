@@ -99,7 +99,7 @@ pub fn arm_pick() {
 /// object at idx=1 would move object idx=2 back to idx=1.)
 ///
 /// If you don't have object with given index or the object can't be placed in
-/// front of you (e.g. because you're looking at a wall), nothing hapens (but
+/// front of you (e.g. because you're looking at a wall), nothing happens (but
 /// the cooldown is still applied).
 ///
 /// # Cooldown
