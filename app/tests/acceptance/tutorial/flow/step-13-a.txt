@@ -2,7 +2,8 @@
         │ so, how about we solidify all this knowledge by implementing │
         │ a good-old line follower, eh?                                │
         │                                                              │
-        │ ekhm, i'm sorry for my sudden canadian accent                │
+        │ ekhm, i'm sorry for my sudden canadian accent, don't know    │
+        │ what happened                                                │
         │                                                              │
         │ a line follower uses radar to check where to go next and     │
         │ then goes there, like:                                       │
@@ -23,8 +24,7 @@
         │     - radar_wait()                                           │
         │     - radar_scan_3x3()                                       │
         │                                                              │
-        │ ... and serial_write() might come handy for debugging!       │
+        │ ... and println!() might come handy for debugging!           │
         │                                                              │
         │                                                 [enter] next │
-        └──────────────────────────────────────────────────────────────┘
-[esc] go-back  [spc] pause  [h] help                                     spd:∞
+[esc] go└──────────────────────────────────────────────────────────────┘ spd:∞

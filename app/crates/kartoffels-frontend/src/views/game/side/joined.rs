@@ -151,34 +151,10 @@ impl JoinedSidePanel {
 
 // TODO this should be done by BotSerial and memoized
 fn render_serial(serial: &VecDeque<u32>) -> String {
-    let mut out = String::with_capacity(256);
-    let mut buf = None;
-
-    for &ch in serial {
-        match ch {
-            0xffffff00 => {
-                buf = Some(String::with_capacity(256));
-            }
-
-            0xffffff01 => {
-                out = buf.take().unwrap_or_default();
-            }
-
-            ch => {
-                if let Some(ch) = char::from_u32(ch) {
-                    if let Some(buf) = &mut buf {
-                        buf.push(ch);
-                    } else {
-                        out.push(ch);
-                    }
-                }
-            }
-        }
-    }
-
-    out
+    serial.iter().copied().filter_map(char::from_u32).collect()
 }
 
+// TODO this should be done by BotSerial and memoized
 fn reflow_serial(serial: &str, area: Rect) -> VecDeque<&str> {
     let mut lines = VecDeque::with_capacity(area.height as usize);
 

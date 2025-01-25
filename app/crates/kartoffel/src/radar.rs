@@ -131,7 +131,7 @@ fn radar_scan<const R: usize>() -> RadarScan<R> {
     RadarScan { _priv: () }
 }
 
-/// Outcome of a radar scan, like [`radar_scan_3x3()`].
+/// Outcome of a radar scan such as [`radar_scan_3x3()`].
 ///
 /// # Coordinate system
 ///

@@ -8,7 +8,7 @@ use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv64", no_mangle)]
 fn main() {
-    serial_write("driving to entrance\n");
+    println!("driving to entrance");
 
     for _ in 0..9 {
         motor_wait();
@@ -17,7 +17,7 @@ fn main() {
 
     // ---
 
-    serial_write("waiting for guard\n");
+    println!("waiting for guard");
 
     loop {
         let scan = {
@@ -32,7 +32,7 @@ fn main() {
 
     // ---
 
-    serial_write("blending in\n");
+    println!("blending in");
 
     let ticks = timer_ticks();
 
@@ -63,12 +63,12 @@ fn main() {
 
     // ---
 
-    serial_write("picking diamond\n");
+    println!("picking diamond");
     arm_pick();
 
     // ---
 
-    serial_write("blending in\n");
+    println!("blending in");
 
     motor_wait();
     motor_turn_left();
@@ -113,7 +113,7 @@ fn main() {
 
     // ---
 
-    serial_write("running to the exit\n");
+    println!("running to the exit");
 
     loop {
         motor_wait();

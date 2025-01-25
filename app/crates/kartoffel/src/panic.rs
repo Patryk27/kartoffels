@@ -1,4 +1,4 @@
-use crate::SerialOutput;
+use crate::Serial;
 use core::fmt::Write;
 use core::panic::PanicInfo;
 
@@ -6,7 +6,7 @@ use core::panic::PanicInfo;
 #[allow(clippy::empty_loop)]
 #[cfg_attr(target_arch = "riscv64", panic_handler)]
 fn panic(i: &PanicInfo) -> ! {
-    let mut output = SerialOutput;
+    let mut output = Serial;
 
     // Only print the panic message if the `serial-panic` feature is enabled.
     // Allows it to be disabled for smaller binaries.

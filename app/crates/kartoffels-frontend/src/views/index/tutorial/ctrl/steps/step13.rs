@@ -9,7 +9,10 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
              good-old *line follower*, eh?",
         ),
         MsgLine::new(""),
-        MsgLine::new("ekhm, i'm sorry for my sudden canadian accent"),
+        MsgLine::new(
+            "ekhm, i'm sorry for my sudden canadian accent, don't know what \
+             happened",
+        ),
         MsgLine::new(""),
     ]
     .into_iter()
@@ -48,9 +51,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("\t- `radar_wait()`"),
         MsgLine::new("\t- `radar_scan_3x3()`"),
         MsgLine::new(""),
-        MsgLine::new(
-            "... and `serial_write()` might come handy for debugging!",
-        ),
+        MsgLine::new("... and `println!()` might come handy for debugging!"),
     ]
 });
 

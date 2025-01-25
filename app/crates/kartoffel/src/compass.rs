@@ -16,11 +16,11 @@ use crate::{rdi, MEM_COMPASS};
 /// # use kartoffel::*;
 /// #
 /// match compass_dir() {
-///     0 => serial_write("measurement not ready yet"),
-///     1 => serial_write("north"),
-///     2 => serial_write("east"),
-///     3 => serial_write("south"),
-///     4 => serial_write("west"),
+///     0 => println!("measurement not ready yet"),
+///     1 => println!("north"),
+///     2 => println!("east"),
+///     3 => println!("south"),
+///     4 => println!("west"),
 ///     _ => unreachable!(),
 /// }
 /// ```

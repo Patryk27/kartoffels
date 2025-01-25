@@ -170,13 +170,14 @@ impl Display {
     }
 
     fn send(&self) {
-        serial_write(SerialControlCode::StartBuffering);
-        serial_write("i'm roberto 🔪\n\n");
+        serial_buffer();
+
+        println!("i'm roberto 🔪\n");
 
         for log in &self.logs {
-            serial_write(*log);
+            print!("{}", *log);
         }
 
-        serial_write(SerialControlCode::FlushBuffer);
+        serial_flush();
     }
 }

@@ -1,14 +1,16 @@
 use crate::{wri, MEM_SERIAL};
-use alloc::string::String;
 use core::fmt;
 
-/// Writes a character or a string to the serial port.
+/// Writes a single character to the serial port.
 ///
 /// Serial port is a circular buffer with capacity for 256 UTF-8 characters -
-/// writing 257th character will shift all the characters by one, removing the
-/// first character.
+/// writing 257th character shifts all the previous characters, removing the
+/// first one.
 ///
-/// See also: [`SerialControlCode`].
+/// Note that you'll most likely find [`crate::print!()`] and
+/// [`crate::println!()`] more useful.
+///
+/// See also: [`serial_buffer()`].
 ///
 /// # Example
 ///
@@ -16,96 +18,70 @@ use core::fmt;
 /// # use kartoffel::*;
 /// #
 /// serial_write('H');
-/// serial_write("Hello\nWorld");
-/// serial_write(format!("n = {}", 123));
+/// serial_write('e');
+/// serial_write('l');
+/// serial_write('l');
+/// serial_write('o');
+/// serial_write('!');
+/// serial_write('\n');
+///
+/// // or:
+///
+/// println!("Hello!");
+/// println!("Hello, {}!", "World");
 /// ```
 #[inline(always)]
-pub fn serial_write(val: impl SerialWritable) {
-    val.write();
+pub fn serial_write(ch: char) {
+    wri(MEM_SERIAL, 0, ch as u32);
 }
 
-/// Terminal control code - similar to ANSI color code, i.e. it allows to
-/// manipulate the terminal.
+/// Enables buffering.
 ///
-/// # Examples
+/// In this mode all characters written into the serial port get buffered until
+/// you call [`serial_flush()`] or [`serial_clear()`].
 ///
-/// ## Reducing flickering
+/// This comes handy for animations, interactive UIs etc., since it prevents the
+/// tearing artifact (seeing partially written text).
 ///
-/// If you plan on displaying something animated, the terminal might flicker -
-/// you can get rid of this like so:
+/// # Example
 ///
-/// ```rust,no_run
+/// ```no_run
 /// # use kartoffel::*;
 /// #
-/// let mut n = 0;
-///
 /// loop {
-///     serial_write(SerialControlCode::StartBuffering);
-///     serial_write("hello: ");
-///     serial_write(format!("{n}"));
-///     serial_write(SerialControlCode::FlushBuffer);
+///     serial_buffer();
+///
+///     println!("Hello, World!");
+///     println!("ticks = {}", timer_ticks());
+///
+///     serial_flush();
 /// }
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum SerialControlCode {
-    /// Start buffering the output.
-    ///
-    /// All characters sent from this point on will not be displayed until you
-    /// send [`SerialControlCode::FlushBuffer`].
-    StartBuffering,
-
-    /// Flush the buffered output and print it on the terminal.
-    FlushBuffer,
+#[inline(always)]
+pub fn serial_buffer() {
+    wri(MEM_SERIAL, 0, 0xffffff00);
 }
 
-impl SerialControlCode {
-    pub fn encode(&self) -> u32 {
-        let ctrl = match self {
-            SerialControlCode::StartBuffering => 0x00,
-            SerialControlCode::FlushBuffer => 0x01,
-        };
-
-        0xffffff00 | ctrl
-    }
-}
-
-/// Thing that can be written into the terminal - see [`serial_write()`].
-pub trait SerialWritable {
-    fn write(self);
-}
-
-impl SerialWritable for char {
-    fn write(self) {
-        wri(MEM_SERIAL, 0, self as u32);
-    }
-}
-
-impl SerialWritable for &str {
-    fn write(self) {
-        for ch in self.chars() {
-            ch.write();
-        }
-    }
-}
-
-impl SerialWritable for String {
-    fn write(self) {
-        for ch in self.chars() {
-            ch.write();
-        }
-    }
-}
-
-impl SerialWritable for SerialControlCode {
-    fn write(self) {
-        wri(MEM_SERIAL, 0, self.encode());
-    }
-}
-
-/// A dummy struct for writing formatted strings to the serial port.
+/// Flushes buffered characters.
 ///
-/// Implements `fmt::Write` trait, so you can use it with `write!` to write
-/// formatted strings to the serial port, totally without any allocations.
+/// If buffering hasn't been enabled, this function does nothing.
+#[inline(always)]
+pub fn serial_flush() {
+    wri(MEM_SERIAL, 0, 0xffffff01);
+}
+
+/// Clears buffered characters.
+///
+/// If buffering hasn't been enabled, this function does nothing.
+#[inline(always)]
+pub fn serial_clear() {
+    wri(MEM_SERIAL, 0, 0xffffff02);
+}
+
+/// A dummy struct for writing formatted strings to the serial port without
+/// extra allocations.
+///
+/// See also: [`crate::print!()`], [`crate::println!()`].
 ///
 /// # Example
 ///
@@ -113,16 +89,73 @@ impl SerialWritable for SerialControlCode {
 /// use kartoffel::*;
 /// use core::fmt::Write;
 ///
-/// let mut serial = SerialOutput;
-/// write!(&mut serial, "Hello, {}!", "world").unwrap();
+/// writeln!(&mut Serial, "Hello!").unwrap();
+/// writeln!(&mut Serial, "Hello, {}!", "World").unwrap();
+///
+/// // or:
+///
+/// println!("Hello!");
+/// println!("Hello, {}!", "World");
 /// ```
-pub struct SerialOutput;
+pub struct Serial;
 
-impl fmt::Write for SerialOutput {
+impl fmt::Write for Serial {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
-            c.write();
+            self.write_char(c)?;
         }
+
         Ok(())
     }
+
+    fn write_char(&mut self, c: char) -> fmt::Result {
+        serial_write(c);
+
+        Ok(())
+    }
+}
+
+/// Prints to the serial port.
+///
+/// See also: [`serial_write()`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// print!("Hello");
+/// print!("{}!", "World");
+/// print!("\n");
+/// ```
+#[cfg(any(target_arch = "riscv64", doc))]
+#[macro_export]
+macro_rules! print {
+    ($($t:tt)*) => {{
+        use ::core::fmt::Write;
+
+        write!($crate::Serial, $($t)*).unwrap();
+    }};
+}
+
+/// Prints to the serial port, with a newline.
+///
+/// See also: [`serial_write()`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// println!("Hello!");
+/// println!("Hello, {}!", "World");
+/// ```
+#[cfg(any(target_arch = "riscv64", doc))]
+#[macro_export]
+macro_rules! println {
+    ($($t:tt)*) => {{
+        use ::core::fmt::Write;
+
+        writeln!($crate::Serial, $($t)*).unwrap();
+    }};
 }

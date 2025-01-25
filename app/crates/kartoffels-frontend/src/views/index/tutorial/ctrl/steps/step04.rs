@@ -21,7 +21,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "there's no `println!()`, no `std::fs` - everything the robot has \
+            "there's no `std::fs`, no `std::net` - everything your robot has \
              access to is a bit of memory, motor, radar, and serial port",
         ),
         MsgLine::new(""),

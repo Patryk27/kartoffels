@@ -1,11 +1,14 @@
 use crate::AliveBot;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::mem;
 use std::sync::Arc;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotSerial {
-    buffer: VecDeque<u32>,
+    curr: VecDeque<u32>,
+    next: VecDeque<u32>,
+    buffering: bool,
 
     #[serde(skip_serializing)]
     #[serde(skip_deserializing)]
@@ -21,7 +24,7 @@ impl BotSerial {
 
     pub fn snapshot(&mut self) -> Arc<VecDeque<u32>> {
         self.snapshot
-            .get_or_insert_with(|| Arc::new(self.buffer.clone()))
+            .get_or_insert_with(|| Arc::new(self.curr.clone()))
             .clone()
     }
 
@@ -32,12 +35,49 @@ impl BotSerial {
     pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
         match addr {
             AliveBot::MEM_SERIAL => {
-                if self.buffer.len() >= Self::CAPACITY {
-                    self.buffer.pop_front();
-                }
+                match val {
+                    // serial_buffer()
+                    0xffffff00 => {
+                        self.buffering = true;
+                    }
 
-                self.buffer.push_back(val);
-                self.snapshot = None;
+                    // serial_flush()
+                    0xffffff01 => {
+                        if self.buffering {
+                            self.snapshot = None;
+                            self.buffering = false;
+                            self.curr.clear();
+
+                            mem::swap(&mut self.curr, &mut self.next);
+                        }
+                    }
+
+                    // serial_clear()
+                    0xffffff02 => {
+                        if self.buffering {
+                            self.buffering = false;
+                            self.next.clear();
+                        }
+                    }
+
+                    val => {
+                        let buf = if self.buffering {
+                            &mut self.next
+                        } else {
+                            &mut self.curr
+                        };
+
+                        if buf.len() >= Self::CAPACITY {
+                            buf.pop_front();
+                        }
+
+                        buf.push_back(val);
+
+                        if !self.buffering {
+                            self.snapshot = None;
+                        }
+                    }
+                }
 
                 Ok(())
             }

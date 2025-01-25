@@ -20,7 +20,7 @@
         │     - radar_wait()                                           │
         │     - radar_scan_3x3()                                       │
         │                                                              │
-        │ ... and serial_write() might come handy for debugging!       │
+        │ ... and println!() might come handy for debugging!           │
         │                                                              │
         │                                                  [esc] close │
         └──────────────────────────────────────────────────────────────┘
