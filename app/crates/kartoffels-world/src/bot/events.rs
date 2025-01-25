@@ -17,7 +17,7 @@ impl BotEvents {
     const LENGTH: usize = 128;
 
     pub fn add(&mut self, msg: impl Into<String>) {
-        while self.entries.len() >= Self::LENGTH {
+        if self.entries.len() >= Self::LENGTH {
             self.entries.pop_back();
         }
 
