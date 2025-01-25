@@ -1,5 +1,9 @@
-//! API for creating your own bot in [kartoffels](https://kartoffels.pwy.io) -
-//! see the in-game tutorial to get started!
+//! # kartoffel
+//!
+//! This crate provides basic building blocks for implementing custom robots for
+//! the [kartoffels](https://kartoffels.pwy.io) game.
+//!
+//! For example usage, see <https://github.com/patryk27/kartoffel>.
 
 #![no_std]
 
