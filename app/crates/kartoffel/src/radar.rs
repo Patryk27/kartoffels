@@ -69,7 +69,8 @@ pub fn radar_scan(r: usize) {
 #[inline(always)]
 pub fn radar_scan_3x3() -> RadarScan<3> {
     radar_scan(3);
-    RadarScan
+
+    RadarScan { _priv: () }
 }
 
 /// Scans a 5x5 square around the bot and returns the scanned area.
@@ -97,7 +98,8 @@ pub fn radar_scan_3x3() -> RadarScan<3> {
 #[inline(always)]
 pub fn radar_scan_5x5() -> RadarScan<5> {
     radar_scan(5);
-    RadarScan
+
+    RadarScan { _priv: () }
 }
 
 /// Scans a 7x7 square around the bot and returns the scanned area.
@@ -125,7 +127,8 @@ pub fn radar_scan_5x5() -> RadarScan<5> {
 #[inline(always)]
 pub fn radar_scan_7x7() -> RadarScan<7> {
     radar_scan(7);
-    RadarScan
+
+    RadarScan { _priv: () }
 }
 
 /// Scans a 9x9 square around the bot and returns the scanned area.
@@ -153,7 +156,8 @@ pub fn radar_scan_7x7() -> RadarScan<7> {
 #[inline(always)]
 pub fn radar_scan_9x9() -> RadarScan<9> {
     radar_scan(9);
-    RadarScan
+
+    RadarScan { _priv: () }
 }
 
 /// Reads data from the radar.
@@ -232,7 +236,9 @@ pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
 /// If you need to preserve an older scan, you should call [`Self::at()`] etc.
 /// and store all the information you need elsewhere.
 #[derive(Debug)]
-pub struct RadarScan<const R: usize>;
+pub struct RadarScan<const R: usize> {
+    _priv: (),
+}
 
 impl<const R: usize> RadarScan<R> {
     /// Returns the topmost thing visible at given coordinates:
