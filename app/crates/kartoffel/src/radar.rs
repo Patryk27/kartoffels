@@ -1,8 +1,7 @@
 use crate::{rdi, wri, MEM_RADAR};
 use core::num::NonZeroU64;
 
-/// Returns whether the radar is ready and [`radar_scan_3x3()`] etc. can be
-/// invoked.
+/// Returns whether the radar is ready and [`radar_scan()`] can be invoked.
 ///
 /// See also: [`radar_wait()`].
 #[inline(always)]
@@ -18,6 +17,31 @@ pub fn radar_wait() {
     while !is_radar_ready() {
         //
     }
+}
+
+/// Scans a square around the bot.
+///
+/// Note that this is a low-level function - for convenience you'll most likely
+/// want to use one of:
+///
+/// - [`radar_scan_3x3()`],
+/// - [`radar_scan_5x5()`],
+/// - [`radar_scan_7x7()`],
+/// - [`radar_scan_9x9()`].
+///
+/// See those functions for example usage.
+///
+/// # Arguments
+///
+/// Valid values of `r` are `3`, `5`, `7` or `9`. Calling this function with an
+/// invalid value of `r` does nothing.
+///
+/// # Output
+///
+/// Use [`radar_read()`] to access the scanned data.
+#[inline(always)]
+pub fn radar_scan(r: usize) {
+    wri(MEM_RADAR, 0, r as u32);
 }
 
 /// Scans a 3x3 square around the bot and returns the scanned area.
@@ -37,13 +61,15 @@ pub fn radar_wait() {
 ///
 /// let scan = radar_scan_3x3();
 ///
+/// // If there's a bot in front of us, stab it
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
 #[inline(always)]
 pub fn radar_scan_3x3() -> RadarScan<3> {
-    radar_scan()
+    radar_scan(3);
+    RadarScan
 }
 
 /// Scans a 5x5 square around the bot and returns the scanned area.
@@ -63,13 +89,15 @@ pub fn radar_scan_3x3() -> RadarScan<3> {
 ///
 /// let scan = radar_scan_5x5();
 ///
+/// // If there's a bot in front of us, stab it
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
 #[inline(always)]
 pub fn radar_scan_5x5() -> RadarScan<5> {
-    radar_scan()
+    radar_scan(5);
+    RadarScan
 }
 
 /// Scans a 7x7 square around the bot and returns the scanned area.
@@ -89,13 +117,15 @@ pub fn radar_scan_5x5() -> RadarScan<5> {
 ///
 /// let scan = radar_scan_7x7();
 ///
+/// // If there's a bot in front of us, stab it
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
 #[inline(always)]
 pub fn radar_scan_7x7() -> RadarScan<7> {
-    radar_scan()
+    radar_scan(7);
+    RadarScan
 }
 
 /// Scans a 9x9 square around the bot and returns the scanned area.
@@ -115,20 +145,43 @@ pub fn radar_scan_7x7() -> RadarScan<7> {
 ///
 /// let scan = radar_scan_9x9();
 ///
+/// // If there's a bot in front of us, stab it
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
 #[inline(always)]
 pub fn radar_scan_9x9() -> RadarScan<9> {
-    radar_scan()
+    radar_scan(9);
+    RadarScan
 }
 
-#[inline(always)]
-fn radar_scan<const R: usize>() -> RadarScan<R> {
-    wri(MEM_RADAR, 0, R as u32);
+/// Reads data from the radar.
+///
+/// Note that this is a low-level function - for convenience you'll most likely
+/// want to use [`RadarScan`], e.g. through [`radar_scan_3x3()`].
+///
+/// # Coordinate system
+///
+/// See: [`RadarScan`].
+///
+/// # Return value
+///
+/// Meaning of the returned number depends on `z`:
+///
+/// - `z=0` returns the tile located at `dx,dy` (see: [`RadarScan::at()`]),
+///
+/// - `z=1` returns the higher 32 bits of the id of the bot located at `dx,dy`
+///   (see: [`RadarScan::bot_at()`]),
+///
+/// - `z=2` returns the lower 32 bits of the id of the bot located at `dx,dy`
+///   (see: [`RadarScan::bot_at()`]).
+pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
+    let x = (dx + (r as i8 / 2)) as usize;
+    let y = (dy + (r as i8 / 2)) as usize;
+    let z = z as usize;
 
-    RadarScan { _priv: () }
+    rdi(MEM_RADAR, 1 + z * r * r + y * r + x)
 }
 
 /// Outcome of a radar scan such as [`radar_scan_3x3()`].
@@ -146,7 +199,7 @@ fn radar_scan<const R: usize>() -> RadarScan<R> {
 /// - etc.
 ///
 /// This also means that the 3x3 scan allows you to access `at(-1..=1)`, 5x5
-/// yields `at(-2..=2)` etc.
+/// gives you `at(-2..=2)` etc.
 ///
 /// The same applies to [`Self::bot_at()`].
 ///
@@ -179,20 +232,23 @@ fn radar_scan<const R: usize>() -> RadarScan<R> {
 /// If you need to preserve an older scan, you should call [`Self::at()`] etc.
 /// and store all the information you need elsewhere.
 #[derive(Debug)]
-pub struct RadarScan<const R: usize> {
-    _priv: (),
-}
+pub struct RadarScan<const R: usize>;
 
 impl<const R: usize> RadarScan<R> {
-    /// Returns what's visible at given coordinates.
+    /// Returns the topmost thing visible at given coordinates:
+    ///
+    /// - if there's a bot, returns `'@'`,
+    /// - otherwise, if there's an object, returns that object (e.g. `'*'`),
+    /// - otherwise, if there's a tile, returns that tile (e.g. `'.'` or `'|'`),
+    /// - otherwise returns `' '` (a space) representing void (driving into it
+    ///   makes you fall out of the map and die).
     ///
     /// # Coordinate system
     ///
     /// This function uses bot-centric coordinates, i.e. `at(0, -1)` points at
     /// the tile right in front of you - see [`RadarScan`] for details.
-    #[inline(always)]
     pub fn at(&self, dx: i8, dy: i8) -> char {
-        self.get_ex(dx, dy, 0) as u8 as char
+        radar_read(R, dx, dy, 0) as u8 as char
     }
 
     /// Returns id of the bot at given coordinates or `None` if there's no bot
@@ -205,27 +261,10 @@ impl<const R: usize> RadarScan<R> {
     ///
     /// This function uses bot-centric coordinates, i.e. `bot_at(0, -1)` points
     /// at the bot right in front of you - see [`RadarScan`] for details.
-    #[inline(always)]
     pub fn bot_at(&self, dx: i8, dy: i8) -> Option<NonZeroU64> {
-        let d1 = self.get_d1(dx, dy) as u64;
-        let d2 = self.get_d2(dx, dy) as u64;
+        let d1 = radar_read(R, dx, dy, 1) as u64;
+        let d2 = radar_read(R, dx, dy, 2) as u64;
 
         NonZeroU64::new((d1 << 32) | d2)
-    }
-
-    fn get_d1(&self, dx: i8, dy: i8) -> u32 {
-        self.get_ex(dx, dy, 1)
-    }
-
-    fn get_d2(&self, dx: i8, dy: i8) -> u32 {
-        self.get_ex(dx, dy, 2)
-    }
-
-    fn get_ex(&self, dx: i8, dy: i8, z: u8) -> u32 {
-        let x = (dx + (R as i8 / 2)) as usize;
-        let y = (dy + (R as i8 / 2)) as usize;
-        let z = z as usize;
-
-        rdi(MEM_RADAR, 1 + z * R * R + y * R + x)
     }
 }
