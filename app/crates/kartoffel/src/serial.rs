@@ -7,8 +7,8 @@ use core::fmt;
 /// writing 257th character shifts all the previous characters, removing the
 /// first one.
 ///
-/// Note that you'll most likely find [`crate::print!()`] and
-/// [`crate::println!()`] more useful.
+/// Note that this is a low-level function - for convenience you'll most likely
+/// want to use [`crate::print!()`] or [`crate::println!()`].
 ///
 /// See also: [`serial_buffer()`].
 ///
@@ -64,7 +64,8 @@ pub fn serial_buffer() {
 
 /// Flushes buffered characters.
 ///
-/// If buffering hasn't been enabled, this function does nothing.
+/// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
+/// nothing.
 #[inline(always)]
 pub fn serial_flush() {
     wri(MEM_SERIAL, 0, 0xffffff01);
@@ -72,14 +73,14 @@ pub fn serial_flush() {
 
 /// Clears buffered characters.
 ///
-/// If buffering hasn't been enabled, this function does nothing.
+/// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
+/// nothing.
 #[inline(always)]
 pub fn serial_clear() {
     wri(MEM_SERIAL, 0, 0xffffff02);
 }
 
-/// A dummy struct for writing formatted strings to the serial port without
-/// extra allocations.
+/// Allows to `write!()` and `writeln!()` into the serial port.
 ///
 /// See also: [`crate::print!()`], [`crate::println!()`].
 ///
