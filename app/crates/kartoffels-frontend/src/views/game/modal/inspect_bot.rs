@@ -127,7 +127,7 @@ impl InspectBotModal {
 
         if stats.lives >= (cfg::MAX_LIVES_PER_BOT as u32) {
             ui.line(format!(
-                "note: your bot has gone through {} lives, showing only the \
+                "note: this robot has gone through {} lives, showing only the \
                  recent {} ones",
                 world.lives.len(self.id),
                 cfg::MAX_LIVES_PER_BOT,
