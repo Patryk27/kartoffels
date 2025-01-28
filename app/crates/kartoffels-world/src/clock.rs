@@ -1,10 +1,12 @@
 use anyhow::Result;
 use bevy_ecs::system::{Res, ResMut, Resource};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use serde::Serialize;
 use std::thread;
 use std::time::{Duration, Instant};
 use tokio::sync::oneshot;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Resource)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Resource, Serialize)]
 pub enum Clock {
     /// Simulates at 64k bot-ticks per second
     #[default]
@@ -21,11 +23,28 @@ pub enum Clock {
 
     /// Manual clock, requires calling [`Handle::tick()`] for world to progress;
     /// useful for testing.
-    Manual,
+    Manual { now: DateTime<Utc> },
 }
 
 impl Clock {
     pub(crate) const HZ: u32 = 64_000;
+
+    pub fn manual() -> Self {
+        Self::Manual {
+            now: Utc.from_utc_datetime(&NaiveDateTime::new(
+                NaiveDate::from_ymd_opt(2018, 1, 1).unwrap(),
+                NaiveTime::from_hms_opt(12, 0, 0).unwrap(),
+            )),
+        }
+    }
+
+    pub(crate) fn now(&self) -> DateTime<Utc> {
+        if let Self::Manual { now } = self {
+            *now
+        } else {
+            Utc::now()
+        }
+    }
 
     pub(crate) fn metronome(&self) -> Metronome {
         Metronome::new(Self::HZ)
@@ -39,7 +58,7 @@ impl Clock {
     /// to utilize CPU caches etc. better.
     pub(crate) fn ticks(&self) -> u32 {
         match self {
-            Clock::Manual => 1,
+            Clock::Manual { .. } => 1,
             _ => 32,
         }
     }
@@ -49,7 +68,7 @@ impl Clock {
             Clock::Normal => Some(1),
             Clock::Fast => Some(2),
             Clock::Faster => Some(4),
-            Clock::Unlimited | Clock::Manual => None,
+            Clock::Unlimited | Clock::Manual { .. } => None,
         }
     }
 }
@@ -68,7 +87,7 @@ impl Metronome {
         }
     }
 
-    pub fn sleep(&mut self, clock: Clock) {
+    pub fn sleep(&mut self, clock: &Clock) {
         let Some(speed) = clock.speed() else {
             return;
         };
@@ -112,7 +131,7 @@ impl Fuel {
         self.callback = Some(callback);
     }
 
-    pub fn tick(&mut self, clock: Clock) {
+    pub fn tick(&mut self, clock: &Clock) {
         self.remaining = self.remaining.saturating_sub(clock.ticks());
 
         if self.is_empty()
@@ -128,5 +147,5 @@ impl Fuel {
 }
 
 pub fn sleep(clock: Res<Clock>, mut mtr: ResMut<Metronome>) {
-    mtr.sleep(*clock);
+    mtr.sleep(&clock);
 }

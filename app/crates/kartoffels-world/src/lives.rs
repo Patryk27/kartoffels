@@ -1,7 +1,7 @@
-use crate::{cfg, BotId, Event, Ticks};
+use crate::{cfg, BotId, Clock, Event, Ticks};
 use ahash::AHashMap;
 use bevy_ecs::event::EventReader;
-use bevy_ecs::system::{ResMut, Resource};
+use bevy_ecs::system::{Res, ResMut, Resource};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{hash_map, VecDeque};
@@ -22,19 +22,23 @@ impl Lives {
     }
 }
 
-pub fn update(mut lives: ResMut<Lives>, mut events: EventReader<Event>) {
+pub fn update(
+    clock: Res<Clock>,
+    mut lives: ResMut<Lives>,
+    mut events: EventReader<Event>,
+) {
     for event in events.read() {
         match *event {
             Event::BotBorn { id } => match lives.entries.entry(id) {
                 hash_map::Entry::Occupied(entry) => {
-                    Arc::make_mut(entry.into_mut()).curr.born_at = Utc::now();
+                    Arc::make_mut(entry.into_mut()).curr.born_at = clock.now();
                 }
 
                 hash_map::Entry::Vacant(entry) => {
                     entry.insert(Arc::new(BotLives {
                         curr: CurrBotLife {
                             score: 0,
-                            born_at: Utc::now(),
+                            born_at: clock.now(),
                         },
                         prev: Default::default(),
                         len: 0,
@@ -57,7 +61,7 @@ pub fn update(mut lives: ResMut<Lives>, mut events: EventReader<Event>) {
                     .get_mut(&id)
                     .map(Arc::make_mut)
                     .unwrap()
-                    .on_bot_died(age);
+                    .on_bot_died(&clock, age);
             }
 
             Event::BotDiscarded { id } => {
@@ -81,7 +85,7 @@ impl BotLives {
         self.curr.score = self.curr.score.saturating_add(1);
     }
 
-    fn on_bot_died(&mut self, age: Ticks) {
+    fn on_bot_died(&mut self, clock: &Clock, age: Ticks) {
         if self.prev.len() >= cfg::MAX_LIVES_PER_BOT {
             self.prev.pop_front();
         }
@@ -90,7 +94,7 @@ impl BotLives {
             age,
             score: self.curr.score,
             born_at: self.curr.born_at,
-            died_at: Utc::now(),
+            died_at: clock.now(),
         });
 
         self.curr = Default::default();

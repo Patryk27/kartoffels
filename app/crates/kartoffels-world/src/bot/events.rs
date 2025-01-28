@@ -1,3 +1,4 @@
+use crate::Clock;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -16,13 +17,13 @@ pub struct BotEvents {
 impl BotEvents {
     const LENGTH: usize = 128;
 
-    pub fn add(&mut self, msg: impl Into<String>) {
+    pub fn add(&mut self, clock: &Clock, msg: impl Into<String>) {
         if self.entries.len() >= Self::LENGTH {
             self.entries.pop_back();
         }
 
         self.entries.push_front(Arc::new(BotEvent {
-            at: Utc::now(),
+            at: clock.now(),
             msg: msg.into(),
         }));
 

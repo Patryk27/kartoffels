@@ -1,10 +1,11 @@
-use crate::{Bots, DeadBot, Event, KillBot, Policy, QueuedBot};
+use crate::{Bots, Clock, DeadBot, Event, KillBot, Policy, QueuedBot};
 use bevy_ecs::event::EventMutator;
 use bevy_ecs::system::{Commands, Res, ResMut};
 use tracing::trace;
 
 pub fn kill(
     mut cmds: Commands,
+    clock: Res<Clock>,
     policy: Res<Policy>,
     mut bots: ResMut<Bots>,
     mut events: EventMutator<KillBot>,
@@ -31,7 +32,7 @@ pub fn kill(
             cmds.send_event(Event::BotScored { id: *id });
         }
 
-        killed.log(&*reason);
+        killed.log(&clock, &*reason);
 
         let decision = if !killed.oneshot
             && policy.auto_respawn
@@ -44,7 +45,7 @@ pub fn kill(
 
         match decision {
             Decision::Requeue => {
-                killed.log("awaiting reincarnation");
+                killed.log(&clock, "awaiting reincarnation");
 
                 bots.queued.push_back(Box::new(QueuedBot {
                     dir: None,

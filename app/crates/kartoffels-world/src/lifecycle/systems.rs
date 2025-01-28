@@ -26,7 +26,7 @@ pub fn log(
 ) {
     state.ticks += clock.ticks();
 
-    if let Clock::Manual = &*clock {
+    if let Clock::Manual { .. } = &*clock {
         return;
     }
 

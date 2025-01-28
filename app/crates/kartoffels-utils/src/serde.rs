@@ -1,60 +1,21 @@
-#![allow(dead_code)]
+pub mod sorted_map {
+    use itertools::Itertools;
+    use serde::{Serialize, Serializer};
+    use std::collections::{BTreeMap, HashMap};
 
-pub mod instant {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::time::{Duration, Instant};
-
-    pub fn serialize<S>(
-        instant: &Instant,
+    pub fn serialize<S, K, V, St>(
+        values: &HashMap<K, V, St>,
         serializer: S,
     ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
+        K: Serialize + Ord,
+        V: Serialize,
     {
-        (*instant - Instant::now())
-            .as_secs_f32()
+        values
+            .iter()
+            .sorted_by_key(|v| v.0)
+            .collect::<BTreeMap<_, _>>()
             .serialize(serializer)
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Instant, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let duration = f32::deserialize(deserializer)?;
-        let duration = Duration::from_secs_f32(duration);
-
-        Ok(Instant::now() + duration)
-    }
-}
-
-pub mod instant_opt {
-    use serde::{Deserialize, Deserializer, Serializer};
-    use std::time::{Duration, Instant};
-
-    pub fn serialize<S>(
-        instant: &Option<Instant>,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        if let Some(instant) = instant {
-            super::instant::serialize(instant, serializer)
-        } else {
-            serializer.serialize_none()
-        }
-    }
-
-    pub fn deserialize<'de, D>(
-        deserializer: D,
-    ) -> Result<Option<Instant>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        if let Some(duration) = Option::deserialize(deserializer)? {
-            Ok(Some(Instant::now() + Duration::from_secs_f32(duration)))
-        } else {
-            Ok(None)
-        }
     }
 }

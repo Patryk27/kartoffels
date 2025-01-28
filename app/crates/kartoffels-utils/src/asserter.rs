@@ -1,6 +1,6 @@
 use pretty_assertions::private::CreateComparison;
 use std::path::{Path, PathBuf};
-use std::{fs, thread};
+use std::{env, fs, thread};
 
 #[derive(Clone, Debug)]
 pub struct Asserter {
@@ -35,16 +35,21 @@ impl Asserter {
         if expected == actual {
             _ = fs::remove_file(&expected_new_path);
         } else {
-            _ = fs::write(&expected_new_path, actual);
+            #[allow(clippy::collapsible_else_if)]
+            if env::var("BLESS").is_ok() {
+                _ = fs::write(&expected_path, actual);
+            } else {
+                _ = fs::write(&expected_new_path, actual);
 
-            eprintln!(
-                "found differences between `{}` and `{}`:\n\n{}",
-                expected_path.display(),
-                expected_new_path.display(),
-                (expected, actual).create_comparison(),
-            );
+                eprintln!(
+                    "found differences between `{}` and `{}`:\n\n{}",
+                    expected_path.display(),
+                    expected_new_path.display(),
+                    (expected, actual).create_comparison(),
+                );
 
-            self.failed = true;
+                self.failed = true;
+            }
         }
 
         self

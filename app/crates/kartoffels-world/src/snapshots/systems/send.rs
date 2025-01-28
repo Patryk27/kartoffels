@@ -64,7 +64,7 @@ pub fn send(
 
         Arc::new(Snapshot {
             bots,
-            clock: *clock,
+            clock: clock.clone(),
             lives,
             map,
             objects,
@@ -81,7 +81,7 @@ pub fn send(
     }
 
     state.next_run_at = match *clock {
-        Clock::Manual => Instant::now(),
+        Clock::Manual { .. } => Instant::now(),
         _ => Instant::now() + Duration::from_millis(33),
     };
 }

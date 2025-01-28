@@ -158,8 +158,8 @@ fn create_world(res: Resources) -> World {
     let mut world = World::new();
 
     world.insert_resource(res.bots);
-    world.insert_resource(res.clock);
     world.insert_resource(res.clock.metronome());
+    world.insert_resource(res.clock);
     world.insert_resource(res.id);
     world.insert_resource(res.map);
     world.insert_resource(res.name);

@@ -31,7 +31,7 @@ async fn acyclic_maze() {
 
     let world = ctxt.store().first_private_world();
 
-    world.overclock(Clock::Manual).await.unwrap();
+    world.overclock(Clock::manual()).await.unwrap();
     ctxt.upload_bot(CHL_ACYCLIC_MAZE).await;
     ctxt.wait_while("[u] upload-bot").await;
 
@@ -111,7 +111,7 @@ async fn personal_roomba() {
 
     let world = ctxt.store().first_private_world();
 
-    world.overclock(Clock::Manual).await.unwrap();
+    world.overclock(Clock::manual()).await.unwrap();
     ctxt.upload_bot(CHL_PERSONAL_ROOMBA).await;
     ctxt.wait_while("[u] upload-bot").await;
 

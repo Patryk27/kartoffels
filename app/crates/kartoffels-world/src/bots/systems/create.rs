@@ -1,6 +1,6 @@
 use crate::{
-    BotEvents, Bots, CreateBot, CreateBotRequest, Policy, QueuedBot, SpawnBot,
-    WorldRng,
+    BotEvents, Bots, Clock, CreateBot, CreateBotRequest, Policy, QueuedBot,
+    SpawnBot, WorldRng,
 };
 use anyhow::{anyhow, Context};
 use bevy_ecs::event::EventMutator;
@@ -12,6 +12,7 @@ use tracing::debug;
 pub fn create(
     mut cmds: Commands,
     mut bots: ResMut<Bots>,
+    clock: Res<Clock>,
     policy: Res<Policy>,
     mut rng: ResMut<WorldRng>,
     mut events: EventMutator<CreateBot>,
@@ -42,7 +43,7 @@ pub fn create(
             let mut events = BotEvents::default();
 
             if !instant {
-                events.add("uploaded");
+                events.add(&clock, "uploaded");
             }
 
             events

@@ -1,6 +1,7 @@
 use crate::{BotId, BotLives, Bots, Clock, Lives};
 use ahash::AHashMap;
 use bevy_ecs::system::{Local, Res, ResMut, Resource};
+use serde::Serialize;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -30,7 +31,7 @@ pub fn update(
     *prev_run_at = Some(Instant::now());
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct BotStats {
     pub ages: BotStatsPart,
     pub scores: BotStatsPart,
@@ -65,7 +66,7 @@ impl BotStats {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct BotStatsPart {
     pub sum: u32,
     pub avg: f32,

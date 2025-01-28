@@ -12,13 +12,14 @@ use bevy_ecs::system::Resource;
 use glam::IVec2;
 use itertools::Itertools;
 use prettytable::{row, Table};
+use serde::Serialize;
 use std::cmp::Reverse;
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::Arc;
 use tokio::sync::watch;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct Snapshot {
     pub bots: BotsSnapshot,
     pub clock: Clock,
@@ -49,7 +50,7 @@ impl fmt::Display for Snapshot {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct BotsSnapshot {
     pub alive: AliveBotsSnapshot,
     pub dead: DeadBotsSnapshot,
@@ -94,16 +95,17 @@ impl fmt::Display for BotsSnapshot {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize)]
 pub enum BotSnapshot<'a> {
     Alive(&'a AliveBotSnapshot),
     Dead(&'a DeadBotSnapshot),
     Queued(&'a QueuedBotSnapshot),
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct AliveBotsSnapshot {
     entries: Vec<AliveBotSnapshot>,
+    #[serde(with = "kartoffels_utils::serde::sorted_map")]
     id_to_idx: AHashMap<BotId, u8>,
     idx_by_scores: Vec<u8>,
 }
@@ -174,7 +176,7 @@ impl fmt::Display for AliveBotsSnapshot {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct AliveBotSnapshot {
     pub age: Ticks,
     pub dir: Dir,
@@ -185,8 +187,9 @@ pub struct AliveBotSnapshot {
     pub serial: Arc<VecDeque<u32>>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct DeadBotsSnapshot {
+    #[serde(with = "kartoffels_utils::serde::sorted_map")]
     entries: AHashMap<BotId, DeadBotSnapshot>,
 }
 
@@ -212,14 +215,15 @@ impl DeadBotsSnapshot {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct DeadBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub serial: Arc<VecDeque<u32>>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct QueuedBotsSnapshot {
+    #[serde(with = "kartoffels_utils::serde::sorted_map")]
     entries: AHashMap<BotId, QueuedBotSnapshot>,
 }
 
@@ -233,7 +237,7 @@ impl QueuedBotsSnapshot {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct QueuedBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub place: u8,
@@ -241,7 +245,7 @@ pub struct QueuedBotSnapshot {
     pub serial: Arc<VecDeque<u32>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct ObjectsSnapshot {
     objects: Vec<ObjectSnapshot>,
 }
@@ -256,15 +260,16 @@ impl ObjectsSnapshot {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ObjectSnapshot {
     pub id: ObjectId,
     pub obj: Object,
     pub pos: Option<IVec2>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct LivesSnapshot {
+    #[serde(with = "kartoffels_utils::serde::sorted_map")]
     entries: AHashMap<BotId, Arc<BotLives>>,
 }
 
@@ -290,8 +295,9 @@ impl LivesSnapshot {
 
 pub type BotLifeSnapshot = BotLife;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct StatsSnapshot {
+    #[serde(with = "kartoffels_utils::serde::sorted_map")]
     entries: Arc<AHashMap<BotId, BotStats>>,
 }
 

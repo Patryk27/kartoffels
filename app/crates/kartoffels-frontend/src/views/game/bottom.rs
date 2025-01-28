@@ -126,7 +126,7 @@ impl BottomPanel {
             }
         } else {
             let speed = match state.snapshot.clock {
-                Clock::Normal | Clock::Manual => None,
+                Clock::Normal | Clock::Manual { .. } => None,
                 Clock::Fast => Some("spd:fast"),
                 Clock::Faster => Some("spd:faster"),
                 Clock::Unlimited => Some("spd:∞"),

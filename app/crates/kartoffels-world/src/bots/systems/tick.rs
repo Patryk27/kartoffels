@@ -23,6 +23,7 @@ pub fn tick(
 
                 let bot = tick_bot(
                     &mut cmds,
+                    &clock,
                     &map,
                     &mut bots,
                     &mut objects,
@@ -40,6 +41,7 @@ pub fn tick(
 
 fn tick_bot(
     cmds: &mut Commands,
+    clock: &Clock,
     map: &Map,
     bots: &mut Bots,
     objects: &mut Objects,
@@ -49,11 +51,15 @@ fn tick_bot(
     match bot.tick(&bots.alive, map, objects, rng) {
         Ok(Some(BotAction::ArmDrop { at, idx })) => {
             if let Some((id, obj)) = bot.inventory.take(idx) {
-                bot.log(format!("dropped {} at {},{}", obj.name(), at.x, at.y));
+                bot.log(
+                    clock,
+                    format!("dropped {} at {},{}", obj.name(), at.x, at.y),
+                );
+
                 cmds.send_event(Event::ObjectDropped { id });
                 objects.add(id, obj, Some(at));
             } else {
-                bot.log("dropped nothing");
+                bot.log(clock, "dropped nothing");
             }
         }
 
@@ -63,33 +69,39 @@ fn tick_bot(
                     Ok(_) => {
                         cmds.send_event(Event::ObjectPicked { id });
 
-                        bot.log(format!(
-                            "picked {} from {},{}",
-                            obj.name(),
-                            at.x,
-                            at.y
-                        ));
+                        bot.log(
+                            clock,
+                            format!(
+                                "picked {} from {},{}",
+                                obj.name(),
+                                at.x,
+                                at.y
+                            ),
+                        );
                     }
 
                     Err(_) => {
-                        bot.log(format!(
-                            "failed to pick {} from {},{} (inventory full)",
-                            obj.name(),
-                            at.x,
-                            at.y
-                        ));
+                        bot.log(
+                            clock,
+                            format!(
+                                "failed to pick {} from {},{} (inventory full)",
+                                obj.name(),
+                                at.x,
+                                at.y
+                            ),
+                        );
 
                         objects.add(id, obj, Some(at));
                     }
                 }
             } else {
-                bot.log("picked fresh air");
+                bot.log(clock, "picked fresh air");
             }
         }
 
         Ok(Some(BotAction::ArmStab { at })) => {
             if let Some(killed) = bots.alive.remove_at(at) {
-                bot.log(format!("killed {} (knife)", killed.id));
+                bot.log(clock, format!("killed {} (knife)", killed.id));
 
                 cmds.send_event(KillBot {
                     killed: Some(killed),
@@ -97,7 +109,7 @@ fn tick_bot(
                     killer: Some(bot.id),
                 });
             } else {
-                bot.log("stabbed fresh air");
+                bot.log(clock, "stabbed fresh air");
             }
         }
 

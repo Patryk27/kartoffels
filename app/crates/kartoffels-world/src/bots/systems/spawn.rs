@@ -1,6 +1,6 @@
 use crate::{
-    AliveBot, AliveBots, Bots, Dir, Event, Map, Objects, Policy, QueuedBot,
-    Spawn, SpawnBot, WorldRng,
+    AliveBot, AliveBots, Bots, Clock, Dir, Event, Map, Objects, Policy,
+    QueuedBot, Spawn, SpawnBot, WorldRng,
 };
 use anyhow::anyhow;
 use bevy_ecs::event::EventMutator;
@@ -29,9 +29,11 @@ pub fn schedule_spawn(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn spawn(
     mut cmds: Commands,
     mut bots: ResMut<Bots>,
+    clock: Res<Clock>,
     map: Res<Map>,
     objects: Res<Objects>,
     mut rng: ResMut<WorldRng>,
@@ -63,7 +65,7 @@ pub fn spawn(
             continue;
         };
 
-        let bot = AliveBot::new(&mut rng.0, pos, dir, *bot);
+        let bot = AliveBot::new(&mut rng.0, &clock, pos, dir, *bot);
         let id = bot.id;
 
         trace!(?id, ?pos, ?dir, "spawning bot");

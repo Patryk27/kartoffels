@@ -126,7 +126,7 @@ impl Store {
     pub fn world_config(&self, name: &str) -> WorldConfig {
         if self.testing() {
             WorldConfig {
-                clock: Clock::Manual,
+                clock: Clock::manual(),
                 emit_events: true,
                 name: name.into(),
                 seed: Some(Default::default()),

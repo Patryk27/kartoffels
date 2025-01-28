@@ -19,11 +19,11 @@ pub fn communicate(
     mut rx: ResMut<HandleRx>,
     mut spawn: ResMut<Spawn>,
 ) {
-    fuel.tick(*clock);
+    fuel.tick(&clock);
 
     loop {
         let request = match *clock {
-            Clock::Manual => {
+            Clock::Manual { .. } => {
                 if !fuel.is_empty() {
                     return;
                 }
@@ -128,7 +128,7 @@ pub fn communicate(
             }
         }
 
-        if let Clock::Manual = *clock {
+        if let Clock::Manual { .. } = *clock {
             break;
         }
     }

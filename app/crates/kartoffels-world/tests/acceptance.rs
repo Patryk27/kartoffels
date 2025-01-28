@@ -27,8 +27,12 @@ async fn smoke() {
     }
 
     world.assert(&mut asserter, "1.md").await;
+    world.assert_json(&mut asserter, "1.json").await;
+
     world.tick(256).await.unwrap();
+
     world.assert(&mut asserter, "2.md").await;
+    world.assert_json(&mut asserter, "2.json").await;
 }
 
 #[tokio::test]
@@ -410,7 +414,7 @@ async fn err_couldnt_parse_firmware() {
 
 fn config() -> Config {
     Config {
-        clock: Clock::Manual,
+        clock: Clock::manual(),
         emit_events: false,
         name: "world".into(),
         path: None,
@@ -436,6 +440,12 @@ trait HandleExt {
         asserter: &mut Asserter,
         file: &str,
     ) -> impl Future<Output = ()>;
+
+    fn assert_json(
+        &self,
+        asserter: &mut Asserter,
+        file: &str,
+    ) -> impl Future<Output = ()>;
 }
 
 impl HandleExt for Handle {
@@ -444,8 +454,15 @@ impl HandleExt for Handle {
     }
 
     async fn assert(&self, asserter: &mut Asserter, file: &str) {
-        let actual = self.snapshot().await.to_string();
-        let actual = format!("{}\n", actual.trim_end());
+        let actual = self.snapshot().await;
+        let actual = format!("{}\n", actual.to_string().trim_end());
+
+        asserter.assert(file, actual);
+    }
+
+    async fn assert_json(&self, asserter: &mut Asserter, file: &str) {
+        let actual = self.snapshot().await;
+        let actual = serde_json::to_string_pretty(&actual).unwrap();
 
         asserter.assert(file, actual);
     }
