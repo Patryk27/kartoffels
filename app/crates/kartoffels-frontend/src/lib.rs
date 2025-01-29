@@ -5,18 +5,18 @@ mod views;
 
 use self::utils::*;
 use anyhow::Result;
-use kartoffels_store::{SessionToken, Store};
+use kartoffels_store::{Session, Store};
 use kartoffels_ui::{Abort, Term};
 
 pub async fn main(
     store: &Store,
-    sess: &SessionToken,
+    sess: &Session,
     term: &mut Term,
 ) -> Result<()> {
     let mut bg = Background::new(store, term);
 
     loop {
-        match views::index::run(store, sess.id(), term, &mut bg).await {
+        match views::index::run(store, sess, term, &bg).await {
             Ok(_) => {
                 return Ok(());
             }

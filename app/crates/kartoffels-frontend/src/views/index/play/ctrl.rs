@@ -1,4 +1,4 @@
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
 use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::Handle;
@@ -50,9 +50,9 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgButton::new(
             KeyCode::Char('c'),
             "copy-command",
-            HelpMsgResponse::Copy(CMD),
+            HelpMsgEvent::Copy(CMD),
         ),
-        HelpMsgResponse::close(),
+        HelpMsgEvent::close(),
     ],
 });
 

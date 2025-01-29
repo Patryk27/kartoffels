@@ -269,8 +269,6 @@ impl<T> UiWidget<T> for Button<'_, T> {
                 ui.space(4);
                 ui.line(Text::raw(help).fg(theme::GRAY));
             });
-
-            ui.space(1);
         }
 
         if resp.pressed

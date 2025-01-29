@@ -15,13 +15,13 @@ pub use self::ctrl::*;
 use self::event::*;
 use self::map::*;
 use self::modal::*;
-pub use self::modal::{HelpMsg, HelpMsgRef, HelpMsgResponse};
+pub use self::modal::{HelpMsg, HelpMsgEvent, HelpMsgRef};
 use self::overlay::*;
 use self::side::*;
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
-use kartoffels_store::{SessionId, Store};
+use kartoffels_store::{Session, Store};
 use kartoffels_ui::{theme, Clear, Fade, FadeDir, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{
     BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
@@ -37,7 +37,7 @@ use tracing::debug;
 
 pub async fn run<CtrlFn, CtrlFut>(
     store: &Store,
-    sess: SessionId,
+    sess: &Session,
     term: &mut Term,
     ctrl: CtrlFn,
 ) -> Result<()>
@@ -57,7 +57,7 @@ where
 
 async fn run_once(
     store: &Store,
-    sess: SessionId,
+    sess: &Session,
     term: &mut Term,
     mut ctrl: GameCtrlRx,
 ) -> Result<()> {
@@ -83,7 +83,7 @@ async fn run_once(
 
         if let Some(event) = event {
             if let ControlFlow::Break(_) =
-                event.handle(store, sess, term, &mut state).await?
+                event.handle(term, &mut state).await?
             {
                 fade = Some(Fade::new(FadeDir::Out));
             }
@@ -133,7 +133,7 @@ impl State {
         self.camera.tick(dt, store);
     }
 
-    fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId, store: &Store) {
+    fn render(&mut self, ui: &mut Ui<Event>, sess: &Session, store: &Store) {
         let [main_area, bottom_area] =
             Layout::vertical([Constraint::Fill(1), Constraint::Length(1)])
                 .areas(ui.area);

@@ -1,6 +1,6 @@
 use super::{BotCount, BotPosition};
 use crate::views::game::{BotSource, Event};
-use kartoffels_store::{SessionId, SessionUploadInterest, Store};
+use kartoffels_store::{Session, SessionUploadInterest};
 use kartoffels_ui::{
     theme, Button, FromMarkdown, InputEvent, KeyCode, Modifiers, Spinner,
     TermFrontend, Ui, UiWidget,
@@ -20,22 +20,16 @@ pub struct UploadBotModal {
 }
 
 impl UploadBotModal {
-    pub fn new(
-        request: UploadBotRequest<()>,
-        store: &Store,
-        sess: SessionId,
-    ) -> Self {
-        let interest = store.with_session(sess, |sess| sess.request_upload());
-
+    pub fn new(request: UploadBotRequest<()>) -> Self {
         Self {
             request,
-            interest,
+            interest: None,
             spinner: Default::default(),
             alert: Default::default(),
         }
     }
 
-    pub fn render(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
+    pub fn render(&mut self, ui: &mut Ui<Event>, sess: &Session) {
         match ui.frontend {
             TermFrontend::Ssh => {
                 self.render_ssh(ui, sess);
@@ -44,6 +38,11 @@ impl UploadBotModal {
             TermFrontend::Web => {
                 // We don't render anything for the web terminal, since it opens
                 // a file picker instead
+
+                if self.interest.is_none() {
+                    self.interest =
+                        Some(sess.with(|sess| sess.request_upload()));
+                }
             }
         }
 
@@ -70,7 +69,7 @@ impl UploadBotModal {
         }
     }
 
-    fn render_ssh(&mut self, ui: &mut Ui<Event>, sess: SessionId) {
+    fn render_ssh(&mut self, ui: &mut Ui<Event>, sess: &Session) {
         let spinner = self.spinner.as_span();
 
         if ui.key(KeyCode::Char('v'), Modifiers::CTRL) {
@@ -87,7 +86,7 @@ impl UploadBotModal {
         let height = body_height + 4;
 
         ui.info_window(width, height, Some(" upload-bot "), |ui| {
-            ui.render(&body);
+            ui.widget(&body);
             ui.space(body_height + 1);
 
             if let Some(alert) = &self.alert {
@@ -125,13 +124,13 @@ impl UploadBotModal {
                     .render(ui)
                     .pressed
                 {
-                    ui.copy(sess.to_string());
+                    ui.copy(sess.id().to_string());
                 }
             });
         });
     }
 
-    fn body(sess: SessionId) -> Paragraph<'static> {
+    fn body(sess: &Session) -> Paragraph<'static> {
         Paragraph::new(vec![
             Line::md("run this:"),
             Line::md("    ./build --copy"),
@@ -145,7 +144,7 @@ impl UploadBotModal {
                 "alternatively, if your terminal doesn't support bracketed \
                  paste, use:",
             ),
-            Line::md(&format!("    ./build --upload {sess}")),
+            Line::md(&format!("    ./build --upload {}", sess.id())),
         ])
         .wrap(Wrap::default())
     }

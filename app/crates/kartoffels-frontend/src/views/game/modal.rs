@@ -16,7 +16,7 @@ pub use self::join_bot::*;
 pub use self::spawn_bot::*;
 pub use self::upload_bot::*;
 use super::Event;
-use kartoffels_store::SessionId;
+use kartoffels_store::Session;
 use kartoffels_ui::{Backdrop, KeyCode, Modifiers, Ui};
 use kartoffels_world::prelude::Snapshot;
 
@@ -38,7 +38,7 @@ impl Modal {
     pub fn render(
         &mut self,
         ui: &mut Ui<Event>,
-        sess: SessionId,
+        sess: &Session,
         world: &Snapshot,
     ) {
         Backdrop::render(ui);
@@ -73,10 +73,10 @@ impl Modal {
 
                 if let Some(event) = event {
                     match event {
-                        HelpMsgResponse::Copy(payload) => {
+                        HelpMsgEvent::Copy(payload) => {
                             ui.copy(payload);
                         }
-                        HelpMsgResponse::Close => {
+                        HelpMsgEvent::Close => {
                             ui.throw(Event::CloseModal);
                         }
                     }

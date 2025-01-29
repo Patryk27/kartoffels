@@ -1,6 +1,6 @@
 use super::{Challenge, CONFIG};
 use crate::utils;
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgResponse};
+use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, UVec2};
@@ -57,7 +57,7 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
     body: DOCS.clone(),
-    buttons: vec![HelpMsgResponse::close()],
+    buttons: vec![HelpMsgEvent::close()],
 });
 
 static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {

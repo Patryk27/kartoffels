@@ -3,14 +3,14 @@ mod ctrl;
 use crate::views::game;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::{SessionId, Store};
+use kartoffels_store::{Session, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, UiWidget};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
-    sess: SessionId,
+    sess: &Session,
     term: &mut Term,
     bg: &Background,
 ) -> Result<()> {
@@ -51,7 +51,7 @@ async fn run_once<'a>(
     let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
-        let resp = term
+        let event = term
             .frame(|ui| {
                 let width = store
                     .public_worlds()
@@ -94,25 +94,25 @@ async fn run_once<'a>(
             })
             .await?;
 
-        if let Some((fade, resp)) = &fade_out {
+        if let Some((fade, event)) = &fade_out {
             if fade.is_completed() {
-                return Ok(resp.clone());
+                return Ok(*event);
             }
 
             continue;
         }
 
-        if let Some(resp) = resp {
-            if resp.fade_out() && !store.testing() {
-                fade_out = Some((Fade::new(FadeDir::Out), resp));
+        if let Some(event) = event {
+            if event.fade_out() && !store.testing() {
+                fade_out = Some((Fade::new(FadeDir::Out), event));
             } else {
-                return Ok(resp);
+                return Ok(event);
             }
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 enum Event<'a> {
     Play(&'a WorldHandle),
     GoBack,

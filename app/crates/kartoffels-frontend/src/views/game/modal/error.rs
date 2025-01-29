@@ -30,9 +30,9 @@ impl ErrorModal {
             ])
             .areas(ui.area);
 
-            ui.render_at(text_area, &self.error);
+            ui.widget_at(text_area, &self.error);
 
-            ui.render_at(footer_area, {
+            ui.widget_at(footer_area, {
                 Button::new(KeyCode::Enter, "close")
                     .throwing(Event::CloseModal)
                     .right_aligned()

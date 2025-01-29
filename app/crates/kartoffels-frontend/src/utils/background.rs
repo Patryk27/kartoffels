@@ -1,6 +1,6 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Term, Ui};
+use kartoffels_ui::{theme, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileKind};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -42,8 +42,12 @@ impl Background {
 
         Self { stream, camera }
     }
+}
 
-    pub fn render<T>(&self, ui: &mut Ui<T>) {
+impl<T> UiWidget<T> for &Background {
+    type Response = ();
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let map = self.stream.borrow().clone();
 
         for x in 0..ui.area.width {

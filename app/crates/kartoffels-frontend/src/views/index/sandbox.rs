@@ -8,7 +8,7 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use glam::uvec2;
-use kartoffels_store::{SessionId, Store};
+use kartoffels_store::{Session, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, Ui, UiWidget};
 use kartoffels_world::prelude::{ArenaTheme, DungeonTheme, Theme};
 use std::ops::ControlFlow;
@@ -16,7 +16,7 @@ use tracing::debug;
 
 pub async fn run(
     store: &Store,
-    sess: SessionId,
+    sess: &Session,
     term: &mut Term,
     bg: &Background,
 ) -> Result<()> {

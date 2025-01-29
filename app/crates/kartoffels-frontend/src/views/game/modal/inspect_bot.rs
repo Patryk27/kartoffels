@@ -268,7 +268,7 @@ impl InspectBotModal {
                     ui.span(" • ");
                 }
 
-                ui.render(if self.tab == tab {
+                ui.widget(if self.tab == tab {
                     tab.btn().bold()
                 } else {
                     tab.btn()
@@ -289,8 +289,8 @@ impl InspectBotModal {
             ])
             .areas(ui.area);
 
-            ui.render_at(join_area, join);
-            ui.render_at(close_area, close);
+            ui.widget_at(join_area, join);
+            ui.widget_at(close_area, close);
         });
     }
 

@@ -133,7 +133,7 @@ impl Term {
     where
         F: FnOnce(&mut Ui<T>),
     {
-        let mut resp = None;
+        let mut event = None;
         let mut clipboard = Vec::new();
 
         if self.size.x < 80 || self.size.y < 30 {
@@ -163,7 +163,7 @@ impl Term {
                     clipboard: &mut clipboard,
                     layout: UiLayout::Col,
                     enabled: true,
-                    thrown: &mut resp,
+                    thrown: &mut event,
                 });
             })?;
         }
@@ -174,7 +174,7 @@ impl Term {
             self.copy_to_clipboard(payload).await?;
         }
 
-        Ok(resp)
+        Ok(event)
     }
 
     async fn poll(&mut self) -> Result<()> {

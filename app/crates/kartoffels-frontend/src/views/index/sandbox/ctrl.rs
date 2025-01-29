@@ -1,5 +1,5 @@
 use crate::utils;
-use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgResponse};
+use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
@@ -37,7 +37,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         ),
     ],
 
-    buttons: vec![HelpMsgResponse::close()],
+    buttons: vec![HelpMsgEvent::close()],
 });
 
 const CONFIG: Config = Config {

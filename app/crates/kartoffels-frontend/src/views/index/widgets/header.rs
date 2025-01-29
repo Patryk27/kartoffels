@@ -47,7 +47,7 @@ impl Header {
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            ui.render(&*TEXT);
+            ui.widget(&*TEXT);
         });
     }
 }

@@ -1,43 +1,59 @@
 #![feature(try_blocks)]
 
 mod open;
+mod session;
 
+pub use self::session::*;
 use ahash::AHashMap;
 use anyhow::{anyhow, Result};
-use derivative::Derivative;
-use kartoffels_utils::Id;
 use kartoffels_world::prelude::{
     Clock, Config as WorldConfig, Handle as WorldHandle,
 };
-use rand::Rng;
-use serde::{Deserialize, Serialize};
-use std::collections::hash_map;
-use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use tokio::sync::{oneshot, Semaphore};
-use tracing::{debug, info};
+use tokio::sync::Semaphore;
+use tracing::info;
 
 #[derive(Debug)]
 pub struct Store {
     dir: Option<PathBuf>,
+    secret: Option<String>,
     public_worlds: Vec<WorldHandle>,
     private_worlds: Mutex<Vec<WorldHandle>>,
     private_worlds_sem: Arc<Semaphore>,
-    sessions: Arc<Mutex<AHashMap<SessionId, Session>>>,
+    sessions: Arc<Mutex<AHashMap<SessionId, Arc<Mutex<SessionEntry>>>>>,
     testing: bool,
 }
 
 impl Store {
-    pub async fn open(dir: Option<&Path>) -> Result<Self> {
+    pub const MAX_SECRET_LENGTH: usize = 64;
+
+    pub async fn open(
+        dir: Option<&Path>,
+        secret: Option<String>,
+    ) -> Result<Self> {
         info!("opening");
 
         let public_worlds = open::load_worlds(dir).await?;
+
+        if let Some(secret) = &secret {
+            if secret.len() > Self::MAX_SECRET_LENGTH {
+                return Err(anyhow!(
+                    "secret is too long - the limit is {} characters",
+                    Self::MAX_SECRET_LENGTH
+                ));
+            }
+
+            if secret.chars().any(|ch| ch.is_ascii_control()) {
+                return Err(anyhow!("secret contains forbidden characters"));
+            }
+        }
 
         info!("ready");
 
         Ok(Self {
             dir: dir.map(|dir| dir.to_owned()),
+            secret,
             public_worlds,
             private_worlds: Default::default(),
             private_worlds_sem: Arc::new(Semaphore::new(128)), // TODO make configurable
@@ -47,7 +63,7 @@ impl Store {
     }
 
     pub async fn test(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
-        let mut this = Self::open(None).await.unwrap();
+        let mut this = Self::open(None, None).await.unwrap();
 
         this.public_worlds = worlds.into_iter().collect();
         this.testing = true;
@@ -55,9 +71,23 @@ impl Store {
     }
 
     pub fn dir(&self) -> &Path {
-        self.dir
-            .as_deref()
-            .expect("Store::test() is not backed by any directory")
+        self.dir.as_deref().unwrap()
+    }
+
+    pub fn secret(&self) -> Option<&str> {
+        self.secret.as_deref()
+    }
+
+    pub fn with_session<T>(
+        &self,
+        id: SessionId,
+        f: impl FnOnce(&mut SessionEntry) -> T,
+    ) -> Option<T> {
+        self.sessions
+            .lock()
+            .unwrap()
+            .get(&id)
+            .map(|sess| f(&mut sess.lock().unwrap()))
     }
 
     pub fn create_private_world(
@@ -87,32 +117,8 @@ impl Store {
         &self.public_worlds
     }
 
-    pub fn create_session(&self) -> SessionToken {
-        let mut rng = rand::thread_rng();
-        let mut sessions = self.sessions.lock().unwrap();
-
-        loop {
-            let id = SessionId(rng.gen());
-
-            if let hash_map::Entry::Vacant(entry) = sessions.entry(id) {
-                entry.insert(Default::default());
-
-                info!(?id, "session created");
-
-                return SessionToken {
-                    id,
-                    sessions: self.sessions.clone(),
-                };
-            }
-        }
-    }
-
-    pub fn with_session<T>(
-        &self,
-        id: SessionId,
-        f: impl FnOnce(&mut Session) -> T,
-    ) -> Option<T> {
-        self.sessions.lock().unwrap().get_mut(&id).map(f)
+    pub fn create_session(&self) -> Session {
+        Session::create(self.sessions.clone())
     }
 
     pub fn first_session_id(&self) -> SessionId {
@@ -147,74 +153,5 @@ impl Store {
         }
 
         Ok(())
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Session {
-    upload: Option<oneshot::Sender<Vec<u8>>>,
-}
-
-impl Session {
-    pub fn request_upload(&mut self) -> SessionUploadInterest {
-        let (tx, rx) = oneshot::channel();
-
-        self.upload = Some(tx);
-
-        SessionUploadInterest { rx }
-    }
-
-    #[allow(clippy::result_unit_err)]
-    pub fn complete_upload(&mut self, src: Vec<u8>) -> Result<(), ()> {
-        if let Some(tx) = self.upload.take() {
-            _ = tx.send(src);
-
-            Ok(())
-        } else {
-            Err(())
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct SessionUploadInterest {
-    rx: oneshot::Receiver<Vec<u8>>,
-}
-
-impl SessionUploadInterest {
-    pub fn try_recv(&mut self) -> Option<Vec<u8>> {
-        self.rx.try_recv().ok()
-    }
-}
-
-#[derive(
-    Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Derivative,
-)]
-#[derivative(Debug = "transparent")]
-pub struct SessionId(Id);
-
-impl fmt::Display for SessionId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-#[derive(Debug)]
-pub struct SessionToken {
-    id: SessionId,
-    sessions: Arc<Mutex<AHashMap<SessionId, Session>>>,
-}
-
-impl SessionToken {
-    pub fn id(&self) -> SessionId {
-        self.id
-    }
-}
-
-impl Drop for SessionToken {
-    fn drop(&mut self) {
-        debug!(id = ?self.id, "session dropped");
-
-        self.sessions.lock().unwrap().remove(&self.id);
     }
 }

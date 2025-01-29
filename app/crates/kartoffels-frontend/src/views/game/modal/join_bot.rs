@@ -1,33 +1,19 @@
 use crate::views::game::Event;
 use anyhow::anyhow;
-use kartoffels_ui::{
-    Button, Caret, InputEvent, KeyCode, Modifiers, Ui, UiWidget,
-};
+use kartoffels_ui::{Button, Input, InputEvent, KeyCode, Ui, UiWidget};
 use kartoffels_world::prelude::{BotId, Snapshot};
-use ratatui::text::{Line, Span};
 
 #[derive(Debug, Default)]
 pub struct JoinBotModal {
-    id: String,
-    caret: Caret,
+    id: Input,
 }
 
 impl JoinBotModal {
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
         ui.info_window(26, 4, Some(" join-bot "), |ui| {
             ui.line("enter bot id:");
-
-            ui.line(Line::from_iter([
-                Span::raw("> "),
-                Span::raw(&self.id),
-                self.caret.as_span(),
-            ]));
-
+            ui.widget(&mut self.id);
             ui.space(1);
-
-            if let Some(event) = ui.event {
-                self.handle(ui, world, event);
-            }
 
             ui.row(|ui| {
                 Button::new(KeyCode::Escape, "cancel")
@@ -42,54 +28,17 @@ impl JoinBotModal {
                     self.handle_confirm(ui, world);
                 }
             });
+
+            if let Some(InputEvent::Paste(_)) = ui.event
+                && self.id.value().len() == BotId::LENGTH
+            {
+                self.handle_confirm(ui, world);
+            }
         });
     }
 
-    fn handle(
-        &mut self,
-        ui: &mut Ui<Event>,
-        world: &Snapshot,
-        event: &InputEvent,
-    ) {
-        match event {
-            InputEvent::Key(event) => match (event.key, event.modifiers) {
-                (KeyCode::Char(ch), Modifiers::NONE) => {
-                    self.handle_insert(ch);
-                }
-
-                (KeyCode::Backspace, Modifiers::NONE) => {
-                    self.id.pop();
-                }
-
-                _ => {}
-            },
-
-            InputEvent::Paste(payload) => {
-                for ch in payload.chars() {
-                    self.handle_insert(ch);
-                }
-
-                if self.id.len() == BotId::LENGTH {
-                    self.handle_confirm(ui, world);
-                }
-            }
-
-            _ => {}
-        }
-    }
-
-    fn handle_insert(&mut self, ch: char) {
-        if self.id.len() >= BotId::LENGTH {
-            return;
-        }
-
-        if ch.is_alphanumeric() || ch == '-' {
-            self.id.push(ch);
-        }
-    }
-
     fn handle_confirm(&self, ui: &mut Ui<Event>, world: &Snapshot) {
-        let id = self.id.trim();
+        let id = self.id.value().trim();
 
         if id.is_empty() {
             ui.throw(Event::CloseModal);
@@ -98,7 +47,7 @@ impl JoinBotModal {
 
         let Ok(id) = id.parse() else {
             ui.throw(Event::OpenErrorModal {
-                error: anyhow!("`{}` is not a valid bot id", self.id)
+                error: anyhow!("`{id}` is not a valid bot id")
                     .context("couldn't join bot"),
             });
 

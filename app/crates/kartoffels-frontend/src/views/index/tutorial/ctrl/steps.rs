@@ -16,7 +16,7 @@ pub mod step15;
 
 mod prelude {
     pub(super) use super::super::TutorialCtxt;
-    pub(super) use crate::views::game::{HelpMsg, HelpMsgResponse};
+    pub(super) use crate::views::game::{HelpMsg, HelpMsgEvent};
     pub(super) use anyhow::Result;
     pub(super) use glam::*;
     pub(super) use kartoffels_prefabs::DUMMY;

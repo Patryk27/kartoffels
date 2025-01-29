@@ -48,11 +48,15 @@ impl<T> Ui<'_, T> {
     }
 
     pub fn row<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
-        self.with(|ui| {
+        let result = self.with(|ui| {
             ui.layout = UiLayout::Row;
 
             f(ui)
-        })
+        });
+
+        self.space(1);
+
+        result
     }
 
     pub fn enable<U>(
@@ -81,11 +85,21 @@ impl<T> Ui<'_, T> {
         }
     }
 
+    pub fn widget(&mut self, widget: impl UiWidget<T>) {
+        widget.render(self);
+    }
+
+    pub fn widget_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
+        self.clamp(area, |ui| {
+            ui.widget(widget);
+        });
+    }
+
     pub fn line<'x>(&mut self, line: impl Into<Text<'x>>) -> u16 {
         let para = Paragraph::new(line).wrap(Wrap::default());
         let height = para.line_count(self.area.width) as u16;
 
-        self.render(para);
+        self.widget(para);
         self.space(height);
 
         height
@@ -95,14 +109,14 @@ impl<T> Ui<'_, T> {
         let span = span.into();
         let width = span.width() as u16;
 
-        self.render(span);
+        self.widget(span);
         self.space(width);
     }
 
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         Clear::render(self);
 
-        self.render(&block);
+        self.widget(&block);
         self.clamp(block.inner(self.area), f);
     }
 
@@ -201,16 +215,6 @@ impl<T> Ui<'_, T> {
 
     pub fn copy(&mut self, payload: impl AsRef<str>) {
         self.clipboard.push(payload.as_ref().to_owned());
-    }
-
-    pub fn render(&mut self, widget: impl UiWidget<T>) {
-        widget.render(self);
-    }
-
-    pub fn render_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
-        self.clamp(area, |ui| {
-            ui.render(widget);
-        });
     }
 
     pub fn throw(&mut self, event: T) {

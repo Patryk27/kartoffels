@@ -17,7 +17,7 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
                 let width = 60;
                 let height = err.line_count(width) as u16 + 2;
 
-                bg.render(ui);
+                ui.widget(bg);
 
                 ui.error_window(width, height, Some(" ouch "), |ui| {
                     let [text_area, _, footer_area] = Layout::vertical([
@@ -27,9 +27,9 @@ pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
                     ])
                     .areas(ui.area);
 
-                    ui.render_at(text_area, &err);
+                    ui.widget_at(text_area, &err);
 
-                    ui.render_at(footer_area, {
+                    ui.widget_at(footer_area, {
                         Button::new(KeyCode::Enter, "close")
                             .throwing(())
                             .right_aligned()

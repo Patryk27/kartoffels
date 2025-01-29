@@ -48,7 +48,7 @@ static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgLine::web("!! don't forget to re-run `./build` !!"),
     ],
 
-    buttons: vec![HelpMsgResponse::close()],
+    buttons: vec![HelpMsgEvent::close()],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

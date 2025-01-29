@@ -39,6 +39,9 @@ pub struct Cmd {
     ssh: Option<SocketAddr>,
 
     #[clap(long)]
+    secret: Option<String>,
+
+    #[clap(long)]
     debug: bool,
 
     #[clap(long)]
@@ -92,9 +95,11 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!(?self, "starting");
 
-        let store = Store::open(Some(&self.data)).await.with_context(|| {
-            format!("couldn't load store from `{}`", self.data.display())
-        })?;
+        let store = Store::open(Some(&self.data), self.secret)
+            .await
+            .with_context(|| {
+                format!("couldn't open store at `{}`", self.data.display())
+            })?;
 
         if self.bench {
             for world in store.public_worlds() {

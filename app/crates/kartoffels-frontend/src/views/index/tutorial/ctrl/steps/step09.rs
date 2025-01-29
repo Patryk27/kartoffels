@@ -14,7 +14,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
     body: DOCS.clone(),
-    buttons: vec![HelpMsgResponse::close()],
+    buttons: vec![HelpMsgEvent::close()],
 });
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {

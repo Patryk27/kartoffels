@@ -7,7 +7,6 @@ use anyhow::{anyhow, Error, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use glam::IVec2;
-use kartoffels_store::{SessionId, Store};
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
 use std::borrow::Cow;
@@ -62,8 +61,6 @@ pub enum Event {
 impl Event {
     pub async fn handle(
         self,
-        store: &Store,
-        sess: SessionId,
         term: &mut Term,
         state: &mut State,
     ) -> Result<ControlFlow<(), ()>> {
@@ -154,7 +151,7 @@ impl Event {
                     }
 
                     state.modal = Some(Box::new(Modal::UploadBot(
-                        UploadBotModal::new(request, store, sess),
+                        UploadBotModal::new(request),
                     )));
                 }
 

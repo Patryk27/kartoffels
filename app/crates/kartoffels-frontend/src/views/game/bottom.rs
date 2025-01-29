@@ -10,6 +10,10 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
+        if state.handle.is_some() {
+            Self::render_status(ui, state);
+        }
+
         ui.row(|ui| {
             Self::render_go_back_btn(ui);
 
@@ -35,10 +39,6 @@ impl BottomPanel {
                 }
             }
         });
-
-        if state.handle.is_some() {
-            Self::render_status(ui, state);
-        }
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
@@ -148,6 +148,6 @@ impl BottomPanel {
             height: 1,
         };
 
-        ui.render_at(area, span);
+        ui.widget_at(area, span);
     }
 }

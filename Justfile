@@ -3,6 +3,7 @@ run *args:
     && cargo run --release -- \
            serve \
            ../data \
+           --secret secret \
            --http 127.0.0.1:1313 \
            --ssh 127.0.0.1:1314 \
            {{ args }}

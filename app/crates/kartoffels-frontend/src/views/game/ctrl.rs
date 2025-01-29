@@ -70,25 +70,25 @@ impl GameCtrl {
         let mut tx = Some(tx);
 
         self.open_modal(move |ui| {
-            let resp = ui.catch(|ui| {
+            let event = ui.catch(|ui| {
                 msg.render(ui);
             });
 
-            if let Some(resp) = resp
+            if let Some(event) = event
                 && let Some(tx) = tx.take()
             {
-                _ = tx.send(resp);
+                _ = tx.send(event);
             }
         })
         .await?;
 
-        let resp = rx.await?;
+        let event = rx.await?;
 
         time::sleep(theme::FRAME_TIME).await;
 
         self.close_modal().await?;
 
-        Ok(resp)
+        Ok(event)
     }
 
     pub async fn set_help(&self, help: Option<HelpMsgRef>) -> Result<()> {

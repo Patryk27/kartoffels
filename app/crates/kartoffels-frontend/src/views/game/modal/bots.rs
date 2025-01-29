@@ -131,7 +131,7 @@ impl BotsModal {
                 });
 
             for (row, area) in rows.zip(ui.area.rows()) {
-                ui.render_at(area, row);
+                ui.widget_at(area, row);
             }
         });
 
@@ -172,8 +172,6 @@ impl BotsModal {
                     .render(ui);
             }
         });
-
-        ui.space(1);
 
         ui.row(|ui| {
             Button::new(KeyCode::Char('s'), "scroll-down")

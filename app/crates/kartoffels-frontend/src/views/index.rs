@@ -1,3 +1,4 @@
+mod admin;
 mod challenges;
 mod play;
 mod sandbox;
@@ -7,21 +8,26 @@ mod widgets;
 use self::widgets::*;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::{SessionId, Store};
-use kartoffels_ui::{Fade, FadeDir, Term, UiWidget};
+use kartoffels_store::{Session, Store};
+use kartoffels_ui::{Fade, FadeDir, KeyCode, Modifiers, Term, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
-    sess: SessionId,
+    sess: &Session,
     term: &mut Term,
-    bg: &mut Background,
+    bg: &Background,
 ) -> Result<()> {
     let mut fade_in = true;
 
     loop {
         match run_once(store, term, bg, fade_in).await? {
+            Event::Admin => {
+                admin::run(store, sess, term, bg).await?;
+                fade_in = false;
+            }
+
             Event::Play => {
                 play::run(store, sess, term, bg).await?;
                 fade_in = false;
@@ -52,7 +58,7 @@ pub async fn run(
 async fn run_once(
     store: &Store,
     term: &mut Term,
-    bg: &mut Background,
+    bg: &Background,
     fade_in: bool,
 ) -> Result<Event> {
     debug!("run()");
@@ -66,7 +72,7 @@ async fn run_once(
     let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
-        let resp = term
+        let event = term
             .frame(|ui| {
                 let [_, area, _] = Layout::horizontal([
                     Constraint::Fill(1),
@@ -91,7 +97,7 @@ async fn run_once(
                 ])
                 .areas(menu_area);
 
-                bg.render(ui);
+                ui.widget(bg);
 
                 ui.clamp(header_area, |ui| {
                     Header::render(ui);
@@ -112,20 +118,24 @@ async fn run_once(
                 if let Some((fade, _)) = &fade_out {
                     fade.render(ui);
                 }
+
+                if ui.key(KeyCode::Char('x'), Modifiers::ALT) {
+                    ui.throw(Event::Admin);
+                }
             })
             .await?;
 
-        if let Some((fade, resp)) = &fade_out
+        if let Some((fade, event)) = &fade_out
             && fade.is_completed()
         {
-            return Ok(*resp);
+            return Ok(*event);
         }
 
-        if let Some(resp) = resp {
-            if resp.fade_out() && !store.testing() {
-                fade_out = Some((Fade::new(FadeDir::Out), resp));
+        if let Some(event) = event {
+            if event.fade_out() && !store.testing() {
+                fade_out = Some((Fade::new(FadeDir::Out), event));
             } else {
-                return Ok(resp);
+                return Ok(event);
             }
         }
     }
@@ -133,6 +143,7 @@ async fn run_once(
 
 #[derive(Clone, Copy, Debug)]
 enum Event {
+    Admin,
     Play,
     Sandbox,
     Tutorial,
