@@ -1,5 +1,7 @@
 use crate::views::game::Event;
+use anyhow::Error;
 use kartoffels_ui::{Button, KeyCode, Ui};
+use kartoffels_utils::ErrorExt;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::Paragraph;
 
@@ -9,14 +11,15 @@ pub struct ErrorModal {
 }
 
 impl ErrorModal {
-    pub fn new(error: String) -> Self {
+    pub fn new(error: Error) -> Self {
         Self {
-            error: Paragraph::new(error).wrap(Default::default()),
+            error: Paragraph::new(error.to_fmt_string())
+                .wrap(Default::default()),
         }
     }
 
     pub fn render(&self, ui: &mut Ui<Event>) {
-        let width = 50;
+        let width = 60;
         let height = self.error.line_count(width) as u16 + 2;
 
         ui.error_window(width, height, Some(" ouch "), |ui| {

@@ -1,12 +1,12 @@
 //! Solution for the `diamond-heist` challenge.
 
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 extern crate kartoffel;
 
 use kartoffel::*;
 
-#[cfg_attr(target_arch = "riscv64", no_mangle)]
+#[cfg_attr(target_arch = "riscv32", no_mangle)]
 fn main() {
     println!("driving to entrance");
 

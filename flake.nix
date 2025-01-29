@@ -81,7 +81,7 @@
             ];
           };
 
-          devShell = pkgs.pkgsCross.riscv64-embedded.mkShell {
+          devShell = pkgs.mkShell {
             #
           };
         }

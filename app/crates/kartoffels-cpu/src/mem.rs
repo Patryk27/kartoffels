@@ -4,13 +4,11 @@ impl Cpu {
     pub(super) fn mem_load<M, const SIZE: usize>(
         &self,
         mmio: Option<M>,
-        addr: u64,
-    ) -> Result<i64, Box<str>>
+        addr: u32,
+    ) -> Result<i32, Box<str>>
     where
         M: Mmio,
     {
-        let addr = addr as u32;
-
         if addr >= Self::MMIO_BASE {
             let mmio = mmio.ok_or_else(|| {
                 Self::mem_fault("atomic mmio load", addr, SIZE)
@@ -34,7 +32,7 @@ impl Cpu {
         &self,
         mmio: impl Mmio,
         addr: u32,
-    ) -> Result<i64, Box<str>> {
+    ) -> Result<i32, Box<str>> {
         if SIZE != 4 {
             return Err(Self::mem_fault("missized mmio load", addr, SIZE));
         }
@@ -49,13 +47,13 @@ impl Cpu {
             Self::mem_fault("out-of-bounds mmio load", addr, SIZE)
         })?;
 
-        Ok(val as i32 as i64)
+        Ok(val as i32)
     }
 
     fn mem_load_ram<const SIZE: usize>(
         &self,
         addr: u32,
-    ) -> Result<i64, Box<str>> {
+    ) -> Result<i32, Box<str>> {
         let rel_addr = (addr - Self::RAM_BASE) as usize;
 
         if rel_addr + SIZE > self.ram.len() {
@@ -65,24 +63,21 @@ impl Cpu {
         let mut val = 0;
 
         for offset in 0..SIZE {
-            val |= (self.ram[rel_addr + offset] as u64) << (offset * 8);
+            val |= (self.ram[rel_addr + offset] as u32) << (offset * 8);
         }
 
-        Ok(val as i64)
+        Ok(val as i32)
     }
 
     pub(super) fn mem_store<M, const SIZE: usize>(
         &mut self,
         mmio: Option<M>,
-        addr: u64,
-        val: i64,
+        addr: u32,
+        val: i32,
     ) -> Result<(), Box<str>>
     where
         M: Mmio,
     {
-        let addr = addr as u32;
-        let val = val as u64;
-
         if addr >= Self::MMIO_BASE {
             let mmio = mmio.ok_or_else(|| {
                 Self::mem_fault("atomic mmio store", addr, SIZE)
@@ -106,7 +101,7 @@ impl Cpu {
         &mut self,
         mmio: impl Mmio,
         addr: u32,
-        val: u64,
+        val: i32,
     ) -> Result<(), Box<str>> {
         if SIZE != 4 {
             return Err(Self::mem_fault("missized mmio store", addr, SIZE));
@@ -117,9 +112,8 @@ impl Cpu {
         }
 
         let rel_addr = addr - Self::MMIO_BASE;
-        let val = val as u32;
 
-        mmio.store(rel_addr, val).map_err(|_| {
+        mmio.store(rel_addr, val as u32).map_err(|_| {
             Self::mem_fault("out-of-bounds mmio store", addr, SIZE)
         })
     }
@@ -127,13 +121,15 @@ impl Cpu {
     fn mem_store_ram<const SIZE: usize>(
         &mut self,
         addr: u32,
-        val: u64,
+        val: i32,
     ) -> Result<(), Box<str>> {
         let rel_addr = (addr - Self::RAM_BASE) as usize;
 
         if rel_addr + SIZE > self.ram.len() {
             return Err(Self::mem_fault("out-of-bounds ram store", addr, SIZE));
         }
+
+        let val = val as u32;
 
         for offset in 0..SIZE {
             self.ram[rel_addr + offset] = (val >> (offset * 8)) as u8;

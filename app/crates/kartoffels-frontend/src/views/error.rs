@@ -8,12 +8,13 @@ use tracing::debug;
 pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
     debug!(?err, "run()");
 
-    let err = Paragraph::new(err.to_string()).wrap(Default::default());
+    let err =
+        Paragraph::new(err.to_string().to_lowercase()).wrap(Default::default());
 
     loop {
         let go_back = term
             .frame(|ui| {
-                let width = 50;
+                let width = 60;
                 let height = err.line_count(width) as u16 + 2;
 
                 bg.render(ui);

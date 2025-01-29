@@ -1,6 +1,7 @@
 use glam::{ivec2, uvec2};
+use indoc::indoc;
 use kartoffels_prefabs::{DUMMY, ROBERTO};
-use kartoffels_utils::Asserter;
+use kartoffels_utils::{Asserter, ErrorExt};
 use kartoffels_world::prelude::*;
 use std::future::Future;
 use std::path::Path;
@@ -9,13 +10,6 @@ use tempfile::NamedTempFile;
 
 #[tokio::test]
 async fn smoke() {
-    // Use roberto compiled in the past, so that bumping the toolchain version
-    // etc. don't cause the test to go stale.
-    //
-    // (e.g. a newer rustc could generate more optimized code, affecting how the
-    // bot behaves)
-    const ROBERTO: &[u8] = include_bytes!("./acceptance/smoke/roberto.elf");
-
     let world = kartoffels_world::create(config());
     let mut asserter = asserter("smoke");
 
@@ -395,21 +389,48 @@ async fn err_too_many_robots_queued() {
 }
 
 #[tokio::test]
-async fn err_couldnt_parse_firmware() {
-    let err = kartoffels_world::create(config())
+async fn err_couldnt_parse_firmware_1() {
+    let actual = kartoffels_world::create(config())
         .create_bot(CreateBotRequest::new(&[0x00]))
         .await
-        .unwrap_err();
+        .unwrap_err()
+        .to_fmt_string();
 
-    assert_eq!(
-        "couldn't parse firmware\
-         \n\
-         \n\
-         Caused by:\
-         \n    \
-         Could not read bytes in range [0x0, 0x10)",
-        format!("{err:?}")
-    );
+    let expected = indoc! {"
+        couldn't parse firmware
+
+        caused by:
+        could not read bytes in range [0x0, 0x10)
+    "};
+
+    assert_eq!(expected.trim_end(), actual);
+}
+
+#[tokio::test]
+async fn err_couldnt_parse_firmware_2() {
+    const BOT: &[u8] =
+        include_bytes!("./acceptance/err-couldnt-parse-firmware-2/bot.elf");
+
+    let actual = kartoffels_world::create(config())
+        .create_bot(CreateBotRequest::new(BOT))
+        .await
+        .unwrap_err()
+        .to_fmt_string();
+
+    let expected = indoc! {"
+        couldn't parse firmware
+
+        caused by:
+        expected a 32-bit binary, but got a 64-bit one
+
+        this is most likely the outcome of a backwards-incompatible change \
+        introduced in kartoffels v0.7 - if you're following the kartoffel \
+        repository, simply clone it again and copy your code there
+
+        sorry for the trouble and godspeed!
+    "};
+
+    assert_eq!(expected.trim_end(), actual);
 }
 
 fn config() -> Config {

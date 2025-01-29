@@ -2,6 +2,7 @@ use crate::Cpu;
 use anyhow::{anyhow, Context, Result};
 use elf::abi::PT_LOAD;
 use elf::endian::LittleEndian;
+use elf::file::Class;
 use elf::ElfBytes;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -9,7 +10,7 @@ use std::fmt;
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Firmware {
     pub(crate) segments: Vec<Segment>,
-    pub(crate) entry_pc: u64,
+    pub(crate) entry_pc: u32,
 }
 
 impl Firmware {
@@ -17,7 +18,18 @@ impl Firmware {
         let mut segments = Vec::new();
 
         let elf = ElfBytes::<LittleEndian>::minimal_parse(src)?;
-        let entry_pc = elf.ehdr.e_entry;
+        let entry_pc = elf.ehdr.e_entry as u32;
+
+        if elf.ehdr.class == Class::ELF64 {
+            return Err(anyhow!(
+                "expected a 32-bit binary, but got a 64-bit one\n\n\
+                 this is most likely the outcome of a backwards-incompatible \
+                 change introduced in kartoffels v0.7 - if you're following \
+                 the kartoffel repository, simply clone it again and copy your \
+                 code there\n\n\
+                 sorry for the trouble and godspeed!",
+            ));
+        }
 
         for (seg_idx, seg) in elf
             .segments()

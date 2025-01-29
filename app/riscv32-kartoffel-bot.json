@@ -1,17 +1,17 @@
 {
-  "arch": "riscv64",
+  "arch": "riscv32",
   "code-model": "medium",
-  "cpu": "generic-rv64",
+  "cpu": "generic-rv32",
   "crt-objects-fallback": "false",
-  "data-layout": "e-m:e-p:64:64-i64:64-i128:128-n32:64-S128",
+  "data-layout": "e-m:e-p:32:32-i64:64-n32-S128",
   "eh-frame-header": false,
   "emit-debug-gdb-scripts": false,
   "features": "+a,+m",
   "linker": "rust-lld",
   "linker-flavor": "gnu-lld",
-  "llvm-abiname": "lp64",
-  "llvm-target": "riscv64",
-  "max-atomic-width": 64,
+  "llvm-abiname": "ilp32",
+  "llvm-target": "riscv32",
+  "max-atomic-width": 32,
   "metadata": {
     "description": null,
     "host_tools": null,
@@ -24,5 +24,5 @@
   "supported-sanitizers": [
     "kernel-address"
   ],
-  "target-pointer-width": "64"
+  "target-pointer-width": "32"
 }

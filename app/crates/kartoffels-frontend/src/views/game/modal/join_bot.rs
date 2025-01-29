@@ -1,4 +1,5 @@
 use crate::views::game::Event;
+use anyhow::anyhow;
 use kartoffels_ui::{
     Button, Caret, InputEvent, KeyCode, Modifiers, Ui, UiWidget,
 };
@@ -97,7 +98,8 @@ impl JoinBotModal {
 
         let Ok(id) = id.parse() else {
             ui.throw(Event::OpenErrorModal {
-                error: format!("`{}` is not a valid bot id", self.id),
+                error: anyhow!("`{}` is not a valid bot id", self.id)
+                    .context("couldn't join bot"),
             });
 
             return;
@@ -105,7 +107,8 @@ impl JoinBotModal {
 
         if !world.bots.has(id) {
             ui.throw(Event::OpenErrorModal {
-                error: format!("bot `{id}` was not found"),
+                error: anyhow!("bot `{id}` not found")
+                    .context("couldn't join bot"),
             });
 
             return;

@@ -1,4 +1,4 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 kartoffels_cpu_tests::test! {
     r#"
@@ -7,7 +7,7 @@ kartoffels_cpu_tests::test! {
     _start:
         li x1, 123
         srai x2, x1, 4
-        srai x3, x1, 63
+        srai x3, x1, 31
         ebreak
     "#
 }

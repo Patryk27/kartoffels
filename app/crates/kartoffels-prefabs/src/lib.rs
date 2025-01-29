@@ -3,10 +3,10 @@
 macro_rules! bots {
     ([ $(static $id:ident = $name:literal;)* ]) => {
         $(
-            #[cfg(not(target_arch = "riscv64"))]
+            #[cfg(not(target_arch = "riscv32"))]
             pub static $id: &[u8] = include_bytes!(concat!(
                 env!("OUT_DIR"),
-                "/target.riscv/riscv64-kartoffel-bot/release/",
+                "/target.riscv/riscv32-kartoffel-bot/release/",
                 $name
             ));
         )*

@@ -2117,6 +2117,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "ciborium",
+ "indoc",
  "itertools",
  "pretty_assertions",
  "rand",

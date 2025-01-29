@@ -1,6 +1,6 @@
 //! Guard used for the `diamond-heist` challenge.
 
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 extern crate alloc;
 extern crate kartoffel;
@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use core::num::NonZeroU64;
 use kartoffel::*;
 
-#[cfg_attr(target_arch = "riscv64", no_mangle)]
+#[cfg_attr(target_arch = "riscv32", no_mangle)]
 fn main() {
     while timer_ticks() <= 16000 {
         //

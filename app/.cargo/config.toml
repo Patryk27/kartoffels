@@ -1,7 +1,7 @@
 [alias]
-build-cpu-tests = "build -p kartoffels-cpu-tests --release --target ../../riscv64-kartoffel-bot.json --target-dir ../../target.riscv -Z build-std=alloc,core -Z build-std-features=compiler-builtins-mem"
+build-cpu-tests = "build -p kartoffels-cpu-tests --release --target ../../riscv32-kartoffel-bot.json --target-dir ../../target.riscv -Z build-std=alloc,core -Z build-std-features=compiler-builtins-mem"
 
-[target.riscv64-kartoffel-bot]
+[target.riscv32-kartoffel-bot]
 rustflags = [
-    "-C", "link-arg=-Triscv64-kartoffel-bot.ld",
+    "-C", "link-arg=-Triscv32-kartoffel-bot.ld",
 ]

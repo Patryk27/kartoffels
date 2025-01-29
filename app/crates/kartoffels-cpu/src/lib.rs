@@ -13,10 +13,10 @@ use std::fmt;
 
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Cpu {
-    pc: u64,
+    pc: u32,
     #[serde(with = "serde_bytes")]
     ram: Box<[u8]>,
-    regs: Box<[i64; 32]>,
+    regs: Box<[i32; 32]>,
 }
 
 impl Cpu {
@@ -56,7 +56,7 @@ impl Cpu {
         }
     }
 
-    pub fn pc(&self) -> u64 {
+    pub fn pc(&self) -> u32 {
         self.pc
     }
 
@@ -64,7 +64,7 @@ impl Cpu {
         &self.ram
     }
 
-    pub fn regs(&self) -> &[i64; 32] {
+    pub fn regs(&self) -> &[i32; 32] {
         &self.regs
     }
 }

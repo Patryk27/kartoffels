@@ -1,9 +1,9 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 kartoffels_cpu_tests::test! {
     r#"
     .global _start
-    .attribute arch, "rv64im"
+    .attribute arch, "rv32im"
 
     _start:
         li x1, -100
@@ -17,6 +17,6 @@ kartoffels_cpu_tests::test! {
 /*
  * x1 = -100
  * x2 = 23
- * x3 = 21
+ * x3 = 4
  * x4 = -1
  */

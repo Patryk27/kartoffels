@@ -3,7 +3,7 @@ use super::{
     InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, State,
     UploadBotModal, UploadBotRequest,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use glam::IVec2;
@@ -31,7 +31,7 @@ pub enum Event {
     },
     OpenBotsModal,
     OpenErrorModal {
-        error: String,
+        error: Error,
     },
     OpenHelpModal,
     OpenJoinBotModal,
@@ -259,11 +259,12 @@ impl State {
                     Ok(src) => Cow::Owned(src),
 
                     Err(err) => {
-                        self.modal = Some(Box::new(Modal::Error(
-                            ErrorModal::new(format!(
-                                "couldn't decode pasted content:\n\n{err}"
-                            )),
-                        )));
+                        self.modal =
+                            Some(Box::new(Modal::Error(ErrorModal::new(
+                                anyhow!("{err}")
+                                    .context("couldn't decode pasted content")
+                                    .context("couldn't upload bot"),
+                            ))));
 
                         return Ok(());
                     }
@@ -286,7 +287,7 @@ impl State {
 
             Err(err) => {
                 self.modal = Some(Box::new(Modal::Error(ErrorModal::new(
-                    format!("{err:?}"),
+                    err.context("couldn't upload bot"),
                 ))));
 
                 return Ok(());

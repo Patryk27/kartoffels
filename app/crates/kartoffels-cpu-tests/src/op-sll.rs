@@ -1,4 +1,4 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 kartoffels_cpu_tests::test! {
     r#"
@@ -14,6 +14,6 @@ kartoffels_cpu_tests::test! {
 
 /*
  * x1 = 0xffffffff
- * x2 = 0x1
- * x3 = 0x1fffffffe
+ * x2 = 0x00000001
+ * x3 = 0xfffffffe
  */

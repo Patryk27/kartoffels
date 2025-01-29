@@ -1,17 +1,17 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 kartoffels_cpu_tests::test! {
     r#"
     .global _start
 
     _start:
-        li x1, 0x1212121212121212
+        li x1, 0x12121212
         andi x2, x1, 0x34
         ebreak
     "#
 }
 
 /*
- * x1 = 0x1212121212121212
- * x2 = 0x0000000000000010
+ * x1 = 0x12121212
+ * x2 = 0x00000010
  */

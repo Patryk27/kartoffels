@@ -49,7 +49,7 @@ fn wri(ptr: *mut u32, off: usize, val: u32) {
     }
 }
 
-#[cfg(target_arch = "riscv64")]
+#[cfg(target_arch = "riscv32")]
 core::arch::global_asm!(
     r#"
     .global _start

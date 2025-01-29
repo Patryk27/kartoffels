@@ -11,7 +11,7 @@ extern "C" {
 }
 
 #[allow(dead_code)]
-#[cfg_attr(target_arch = "riscv64", global_allocator)]
+#[cfg_attr(target_arch = "riscv32", global_allocator)]
 static ALLOCATOR: Talck<Mutex<()>, ClaimOnOom> = unsafe {
     Talc::new(ClaimOnOom::new(Span::new(
         addr_of!(HEAP_START) as *mut u8,

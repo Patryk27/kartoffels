@@ -177,9 +177,35 @@ async fn http_upload_err() {
 
     ctxt.upload_bot_http(sess, DUMMY).await;
     ctxt.wait_for_modal("ouch").await;
+    ctxt.see("couldn't upload bot");
     ctxt.see_frame("game/http-upload-err/1.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_while_modal("ouch").await;
     ctxt.see_frame("game/http-upload-err/2.txt").await;
+}
+
+#[tokio::test]
+async fn cli_upload_err() {
+    let mut ctxt = {
+        let world = kartoffels_world::create(Config {
+            name: "world".into(),
+            ..Default::default()
+        });
+
+        TestContext::new([world]).await
+    };
+
+    ctxt.wait_for(TestContext::INDEX).await;
+    ctxt.press(KeyCode::Char('p')).await;
+
+    ctxt.wait_for("[1] world").await;
+    ctxt.press(KeyCode::Char('1')).await;
+
+    ctxt.wait_for("[j] join-bot").await;
+    ctxt.upload_bot(&[0x00]).await;
+
+    ctxt.wait_for_modal("ouch").await;
+    ctxt.see("couldn't upload bot");
+    ctxt.see_frame("game/cli-upload-err/1.txt").await;
 }

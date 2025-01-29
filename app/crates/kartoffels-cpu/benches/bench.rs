@@ -15,7 +15,7 @@ fn bench(b: &mut Bencher) {
     let elf_path = Path::new("..")
         .join("..")
         .join("target.riscv")
-        .join("riscv64-kartoffel-bot")
+        .join("riscv32-kartoffel-bot")
         .join("release")
         .join("xx-ints");
 

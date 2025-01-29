@@ -1,4 +1,4 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 extern crate alloc;
 extern crate kartoffel;
@@ -6,7 +6,7 @@ extern crate kartoffel;
 use alloc::collections::BTreeMap;
 use core::hint::black_box;
 
-#[cfg_attr(target_arch = "riscv64", no_mangle)]
+#[cfg_attr(target_arch = "riscv32", no_mangle)]
 fn main() {
     let mut items = BTreeMap::<i128, i128>::new();
 

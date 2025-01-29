@@ -4,17 +4,17 @@
 
 
 
-
         ┌──────────────────────────── ouch ────────────────────────────┐
         │ couldn't upload bot                                          │
         │                                                              │
         │ caused by:                                                   │
-        │ too many robots queued, try again in a moment                │
+        │ couldn't parse firmware                                      │
+        │                                                              │
+        │ caused by:                                                   │
+        │ could not read bytes in range [0x0, 0x10)                    │
         │                                                              │
         │                                                [enter] close │
         └──────────────────────────────────────────────────────────────┘
-
-
 
 
 

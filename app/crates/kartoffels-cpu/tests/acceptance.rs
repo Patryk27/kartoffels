@@ -17,7 +17,7 @@ fn test() {
     let elf_dir = Path::new("..")
         .join("..")
         .join("target.riscv")
-        .join("riscv64-kartoffel-bot")
+        .join("riscv32-kartoffel-bot")
         .join("release");
 
     for test in tests {
@@ -135,7 +135,7 @@ impl Mmio for &mut TestMmio {
 
 struct TestExpectation {
     err: Option<String>,
-    regs: Vec<(usize, i64)>,
+    regs: Vec<(usize, i32)>,
 }
 
 impl TestExpectation {
@@ -180,7 +180,7 @@ impl TestExpectation {
         s.strip_prefix("x").unwrap().parse().unwrap()
     }
 
-    fn parse_reg_val(mut s: &str) -> i64 {
+    fn parse_reg_val(mut s: &str) -> i32 {
         let mut neg = false;
 
         if let Some(s2) = s.strip_prefix("-") {
@@ -190,7 +190,7 @@ impl TestExpectation {
 
         let val = s
             .strip_prefix("0x")
-            .map(|val| u64::from_str_radix(val, 16).unwrap() as i64)
+            .map(|val| u32::from_str_radix(val, 16).unwrap() as i32)
             .unwrap_or_else(|| s.parse().unwrap());
 
         if neg {

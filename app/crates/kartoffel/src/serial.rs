@@ -129,7 +129,7 @@ impl fmt::Write for Serial {
 /// print!("{}!", "World");
 /// print!("\n");
 /// ```
-#[cfg(any(target_arch = "riscv64", doc))]
+#[cfg(any(target_arch = "riscv32", doc))]
 #[macro_export]
 macro_rules! print {
     ($($t:tt)*) => {{
@@ -151,7 +151,7 @@ macro_rules! print {
 /// println!("Hello!");
 /// println!("Hello, {}!", "World");
 /// ```
-#[cfg(any(target_arch = "riscv64", doc))]
+#[cfg(any(target_arch = "riscv32", doc))]
 #[macro_export]
 macro_rules! println {
     ($($t:tt)*) => {{

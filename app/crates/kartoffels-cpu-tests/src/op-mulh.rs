@@ -1,33 +1,20 @@
-#![cfg_attr(target_arch = "riscv64", no_std, no_main)]
+#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
 kartoffels_cpu_tests::test! {
     r#"
     .global _start
-    .attribute arch, "rv64im"
+    .attribute arch, "rv32im"
 
     _start:
-        li x1, 0xb504f334
-        li x2, -0xb504f332
+        li x1, 0x12121212
+        li x2, -0x34343434
         mulh x3, x1, x2
-
-        li x1, -0xb504f332
-        li x2, -0xb504f332
-        mulh x4, x1, x2
-
-        li x1, -0xb504f332
-        li x2, 0xb504f334
-        mulh x5, x1, x2
-
-        li x1, -0x8000000000000000
-        li x2, 0xb504f334
-        mulh x6, x1, x2
         ebreak
     "#
 }
 
 /*
- * x3 = 0xffffffffffffffff
- * x4 = 0x0
- * x5 = 0xffffffffffffffff
- * x6 = 0xffffffffa57d8666
+ * x1 = 0x12121212
+ * x2 = -0x34343434
+ * x3 = 0xfc50a4f9
  */
