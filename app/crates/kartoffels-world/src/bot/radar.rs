@@ -33,11 +33,11 @@ impl BotRadar {
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
-        match addr {
-            AliveBot::MEM_RADAR => {
-                if self.cooldown == 0
-                    && let Some(range) = BotRadarRange::new(val)
-                {
+        match (addr, val.to_le_bytes()) {
+            (AliveBot::MEM_RADAR, [0x01, range, 0x00, 0x00])
+                if let Some(range) = BotRadarRange::new(range) =>
+            {
+                if self.cooldown == 0 {
                     self.do_scan(ctxt, range);
                 }
 
@@ -107,7 +107,7 @@ enum BotRadarRange {
 }
 
 impl BotRadarRange {
-    fn new(r: u32) -> Option<Self> {
+    fn new(r: u8) -> Option<Self> {
         match r {
             3 => Some(Self::D3),
             5 => Some(Self::D5),
@@ -194,7 +194,7 @@ mod tests {
     struct TestCase {
         pos: IVec2,
         dir: Dir,
-        range: u32,
+        range: u8,
         expected_bots: &'static [(BotId, IVec2)],
         expected_tiles: &'static str,
         expected_cooldown: u32,
@@ -366,7 +366,11 @@ mod tests {
         };
 
         radar
-            .mmio_store(&mut ctxt, AliveBot::MEM_RADAR, case.range)
+            .mmio_store(
+                &mut ctxt,
+                AliveBot::MEM_RADAR,
+                u32::from_le_bytes([0x01, case.range, 0x00, 0x00]),
+            )
             .unwrap();
 
         let range = BotRadarRange::new(case.range).unwrap();

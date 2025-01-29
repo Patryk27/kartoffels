@@ -19,7 +19,7 @@ pub fn timer_ticks() -> u32 {
     rdi(MEM_TIMER, 1)
 }
 
-/// Waits for until given number of ticks has passed.
+/// Waits until given number of ticks has passed.
 ///
 /// # Example
 ///

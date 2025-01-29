@@ -1,4 +1,4 @@
-use crate::{rdi, wri, MEM_ARM};
+use crate::{cmd, rdi, wri, MEM_ARM};
 
 /// Returns whether the arm is ready and [`arm_stab()`] can be invoked.
 ///
@@ -60,7 +60,7 @@ pub fn arm_wait() {
 /// ```
 #[inline(always)]
 pub fn arm_stab() {
-    wri(MEM_ARM, 0, 1);
+    wri(MEM_ARM, 0, cmd(0x01, 0x00, 0x00, 0x00));
 }
 
 /// Picks the object in front of you and puts it into the inventory under the
@@ -89,7 +89,7 @@ pub fn arm_stab() {
 /// ```
 #[inline(always)]
 pub fn arm_pick() {
-    wri(MEM_ARM, 0, 2);
+    wri(MEM_ARM, 0, cmd(0x02, 0x00, 0x00, 0x00));
 }
 
 /// Takes object from the inventory and drops it in front of you, shifting
@@ -121,5 +121,5 @@ pub fn arm_pick() {
 /// ```
 #[inline(always)]
 pub fn arm_drop(idx: u8) {
-    wri(MEM_ARM, 0, u32::from_be_bytes([0, 0, idx, 3]));
+    wri(MEM_ARM, 0, cmd(0x03, idx, 0x00, 0x00));
 }

@@ -27,37 +27,39 @@ impl BotArm {
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
-        match addr {
-            AliveBot::MEM_ARM => {
+        match (addr, val.to_le_bytes()) {
+            (AliveBot::MEM_ARM, [0x01, 0x00, 0x00, 0x00]) => {
                 if self.cooldown == 0 {
-                    match val.to_be_bytes() {
-                        [0, 0, 0, 1] => {
-                            *ctxt.action = Some(BotAction::ArmStab {
-                                at: ctxt.pos + *ctxt.dir,
-                            });
+                    *ctxt.action = Some(BotAction::ArmStab {
+                        at: ctxt.pos + *ctxt.dir,
+                    });
 
-                            self.cooldown = ctxt.cooldown(60_000, 15);
-                        }
+                    self.cooldown = ctxt.cooldown(60_000, 15);
+                }
 
-                        [0, 0, 0, 2] => {
-                            *ctxt.action = Some(BotAction::ArmPick {
-                                at: ctxt.pos + *ctxt.dir,
-                            });
+                Ok(())
+            }
 
-                            self.cooldown = ctxt.cooldown(60_000, 15);
-                        }
+            (AliveBot::MEM_ARM, [0x02, 0x00, 0x00, 0x00]) => {
+                if self.cooldown == 0 {
+                    *ctxt.action = Some(BotAction::ArmPick {
+                        at: ctxt.pos + *ctxt.dir,
+                    });
 
-                        [0, 0, idx, 3] => {
-                            *ctxt.action = Some(BotAction::ArmDrop {
-                                at: ctxt.pos + *ctxt.dir,
-                                idx,
-                            });
+                    self.cooldown = ctxt.cooldown(60_000, 15);
+                }
 
-                            self.cooldown = ctxt.cooldown(60_000, 15);
-                        }
+                Ok(())
+            }
 
-                        _ => (),
-                    }
+            (AliveBot::MEM_ARM, [0x03, idx, 0x00, 0x00]) => {
+                if self.cooldown == 0 {
+                    *ctxt.action = Some(BotAction::ArmDrop {
+                        at: ctxt.pos + *ctxt.dir,
+                        idx,
+                    });
+
+                    self.cooldown = ctxt.cooldown(60_000, 15);
                 }
 
                 Ok(())

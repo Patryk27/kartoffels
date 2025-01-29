@@ -26,9 +26,9 @@ impl BotMotor {
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
-        match addr {
-            AliveBot::MEM_MOTOR => {
-                if self.cooldown == 0 && val > 0 {
+        match (addr, val.to_le_bytes()) {
+            (AliveBot::MEM_MOTOR, [0x01, 0x00, 0x00, 0x00]) => {
+                if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + *ctxt.dir,
                     });
@@ -39,20 +39,23 @@ impl BotMotor {
                 Ok(())
             }
 
-            const { AliveBot::MEM_MOTOR + 4 } => {
+            (AliveBot::MEM_MOTOR, [0x02, 0x00, 0x00, 0x00]) => Ok(()),
+
+            (AliveBot::MEM_MOTOR, [0x02, 0x01, 0x00, 0x00]) => {
                 if self.cooldown == 0 {
-                    let val = val as i32;
+                    *ctxt.dir = ctxt.dir.turned_right();
 
-                    #[allow(clippy::comparison_chain)]
-                    if val < 0 {
-                        *ctxt.dir = ctxt.dir.turned_left();
-                    } else if val > 0 {
-                        *ctxt.dir = ctxt.dir.turned_right();
-                    }
+                    self.cooldown = ctxt.cooldown(15000, 15);
+                }
 
-                    if val != 0 {
-                        self.cooldown = ctxt.cooldown(15000, 15);
-                    }
+                Ok(())
+            }
+
+            (AliveBot::MEM_MOTOR, [0x02, 0xff, 0x00, 0x00]) => {
+                if self.cooldown == 0 {
+                    *ctxt.dir = ctxt.dir.turned_left();
+
+                    self.cooldown = ctxt.cooldown(15000, 15);
                 }
 
                 Ok(())

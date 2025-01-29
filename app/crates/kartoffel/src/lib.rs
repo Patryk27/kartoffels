@@ -49,6 +49,11 @@ fn wri(ptr: *mut u32, off: usize, val: u32) {
     }
 }
 
+#[inline(always)]
+fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {
+    u32::from_le_bytes([cmd, arg0, arg1, arg2])
+}
+
 #[cfg(target_arch = "riscv32")]
 core::arch::global_asm!(
     r#"

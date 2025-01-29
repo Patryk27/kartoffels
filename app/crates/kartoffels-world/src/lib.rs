@@ -1,6 +1,7 @@
 #![feature(cmp_minmax)]
 #![feature(debug_closure_helpers)]
 #![feature(duration_constructors)]
+#![feature(if_let_guard)]
 #![feature(inline_const_pat)]
 #![feature(let_chains)]
 #![feature(type_alias_impl_trait)]

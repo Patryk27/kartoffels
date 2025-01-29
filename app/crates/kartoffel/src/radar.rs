@@ -1,4 +1,4 @@
-use crate::{rdi, wri, MEM_RADAR};
+use crate::{cmd, rdi, wri, MEM_RADAR};
 use core::num::NonZeroU64;
 
 /// Returns whether the radar is ready and [`radar_scan()`] can be invoked.
@@ -29,19 +29,19 @@ pub fn radar_wait() {
 /// - [`radar_scan_7x7()`],
 /// - [`radar_scan_9x9()`].
 ///
-/// See those functions for example usage.
+/// See those functions for example usage and cooldowns.
 ///
-/// # Arguments
+/// # Input
 ///
 /// Valid values of `r` are `3`, `5`, `7` or `9`. Calling this function with an
-/// invalid value of `r` does nothing.
+/// invalid value of `r` will crash the firmware.
 ///
 /// # Output
 ///
 /// Use [`radar_read()`] to access the scanned data.
 #[inline(always)]
-pub fn radar_scan(r: usize) {
-    wri(MEM_RADAR, 0, r as u32);
+pub fn radar_scan(r: u8) {
+    wri(MEM_RADAR, 0, cmd(0x01, r, 0x00, 0x00));
 }
 
 /// Scans a 3x3 square around the bot and returns the scanned area.

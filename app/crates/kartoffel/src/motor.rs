@@ -1,4 +1,4 @@
-use crate::{rdi, wri, MEM_MOTOR};
+use crate::{cmd, rdi, wri, MEM_MOTOR};
 
 /// Returns whether the motor is ready and [`motor_step()`] or [`motor_turn()`]
 /// can be invoked.
@@ -65,10 +65,47 @@ pub fn motor_wait() {
 /// ```
 #[inline(always)]
 pub fn motor_step() {
-    wri(MEM_MOTOR, 0, 1);
+    wri(MEM_MOTOR, 0, cmd(0x01, 0x00, 0x00, 0x00));
+}
+
+/// Turns the bot.
+///
+/// Note that this is a low-level function - for convenience you'll most likely
+/// want to use [`motor_turn_left()`] or [`motor_turn_right()`].
+///
+/// # Input
+///
+/// - if dir == -1, the bot turns left (counterclockwise),
+/// - if dir == 1, the bot turns right (clockwise),
+/// - if dir == 0, the bot does nothing.
+///
+/// Other values of `dir` are illegal and will crash the firmware.
+///
+/// # Cooldown
+///
+/// ```text
+/// 10_000 +- 15% ticks (~150 ms)
+/// ```
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// motor_wait();
+/// motor_turn(-1); // turns left (counterclockwise)
+///
+/// motor_wait();
+/// motor_turn(1); // turns right (clockwise)
+/// ```
+#[inline(always)]
+pub fn motor_turn(dir: i8) {
+    wri(MEM_MOTOR, 0, cmd(0x02, dir as u8, 0x00, 0x00));
 }
 
 /// Turns the bot left (counterclockwise).
+///
+/// See also: [`motor_turn()`], [`motor_turn_right()`].
 ///
 /// # Cooldown
 ///
@@ -84,11 +121,14 @@ pub fn motor_step() {
 /// motor_wait();
 /// motor_turn_left();
 /// ```
+#[inline(always)]
 pub fn motor_turn_left() {
     motor_turn(-1);
 }
 
 /// Turns the bot right (clockwise).
+///
+/// See also: [`motor_turn()`], [`motor_turn_left()`].
 ///
 /// # Cooldown
 ///
@@ -104,37 +144,7 @@ pub fn motor_turn_left() {
 /// motor_wait();
 /// motor_turn_right();
 /// ```
+#[inline(always)]
 pub fn motor_turn_right() {
     motor_turn(1);
-}
-
-/// Turns the bot depending on the parameter:
-///
-/// - if dir < 0, the bot turns left (counterclockwise),
-/// - if dir > 0, the bot turns right (clockwise),
-/// - if dir = 0, the bot does nothing.
-///
-/// Only the sign of `dir` matters, `motor_turn(-123)` is the same as
-/// `motor_turn(-1)`.
-///
-/// # Cooldown
-///
-/// ```text
-/// 10_000 +- 15% ticks (~150 ms)
-/// ```
-///
-/// # Example
-///
-/// ```no_run
-/// # use kartoffel::*;
-/// #
-/// motor_wait();
-/// motor_turn(-1);
-///
-/// motor_wait();
-/// motor_turn(1);
-/// ```
-#[inline(always)]
-pub fn motor_turn(dir: i32) {
-    wri(MEM_MOTOR, 1, dir as u32);
 }

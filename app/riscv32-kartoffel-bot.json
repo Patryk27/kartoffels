@@ -1,6 +1,6 @@
 {
   "arch": "riscv32",
-  "code-model": "medium",
+  "code-model": "small",
   "cpu": "generic-rv32",
   "crt-objects-fallback": "false",
   "data-layout": "e-m:e-p:32:32-i64:64-n32-S128",
@@ -21,8 +21,6 @@
   "panic-strategy": "abort",
   "relocation-model": "static",
   "singlethread": true,
-  "supported-sanitizers": [
-    "kernel-address"
-  ],
+  "supported-sanitizers": [],
   "target-pointer-width": "32"
 }
