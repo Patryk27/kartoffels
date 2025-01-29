@@ -7,6 +7,7 @@ use glam::{ivec2, uvec2, IVec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::{cmp, fmt};
 
 #[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize, Resource)]
@@ -196,7 +197,17 @@ impl Map {
 
 impl fmt::Debug for Map {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Map").field("size", &self.size).finish()
+        let hash = {
+            let mut hasher = DefaultHasher::new();
+
+            self.tiles.hash(&mut hasher);
+            hasher.finish()
+        };
+
+        f.debug_struct("Map")
+            .field("size", &self.size)
+            .field("tiles.hash", &hash)
+            .finish()
     }
 }
 
@@ -247,7 +258,7 @@ impl Anchors {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Tile {
     pub kind: u8,
     pub meta: [u8; 3],
