@@ -1,6 +1,7 @@
 use crate::Background;
 use anyhow::{Error, Result};
 use kartoffels_ui::{Button, Frame, KeyCode};
+use kartoffels_utils::ErrorExt;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::Paragraph;
 use tracing::debug;
@@ -8,8 +9,7 @@ use tracing::debug;
 pub async fn run(frame: &mut Frame, bg: &Background, err: Error) -> Result<()> {
     debug!(?err, "run()");
 
-    let err =
-        Paragraph::new(err.to_string().to_lowercase()).wrap(Default::default());
+    let err = Paragraph::new(err.to_fmt_string()).wrap(Default::default());
 
     loop {
         let go_back = frame
