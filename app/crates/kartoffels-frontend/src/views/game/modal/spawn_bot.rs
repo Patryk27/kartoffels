@@ -8,7 +8,7 @@ pub use self::bot_source::*;
 use super::{Event as ParentEvent, UploadBotRequest};
 use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SpawnBotModal {
     focus: Option<Focus>,
     bot_source: BotSourceType,
@@ -17,6 +17,15 @@ pub struct SpawnBotModal {
 }
 
 impl SpawnBotModal {
+    pub fn new(bot_source: BotSourceType) -> Self {
+        Self {
+            focus: Default::default(),
+            bot_source,
+            bot_position: Default::default(),
+            bot_count: Default::default(),
+        }
+    }
+
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
         let event = ui.catch(|ui| {
             let width = 50;

@@ -150,7 +150,7 @@ impl UploadBotModal {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct UploadBotRequest<S> {
     pub source: S,
     pub position: BotPosition,
@@ -158,6 +158,14 @@ pub struct UploadBotRequest<S> {
 }
 
 impl<S> UploadBotRequest<S> {
+    pub fn new(source: S) -> Self {
+        Self {
+            source,
+            position: Default::default(),
+            count: Default::default(),
+        }
+    }
+
     pub fn with_source<S2>(&self, source: S2) -> UploadBotRequest<S2> {
         UploadBotRequest {
             source,

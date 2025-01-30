@@ -1,7 +1,7 @@
 use super::{
-    BotPosition, BotSource, BotSourceType, BotsModal, ErrorModal, GoBackModal,
-    InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, State,
-    UploadBotModal, UploadBotRequest,
+    BotPosition, BotPrefabType, BotSource, BotSourceType, BotsModal,
+    ErrorModal, GoBackModal, InspectBotModal, JoinBotModal, Modal, Mode,
+    SpawnBotModal, State, UploadBotModal, UploadBotRequest,
 };
 use anyhow::{anyhow, Error, Result};
 use base64::prelude::BASE64_STANDARD;
@@ -139,7 +139,9 @@ impl Event {
 
             Event::OpenSpawnBotModal => {
                 state.modal =
-                    Some(Box::new(Modal::SpawnBot(SpawnBotModal::default())));
+                    Some(Box::new(Modal::SpawnBot(SpawnBotModal::new(
+                        BotSourceType::Prefab(BotPrefabType::Roberto),
+                    ))));
             }
 
             Event::OpenUploadBotModal { request } => match request.source {

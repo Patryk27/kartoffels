@@ -3,9 +3,8 @@ use kartoffels_prefabs::{DUMMY, ROBERTO};
 use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 use std::fmt;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub enum BotSourceType {
-    #[default]
     Upload,
     Prefab(BotPrefabType),
 }
