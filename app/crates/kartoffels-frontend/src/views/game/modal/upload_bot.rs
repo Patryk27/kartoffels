@@ -5,8 +5,8 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use kartoffels_store::{Session, SessionUploadInterest};
 use kartoffels_ui::{
-    theme, Button, FromMarkdown, InputEvent, KeyCode, Modifiers, Spinner,
-    TermFrontend, Ui, UiWidget,
+    theme, Button, FrameType, FromMarkdown, InputEvent, KeyCode, Modifiers,
+    Spinner, Ui, UiWidget,
 };
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
@@ -33,13 +33,13 @@ impl UploadBotModal {
     }
 
     pub fn render(&mut self, ui: &mut Ui<Event>, sess: &Session) {
-        match ui.frontend {
-            TermFrontend::Ssh => {
+        match ui.ty {
+            FrameType::Ssh => {
                 self.render_ssh(ui, sess);
             }
 
-            TermFrontend::Web => {
-                // For the web frontend we don't render anything - rather, we
+            FrameType::Web => {
+                // For the web frame we don't render anything - rather, we
                 // request the native file picker and wait until the bot is
                 // uploaded via an HTTP endpoint.
                 if self.interest.is_none() {
@@ -133,7 +133,9 @@ impl UploadBotModal {
                     .render(ui)
                     .pressed
                 {
-                    ui.copy(sess.id().to_string());
+                    ui.throw(Event::Copy {
+                        payload: sess.id().to_string(),
+                    });
                 }
             });
         });

@@ -1,6 +1,6 @@
 use futures_util::FutureExt;
 use kartoffels_store::Store;
-use kartoffels_ui::Term;
+use kartoffels_ui::Frame;
 use std::panic::AssertUnwindSafe;
 use std::pin::pin;
 use std::sync::Arc;
@@ -10,15 +10,15 @@ use tracing::info;
 
 pub async fn start_session(
     store: Arc<Store>,
-    mut term: Term,
+    mut frame: Frame,
     shutdown: CancellationToken,
 ) {
-    _ = term.init().await;
+    _ = frame.create().await;
 
     let sess = store.create_session();
 
     let result = {
-        let sess = kartoffels_frontend::main(&store, &sess, &mut term);
+        let sess = kartoffels_frontend::main(&store, &sess, &mut frame);
         let sess = AssertUnwindSafe(sess).catch_unwind();
         let sess = pin!(sess);
 
@@ -28,7 +28,7 @@ pub async fn start_session(
         }
     };
 
-    _ = term.finalize().await;
+    _ = frame.destroy().await;
 
     match result {
         Some(Ok(result)) => {
@@ -42,13 +42,13 @@ pub async fn start_session(
                 info!("session crashed");
             }
 
-            _ = term.send("ouch, the game has crashed\r\n".into()).await;
+            _ = frame.send("ouch, the game has crashed\r\n".into()).await;
         }
 
         None => {
             info!("session aborted: server is shutting down");
 
-            _ = term
+            _ = frame
                 .send("ouch, the server is shutting down\r\n".into())
                 .await;
         }

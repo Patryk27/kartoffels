@@ -22,7 +22,7 @@ use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{theme, Clear, Fade, FadeDir, Term, Ui, UiWidget};
+use kartoffels_ui::{theme, Clear, Fade, FadeDir, Frame, Ui, UiWidget};
 use kartoffels_world::prelude::{
     BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
 };
@@ -38,7 +38,7 @@ use tracing::debug;
 pub async fn run<CtrlFn, CtrlFut>(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     ctrl: CtrlFn,
 ) -> Result<()>
 where
@@ -46,7 +46,7 @@ where
     CtrlFut: Future<Output = Result<()>>,
 {
     let (tx, rx) = GameCtrl::new();
-    let view = Box::pin(run_once(store, sess, term, rx));
+    let view = Box::pin(run_once(store, sess, frame, rx));
     let ctrl = Box::pin(ctrl(tx));
 
     select! {
@@ -58,7 +58,7 @@ where
 async fn run_once(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     mut ctrl: GameCtrlRx,
 ) -> Result<()> {
     debug!("run()");
@@ -68,8 +68,8 @@ async fn run_once(
     let mut state = State::default();
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 state.tick(tick.elapsed().as_secs_f32(), store);
                 state.render(ui, sess, store);
 
@@ -83,13 +83,13 @@ async fn run_once(
 
         if let Some(event) = event {
             if let ControlFlow::Break(_) =
-                event.handle(term, &mut state).await?
+                event.handle(frame, &mut state).await?
             {
                 fade = Some(Fade::new(FadeDir::Out));
             }
         }
 
-        state.poll(term, &mut ctrl).await?;
+        state.poll(frame, &mut ctrl).await?;
 
         if let Some(fade) = &fade
             && fade.dir() == FadeDir::Out
@@ -211,11 +211,11 @@ impl State {
 
     async fn poll(
         &mut self,
-        term: &mut Term,
+        frame: &mut Frame,
         ctrl: &mut GameCtrlRx,
     ) -> Result<()> {
         while let Some(event) = ctrl.recv().now_or_never().flatten() {
-            event.handle(self, term).await?;
+            event.handle(self, frame).await?;
         }
 
         if let Some(snapshots) = &mut self.snapshots

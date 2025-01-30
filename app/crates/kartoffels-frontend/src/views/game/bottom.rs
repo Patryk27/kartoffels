@@ -43,9 +43,7 @@ impl BottomPanel {
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
         Button::new(KeyCode::Escape, "go-back")
-            .throwing(Event::GoBack {
-                needs_confirmation: true,
-            })
+            .throwing(Event::GoBack { confirm: true })
             .render(ui);
     }
 

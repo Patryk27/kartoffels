@@ -1,4 +1,4 @@
-use crate::{theme, Clear, TermFrontend, UiWidget};
+use crate::{theme, Clear, FrameType, UiWidget};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
@@ -9,12 +9,11 @@ use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
 pub struct Ui<'a, T> {
-    pub frontend: TermFrontend,
+    pub ty: FrameType,
     pub buf: &'a mut Buffer,
     pub area: Rect,
     pub(super) mouse: Option<&'a (UVec2, bool)>,
     pub event: Option<&'a InputEvent>,
-    pub(super) clipboard: &'a mut Vec<String>,
     pub layout: UiLayout,
     pub enabled: bool,
     pub(super) thrown: &'a mut Option<T>,
@@ -23,12 +22,11 @@ pub struct Ui<'a, T> {
 impl<T> Ui<'_, T> {
     pub fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         f(&mut Ui {
-            frontend: self.frontend,
+            ty: self.ty,
             buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,
-            clipboard: self.clipboard,
             layout: self.layout,
             enabled: self.enabled,
             thrown: self.thrown,
@@ -213,10 +211,6 @@ impl<T> Ui<'_, T> {
         }
     }
 
-    pub fn copy(&mut self, payload: impl AsRef<str>) {
-        self.clipboard.push(payload.as_ref().to_owned());
-    }
-
     pub fn throw(&mut self, event: T) {
         *self.thrown = Some(event);
     }
@@ -225,12 +219,11 @@ impl<T> Ui<'_, T> {
         let mut thrown = None;
 
         f(&mut Ui {
-            frontend: self.frontend,
+            ty: self.ty,
             buf: self.buf,
             area: self.area,
             mouse: self.mouse,
             event: self.event,
-            clipboard: self.clipboard,
             layout: self.layout,
             enabled: self.enabled,
             thrown: &mut thrown,

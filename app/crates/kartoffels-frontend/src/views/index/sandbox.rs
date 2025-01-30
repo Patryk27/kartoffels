@@ -9,7 +9,7 @@ use crate::Background;
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, Ui, UiWidget};
+use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, Ui, UiWidget};
 use kartoffels_world::prelude::{ArenaTheme, DungeonTheme, Theme};
 use std::ops::ControlFlow;
 use tracing::debug;
@@ -17,7 +17,7 @@ use tracing::debug;
 pub async fn run(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<()> {
     let mut fade_in = false;
@@ -29,9 +29,9 @@ pub async fn run(
 
     loop {
         if let Some(theme) =
-            run_once(store, term, bg, fade_in, &mut size, &mut theme).await?
+            run_once(store, frame, bg, fade_in, &mut size, &mut theme).await?
         {
-            game::run(store, sess, term, |game| ctrl::run(store, theme, game))
+            game::run(store, sess, frame, |game| ctrl::run(store, theme, game))
                 .await?;
 
             fade_in = true;
@@ -43,7 +43,7 @@ pub async fn run(
 
 async fn run_once(
     store: &Store,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
     fade_in: bool,
     size: &mut SandboxSize,
@@ -71,8 +71,8 @@ async fn run_once(
     };
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 view.render(ui);
             })
             .await?;

@@ -2,7 +2,7 @@ use crate::common;
 use anyhow::{anyhow, Result};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Term, TermFrontend};
+use kartoffels_ui::{Frame, FrameType};
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
@@ -104,7 +104,7 @@ impl AppChannel {
         let height = height.min(255);
 
         stdin
-            .send(vec![Term::CMD_RESIZE, width as u8, height as u8])
+            .send(vec![Frame::CMD_RESIZE, width as u8, height as u8])
             .await
             .map_err(|_| anyhow!("lost ui"))?;
 
@@ -117,7 +117,7 @@ impl AppChannel {
         width: u32,
         height: u32,
         span: Span,
-    ) -> Result<(Term, mpsc::Sender<Vec<u8>>)> {
+    ) -> Result<(Frame, mpsc::Sender<Vec<u8>>)> {
         let (stdin_tx, stdin_rx) = mpsc::channel(1);
 
         let stdout = {
@@ -143,9 +143,9 @@ impl AppChannel {
         };
 
         let size = uvec2(width, height);
-        let term = Term::new(TermFrontend::Ssh, stdin_rx, stdout, size)?;
+        let frame = Frame::new(FrameType::Ssh, stdin_rx, stdout, size)?;
 
-        Ok((term, stdin_tx))
+        Ok((frame, stdin_tx))
     }
 }
 

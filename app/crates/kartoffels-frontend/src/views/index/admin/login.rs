@@ -1,12 +1,12 @@
 use crate::Background;
 use anyhow::{anyhow, Result};
 use kartoffels_store::Store;
-use kartoffels_ui::{Button, Input, KeyCode, Term, UiWidget};
+use kartoffels_ui::{Button, Frame, Input, KeyCode, UiWidget};
 use tracing::{debug, info, warn};
 
 pub async fn run(
     store: &Store,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<Event> {
     debug!("run()");
@@ -19,8 +19,8 @@ pub async fn run(
     let mut tries = 0;
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 ui.widget(bg);
 
                 ui.info_window(30, 4, Some(" admin "), |ui| {

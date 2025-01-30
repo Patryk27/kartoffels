@@ -30,6 +30,7 @@ impl<'a, T> Button<'a, T> {
         }
     }
 
+    // TODO separate into a different widget
     pub fn multi(label: impl Into<Cow<'a, str>>) -> Self {
         Self {
             label: label.into(),

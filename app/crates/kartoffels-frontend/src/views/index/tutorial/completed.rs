@@ -1,6 +1,6 @@
 use anyhow::Result;
 use kartoffels_ui::{
-    theme, Clear, Fade, FadeDir, Msg, MsgButton, MsgLine, Term, UiWidget,
+    theme, Clear, Fade, FadeDir, Frame, Msg, MsgButton, MsgLine, UiWidget,
 };
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
@@ -29,13 +29,13 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     buttons: vec![MsgButton::confirm("complete", ())],
 });
 
-pub async fn run(term: &mut Term) -> Result<()> {
+pub async fn run(frame: &mut Frame) -> Result<()> {
     let mut fade_in = Some(Fade::new(FadeDir::In));
     let mut fade_out: Option<Fade> = None;
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 Clear::render(ui);
                 MSG.render(ui);
 

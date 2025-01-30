@@ -5,22 +5,22 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, UiWidget};
+use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
 use ratatui::widgets::{Paragraph, Wrap};
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<()> {
     let mut fade_in = false;
 
     loop {
-        match run_once(store, term, bg, fade_in).await? {
+        match run_once(store, frame, bg, fade_in).await? {
             Event::Play(challenge) => {
-                game::run(store, sess, term, |game| {
+                game::run(store, sess, frame, |game| {
                     (challenge.run)(store, game)
                 })
                 .await?;
@@ -37,7 +37,7 @@ pub async fn run(
 
 async fn run_once(
     store: &Store,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
     fade_in: bool,
 ) -> Result<Event> {
@@ -52,8 +52,8 @@ async fn run_once(
     let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 bg.render(ui);
 
                 let width = (ui.area.width - 2).min(60);

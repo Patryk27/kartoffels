@@ -1,19 +1,19 @@
 use crate::Background;
 use anyhow::{Error, Result};
-use kartoffels_ui::{Button, KeyCode, Term};
+use kartoffels_ui::{Button, Frame, KeyCode};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::Paragraph;
 use tracing::debug;
 
-pub async fn run(term: &mut Term, bg: &Background, err: Error) -> Result<()> {
+pub async fn run(frame: &mut Frame, bg: &Background, err: Error) -> Result<()> {
     debug!(?err, "run()");
 
     let err =
         Paragraph::new(err.to_string().to_lowercase()).wrap(Default::default());
 
     loop {
-        let go_back = term
-            .frame(|ui| {
+        let go_back = frame
+            .update(|ui| {
                 let width = 60;
                 let height = err.line_count(width) as u16 + 2;
 

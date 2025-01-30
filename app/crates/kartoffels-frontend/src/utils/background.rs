@@ -1,6 +1,6 @@
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
-use kartoffels_ui::{theme, Term, Ui, UiWidget};
+use kartoffels_ui::{theme, Frame, Ui, UiWidget};
 use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileKind};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -18,7 +18,7 @@ pub struct Background {
 impl Background {
     const MAP_SIZE: UVec2 = uvec2(256, 256);
 
-    pub fn new(store: &Store, term: &Term) -> Self {
+    pub fn new(store: &Store, frame: &Frame) -> Self {
         let stream = if store.testing() {
             watch::channel(Default::default()).1
         } else {
@@ -34,7 +34,7 @@ impl Background {
             let mut rng = rand::thread_rng();
 
             let min = uvec2(0, 0);
-            let max = Self::MAP_SIZE - term.size();
+            let max = Self::MAP_SIZE - frame.size();
 
             uvec2(rng.gen_range(min.x..=max.x), rng.gen_range(min.y..=max.y))
                 .as_ivec2()

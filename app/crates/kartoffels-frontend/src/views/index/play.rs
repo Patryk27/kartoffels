@@ -4,22 +4,22 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, KeyCode, Term, UiWidget};
+use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<()> {
     let mut fade_in = false;
 
     loop {
-        match run_once(store, term, bg, fade_in).await? {
+        match run_once(store, frame, bg, fade_in).await? {
             Event::Play(world) => {
-                game::run(store, sess, term, |game| {
+                game::run(store, sess, frame, |game| {
                     ctrl::run(world.clone(), game)
                 })
                 .await?;
@@ -36,7 +36,7 @@ pub async fn run(
 
 async fn run_once<'a>(
     store: &'a Store,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
     fade_in: bool,
 ) -> Result<Event<'a>> {
@@ -51,8 +51,8 @@ async fn run_once<'a>(
     let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 let width = store
                     .public_worlds()
                     .iter()

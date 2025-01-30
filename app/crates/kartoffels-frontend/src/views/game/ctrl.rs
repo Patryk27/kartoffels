@@ -1,7 +1,7 @@
 use super::{Modal, State};
 use crate::views::game::{Config, HelpMsgRef};
 use anyhow::{anyhow, Result};
-use kartoffels_ui::{theme, Msg, Term, Ui};
+use kartoffels_ui::{theme, Frame, Msg, Ui};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::time::Instant;
 use tokio::sync::{mpsc, oneshot};
@@ -103,12 +103,8 @@ impl GameCtrl {
         Ok(())
     }
 
-    pub async fn copy_to_clipboard(
-        &self,
-        payload: impl Into<String>,
-    ) -> Result<()> {
-        self.send(GameCtrlEvent::CopyToClipboard(payload.into()))
-            .await?;
+    pub async fn copy(&self, payload: impl Into<String>) -> Result<()> {
+        self.send(GameCtrlEvent::Copy(payload.into())).await?;
 
         Ok(())
     }
@@ -163,7 +159,7 @@ pub(super) enum GameCtrlEvent {
     SetModal(Option<Box<dyn FnMut(&mut Ui<()>) + Send>>),
     SetHelp(Option<HelpMsgRef>),
     SetStatus(Option<String>),
-    CopyToClipboard(String),
+    Copy(String),
     GetWorldVersion(oneshot::Sender<u64>),
     WaitForRestart(oneshot::Sender<()>),
 }
@@ -172,7 +168,7 @@ impl GameCtrlEvent {
     pub(super) async fn handle(
         self,
         state: &mut State,
-        term: &mut Term,
+        frame: &mut Frame,
     ) -> Result<()> {
         match self {
             GameCtrlEvent::Join(handle) => {
@@ -209,8 +205,8 @@ impl GameCtrlEvent {
                 state.status = status.map(|status| (status, Instant::now()));
             }
 
-            GameCtrlEvent::CopyToClipboard(payload) => {
-                term.copy_to_clipboard(payload).await?;
+            GameCtrlEvent::Copy(payload) => {
+                frame.copy(payload).await?;
             }
 
             GameCtrlEvent::GetWorldVersion(tx) => {

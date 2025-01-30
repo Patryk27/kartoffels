@@ -6,17 +6,17 @@ mod views;
 use self::utils::*;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Abort, Term};
+use kartoffels_ui::{Abort, Frame};
 
 pub async fn main(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
 ) -> Result<()> {
-    let mut bg = Background::new(store, term);
+    let mut bg = Background::new(store, frame);
 
     loop {
-        match views::index::run(store, sess, term, &bg).await {
+        match views::index::run(store, sess, frame, &bg).await {
             Ok(_) => {
                 return Ok(());
             }
@@ -27,7 +27,7 @@ pub async fn main(
                         if abort.soft {
                             // Let soft-aborts generate a new background, just
                             // for fun
-                            bg = Background::new(store, term);
+                            bg = Background::new(store, frame);
                             continue;
                         } else {
                             return Err(abort.into());
@@ -35,7 +35,7 @@ pub async fn main(
                     }
 
                     Err(err) => {
-                        views::error::run(term, &bg, err).await?;
+                        views::error::run(frame, &bg, err).await?;
                     }
                 }
             }

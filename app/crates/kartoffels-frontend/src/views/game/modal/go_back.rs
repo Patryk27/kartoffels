@@ -17,9 +17,7 @@ impl GoBackModal {
                     .render(ui);
 
                 Button::new(KeyCode::Char('y'), "yes")
-                    .throwing(Event::GoBack {
-                        needs_confirmation: false,
-                    })
+                    .throwing(Event::GoBack { confirm: false })
                     .right_aligned()
                     .render(ui);
             });

@@ -24,7 +24,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     loop {
         match ctxt.game.msg(&MSG).await? {
             "copy" => {
-                ctxt.game.copy_to_clipboard(CMD).await?;
+                ctxt.game.copy(CMD).await?;
             }
 
             "next" => {

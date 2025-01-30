@@ -50,7 +50,9 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgButton::new(
             KeyCode::Char('c'),
             "copy-command",
-            HelpMsgEvent::Copy(CMD),
+            HelpMsgEvent::Copy {
+                payload: CMD.to_owned(),
+            },
         ),
         HelpMsgEvent::close(),
     ],

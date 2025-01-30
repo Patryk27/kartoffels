@@ -5,13 +5,16 @@ use super::{
 };
 use anyhow::{anyhow, Error, Result};
 use glam::IVec2;
-use kartoffels_ui::Term;
+use kartoffels_ui::Frame;
 use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
 use std::ops::ControlFlow;
 
 pub enum Event {
+    Copy {
+        payload: String,
+    },
     GoBack {
-        needs_confirmation: bool,
+        confirm: bool,
     },
     Restart,
     JoinBot {
@@ -58,13 +61,17 @@ pub enum Event {
 impl Event {
     pub async fn handle(
         self,
-        term: &mut Term,
+        frame: &mut Frame,
         state: &mut State,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
-            Event::GoBack { needs_confirmation } => match &state.mode {
+            Event::Copy { payload } => {
+                frame.copy(payload).await?;
+            }
+
+            Event::GoBack { confirm } => match &state.mode {
                 Mode::Default => {
-                    if needs_confirmation {
+                    if confirm {
                         state.modal =
                             Some(Box::new(Modal::GoBack(GoBackModal)));
                     } else {
@@ -145,8 +152,8 @@ impl Event {
                 BotSource::Upload => {
                     let request = request.with_source(());
 
-                    if term.frontend().is_web() {
-                        term.send(vec![0x04]).await?;
+                    if frame.ty().is_web() {
+                        frame.send(vec![0x04]).await?;
                     }
 
                     state.modal = Some(Box::new(Modal::UploadBot(

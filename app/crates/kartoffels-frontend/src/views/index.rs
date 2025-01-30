@@ -9,42 +9,42 @@ use self::widgets::*;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Fade, FadeDir, KeyCode, Modifiers, Term, UiWidget};
+use kartoffels_ui::{Fade, FadeDir, Frame, KeyCode, Modifiers, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<()> {
     let mut fade_in = true;
 
     loop {
-        match run_once(store, term, bg, fade_in).await? {
+        match run_once(store, frame, bg, fade_in).await? {
             Event::Admin => {
-                admin::run(store, sess, term, bg).await?;
+                admin::run(store, sess, frame, bg).await?;
                 fade_in = false;
             }
 
             Event::Play => {
-                play::run(store, sess, term, bg).await?;
+                play::run(store, sess, frame, bg).await?;
                 fade_in = false;
             }
 
             Event::Sandbox => {
-                sandbox::run(store, sess, term, bg).await?;
+                sandbox::run(store, sess, frame, bg).await?;
                 fade_in = false;
             }
 
             Event::Tutorial => {
-                tutorial::run(store, sess, term).await?;
+                tutorial::run(store, sess, frame).await?;
                 fade_in = true;
             }
 
             Event::Challenges => {
-                challenges::run(store, sess, term, bg).await?;
+                challenges::run(store, sess, frame, bg).await?;
                 fade_in = false;
             }
 
@@ -57,7 +57,7 @@ pub async fn run(
 
 async fn run_once(
     store: &Store,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
     fade_in: bool,
 ) -> Result<Event> {
@@ -72,8 +72,8 @@ async fn run_once(
     let mut fade_out: Option<(Fade, Event)> = None;
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 let [_, area, _] = Layout::horizontal([
                     Constraint::Fill(1),
                     Constraint::Length(Header::width()),

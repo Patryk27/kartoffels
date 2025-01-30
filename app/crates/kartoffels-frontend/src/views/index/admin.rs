@@ -3,19 +3,19 @@ mod login;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, KeyCode, Term, UiWidget};
+use kartoffels_ui::{Button, Frame, KeyCode, UiWidget};
 use tracing::debug;
 
 pub async fn run(
     store: &Store,
     sess: &Session,
-    term: &mut Term,
+    frame: &mut Frame,
     bg: &Background,
 ) -> Result<()> {
     debug!("run()");
 
     if sess.with(|sess| !sess.is_admin()) {
-        match login::run(store, term, bg).await? {
+        match login::run(store, frame, bg).await? {
             login::Event::LoggedIn => {
                 sess.with(|sess| {
                     sess.make_admin();
@@ -29,8 +29,8 @@ pub async fn run(
     }
 
     loop {
-        let event = term
-            .frame(|ui| {
+        let event = frame
+            .update(|ui| {
                 ui.widget(bg);
 
                 ui.info_window(20, 3, Some(" admin "), |ui| {

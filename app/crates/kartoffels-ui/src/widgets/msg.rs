@@ -1,5 +1,4 @@
-use super::FromMarkdown;
-use crate::{Button, Ui, UiWidget};
+use crate::{Button, FromMarkdown, Ui, UiWidget};
 use ratatui::style::{Style, Styled};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::Paragraph;
@@ -85,8 +84,8 @@ impl MsgLine {
 
     fn matches<E>(&self, ui: &Ui<E>) -> bool {
         match self.cond {
-            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.frontend.is_ssh(),
-            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.frontend.is_web(),
+            Some(MsgLineCondition::ShowOnlyOnSsh) => ui.ty.is_ssh(),
+            Some(MsgLineCondition::ShowOnlyOnWeb) => ui.ty.is_web(),
             None => true,
         }
     }

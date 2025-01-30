@@ -9,7 +9,7 @@ use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Stdin, Stdout, Term, TermFrontend};
+use kartoffels_ui::{Frame, FrameType, Stdin, Stdout};
 use serde::Deserialize;
 use std::io::Write;
 use std::net::SocketAddr;
@@ -61,10 +61,9 @@ async fn main(
         .await
         .context("couldn't retrieve hello message")?;
 
-    let term =
-        create_term(socket, hello).context("couldn't create terminal")?;
+    let frame = create_frame(socket, hello).context("couldn't create frame")?;
 
-    common::start_session(store, term, shutdown).await;
+    common::start_session(store, frame, shutdown).await;
 
     Ok(())
 }
@@ -79,14 +78,14 @@ async fn recv_hello_msg(socket: &mut WebSocket) -> Result<HelloMsg> {
     serde_json::from_str(&msg).context("couldn't deserialize message")
 }
 
-fn create_term(socket: WebSocket, hello: HelloMsg) -> Result<Term> {
+fn create_frame(socket: WebSocket, hello: HelloMsg) -> Result<Frame> {
     let (stdout, stdin) = socket.split();
     let stdin = create_term_stdin(stdin);
     let stdout = create_term_stdout(stdout);
     let size = uvec2(hello.cols, hello.rows);
-    let term = Term::new(TermFrontend::Web, stdin, stdout, size)?;
+    let frame = Frame::new(FrameType::Web, stdin, stdout, size)?;
 
-    Ok(term)
+    Ok(frame)
 }
 
 fn create_term_stdin(mut stdin: SplitStream<WebSocket>) -> Stdin {

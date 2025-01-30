@@ -72,14 +72,12 @@ impl Modal {
                 });
 
                 if let Some(event) = event {
-                    match event {
-                        HelpMsgEvent::Copy(payload) => {
-                            ui.copy(payload);
+                    ui.throw(match event {
+                        HelpMsgEvent::Copy { payload } => {
+                            Event::Copy { payload }
                         }
-                        HelpMsgEvent::Close => {
-                            ui.throw(Event::CloseModal);
-                        }
-                    }
+                        HelpMsgEvent::Close => Event::CloseModal,
+                    });
                 }
 
                 if ui.key(KeyCode::Escape, Modifiers::NONE) {
