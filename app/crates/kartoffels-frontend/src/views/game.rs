@@ -296,7 +296,7 @@ enum Mode {
     Default,
 
     SpawningBot {
-        source: BotSource,
+        source: Vec<u8>,
         cursor_screen: Option<UVec2>,
         cursor_world: Option<IVec2>,
         cursor_valid: bool,
@@ -308,11 +308,4 @@ struct JoinedBot {
     id: BotId,
     follow: bool,
     exists: bool,
-}
-
-#[derive(Clone, Debug)]
-enum BotSource {
-    Base64(String),
-    Binary(Vec<u8>),
-    BinaryRef(&'static [u8]),
 }

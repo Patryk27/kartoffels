@@ -1,4 +1,4 @@
-use crate::views::game::{BotSourceType, Event, Mode, State, UploadBotRequest};
+use crate::views::game::{BotSource, Event, Mode, State, UploadBotRequest};
 use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 
@@ -40,7 +40,7 @@ impl IdleSidePanel {
                         Button::new(KeyCode::Char('u'), "upload-bot").throwing(
                             Event::OpenUploadBotModal {
                                 request: UploadBotRequest::new(
-                                    BotSourceType::Upload,
+                                    BotSource::Upload,
                                 ),
                             },
                         ),

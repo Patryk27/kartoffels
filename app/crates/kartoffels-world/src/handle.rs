@@ -10,7 +10,6 @@ use bevy_ecs::system::Resource;
 use derivative::Derivative;
 use glam::IVec2;
 use kartoffels_utils::Id;
-use std::borrow::Cow;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
 
@@ -289,7 +288,7 @@ pub enum Request {
 #[derivative(Debug)]
 pub struct CreateBotRequest {
     #[derivative(Debug = "ignore")]
-    pub src: Cow<'static, [u8]>,
+    pub src: Vec<u8>,
     pub pos: Option<IVec2>,
     pub dir: Option<Dir>,
     pub instant: bool,
@@ -297,7 +296,7 @@ pub struct CreateBotRequest {
 }
 
 impl CreateBotRequest {
-    pub fn new(src: impl Into<Cow<'static, [u8]>>) -> Self {
+    pub fn new(src: impl Into<Vec<u8>>) -> Self {
         Self {
             src: src.into(),
             pos: None,

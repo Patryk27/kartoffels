@@ -11,13 +11,13 @@ use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 #[derive(Debug)]
 pub struct SpawnBotModal {
     focus: Option<Focus>,
-    bot_source: BotSourceType,
+    bot_source: BotSource,
     bot_position: BotPosition,
     bot_count: BotCount,
 }
 
 impl SpawnBotModal {
-    pub fn new(bot_source: BotSourceType) -> Self {
+    pub fn new(bot_source: BotSource) -> Self {
         Self {
             focus: Default::default(),
             bot_source,
@@ -56,7 +56,7 @@ impl SpawnBotModal {
 
     fn height(&self) -> u16 {
         let body = match &self.focus {
-            Some(Focus::BotSource) => BotSourceType::height(),
+            Some(Focus::BotSource) => BotSource::height(),
             Some(Focus::BotPosition) => BotPosition::height(),
             Some(Focus::BotCount) => BotCount::height(),
 
@@ -75,7 +75,7 @@ impl SpawnBotModal {
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
             Some(Focus::BotSource) => {
-                BotSourceType::render_choice(ui);
+                BotSource::render_choice(ui);
             }
             Some(Focus::BotPosition) => {
                 BotPosition::render_choice(ui);
@@ -85,7 +85,7 @@ impl SpawnBotModal {
             }
 
             None => {
-                BotSourceType::render_focus(ui, &self.bot_source);
+                BotSource::render_focus(ui, &self.bot_source);
                 BotPosition::render_focus(ui, &self.bot_position);
 
                 if let BotPosition::Random = &self.bot_position {
@@ -161,7 +161,7 @@ enum Event {
     GoBack,
     Confirm,
     FocusOn(Option<Focus>),
-    SetBotSource(BotSourceType),
+    SetBotSource(BotSource),
     SetBotPosition(BotPosition),
     SetBotCount(BotCount),
 }

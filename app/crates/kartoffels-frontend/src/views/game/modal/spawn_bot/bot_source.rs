@@ -4,12 +4,12 @@ use kartoffels_ui::{Button, KeyCode, Ui, UiWidget};
 use std::fmt;
 
 #[derive(Clone, Copy, Debug)]
-pub enum BotSourceType {
+pub enum BotSource {
     Upload,
     Prefab(BotPrefabType),
 }
 
-impl BotSourceType {
+impl BotSource {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
         Button::new(KeyCode::Char('s'), format!("source: {val}"))
             .throwing(Event::FocusOn(Some(Focus::BotSource)))
@@ -63,7 +63,7 @@ impl BotSourceType {
     }
 }
 
-impl fmt::Display for BotSourceType {
+impl fmt::Display for BotSource {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Upload => write!(f, "upload"),
@@ -88,10 +88,11 @@ impl fmt::Display for BotPrefabType {
 }
 
 impl BotPrefabType {
-    pub fn source(&self) -> &'static [u8] {
+    pub fn source(&self) -> Vec<u8> {
         match self {
             Self::Dummy => DUMMY,
             Self::Roberto => ROBERTO,
         }
+        .to_vec()
     }
 }

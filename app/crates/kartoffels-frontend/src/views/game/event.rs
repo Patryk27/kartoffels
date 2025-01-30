@@ -1,15 +1,12 @@
 use super::{
-    BotPosition, BotPrefabType, BotSource, BotSourceType, BotsModal,
-    ErrorModal, GoBackModal, InspectBotModal, JoinBotModal, Modal, Mode,
-    SpawnBotModal, State, UploadBotModal, UploadBotRequest,
+    BotPosition, BotPrefabType, BotSource, BotsModal, ErrorModal, GoBackModal,
+    InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, State,
+    UploadBotModal, UploadBotRequest,
 };
 use anyhow::{anyhow, Error, Result};
-use base64::prelude::BASE64_STANDARD;
-use base64::Engine;
 use glam::IVec2;
 use kartoffels_ui::Term;
 use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
-use std::borrow::Cow;
 use std::ops::ControlFlow;
 
 pub enum Event {
@@ -35,14 +32,14 @@ pub enum Event {
     OpenHelpModal,
     OpenJoinBotModal,
     OpenUploadBotModal {
-        request: UploadBotRequest<BotSourceType>,
+        request: UploadBotRequest<BotSource>,
     },
     OpenSpawnBotModal,
     UploadBot {
-        request: UploadBotRequest<BotSource>,
+        request: UploadBotRequest<Vec<u8>>,
     },
     CreateBot {
-        src: BotSource,
+        src: Vec<u8>,
         pos: Option<IVec2>,
         follow: bool,
     },
@@ -140,12 +137,12 @@ impl Event {
             Event::OpenSpawnBotModal => {
                 state.modal =
                     Some(Box::new(Modal::SpawnBot(SpawnBotModal::new(
-                        BotSourceType::Prefab(BotPrefabType::Roberto),
+                        BotSource::Prefab(BotPrefabType::Roberto),
                     ))));
             }
 
             Event::OpenUploadBotModal { request } => match request.source {
-                BotSourceType::Upload => {
+                BotSource::Upload => {
                     let request = request.with_source(());
 
                     if term.frontend().is_web() {
@@ -157,9 +154,8 @@ impl Event {
                     )));
                 }
 
-                BotSourceType::Prefab(source) => {
-                    let request = request
-                        .with_source(BotSource::BinaryRef(source.source()));
+                BotSource::Prefab(source) => {
+                    let request = request.with_source(source.source());
 
                     state.modal = None;
                     state.upload_bot(request).await?;
@@ -173,7 +169,7 @@ impl Event {
 
             Event::CreateBot { src, pos, follow } => {
                 state.modal = None;
-                state.create_bot(&src, pos, follow).await?;
+                state.create_bot(src, pos, follow).await?;
             }
 
             Event::LeaveBot => {
@@ -221,7 +217,7 @@ impl Event {
 impl State {
     async fn upload_bot(
         &mut self,
-        request: UploadBotRequest<BotSource>,
+        request: UploadBotRequest<Vec<u8>>,
     ) -> Result<()> {
         match request.position {
             BotPosition::Manual => {
@@ -235,7 +231,7 @@ impl State {
 
             BotPosition::Random => {
                 for _ in 0..request.count.get() {
-                    self.create_bot(&request.source, None, true).await?;
+                    self.create_bot(request.source.clone(), None, true).await?;
                 }
             }
         }
@@ -245,35 +241,10 @@ impl State {
 
     async fn create_bot(
         &mut self,
-        src: &BotSource,
+        src: Vec<u8>,
         pos: Option<IVec2>,
         follow: bool,
     ) -> Result<()> {
-        let src = match src {
-            BotSource::Base64(src) => {
-                let src = src.trim().replace('\r', "");
-                let src = src.trim().replace('\n', "");
-
-                match BASE64_STANDARD.decode(src) {
-                    Ok(src) => Cow::Owned(src),
-
-                    Err(err) => {
-                        self.modal =
-                            Some(Box::new(Modal::Error(ErrorModal::new(
-                                anyhow!("{err}")
-                                    .context("couldn't decode pasted content")
-                                    .context("couldn't upload bot"),
-                            ))));
-
-                        return Ok(());
-                    }
-                }
-            }
-
-            BotSource::Binary(src) => Cow::Owned(src.to_owned()),
-            BotSource::BinaryRef(src) => Cow::Borrowed(*src),
-        };
-
         let id = self
             .handle
             .as_ref()
