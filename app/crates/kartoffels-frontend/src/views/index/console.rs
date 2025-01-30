@@ -54,6 +54,7 @@ pub async fn run(
         if let Some(cmd) = cmd {
             info!(?cmd, "running command");
 
+            _ = writeln!(term, "; ---");
             _ = writeln!(term, "; {cmd}");
             _ = writeln!(term);
 

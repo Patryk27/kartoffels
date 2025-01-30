@@ -14,10 +14,11 @@ use tracing::info;
 pub struct Worlds {
     public: ArcSwap<Vec<WorldHandle>>,
     private: Arc<Mutex<AHashMap<Id, WorldHandle>>>,
-    testing_id: AtomicU64,
+    test_next_id: AtomicU64,
 }
 
 impl Worlds {
+    pub const MAX_PUBLIC_WORLDS: usize = 128;
     pub const MAX_PRIVATE_WORLDS: usize = 128;
 
     pub async fn new(dir: Option<&Path>) -> Result<Self> {
@@ -30,7 +31,7 @@ impl Worlds {
         Ok(Self {
             public: ArcSwap::new(Arc::new(public)),
             private: Default::default(),
-            testing_id: AtomicU64::new(1),
+            test_next_id: AtomicU64::new(1),
         })
     }
 
@@ -69,7 +70,7 @@ impl Worlds {
             })?;
         }
 
-        worlds.sort_by_key(|world| world.name().to_owned());
+        sort_worlds(&mut worlds);
 
         Ok(worlds)
     }
@@ -78,11 +79,57 @@ impl Worlds {
         self.public.swap(Arc::new(public.into_iter().collect()));
     }
 
-    pub fn create_public(&self, config: WorldConfig) -> Result<WorldHandle> {
+    pub fn create_public(
+        &self,
+        dir: &Path,
+        config: WorldConfig,
+    ) -> Result<WorldHandle> {
         assert!(config.id.is_none());
         assert!(config.path.is_none());
 
-        todo!();
+        let mut worlds = self.public.load().to_vec();
+
+        if worlds.len() >= Self::MAX_PUBLIC_WORLDS {
+            return Err(anyhow!("ouch, the server is currently overloaded"));
+        }
+
+        if worlds.iter().any(|world| world.name() == config.name) {
+            return Err(anyhow!(
+                "world named `{}` already exists",
+                config.name
+            ));
+        }
+
+        let id = loop {
+            let id = rand::random();
+
+            // We expect at most a couple of public worlds, so this linear
+            // search shouldn't be too painful
+            if worlds.iter().any(|world| world.id() == id) {
+                continue;
+            }
+
+            break id;
+        };
+
+        info!(?id, "public world created");
+
+        let handle = {
+            let path = dir.join(id.to_string()).with_extension("world");
+
+            kartoffels_world::create(WorldConfig {
+                id: Some(id),
+                path: Some(path),
+                ..config
+            })
+        };
+
+        worlds.push(handle.clone());
+        sort_worlds(&mut worlds);
+
+        self.public.store(Arc::new(worlds));
+
+        Ok(handle)
     }
 
     pub fn public(&self) -> Arc<Vec<WorldHandle>> {
@@ -97,20 +144,20 @@ impl Worlds {
         assert!(config.id.is_none());
         assert!(config.path.is_none());
 
-        let mut private = self.private.lock().unwrap();
+        let mut worlds = self.private.lock().unwrap();
 
-        if private.len() >= Self::MAX_PRIVATE_WORLDS {
+        if worlds.len() >= Self::MAX_PRIVATE_WORLDS {
             return Err(anyhow!("ouch, the server is currently overloaded"));
         }
 
         let (id, handle) = loop {
             let id = if testing {
-                Id::new(self.testing_id.fetch_add(1, Ordering::Relaxed))
+                Id::new(self.test_next_id.fetch_add(1, Ordering::Relaxed))
             } else {
                 rand::random()
             };
 
-            if let hash_map::Entry::Vacant(entry) = private.entry(id) {
+            if let hash_map::Entry::Vacant(entry) = worlds.entry(id) {
                 info!(?id, "private world created");
 
                 let handle = kartoffels_world::create(WorldConfig {
@@ -125,11 +172,11 @@ impl Worlds {
         };
 
         let handle = handle.on_last_drop({
-            let private = self.private.clone();
+            let worlds = self.private.clone();
 
             move || {
                 info!(?id, "private world destroyed");
-                private.lock().unwrap().remove(&id);
+                worlds.lock().unwrap().remove(&id);
             }
         });
 
@@ -147,4 +194,8 @@ impl Worlds {
 
         Ok(())
     }
+}
+
+fn sort_worlds(worlds: &mut [WorldHandle]) {
+    worlds.sort_by(|a, b| a.name().cmp(b.name()));
 }

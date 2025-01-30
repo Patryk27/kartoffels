@@ -64,7 +64,9 @@ impl Store {
         &self,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
-        self.worlds.create_public(config)
+        let dir = self.dir.as_deref().unwrap();
+
+        self.worlds.create_public(dir, config)
     }
 
     pub fn public_worlds(&self) -> Arc<Vec<WorldHandle>> {
