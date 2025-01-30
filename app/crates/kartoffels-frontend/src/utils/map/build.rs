@@ -2,7 +2,7 @@ use anyhow::{Error, Result};
 use kartoffels_store::Store;
 use kartoffels_ui::theme;
 use kartoffels_world::prelude::{Handle, Map, MapBuilder};
-use rand::{Rng, SeedableRng};
+use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use std::future::Future;
 use tokio::{time, try_join};
@@ -21,7 +21,7 @@ where
         let seed = if store.testing() {
             Default::default()
         } else {
-            rand::thread_rng().gen()
+            rand::random()
         };
 
         debug!(?seed, "building world");

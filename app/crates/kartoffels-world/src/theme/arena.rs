@@ -1,7 +1,8 @@
 use crate::{spec, Map, TileKind};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use glam::uvec2;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ArenaTheme {
@@ -13,7 +14,25 @@ impl ArenaTheme {
         Self { radius }
     }
 
-    pub fn create(spec: &str) -> Result<Self> {
+    pub fn create_map(&self) -> Map {
+        let map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
+        let center = map.center();
+        let radius = self.radius as f32;
+
+        map.map(|pos, tile| {
+            if center.as_vec2().distance(pos.as_vec2()) < radius {
+                TileKind::FLOOR.into()
+            } else {
+                tile
+            }
+        })
+    }
+}
+
+impl FromStr for ArenaTheme {
+    type Err = Error;
+
+    fn from_str(spec: &str) -> Result<Self> {
         let mut radius = None;
 
         for entry in spec::entries(spec) {
@@ -33,19 +52,5 @@ impl ArenaTheme {
         let radius = radius.context("missing key: radius")?;
 
         Ok(Self::new(radius))
-    }
-
-    pub fn create_map(&self) -> Map {
-        let map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
-        let center = map.center();
-        let radius = self.radius as f32;
-
-        map.map(|pos, tile| {
-            if center.as_vec2().distance(pos.as_vec2()) < radius {
-                TileKind::FLOOR.into()
-            } else {
-                tile
-            }
-        })
     }
 }

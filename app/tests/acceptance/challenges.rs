@@ -115,7 +115,7 @@ async fn personal_roomba() {
     ctxt.upload_bot(CHL_PERSONAL_ROOMBA).await;
     ctxt.wait_while("[u] upload-bot").await;
 
-    world.tick(6_000_000).await.unwrap();
+    world.tick(10_000_000).await.unwrap();
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;

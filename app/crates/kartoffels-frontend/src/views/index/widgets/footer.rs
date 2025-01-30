@@ -22,7 +22,7 @@ impl Footer {
             height: 1,
         };
 
-        ui.widget_at(area, Span::raw(text).fg(theme::GRAY));
+        ui.add_at(area, Span::raw(text).fg(theme::GRAY));
     }
 }
 

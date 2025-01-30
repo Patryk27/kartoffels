@@ -131,7 +131,7 @@ impl BotsModal {
                 });
 
             for (row, area) in rows.zip(ui.area.rows()) {
-                ui.widget_at(area, row);
+                ui.add_at(area, row);
             }
         });
 

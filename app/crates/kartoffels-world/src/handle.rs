@@ -11,16 +11,26 @@ use derivative::Derivative;
 use glam::IVec2;
 use kartoffels_utils::Id;
 use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot, watch, OwnedSemaphorePermit};
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Derivative)]
+#[derivative(Debug)]
 pub struct Handle {
-    pub(super) shared: Arc<HandleShared>,
-    pub(super) permit: Option<Arc<OwnedSemaphorePermit>>,
+    shared: Arc<HandleShared>,
+
+    #[derivative(Debug = "ignore")]
+    on_last_drop: Option<Arc<Box<dyn FnOnce() + Send + Sync>>>,
 }
 
 impl Handle {
     pub(crate) const ERR: &'static str = "world has crashed";
+
+    pub(crate) fn new(shared: HandleShared) -> Self {
+        Self {
+            shared: Arc::new(shared),
+            on_last_drop: None,
+        }
+    }
 
     pub fn id(&self) -> Id {
         self.shared.id
@@ -48,8 +58,13 @@ impl Handle {
         self.shared.snapshots.borrow().version
     }
 
-    pub fn with_permit(mut self, permit: OwnedSemaphorePermit) -> Self {
-        self.permit = Some(Arc::new(permit));
+    pub fn on_last_drop(
+        mut self,
+        f: impl FnOnce() + Send + Sync + 'static,
+    ) -> Self {
+        assert!(self.on_last_drop.is_none());
+
+        self.on_last_drop = Some(Arc::new(Box::new(f)));
         self
     }
 
@@ -184,6 +199,16 @@ impl Handle {
             .map_err(|_| anyhow!("{}", Self::ERR))?;
 
         Ok(())
+    }
+}
+
+impl Drop for Handle {
+    fn drop(&mut self) {
+        if let Some(f) = self.on_last_drop.take()
+            && let Ok(f) = Arc::try_unwrap(f)
+        {
+            f();
+        }
     }
 }
 

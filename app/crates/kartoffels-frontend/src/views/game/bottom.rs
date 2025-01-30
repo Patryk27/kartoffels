@@ -146,6 +146,6 @@ impl BottomPanel {
             height: 1,
         };
 
-        ui.widget_at(area, span);
+        ui.add_at(area, span);
     }
 }

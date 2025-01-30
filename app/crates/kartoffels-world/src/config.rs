@@ -1,4 +1,5 @@
 use crate::{Clock, Policy, Theme};
+use kartoffels_utils::Id;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use std::path::PathBuf;
@@ -6,7 +7,8 @@ use std::path::PathBuf;
 #[derive(Clone, Debug, Default)]
 pub struct Config {
     pub clock: Clock,
-    pub emit_events: bool,
+    pub events: bool,
+    pub id: Option<Id>,
     pub name: String,
     pub path: Option<PathBuf>,
     pub policy: Policy,

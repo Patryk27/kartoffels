@@ -34,12 +34,12 @@ pub async fn run(
     }
 }
 
-async fn run_once<'a>(
-    store: &'a Store,
+async fn run_once(
+    store: &Store,
     frame: &mut Frame,
     bg: &Background,
     fade_in: bool,
-) -> Result<Event<'a>> {
+) -> Result<Event> {
     debug!("run()");
 
     let mut fade_in = if fade_in && !store.testing() {
@@ -49,6 +49,7 @@ async fn run_once<'a>(
     };
 
     let mut fade_out: Option<(Fade, Event)> = None;
+    let worlds = store.public_worlds();
 
     loop {
         let event = frame
@@ -66,13 +67,12 @@ async fn run_once<'a>(
                 bg.render(ui);
 
                 ui.info_window(width, height, Some(" play "), |ui| {
-                    for (idx, world) in store.public_worlds().iter().enumerate()
-                    {
+                    for (idx, world) in worlds.iter().enumerate() {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-                        Button::new(key, world.name())
-                            .throwing(Event::Play(world))
-                            .render(ui);
+                        if Button::new(key, world.name()).render(ui).pressed {
+                            ui.throw(Event::Play(world.clone()));
+                        }
                     }
 
                     ui.space(1);
@@ -96,7 +96,7 @@ async fn run_once<'a>(
 
         if let Some((fade, event)) = &fade_out {
             if fade.is_completed() {
-                return Ok(*event);
+                return Ok(event.clone());
             }
 
             continue;
@@ -112,13 +112,13 @@ async fn run_once<'a>(
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-enum Event<'a> {
-    Play(&'a WorldHandle),
+#[derive(Clone, Debug)]
+enum Event {
+    Play(WorldHandle),
     GoBack,
 }
 
-impl Event<'_> {
+impl Event {
     fn fade_out(&self) -> bool {
         matches!(self, Event::Play(_))
     }

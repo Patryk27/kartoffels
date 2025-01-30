@@ -7,7 +7,7 @@ pub mod ssh;
 use anyhow::{Context, Result};
 use clap::Parser;
 use indoc::indoc;
-use kartoffels_store::Store;
+use kartoffels_store::{Secret, Store};
 use kartoffels_world::prelude::Clock;
 use std::env;
 use std::net::SocketAddr;
@@ -39,7 +39,7 @@ pub struct Cmd {
     ssh: Option<SocketAddr>,
 
     #[clap(long)]
-    secret: Option<String>,
+    secret: Option<Secret>,
 
     #[clap(long)]
     debug: bool,
@@ -95,14 +95,14 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!(?self, "starting");
 
-        let store = Store::open(Some(&self.data), self.secret)
+        let store = Store::new(Some(&self.data), self.secret)
             .await
             .with_context(|| {
                 format!("couldn't open store at `{}`", self.data.display())
             })?;
 
         if self.bench {
-            for world in store.public_worlds() {
+            for world in store.public_worlds().iter() {
                 world.overclock(Clock::Unlimited).await?;
             }
         }

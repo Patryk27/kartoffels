@@ -83,13 +83,13 @@ impl<T> Ui<'_, T> {
         }
     }
 
-    pub fn widget(&mut self, widget: impl UiWidget<T>) {
+    pub fn add(&mut self, widget: impl UiWidget<T>) {
         widget.render(self);
     }
 
-    pub fn widget_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
+    pub fn add_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
         self.clamp(area, |ui| {
-            ui.widget(widget);
+            ui.add(widget);
         });
     }
 
@@ -97,7 +97,7 @@ impl<T> Ui<'_, T> {
         let para = Paragraph::new(line).wrap(Wrap::default());
         let height = para.line_count(self.area.width) as u16;
 
-        self.widget(para);
+        self.add(para);
         self.space(height);
 
         height
@@ -107,14 +107,14 @@ impl<T> Ui<'_, T> {
         let span = span.into();
         let width = span.width() as u16;
 
-        self.widget(span);
+        self.add(span);
         self.space(width);
     }
 
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         Clear::render(self);
 
-        self.widget(&block);
+        self.add(&block);
         self.clamp(block.inner(self.area), f);
     }
 

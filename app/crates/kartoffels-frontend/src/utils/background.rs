@@ -45,8 +45,6 @@ impl Background {
 }
 
 impl<T> UiWidget<T> for &Background {
-    type Response = ();
-
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let map = self.stream.borrow().clone();
 

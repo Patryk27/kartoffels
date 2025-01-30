@@ -436,7 +436,8 @@ async fn err_couldnt_parse_firmware_2() {
 fn config() -> Config {
     Config {
         clock: Clock::manual(),
-        emit_events: false,
+        events: false,
+        id: None,
         name: "world".into(),
         path: None,
         policy: Policy {

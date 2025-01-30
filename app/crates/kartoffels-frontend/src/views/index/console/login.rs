@@ -21,11 +21,11 @@ pub async fn run(
     loop {
         let event = frame
             .update(|ui| {
-                ui.widget(bg);
+                ui.add(bg);
 
                 ui.info_window(30, 4, Some(" admin "), |ui| {
                     ui.line("enter secret:");
-                    ui.widget(&mut secret);
+                    ui.add(&mut secret);
                     ui.space(1);
 
                     ui.row(|ui| {

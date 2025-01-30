@@ -1,45 +1,33 @@
-use ahash::AHashMap;
 use derivative::Derivative;
 use kartoffels_utils::Id;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 use tokio::sync::oneshot;
-use tracing::{debug, info};
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub struct Session {
     id: SessionId,
     entry: Arc<Mutex<SessionEntry>>,
-    entries: Arc<Mutex<AHashMap<SessionId, Arc<Mutex<SessionEntry>>>>>,
+
+    #[derivative(Debug = "ignore")]
+    on_drop: Option<Box<dyn FnOnce() + Send + Sync>>,
 }
 
 impl Session {
-    pub(crate) fn create(
-        entries: Arc<Mutex<AHashMap<SessionId, Arc<Mutex<SessionEntry>>>>>,
+    pub(crate) fn new(
+        id: SessionId,
+        entry: Arc<Mutex<SessionEntry>>,
+        on_drop: impl FnOnce() + Send + Sync + 'static,
     ) -> Self {
-        let mut rng = rand::thread_rng();
-
-        loop {
-            let id = rng.gen();
-
-            let entry = if let hash_map::Entry::Vacant(entry) =
-                entries.lock().unwrap().entry(id)
-            {
-                info!(?id, "session created");
-
-                entry
-                    .insert(Arc::new(Mutex::new(SessionEntry::default())))
-                    .clone()
-            } else {
-                continue;
-            };
-
-            break Self { id, entry, entries };
+        Self {
+            id,
+            entry,
+            on_drop: Some(Box::new(on_drop)),
         }
     }
 
@@ -54,9 +42,9 @@ impl Session {
 
 impl Drop for Session {
     fn drop(&mut self) {
-        debug!(id = ?self.id, "session dropped");
-
-        self.entries.lock().unwrap().remove(&self.id);
+        if let Some(f) = self.on_drop.take() {
+            f();
+        }
     }
 }
 

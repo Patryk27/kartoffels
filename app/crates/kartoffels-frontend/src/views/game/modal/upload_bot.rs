@@ -93,7 +93,7 @@ impl UploadBotModal {
         // ---
 
         ui.info_window(width, height, Some(" upload-bot "), |ui| {
-            ui.widget(&body);
+            ui.add(&body);
             ui.space(body_height + 1);
 
             if let Some(alert) = &self.alert {

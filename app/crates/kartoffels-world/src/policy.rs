@@ -1,7 +1,8 @@
 use crate::spec;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Resource)]
 pub struct Policy {
@@ -10,8 +11,10 @@ pub struct Policy {
     pub max_queued_bots: usize,
 }
 
-impl Policy {
-    pub fn create(spec: &str) -> Result<Self> {
+impl FromStr for Policy {
+    type Err = Error;
+
+    fn from_str(spec: &str) -> Result<Self> {
         let mut this = Self::default();
 
         for entry in spec::entries(spec) {

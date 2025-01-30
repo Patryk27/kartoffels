@@ -4,11 +4,12 @@ mod room;
 use self::corridor::*;
 use self::room::*;
 use crate::{spec, Dir, Map, Tile, TileKind};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use glam::{ivec2, uvec2, UVec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DungeonTheme {
@@ -18,34 +19,6 @@ pub struct DungeonTheme {
 impl DungeonTheme {
     pub fn new(size: UVec2) -> Self {
         Self { size }
-    }
-
-    pub fn create(spec: &str) -> Result<Self> {
-        let mut width = None;
-        let mut height = None;
-
-        for entry in spec::entries(spec) {
-            let entry = entry?;
-
-            match entry.key {
-                "width" => {
-                    width = Some(entry.value()?);
-                }
-
-                "height" => {
-                    height = Some(entry.value()?);
-                }
-
-                key => {
-                    return Err(anyhow!("unknown key: {key}"));
-                }
-            }
-        }
-
-        let width = width.context("missing key: width")?;
-        let height = height.context("missing key: height")?;
-
-        Ok(Self::new(uvec2(width, height)))
     }
 
     pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
@@ -233,6 +206,38 @@ impl DungeonTheme {
         });
 
         tiles
+    }
+}
+
+impl FromStr for DungeonTheme {
+    type Err = Error;
+
+    fn from_str(spec: &str) -> Result<Self> {
+        let mut width = None;
+        let mut height = None;
+
+        for entry in spec::entries(spec) {
+            let entry = entry?;
+
+            match entry.key {
+                "width" => {
+                    width = Some(entry.value()?);
+                }
+
+                "height" => {
+                    height = Some(entry.value()?);
+                }
+
+                key => {
+                    return Err(anyhow!("unknown key: {key}"));
+                }
+            }
+        }
+
+        let width = width.context("missing key: width")?;
+        let height = height.context("missing key: height")?;
+
+        Ok(Self::new(uvec2(width, height)))
     }
 }
 

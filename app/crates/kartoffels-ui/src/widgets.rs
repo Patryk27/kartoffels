@@ -5,6 +5,7 @@ mod fade;
 mod input;
 mod msg;
 mod spinner;
+mod term;
 mod vtable;
 
 pub use self::backdrop::*;
@@ -14,6 +15,7 @@ pub use self::fade::*;
 pub use self::input::*;
 pub use self::msg::*;
 pub use self::spinner::*;
+pub use self::term::*;
 pub use self::vtable::*;
 use crate::Ui;
 use ratatui::widgets::Widget;
@@ -28,8 +30,6 @@ impl<T, W> UiWidget<T> for W
 where
     W: Widget,
 {
-    type Response = ();
-
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         W::render(self, ui.area, ui.buf)
     }

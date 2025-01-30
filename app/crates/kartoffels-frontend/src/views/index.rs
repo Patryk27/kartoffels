@@ -1,5 +1,5 @@
-mod admin;
 mod challenges;
+mod console;
 mod play;
 mod sandbox;
 mod tutorial;
@@ -24,7 +24,7 @@ pub async fn run(
     loop {
         match run_once(store, frame, bg, fade_in).await? {
             Event::Admin => {
-                admin::run(store, sess, frame, bg).await?;
+                console::run(store, sess, frame, bg).await?;
                 fade_in = false;
             }
 
@@ -97,7 +97,7 @@ async fn run_once(
                 ])
                 .areas(menu_area);
 
-                ui.widget(bg);
+                ui.add(bg);
 
                 ui.clamp(header_area, |ui| {
                     Header::render(ui);

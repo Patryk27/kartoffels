@@ -76,7 +76,6 @@ use kartoffels_utils::Id;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::path::Path;
-use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, watch};
@@ -90,7 +89,7 @@ pub fn create(config: Config) -> Handle {
         .map(ChaCha8Rng::from_seed)
         .unwrap_or_else(ChaCha8Rng::from_entropy);
 
-    let id = rng.gen();
+    let id = config.id.unwrap_or_else(|| rng.gen());
 
     let map = config
         .theme
@@ -111,7 +110,7 @@ pub fn create(config: Config) -> Handle {
         theme: config.theme,
     };
 
-    create_or_resume(res, config.emit_events)
+    create_or_resume(res, config.events)
 }
 
 pub fn resume(id: Id, path: &Path) -> Result<Handle> {
@@ -222,16 +221,13 @@ fn create_handle(world: &mut World, emit_events: bool) -> Handle {
     let id = world.resource::<WorldId>().0;
     let name = world.resource::<WorldName>().0.clone();
 
-    Handle {
-        shared: Arc::new(HandleShared {
-            tx,
-            id,
-            name,
-            events,
-            snapshots,
-        }),
-        permit: None,
-    }
+    Handle::new(HandleShared {
+        tx,
+        id,
+        name,
+        events,
+        snapshots,
+    })
 }
 
 fn spawn(world: World) {

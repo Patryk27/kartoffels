@@ -5,7 +5,7 @@ use std::mem;
 use std::time::Instant;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Input {
     value: String,
     caret: Instant,
@@ -74,8 +74,6 @@ impl Default for Input {
 }
 
 impl<T> UiWidget<T> for &mut Input {
-    type Response = ();
-
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         ui.row(|ui| {
             ui.span("> ");

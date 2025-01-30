@@ -32,7 +32,7 @@ where
         let height = body.line_count(width) as u16 + 2;
 
         ui.info_window(width, height, self.title, |ui| {
-            ui.widget(&body);
+            ui.add(&body);
             ui.space(height - 1);
 
             ui.row(|ui| {
