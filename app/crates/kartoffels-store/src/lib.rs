@@ -1,3 +1,4 @@
+#![feature(let_chains)]
 #![feature(try_blocks)]
 
 mod secret;
@@ -10,6 +11,7 @@ pub use self::session::*;
 use self::sessions::*;
 use self::worlds::*;
 use anyhow::Result;
+use kartoffels_utils::Id;
 use kartoffels_world::prelude::{
     Clock, Config as WorldConfig, Handle as WorldHandle,
 };
@@ -64,23 +66,41 @@ impl Store {
         &self,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
-        let dir = self.dir.as_deref().unwrap();
-
-        self.worlds.create_public(dir, config)
-    }
-
-    pub fn public_worlds(&self) -> Arc<Vec<WorldHandle>> {
-        self.worlds.public()
+        self.worlds.create(
+            self.testing,
+            self.dir.as_deref(),
+            WorldType::Public,
+            config,
+        )
     }
 
     pub fn create_private_world(
         &self,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
-        self.worlds.create_private(self.testing, config)
+        self.worlds.create(
+            self.testing,
+            self.dir.as_deref(),
+            WorldType::Private,
+            config,
+        )
+    }
+
+    pub async fn delete_world(&self, id: Id) -> Result<()> {
+        self.worlds.delete(self.dir.as_deref(), id).await
+    }
+
+    pub fn worlds(&self) -> Vec<(WorldType, WorldHandle)> {
+        self.worlds.all()
+    }
+
+    pub fn public_worlds(&self) -> Arc<Vec<WorldHandle>> {
+        self.worlds.public()
     }
 
     pub fn first_private_world(&self) -> WorldHandle {
+        assert!(self.testing);
+
         self.worlds.first_private().unwrap()
     }
 

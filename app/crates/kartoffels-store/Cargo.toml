@@ -8,6 +8,7 @@ ahash.workspace = true
 anyhow.workspace = true
 arc-swap.workspace = true
 derivative.workspace = true
+itertools.workspace = true
 kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
 rand.workspace = true

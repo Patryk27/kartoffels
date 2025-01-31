@@ -1,49 +1,50 @@
 use ahash::AHashMap;
 use anyhow::{anyhow, Context, Result};
 use arc_swap::ArcSwap;
-use kartoffels_utils::Id;
+use itertools::Itertools;
+use kartoffels_utils::{ArcSwapExt, Id};
 use kartoffels_world::prelude::{Config as WorldConfig, Handle as WorldHandle};
 use std::collections::hash_map;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::fs;
-use tracing::info;
+use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct Worlds {
-    public: ArcSwap<Vec<WorldHandle>>,
-    private: Arc<Mutex<AHashMap<Id, WorldHandle>>>,
+    entries: Arc<ArcSwap<AHashMap<Id, WorldEntry>>>,
+    public_idx: ArcSwap<Vec<WorldHandle>>,
     test_next_id: AtomicU64,
 }
 
 impl Worlds {
-    pub const MAX_PUBLIC_WORLDS: usize = 128;
-    pub const MAX_PRIVATE_WORLDS: usize = 128;
+    pub const MAX_WORLDS: usize = 128;
 
     pub async fn new(dir: Option<&Path>) -> Result<Self> {
-        let public = if let Some(dir) = dir {
+        let entries = if let Some(dir) = dir {
             Self::load(dir).await?
         } else {
             Default::default()
         };
 
+        let public_idx = build_public_idx(&entries);
+
         Ok(Self {
-            public: ArcSwap::new(Arc::new(public)),
-            private: Default::default(),
+            entries: Arc::new(ArcSwap::from_pointee(entries)),
+            public_idx: ArcSwap::from_pointee(public_idx),
             test_next_id: AtomicU64::new(1),
         })
     }
 
-    async fn load(dir: &Path) -> Result<Vec<WorldHandle>> {
-        let mut worlds = Vec::new();
-        let mut entries = fs::read_dir(dir).await?;
+    async fn load(dir: &Path) -> Result<AHashMap<Id, WorldEntry>> {
+        let mut entries = AHashMap::new();
+        let mut files = fs::read_dir(dir).await?;
 
-        while let Some(entry) = entries.next_entry().await? {
-            let path = entry.path();
+        while let Some(file) = files.next_entry().await? {
+            let path = file.path();
 
-            let Some(entry_stem) =
-                path.file_stem().and_then(|stem| stem.to_str())
+            let Some(stem) = path.file_stem().and_then(|stem| stem.to_str())
             else {
                 continue;
             };
@@ -56,13 +57,19 @@ impl Worlds {
             info!("loading: {}", path.display());
 
             let result: Result<()> = try {
-                let id = entry_stem
+                let id = stem
                     .parse()
                     .context("couldn't extract world id from path")?;
 
-                let world = kartoffels_world::resume(id, &path)?;
+                let handle = kartoffels_world::resume(id, &path)?;
 
-                worlds.push(world);
+                entries.insert(
+                    id,
+                    WorldEntry {
+                        ty: WorldType::Public,
+                        handle: Some(handle),
+                    },
+                );
             };
 
             result.with_context(|| {
@@ -70,132 +77,286 @@ impl Worlds {
             })?;
         }
 
-        sort_worlds(&mut worlds);
-
-        Ok(worlds)
+        Ok(entries)
     }
 
-    pub fn set(&self, public: impl IntoIterator<Item = WorldHandle>) {
-        self.public.swap(Arc::new(public.into_iter().collect()));
+    pub fn set(&self, handles: impl IntoIterator<Item = WorldHandle>) {
+        let entries = handles
+            .into_iter()
+            .map(|handle| {
+                let key = handle.id();
+
+                let val = WorldEntry {
+                    ty: WorldType::Public,
+                    handle: Some(handle),
+                };
+
+                (key, val)
+            })
+            .collect();
+
+        let public_idx = build_public_idx(&entries);
+
+        self.entries.swap(Arc::new(entries));
+        self.public_idx.swap(Arc::new(public_idx));
     }
 
-    pub fn create_public(
+    pub fn create(
         &self,
-        dir: &Path,
+        testing: bool,
+        dir: Option<&Path>,
+        ty: WorldType,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
+        debug!(?dir, ?ty, ?config, "creating world");
+
         assert!(config.id.is_none());
         assert!(config.path.is_none());
 
-        let mut worlds = self.public.load().to_vec();
+        let id = self.create_alloc(testing, ty, &config)?;
+        let config = self.create_config(dir, ty, config, id);
+        let handle = self.create_spawn(ty, config);
 
-        if worlds.len() >= Self::MAX_PUBLIC_WORLDS {
-            return Err(anyhow!("ouch, the server is currently overloaded"));
-        }
+        self.create_reindex(ty, &handle);
 
-        if worlds.iter().any(|world| world.name() == config.name) {
-            return Err(anyhow!(
-                "world named `{}` already exists",
-                config.name
-            ));
-        }
-
-        let id = loop {
-            let id = rand::random();
-
-            // We expect at most a couple of public worlds, so this linear
-            // search shouldn't be too painful
-            if worlds.iter().any(|world| world.id() == id) {
-                continue;
-            }
-
-            break id;
-        };
-
-        info!(?id, "public world created");
-
-        let handle = {
-            let path = dir.join(id.to_string()).with_extension("world");
-
-            kartoffels_world::create(WorldConfig {
-                id: Some(id),
-                path: Some(path),
-                ..config
-            })
-        };
-
-        worlds.push(handle.clone());
-        sort_worlds(&mut worlds);
-
-        self.public.store(Arc::new(worlds));
+        info!(?id, ?ty, "world created");
 
         Ok(handle)
     }
 
-    pub fn public(&self) -> Arc<Vec<WorldHandle>> {
-        self.public.load_full()
-    }
-
-    pub fn create_private(
+    fn create_alloc(
         &self,
         testing: bool,
-        config: WorldConfig,
-    ) -> Result<WorldHandle> {
-        assert!(config.id.is_none());
-        assert!(config.path.is_none());
+        ty: WorldType,
+        config: &WorldConfig,
+    ) -> Result<Id> {
+        let mut id = None;
 
-        let mut worlds = self.private.lock().unwrap();
+        self.entries.try_rcu(|entries| {
+            if let WorldType::Public = ty {
+                if entries
+                    .values()
+                    .filter_map(|entry| entry.handle.as_ref())
+                    .any(|entry| entry.name() == config.name)
+                {
+                    return Err(anyhow!(
+                        "world named `{}` already exists",
+                        config.name
+                    ));
+                }
+            }
 
-        if worlds.len() >= Self::MAX_PRIVATE_WORLDS {
-            return Err(anyhow!("ouch, the server is currently overloaded"));
+            if entries.len() >= Self::MAX_WORLDS {
+                return Err(anyhow!(
+                    "ouch, the server is currently overloaded"
+                ));
+            }
+
+            let mut entries = (**entries).clone();
+
+            id = Some(loop {
+                let id = if testing {
+                    Id::new(self.test_next_id.fetch_add(1, Ordering::Relaxed))
+                } else {
+                    rand::random()
+                };
+
+                if let hash_map::Entry::Vacant(entry) = entries.entry(id) {
+                    entry.insert(WorldEntry { ty, handle: None });
+
+                    break id;
+                }
+            });
+
+            Ok(entries)
+        })?;
+
+        Ok(id.unwrap())
+    }
+
+    fn create_config(
+        &self,
+        dir: Option<&Path>,
+        ty: WorldType,
+        mut config: WorldConfig,
+        id: Id,
+    ) -> WorldConfig {
+        config.id = Some(id);
+
+        if let WorldType::Public = ty {
+            config.path = dir.map(|dir| path(dir, id));
         }
 
-        let (id, handle) = loop {
-            let id = if testing {
-                Id::new(self.test_next_id.fetch_add(1, Ordering::Relaxed))
+        config
+    }
+
+    fn create_spawn(&self, ty: WorldType, config: WorldConfig) -> WorldHandle {
+        let id = config.id.unwrap();
+        let handle = kartoffels_world::create(config);
+
+        self.entries.rcu(|entries| {
+            let mut entries = (**entries).clone();
+
+            entries.get_mut(&id).unwrap().handle = Some(handle.clone());
+            entries
+        });
+
+        match ty {
+            WorldType::Public => handle,
+
+            WorldType::Private => handle.on_last_drop({
+                let entries = self.entries.clone();
+
+                move || {
+                    info!(?id, "world abandoned");
+
+                    entries.rcu(|entries| {
+                        let mut entries = (**entries).clone();
+
+                        entries.remove(&id);
+                        entries
+                    });
+                }
+            }),
+        }
+    }
+
+    fn create_reindex(&self, ty: WorldType, handle: &WorldHandle) {
+        if let WorldType::Public = ty {
+            self.public_idx.rcu(|handles| {
+                let mut handles = (**handles).clone();
+
+                handles.push(handle.clone());
+                handles.sort_by(|a, b| a.name().cmp(b.name()));
+                handles
+            });
+        }
+    }
+
+    pub async fn delete(&self, dir: Option<&Path>, id: Id) -> Result<()> {
+        debug!(?dir, ?id, "deleting world");
+
+        let entry = self.delete_remove(id)?;
+
+        self.delete_cleanup(dir, id, entry).await?;
+
+        debug!(?id, "world deleted");
+
+        Ok(())
+    }
+
+    fn delete_remove(&self, id: Id) -> Result<WorldEntry> {
+        let mut entry = None;
+
+        _ = self.public_idx.try_rcu(|entries| {
+            if let Some((idx, _)) =
+                entries.iter().find_position(|entry| entry.id() == id)
+            {
+                let mut entries = (**entries).clone();
+
+                entries.remove(idx);
+
+                Ok(entries)
             } else {
-                rand::random()
-            };
-
-            if let hash_map::Entry::Vacant(entry) = worlds.entry(id) {
-                info!(?id, "private world created");
-
-                let handle = kartoffels_world::create(WorldConfig {
-                    id: Some(id),
-                    ..config
-                });
-
-                entry.insert(handle.clone());
-
-                break (id, handle);
-            }
-        };
-
-        let handle = handle.on_last_drop({
-            let worlds = self.private.clone();
-
-            move || {
-                info!(?id, "private world destroyed");
-                worlds.lock().unwrap().remove(&id);
+                // No need to update the index (not really an error, it's just
+                // that we don't have a better-named ArcSwap combinator at hand)
+                Err(())
             }
         });
 
-        Ok(handle)
+        self.entries.try_rcu(|entries| -> Result<_> {
+            let mut entries = (**entries).clone();
+
+            entry = Some(
+                entries
+                    .remove(&id)
+                    .with_context(|| format!("couldn't find world `{id}`"))?,
+            );
+
+            Ok(entries)
+        })?;
+
+        Ok(entry.unwrap())
+    }
+
+    async fn delete_cleanup(
+        &self,
+        dir: Option<&Path>,
+        id: Id,
+        entry: WorldEntry,
+    ) -> Result<()> {
+        if let Some(handle) = entry.handle {
+            handle.shutdown().await?;
+        }
+
+        if let WorldType::Public = entry.ty
+            && let Some(dir) = dir
+        {
+            let path = path(dir, id);
+
+            fs::remove_file(&path).await.with_context(|| {
+                format!("couldn't remove world's file `{}`", path.display())
+            })?;
+        }
+
+        Ok(())
+    }
+
+    pub fn all(&self) -> Vec<(WorldType, WorldHandle)> {
+        self.entries
+            .load()
+            .values()
+            .filter_map(|entry| Some((entry.ty, entry.handle.clone()?)))
+            .collect()
+    }
+
+    pub fn public(&self) -> Arc<Vec<WorldHandle>> {
+        self.public_idx.load_full()
     }
 
     pub fn first_private(&self) -> Option<WorldHandle> {
-        self.private.lock().unwrap().values().next().cloned()
+        self.entries
+            .load()
+            .values()
+            .filter(|entry| matches!(entry.ty, WorldType::Private))
+            .filter_map(|entry| entry.handle.clone())
+            .next()
     }
 
     pub async fn shutdown(&self) -> Result<()> {
-        for world in self.public.load().iter() {
-            world.shutdown().await?;
+        for entry in self.entries.load().values() {
+            if let WorldType::Public = entry.ty
+                && let Some(handle) = &entry.handle
+            {
+                handle.shutdown().await?;
+            }
         }
 
         Ok(())
     }
 }
 
-fn sort_worlds(worlds: &mut [WorldHandle]) {
-    worlds.sort_by(|a, b| a.name().cmp(b.name()));
+#[derive(Clone, Debug)]
+struct WorldEntry {
+    ty: WorldType,
+    handle: Option<WorldHandle>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorldType {
+    Public,
+    Private,
+}
+
+fn path(dir: &Path, id: Id) -> PathBuf {
+    dir.join(id.to_string()).with_extension("world")
+}
+
+fn build_public_idx(entries: &AHashMap<Id, WorldEntry>) -> Vec<WorldHandle> {
+    entries
+        .values()
+        .filter(|entry| matches!(entry.ty, WorldType::Public))
+        .filter_map(|entry| entry.handle.clone())
+        .sorted_by(|a, b| a.name().cmp(b.name()))
+        .collect()
 }
