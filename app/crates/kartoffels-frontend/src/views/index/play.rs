@@ -51,6 +51,10 @@ async fn run_once(
     let mut fade_out: Option<(Fade, Event)> = None;
     let worlds = store.public_worlds();
 
+    if worlds.is_empty() {
+        return Ok(Event::GoBack);
+    }
+
     loop {
         let event = frame
             .update(|ui| {
