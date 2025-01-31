@@ -12,7 +12,7 @@ pub enum Cmd {
 }
 
 impl Cmd {
-    pub fn run(
+    pub async fn run(
         self,
         store: &Store,
         sess: &Session,

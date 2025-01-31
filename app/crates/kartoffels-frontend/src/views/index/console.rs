@@ -35,27 +35,33 @@ pub async fn run(
     }
 
     let mut term = Term::default();
+    let mut sep = false;
 
     loop {
         let cmd = frame
             .update(|ui| {
-                ui.add(bg);
-
-                let width = ui.area.width - 8;
-                let height = ui.area.height - 4;
-                let title = Some(" console ");
-
-                ui.info_window(width, height, title, |ui| {
-                    ui.add(&mut term);
-                });
+                ui.info_window(
+                    ui.area.width,
+                    ui.area.height,
+                    Some(" console "),
+                    |ui| {
+                        ui.add(&mut term);
+                    },
+                );
             })
             .await?;
 
         if let Some(cmd) = cmd {
             info!(?cmd, "running command");
 
-            _ = writeln!(term, "; ---");
-            _ = writeln!(term, "; {cmd}");
+            if sep {
+                _ = writeln!(term);
+                _ = writeln!(term, "-----");
+            } else {
+                sep = true;
+            }
+
+            _ = writeln!(term, "> {cmd}");
             _ = writeln!(term);
 
             let cmd = match shellwords::split(&cmd) {
@@ -73,13 +79,13 @@ pub async fn run(
                     Ok(cmd) => cmd,
 
                     Err(err) => {
-                        _ = writeln!(term, "{err}");
+                        _ = write!(term, "{err}");
                         continue;
                     }
                 }
             };
 
-            if let Err(err) = cmd.run(store, sess, &mut term) {
+            if let Err(err) = cmd.run(store, sess, &mut term).await {
                 _ = writeln!(term, "{}", err.to_fmt_string());
             }
         }

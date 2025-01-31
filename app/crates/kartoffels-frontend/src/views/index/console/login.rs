@@ -11,12 +11,7 @@ pub async fn run(
 ) -> Result<Event> {
     debug!("run()");
 
-    if store.secret().is_none() {
-        return Ok(Event::GoBack);
-    }
-
     let mut secret = Input::default().secret();
-    let mut tries = 0;
 
     loop {
         let event = frame
@@ -50,19 +45,15 @@ pub async fn run(
         if let Some(event) = event {
             match event {
                 InnerEvent::AttemptLogin(secret) => {
-                    info!(?secret, "admin login attempt");
+                    return if Some(secret.as_str()) == store.secret() {
+                        info!("console login attempt succeeded");
 
-                    if Some(secret.as_str()) == store.secret() {
-                        return Ok(Event::LoggedIn);
+                        Ok(Event::LoggedIn)
                     } else {
-                        warn!(?secret, ?tries, "admin login attempt failed");
-                    }
+                        warn!(?secret, "console login attempt failed");
 
-                    tries += 1;
-
-                    if tries >= 3 {
-                        return Err(anyhow!("too many login attempts"));
-                    }
+                        Err(anyhow!("invalid secret"))
+                    };
                 }
 
                 InnerEvent::GoBack => {
