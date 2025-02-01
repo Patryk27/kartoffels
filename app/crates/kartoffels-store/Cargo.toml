@@ -11,7 +11,10 @@ derivative.workspace = true
 itertools.workspace = true
 kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
-rand.workspace = true
+rand = { workspace = true, features = ["std", "std_rng"] }
 serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+rand_chacha.workspace = true

@@ -1,8 +1,5 @@
 use derivative::Derivative;
 use kartoffels_utils::Id;
-use rand::distributions::Standard;
-use rand::prelude::Distribution;
-use rand::Rng;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
@@ -78,7 +75,7 @@ impl ObjectKind {
     Derivative,
 )]
 #[derivative(Debug = "transparent")]
-pub struct ObjectId(Id);
+pub struct ObjectId(pub(crate) Id);
 
 impl ObjectId {
     pub const fn new(id: u64) -> Self {
@@ -89,14 +86,5 @@ impl ObjectId {
 impl fmt::Display for ObjectId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
-    }
-}
-
-impl Distribution<ObjectId> for Standard {
-    fn sample<R>(&self, rng: &mut R) -> ObjectId
-    where
-        R: Rng + ?Sized,
-    {
-        ObjectId(rng.gen())
     }
 }

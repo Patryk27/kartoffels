@@ -1,8 +1,5 @@
 use derivative::Derivative;
 use kartoffels_utils::Id;
-use rand::distributions::Standard;
-use rand::prelude::Distribution;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::sync::{Arc, Mutex};
@@ -106,16 +103,7 @@ impl SessionUploadInterest {
     Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Derivative,
 )]
 #[derivative(Debug = "transparent")]
-pub struct SessionId(Id);
-
-impl Distribution<SessionId> for Standard {
-    fn sample<R>(&self, rng: &mut R) -> SessionId
-    where
-        R: Rng + ?Sized,
-    {
-        SessionId(rng.gen())
-    }
-}
+pub struct SessionId(pub(crate) Id);
 
 impl fmt::Display for SessionId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

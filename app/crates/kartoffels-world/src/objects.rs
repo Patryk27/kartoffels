@@ -19,7 +19,7 @@ impl Objects {
         pos: Option<IVec2>,
     ) -> ObjectId {
         let id = loop {
-            let id = rng.gen();
+            let id = ObjectId(rng.gen());
 
             if !self.objects.contains_key(&id) {
                 break id;

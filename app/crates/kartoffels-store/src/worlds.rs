@@ -1,3 +1,4 @@
+use crate::WorldType;
 use ahash::AHashMap;
 use anyhow::{anyhow, Context, Result};
 use arc_swap::ArcSwap;
@@ -78,27 +79,6 @@ impl Worlds {
         }
 
         Ok(entries)
-    }
-
-    pub fn set(&self, handles: impl IntoIterator<Item = WorldHandle>) {
-        let entries = handles
-            .into_iter()
-            .map(|handle| {
-                let key = handle.id();
-
-                let val = WorldEntry {
-                    ty: WorldType::Public,
-                    handle: Some(handle),
-                };
-
-                (key, val)
-            })
-            .collect();
-
-        let public_idx = build_public_idx(&entries);
-
-        self.entries.swap(Arc::new(entries));
-        self.public_idx.swap(Arc::new(public_idx));
     }
 
     pub fn create(
@@ -302,10 +282,32 @@ impl Worlds {
         Ok(())
     }
 
-    pub fn all(&self) -> Vec<(WorldType, WorldHandle)> {
+    pub fn set(&self, handles: impl IntoIterator<Item = WorldHandle>) {
+        let entries = handles
+            .into_iter()
+            .map(|handle| {
+                let key = handle.id();
+
+                let val = WorldEntry {
+                    ty: WorldType::Public,
+                    handle: Some(handle),
+                };
+
+                (key, val)
+            })
+            .collect();
+
+        let public_idx = build_public_idx(&entries);
+
+        self.entries.swap(Arc::new(entries));
+        self.public_idx.swap(Arc::new(public_idx));
+    }
+
+    pub fn list(&self, ty: Option<WorldType>) -> Vec<(WorldType, WorldHandle)> {
         self.entries
             .load()
             .values()
+            .filter(|entry| ty.map_or(true, |ty| ty == entry.ty))
             .filter_map(|entry| Some((entry.ty, entry.handle.clone()?)))
             .collect()
     }
@@ -342,12 +344,6 @@ struct WorldEntry {
     handle: Option<WorldHandle>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum WorldType {
-    Public,
-    Private,
-}
-
 fn path(dir: &Path, id: Id) -> PathBuf {
     dir.join(id.to_string()).with_extension("world")
 }
@@ -359,4 +355,96 @@ fn build_public_idx(entries: &AHashMap<Id, WorldEntry>) -> Vec<WorldHandle> {
         .filter_map(|entry| entry.handle.clone())
         .sorted_by(|a, b| a.name().cmp(b.name()))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::array;
+
+    #[tokio::test]
+    async fn smoke() {
+        let target = Worlds::new(None).await.unwrap();
+
+        let [h1, h2, h3, h4] = array::from_fn(|idx| {
+            let idx = idx + 1;
+
+            let ty = if idx % 2 == 0 {
+                WorldType::Public
+            } else {
+                WorldType::Private
+            };
+
+            let config = WorldConfig {
+                name: format!("w{idx}"),
+                ..Default::default()
+            };
+
+            target.create(true, None, ty, config).unwrap()
+        });
+
+        assert_eq!(h1.id(), Id::new(1));
+        assert_eq!(h2.id(), Id::new(2));
+        assert_eq!(h3.id(), Id::new(3));
+        assert_eq!(h4.id(), Id::new(4));
+
+        // ---
+
+        let list = |ty: Option<WorldType>| -> Vec<(WorldType, Id)> {
+            target
+                .list(ty)
+                .into_iter()
+                .map(|(ty, handle)| (ty, handle.id()))
+                .sorted_by_key(|(_, id)| *id)
+                .collect()
+        };
+
+        assert_eq!(
+            vec![
+                (WorldType::Private, h1.id()),
+                (WorldType::Public, h2.id()),
+                (WorldType::Private, h3.id()),
+                (WorldType::Public, h4.id()),
+            ],
+            list(None),
+        );
+
+        assert_eq!(
+            vec![(WorldType::Private, h1.id()), (WorldType::Private, h3.id()),],
+            list(Some(WorldType::Private)),
+        );
+
+        assert_eq!(
+            vec![(WorldType::Public, h2.id()), (WorldType::Public, h4.id()),],
+            list(Some(WorldType::Public)),
+        );
+
+        // ---
+
+        assert_eq!(
+            vec![h2.id(), h4.id()],
+            target.public().iter().map(|h| h.id()).collect_vec()
+        );
+
+        // ---
+
+        target.delete(None, h1.id()).await.unwrap();
+        target.delete(None, h2.id()).await.unwrap();
+
+        assert_eq!(
+            vec![(WorldType::Private, h3.id()), (WorldType::Public, h4.id())],
+            list(None),
+        );
+
+        assert_eq!(
+            vec![h4.id()],
+            target.public().iter().map(|h| h.id()).collect_vec()
+        );
+
+        // ---
+
+        drop(h3);
+
+        assert_eq!(vec![(WorldType::Public, h4.id())], list(None));
+    }
 }

@@ -4,11 +4,13 @@
 mod secret;
 mod session;
 mod sessions;
+mod world;
 mod worlds;
 
 pub use self::secret::*;
 pub use self::session::*;
 use self::sessions::*;
+pub use self::world::*;
 use self::worlds::*;
 use anyhow::Result;
 use kartoffels_utils::Id;
@@ -90,8 +92,11 @@ impl Store {
         self.worlds.delete(self.dir.as_deref(), id).await
     }
 
-    pub fn worlds(&self) -> Vec<(WorldType, WorldHandle)> {
-        self.worlds.all()
+    pub fn worlds(
+        &self,
+        ty: Option<WorldType>,
+    ) -> Vec<(WorldType, WorldHandle)> {
+        self.worlds.list(ty)
     }
 
     pub fn public_worlds(&self) -> Arc<Vec<WorldHandle>> {
@@ -125,7 +130,7 @@ impl Store {
     // ---
 
     pub fn create_session(&self) -> Session {
-        self.sessions.create()
+        self.sessions.create(&mut rand::thread_rng())
     }
 
     pub fn first_session_id(&self) -> SessionId {

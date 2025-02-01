@@ -2088,6 +2088,7 @@ dependencies = [
  "kartoffels-utils",
  "kartoffels-world",
  "rand",
+ "rand_chacha",
  "serde",
  "tokio",
  "tracing",
