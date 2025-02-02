@@ -10,6 +10,7 @@ use kartoffels_ui::{Frame, Term};
 use kartoffels_utils::ErrorExt;
 use std::fmt::Write;
 use std::iter;
+use std::ops::ControlFlow;
 use tracing::{debug, info};
 
 pub async fn run(
@@ -85,8 +86,16 @@ pub async fn run(
                 }
             };
 
-            if let Err(err) = cmd.run(store, sess, &mut term).await {
-                _ = writeln!(term, "{}", err.to_fmt_string());
+            match cmd.run(store, sess, &mut term).await {
+                Ok(ControlFlow::Continue(_)) => {
+                    //
+                }
+                Ok(ControlFlow::Break(_)) => {
+                    return Ok(());
+                }
+                Err(err) => {
+                    _ = writeln!(term, "{}", err.to_fmt_string());
+                }
             }
         }
     }

@@ -9,12 +9,15 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use kartoffels_store::{Session, Store};
 use kartoffels_ui::Term;
+use std::ops::ControlFlow;
 
 #[derive(Debug, Parser)]
 pub enum Cmd {
     CreateWorld(CreateWorldCmd),
     DeleteWorld(DeleteWorldCmd),
     ListWorlds(ListWorldsCmd),
+
+    Exit,
 }
 
 impl Cmd {
@@ -23,15 +26,21 @@ impl Cmd {
         store: &Store,
         sess: &Session,
         term: &mut Term,
-    ) -> Result<()> {
+    ) -> Result<ControlFlow<()>> {
         if sess.with(|sess| !sess.is_admin()) {
             return Err(anyhow!("insufficient privileges"));
         }
 
         match self {
-            Cmd::CreateWorld(cmd) => cmd.run(store, term),
-            Cmd::DeleteWorld(cmd) => cmd.run(store).await,
-            Cmd::ListWorlds(cmd) => cmd.run(store, term),
+            Cmd::CreateWorld(cmd) => cmd.run(store, term)?,
+            Cmd::DeleteWorld(cmd) => cmd.run(store).await?,
+            Cmd::ListWorlds(cmd) => cmd.run(store, term)?,
+
+            Cmd::Exit => {
+                return Ok(ControlFlow::Break(()));
+            }
         }
+
+        Ok(ControlFlow::Continue(()))
     }
 }
