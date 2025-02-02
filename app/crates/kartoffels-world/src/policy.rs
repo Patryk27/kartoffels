@@ -4,7 +4,9 @@ use bevy_ecs::system::Resource;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Resource)]
+#[derive(
+    Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Resource,
+)]
 pub struct Policy {
     pub auto_respawn: bool,
     pub max_alive_bots: usize,
@@ -21,15 +23,15 @@ impl FromStr for Policy {
             let entry = entry?;
 
             match entry.key {
-                "auto_respawn" => {
+                "auto-respawn" => {
                     this.auto_respawn = entry.value()?;
                 }
 
-                "max_alive_bots" => {
+                "max-alive-bots" => {
                     this.max_alive_bots = entry.value()?;
                 }
 
-                "max_queued_bots" => {
+                "max-queued-bots" => {
                     this.max_queued_bots = entry.value()?;
                 }
 
@@ -40,5 +42,26 @@ impl FromStr for Policy {
         }
 
         Ok(this)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_str() {
+        let actual = Policy::from_str(
+            "auto-respawn=true,max-alive-bots=100,max-queued-bots=200",
+        )
+        .unwrap();
+
+        let expected = Policy {
+            auto_respawn: true,
+            max_alive_bots: 100,
+            max_queued_bots: 200,
+        };
+
+        assert_eq!(expected, actual);
     }
 }
