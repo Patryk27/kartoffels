@@ -1,5 +1,6 @@
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
+use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
+use kartoffels_store::Session;
 use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::Handle;
 use std::future;
@@ -58,9 +59,26 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     ],
 });
 
-pub async fn run(world: Handle, game: GameCtrl) -> Result<()> {
+pub async fn run(sess: &Session, world: Handle, game: GameCtrl) -> Result<()> {
     game.set_help(Some(&HELP)).await?;
     game.join(world).await?;
+
+    if sess.with(|sess| sess.is_admin()) {
+        game.set_config(Config {
+            enabled: true,
+            hero_mode: false,
+            sync_pause: true,
+
+            can_delete_bots: true,
+            can_join_bots: true,
+            can_overclock: false,
+            can_pause: true,
+            can_restart_bots: true,
+            can_spawn_bots: true,
+            can_upload_bots: true,
+        })
+        .await?;
+    }
 
     future::pending().await
 }

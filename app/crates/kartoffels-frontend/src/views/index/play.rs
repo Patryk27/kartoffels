@@ -20,7 +20,7 @@ pub async fn run(
         match run_once(store, frame, bg, fade_in).await? {
             Event::Play(world) => {
                 game::run(store, sess, frame, |game| {
-                    ctrl::run(world.clone(), game)
+                    ctrl::run(sess, world, game)
                 })
                 .await?;
 
