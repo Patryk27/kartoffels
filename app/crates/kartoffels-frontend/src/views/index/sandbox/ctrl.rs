@@ -1,9 +1,10 @@
 use crate::utils;
 use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
+use glam::uvec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Msg, MsgLine};
-use kartoffels_world::prelude::{Config as WorldConfig, Policy, Theme};
+use kartoffels_world::prelude::{wfc, Config as WorldConfig, Policy, Theme};
 use std::future;
 use std::sync::LazyLock;
 
@@ -63,7 +64,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     future::pending().await
 }
 
-async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
+async fn init(store: &Store, _theme: Theme, game: &GameCtrl) -> Result<()> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_status(Some("building".into())).await?;
@@ -81,9 +82,10 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
     game.join(world.clone()).await?;
 
     utils::map::build(store, &world, |mut mapb, mut rng| async move {
-        let map = theme.create_map(&mut rng)?;
+        wfc(&mut rng, &mut mapb, uvec2(64, 32)).await?;
 
-        mapb.reveal(map, &mut rng).await;
+        // let map = theme.create_map(&mut rng)?;
+        // mapb.reveal(map, &mut rng).await;
 
         Ok(mapb.finish())
     })

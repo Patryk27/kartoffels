@@ -1,8 +1,10 @@
 mod arena;
 mod dungeon;
+mod wfc;
 
 pub use self::arena::*;
 pub use self::dungeon::*;
+pub use self::wfc::*;
 use crate::Map;
 use anyhow::{anyhow, Error, Result};
 use bevy_ecs::system::Resource;

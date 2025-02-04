@@ -3,12 +3,13 @@ mod reveal;
 use super::{Map, Tile};
 use glam::{ivec2, IVec2, UVec2};
 use std::cmp;
+use std::ops::Deref;
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub struct MapBuilder {
     map: Map,
-    tx: mpsc::Sender<Map>,
+    tx: mpsc::Sender<Map>, // TODO use watch
     updates: u32,
 }
 
@@ -31,10 +32,6 @@ impl MapBuilder {
 
     pub fn update<T>(&mut self, f: impl FnOnce(&mut Map) -> T) -> T {
         f(&mut self.map)
-    }
-
-    pub fn get(&self, pos: IVec2) -> Tile {
-        self.map.get(pos)
     }
 
     pub async fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
@@ -79,5 +76,13 @@ impl MapBuilder {
 
     pub fn finish(self) -> Map {
         self.map
+    }
+}
+
+impl Deref for MapBuilder {
+    type Target = Map;
+
+    fn deref(&self) -> &Self::Target {
+        &self.map
     }
 }

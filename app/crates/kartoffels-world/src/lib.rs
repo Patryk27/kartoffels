@@ -46,7 +46,7 @@ pub mod prelude {
         DeadBotSnapshot, DeadBotsSnapshot, ObjectsSnapshot, QueuedBotSnapshot,
         QueuedBotsSnapshot, Snapshot, SnapshotStream,
     };
-    pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
+    pub use crate::theme::{wfc, ArenaTheme, DungeonTheme, Theme};
     pub use crate::utils::Dir;
 }
 
