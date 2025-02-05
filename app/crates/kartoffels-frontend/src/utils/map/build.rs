@@ -1,3 +1,4 @@
+use crate::views::game::GameCtrl;
 use anyhow::{Error, Result};
 use kartoffels_store::Store;
 use kartoffels_ui::theme;
@@ -10,11 +11,12 @@ use tracing::debug;
 
 pub async fn build<BuildMapFn, BuildMapFut>(
     store: &Store,
+    game: &GameCtrl,
     world: &Handle,
     build: BuildMapFn,
 ) -> Result<()>
 where
-    BuildMapFn: FnOnce(MapBuilder, ChaCha8Rng) -> BuildMapFut,
+    BuildMapFn: FnOnce(ChaCha8Rng, MapBuilder) -> BuildMapFut,
     BuildMapFut: Future<Output = Result<Map>>,
 {
     let rng = {
@@ -30,7 +32,7 @@ where
     };
 
     let (map, mut rx) = MapBuilder::new();
-    let map = (build)(map, rng);
+    let map = (build)(rng, map);
 
     if store.testing() {
         drop(rx);
@@ -38,8 +40,13 @@ where
         world.set_map(map.await?).await?;
     } else {
         let progress = async {
-            while let Some(map) = rx.recv().await {
-                world.set_map(map).await?;
+            while let Some(msg) = rx.recv().await {
+                if let Some(status) = msg.status {
+                    game.set_status(Some(format!("building:{status}"))).await?;
+                }
+
+                world.set_map(msg.map).await?;
+
                 time::sleep(theme::FRAME_TIME).await;
             }
 

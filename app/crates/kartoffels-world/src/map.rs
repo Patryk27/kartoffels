@@ -8,7 +8,7 @@ use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::{cmp, fmt};
+use std::{cmp, fmt, mem};
 
 #[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize, Resource)]
 pub struct Map {
@@ -68,11 +68,15 @@ impl Map {
         &mut self.tiles[idx]
     }
 
-    pub fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
+    pub fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) -> bool {
         let tile = tile.into();
 
         if let Some(idx) = self.pos_to_idx(pos) {
-            self.tiles[idx] = tile;
+            let prev = mem::replace(&mut self.tiles[idx], tile);
+
+            tile != prev
+        } else {
+            false
         }
     }
 
@@ -281,7 +285,9 @@ impl Tile {
     }
 
     pub fn is_wall(&self) -> bool {
-        self.kind == TileKind::WALL_H || self.kind == TileKind::WALL_V
+        self.kind == TileKind::WALL
+            || self.kind == TileKind::WALL_H
+            || self.kind == TileKind::WALL_V
     }
 
     pub fn is_bot(&self) -> bool {
@@ -332,6 +338,7 @@ impl TileKind {
     pub const DOOR: u8 = b'+';
     pub const FLOOR: u8 = b'.';
     pub const VOID: u8 = b' ';
+    pub const WALL: u8 = b'#';
     pub const WALL_H: u8 = b'-';
     pub const WALL_V: u8 = b'|';
 }

@@ -5,7 +5,7 @@ use std::fmt;
 #[derive(Clone, Debug)]
 pub enum SandboxTheme {
     Arena,
-    Dungeon,
+    Cave,
 }
 
 impl SandboxTheme {
@@ -28,13 +28,13 @@ impl SandboxTheme {
     }
 
     fn all() -> impl Iterator<Item = Self> {
-        [Self::Arena, Self::Dungeon].into_iter()
+        [Self::Arena, Self::Cave].into_iter()
     }
 
     fn key(&self) -> KeyCode {
         KeyCode::Char(match self {
             Self::Arena => 'a',
-            Self::Dungeon => 'd',
+            Self::Cave => 'c',
         })
     }
 }
@@ -46,7 +46,7 @@ impl fmt::Display for SandboxTheme {
             "{}",
             match self {
                 Self::Arena => "arena",
-                Self::Dungeon => "dungeon",
+                Self::Cave => "cave",
             }
         )
     }

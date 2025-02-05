@@ -26,15 +26,12 @@ impl FromStr for Policy {
                 "auto-respawn" => {
                     this.auto_respawn = entry.value()?;
                 }
-
                 "max-alive-bots" => {
                     this.max_alive_bots = entry.value()?;
                 }
-
                 "max-queued-bots" => {
                     this.max_queued_bots = entry.value()?;
                 }
-
                 key => {
                     return Err(anyhow!("unknown key: {key}"));
                 }

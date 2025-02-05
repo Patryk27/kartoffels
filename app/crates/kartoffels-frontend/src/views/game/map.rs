@@ -126,6 +126,12 @@ impl Map {
                 bg = theme::BG;
             }
 
+            TileKind::WALL => {
+                ch = '#';
+                fg = theme::GRAY;
+                bg = theme::BG;
+            }
+
             TileKind::WALL_H => {
                 ch = '-';
                 fg = theme::GRAY;

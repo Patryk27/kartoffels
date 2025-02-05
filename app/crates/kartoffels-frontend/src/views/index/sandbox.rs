@@ -10,7 +10,7 @@ use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, Ui, UiWidget};
-use kartoffels_world::prelude::{ArenaTheme, DungeonTheme, Theme};
+use kartoffels_world::prelude::{ArenaTheme, CaveTheme, Theme};
 use std::ops::ControlFlow;
 use tracing::debug;
 
@@ -25,7 +25,7 @@ pub async fn run(
     // We keep those outside `run_once()`, because we want to preserve settings
     // when user goes back to the form, for convenience
     let mut size = SandboxSize::Medium;
-    let mut theme = SandboxTheme::Dungeon;
+    let mut theme = SandboxTheme::Cave;
 
     loop {
         if let Some(theme) =
@@ -233,7 +233,7 @@ impl Form<'_> {
                 Theme::Arena(ArenaTheme::new(radius))
             }
 
-            SandboxTheme::Dungeon => {
+            SandboxTheme::Cave => {
                 let size = match &self.size {
                     SandboxSize::Tiny => uvec2(10, 10),
                     SandboxSize::Small => uvec2(20, 15),
@@ -241,7 +241,7 @@ impl Form<'_> {
                     SandboxSize::Large => uvec2(80, 50),
                 };
 
-                Theme::Dungeon(DungeonTheme::new(size))
+                Theme::Cave(CaveTheme::new(size))
             }
         }
     }

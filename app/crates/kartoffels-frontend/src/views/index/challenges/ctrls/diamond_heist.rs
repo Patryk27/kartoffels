@@ -162,10 +162,10 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, IVec2)> {
         .create_object(Object::new(ObjectKind::GEM), anchors.get('b'))
         .await?;
 
-    utils::map::build(store, &world, |mut mapb, mut rng| async move {
-        mapb.reveal(map, &mut rng).await;
+    utils::map::build(store, game, &world, |mut rng, mut mapb| async move {
+        mapb.reveal(&mut rng, map).await;
 
-        Ok(mapb.finish())
+        Ok(mapb.commit())
     })
     .await?;
 

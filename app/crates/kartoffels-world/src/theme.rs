@@ -1,9 +1,9 @@
 mod arena;
-mod dungeon;
+mod cave;
 
 pub use self::arena::*;
-pub use self::dungeon::*;
-use crate::Map;
+pub use self::cave::*;
+use crate::{Map, MapBuilder};
 use anyhow::{anyhow, Error, Result};
 use bevy_ecs::system::Resource;
 use rand::RngCore;
@@ -16,15 +16,19 @@ pub enum Theme {
     #[serde(rename = "arena")]
     Arena(ArenaTheme),
 
-    #[serde(rename = "dungeon")]
-    Dungeon(DungeonTheme),
+    #[serde(rename = "cave")]
+    Cave(CaveTheme),
 }
 
 impl Theme {
-    pub fn create_map(&self, rng: &mut impl RngCore) -> Result<Map> {
+    pub async fn build(
+        &self,
+        rng: &mut impl RngCore,
+        map: MapBuilder,
+    ) -> Result<Map> {
         match self {
-            Theme::Arena(this) => Ok(this.create_map()),
-            Theme::Dungeon(this) => this.create_map(rng),
+            Theme::Arena(this) => this.build(rng, map).await,
+            Theme::Cave(this) => this.build(rng, map).await,
         }
     }
 }
@@ -37,8 +41,8 @@ impl FromStr for Theme {
             return ArenaTheme::from_str(spec).map(Theme::Arena);
         }
 
-        if let Some(spec) = spec.strip_prefix("dungeon:") {
-            return DungeonTheme::from_str(spec).map(Theme::Dungeon);
+        if let Some(spec) = spec.strip_prefix("cave:") {
+            return CaveTheme::from_str(spec).map(Theme::Cave);
         }
 
         Err(anyhow!("unknown theme"))
@@ -58,8 +62,8 @@ mod tests {
         );
 
         assert_eq!(
-            Theme::Dungeon(DungeonTheme::new(uvec2(12, 34))),
-            Theme::from_str("dungeon:width=12,height=34").unwrap(),
+            Theme::Cave(CaveTheme::new(uvec2(12, 34))),
+            Theme::from_str("cave:width=12,height=34").unwrap(),
         );
     }
 }
