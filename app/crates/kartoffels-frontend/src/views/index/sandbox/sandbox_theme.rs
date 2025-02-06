@@ -5,19 +5,19 @@ use std::fmt;
 #[derive(Clone, Debug)]
 pub enum SandboxTheme {
     Arena,
-    Dungeon,
+    Cave,
 }
 
 impl SandboxTheme {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('t'), format!("theme: {val}"))
+        Button::new(format!("theme: {val}"), KeyCode::Char('t'))
             .throwing(Event::FocusOn(Some(Focus::SandboxTheme)))
             .render(ui);
     }
 
     pub fn render_choice(ui: &mut Ui<Event>) {
         for val in SandboxTheme::all() {
-            Button::new(val.key(), val.to_string())
+            Button::new(val.to_string(), val.key())
                 .throwing(Event::SetTheme(val))
                 .render(ui);
         }
@@ -28,13 +28,13 @@ impl SandboxTheme {
     }
 
     fn all() -> impl Iterator<Item = Self> {
-        [Self::Arena, Self::Dungeon].into_iter()
+        [Self::Arena, Self::Cave].into_iter()
     }
 
     fn key(&self) -> KeyCode {
         KeyCode::Char(match self {
             Self::Arena => 'a',
-            Self::Dungeon => 'd',
+            Self::Cave => 'c',
         })
     }
 }
@@ -46,7 +46,7 @@ impl fmt::Display for SandboxTheme {
             "{}",
             match self {
                 Self::Arena => "arena",
-                Self::Dungeon => "dungeon",
+                Self::Cave => "cave",
             }
         )
     }

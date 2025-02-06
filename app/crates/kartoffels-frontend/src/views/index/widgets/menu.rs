@@ -29,23 +29,23 @@ impl Menu {
 
         ui.block(block, |ui| {
             if !store.public_worlds().is_empty() {
-                Button::new(KeyCode::Char('p'), "play")
+                Button::new("play", KeyCode::Char('p'))
                     .throwing(Event::Play)
                     .centered()
                     .render(ui);
             }
 
-            Button::new(KeyCode::Char('s'), "sandbox")
+            Button::new("sandbox", KeyCode::Char('s'))
                 .throwing(Event::Sandbox)
                 .centered()
                 .render(ui);
 
-            Button::new(KeyCode::Char('t'), "tutorial")
+            Button::new("tutorial", KeyCode::Char('t'))
                 .throwing(Event::Tutorial)
                 .centered()
                 .render(ui);
 
-            Button::new(KeyCode::Char('c'), "challenges")
+            Button::new("challenges", KeyCode::Char('c'))
                 .throwing(Event::Challenges)
                 .centered()
                 .render(ui);
@@ -53,7 +53,7 @@ impl Menu {
             if ui.ty.is_ssh() {
                 ui.space(1);
 
-                Button::new(KeyCode::Escape, "quit")
+                Button::new("quit", KeyCode::Escape)
                     .throwing(Event::Quit)
                     .centered()
                     .render(ui);

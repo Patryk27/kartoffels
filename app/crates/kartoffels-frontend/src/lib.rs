@@ -42,3 +42,7 @@ pub async fn main(
         }
     }
 }
+
+pub fn init() {
+    Background::init();
+}

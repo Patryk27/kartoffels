@@ -23,6 +23,10 @@ nixpkgs.lib.nixosSystem {
           kartoffels = {
             enable = true;
 
+            app = {
+              secret = "demo";
+            };
+
             nginx = {
               enable = true;
             };

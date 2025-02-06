@@ -7,17 +7,17 @@ pub struct BotCount(u8);
 
 impl BotCount {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('c'), format!("count: {val}"))
+        Button::new(format!("count: {val}"), KeyCode::Char('c'))
             .throwing(Event::FocusOn(Some(Focus::BotCount)))
             .render(ui);
     }
 
     pub(super) fn render_choice(ui: &mut Ui<Event>) {
         for n in 1..=10 {
-            let key = KeyCode::Char((b'0' + (n % 10)) as char);
             let val = Self(n);
+            let key = KeyCode::Char((b'0' + (n % 10)) as char);
 
-            Button::new(key, val.to_string())
+            Button::new(val.to_string(), key)
                 .throwing(Event::SetBotCount(val))
                 .render(ui);
         }

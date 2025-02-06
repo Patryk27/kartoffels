@@ -1,7 +1,10 @@
+use futures::FutureExt;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_ui::{theme, Frame, Ui, UiWidget};
-use kartoffels_world::prelude::{Dir, DungeonTheme, Map, Tile, TileKind};
+use kartoffels_world::prelude::{
+    CaveTheme, Dir, Map, MapBuilder, Tile, TileKind,
+};
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
@@ -42,6 +45,13 @@ impl Background {
 
         Self { stream, camera }
     }
+
+    pub fn init() {
+        // Borrow the stream to force it to initialize - this way the first
+        // person to connect won't get a black background, since it'll have been
+        // initialized by then.
+        STREAM.borrow();
+    }
 }
 
 impl<T> UiWidget<T> for &Background {
@@ -80,8 +90,10 @@ static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
 fn refresh(tx: watch::Sender<Arc<Map>>) {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let mut map = DungeonTheme::new(Background::MAP_SIZE)
-        .create_map(&mut rng)
+    let mut map = CaveTheme::new(Background::MAP_SIZE)
+        .build(&mut rng, MapBuilder::detached())
+        .now_or_never()
+        .unwrap()
         .unwrap();
 
     map.for_each_mut(|_, tile| {

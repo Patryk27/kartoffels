@@ -5,8 +5,8 @@ use rand::{Rng, RngCore};
 /// Creates an acyclic maze using recursive backtracking algorithm, a'la
 /// https://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
 pub async fn draw_maze(
-    map: &mut MapBuilder,
     rng: &mut impl RngCore,
+    map: &mut MapBuilder,
     area: UVec2,
     head: IVec2,
 ) {
@@ -19,7 +19,7 @@ pub async fn draw_maze(
         frontier.push((head, dir));
     }
 
-    map.update(|map| {
+    map.with(|map| {
         map.get_mut(head).meta[0] = VISITED;
     });
 
@@ -30,7 +30,7 @@ pub async fn draw_maze(
         let dst = mid + dir;
 
         if map.get(src).is_void() {
-            map.update(|map| {
+            map.with(|map| {
                 map.get_mut(src).kind = TileKind::FLOOR;
             });
 
@@ -46,7 +46,7 @@ pub async fn draw_maze(
             && dst.y < area.y as i32
             && map.get(dst).meta[0] == NOT_VISITED
         {
-            map.update(|map| {
+            map.with(|map| {
                 map.get_mut(dst).meta[0] = VISITED;
             });
 
@@ -70,7 +70,7 @@ pub async fn draw_maze(
         }
     }
 
-    map.update(|map| {
+    map.with(|map| {
         map.for_each_mut(|_, tile| {
             tile.meta[0] = 0;
         });

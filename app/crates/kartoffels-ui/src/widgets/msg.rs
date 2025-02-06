@@ -12,11 +12,13 @@ pub struct Msg<T = ()> {
     pub buttons: Vec<MsgButton<T>>,
 }
 
-impl<T> Msg<T>
+impl<T> UiWidget<T> for &Msg<T>
 where
     T: Clone,
 {
-    pub fn render(&self, ui: &mut Ui<T>) {
+    type Response = ();
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let body = {
             let text: Text = self
                 .body
@@ -37,7 +39,7 @@ where
 
             ui.row(|ui| {
                 for button in &self.buttons {
-                    button.inner.clone().render(ui);
+                    ui.add(button.inner.clone());
                 }
             });
         });
@@ -139,18 +141,18 @@ pub struct MsgButton<T> {
 }
 
 impl<T> MsgButton<T> {
-    pub fn new(key: KeyCode, label: impl AsRef<str>, resp: T) -> Self {
+    pub fn new(label: impl AsRef<str>, key: KeyCode, resp: T) -> Self {
         Self {
-            inner: Button::new(key, label.as_ref().to_owned()).throwing(resp),
+            inner: Button::new(label.as_ref().to_owned(), key).throwing(resp),
         }
     }
 
     pub fn abort(label: impl AsRef<str>, resp: T) -> Self {
-        Self::new(KeyCode::Escape, label, resp)
+        Self::new(label, KeyCode::Escape, resp)
     }
 
     pub fn confirm(label: impl AsRef<str>, resp: T) -> Self {
-        Self::new(KeyCode::Enter, label, resp).right_aligned()
+        Self::new(label, KeyCode::Enter, resp).right_aligned()
     }
 
     pub fn right_aligned(mut self) -> Self {

@@ -124,11 +124,11 @@ impl UploadBotModal {
             }
 
             ui.row(|ui| {
-                Button::new(KeyCode::Escape, "cancel")
+                Button::new("cancel", KeyCode::Escape)
                     .throwing(Event::CloseModal)
                     .render(ui);
 
-                if Button::new(KeyCode::Char('c'), "copy-session-id")
+                if Button::new("copy-session-id", KeyCode::Char('c'))
                     .right_aligned()
                     .render(ui)
                     .pressed

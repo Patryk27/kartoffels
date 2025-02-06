@@ -3,12 +3,12 @@ use rand::RngCore;
 use tokio::task;
 
 pub async fn draw_holes(
-    map: &mut MapBuilder,
     rng: &mut impl RngCore,
+    map: &mut MapBuilder,
     mut how_many: u32,
 ) {
     while how_many > 0 {
-        let pos = map.update(|map| map.sample_pos(rng));
+        let pos = map.with(|map| map.sample_pos(rng));
 
         if map.get(pos).is_wall() {
             map.set(pos, TileKind::FLOOR).await;

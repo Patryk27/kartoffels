@@ -119,15 +119,15 @@ async fn init(
 
     // ---
 
-    utils::map::build(store, &world, |mut map, mut rng| async move {
-        map.init(SIZE);
+    utils::map::build(store, game, &world, |mut rng, mut map| async move {
+        map.begin(SIZE);
 
-        utils::map::draw_maze(&mut map, &mut rng, SIZE, SIZE.as_ivec2() / 2)
+        utils::map::draw_maze(&mut rng, &mut map, SIZE, SIZE.as_ivec2() / 2)
             .await;
 
-        utils::map::draw_holes(&mut map, &mut rng, 128).await;
+        utils::map::draw_holes(&mut rng, &mut map, 128).await;
 
-        Ok(map.finish())
+        Ok(map.commit())
     })
     .await?;
 

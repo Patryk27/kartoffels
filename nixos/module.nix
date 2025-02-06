@@ -27,6 +27,16 @@ in
           default = "/var/lib/kartoffels";
         };
 
+        secret = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+        };
+
+        debug = mkOption {
+          type = types.bool;
+          default = false;
+        };
+
         http = mkOption {
           type = types.nullOr types.str;
           default = "0.0.0.0:81";
@@ -35,11 +45,6 @@ in
         ssh = mkOption {
           type = types.nullOr types.str;
           default = "0.0.0.0:22";
-        };
-
-        debug = mkOption {
-          type = types.bool;
-          default = false;
         };
       };
 
@@ -117,9 +122,10 @@ in
 
         ${cfg.app.package}/bin/kartoffels serve \
             '${cfg.app.data}' \
+            ${optionalString cfg.app.debug "--debug"} \
+            ${optionalString (cfg.app.secret != null) "--secret ${cfg.app.secret}"} \
             ${optionalString (cfg.app.http != null) "--http ${cfg.app.http}"} \
-            ${optionalString (cfg.app.ssh != null) "--ssh ${cfg.app.ssh}"} \
-            ${optionalString cfg.app.debug "--debug"}
+            ${optionalString (cfg.app.ssh != null) "--ssh ${cfg.app.ssh}"}
       '';
 
       wantedBy = [ "multi-user.target" ];

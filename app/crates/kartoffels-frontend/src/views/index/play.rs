@@ -4,8 +4,11 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
+use kartoffels_ui::{
+    Button, FadeCtrl, FadeCtrlEvent, Frame, KeyCode, UiWidget,
+};
 use kartoffels_world::prelude::Handle as WorldHandle;
+use std::iter;
 use tracing::debug;
 
 pub async fn run(
@@ -42,76 +45,58 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
-    let mut fade_in = if fade_in && !store.testing() {
-        Some(Fade::new(FadeDir::In))
-    } else {
-        None
-    };
-
-    let mut fade_out: Option<(Fade, Event)> = None;
     let worlds = store.public_worlds();
 
     if worlds.is_empty() {
         return Ok(Event::GoBack);
     }
 
+    let mut world_btns: Vec<_> = worlds
+        .iter()
+        .enumerate()
+        .map(|(idx, world)| {
+            let key = KeyCode::Char((b'1' + (idx as u8)) as char);
+
+            Button::new(world.name(), key).throwing(Event::Play(world.clone()))
+        })
+        .collect();
+
+    let mut go_back_btn =
+        Button::new("go-back", KeyCode::Escape).throwing(Event::GoBack);
+
+    let width = world_btns
+        .iter()
+        .chain(iter::once(&go_back_btn))
+        .map(|btn| btn.width())
+        .max()
+        .unwrap();
+
+    let height = world_btns.len() as u16 + 2;
+
+    let mut fade = FadeCtrl::default()
+        .animate(!store.testing())
+        .fade_in(fade_in);
+
     loop {
         let event = frame
             .update(|ui| {
-                let width = store
-                    .public_worlds()
-                    .iter()
-                    .map(|world| world.name().len() as u16 + 4)
-                    .max()
-                    .unwrap_or(0)
-                    .max(11);
+                fade.render(ui, |ui| {
+                    bg.render(ui);
 
-                let height = store.public_worlds().len() as u16 + 2;
-
-                bg.render(ui);
-
-                ui.info_window(width, height, Some(" play "), |ui| {
-                    for (idx, world) in worlds.iter().enumerate() {
-                        let key = KeyCode::Char((b'1' + (idx as u8)) as char);
-
-                        if Button::new(key, world.name()).render(ui).pressed {
-                            ui.throw(Event::Play(world.clone()));
+                    ui.info_window(width, height, Some(" play "), |ui| {
+                        for btn in &mut world_btns {
+                            ui.add(btn);
                         }
-                    }
 
-                    ui.space(1);
-
-                    Button::new(KeyCode::Escape, "go-back")
-                        .throwing(Event::GoBack)
-                        .render(ui);
+                        ui.space(1);
+                        ui.add(&mut go_back_btn);
+                    });
                 });
-
-                if let Some(fade) = &fade_in
-                    && fade.render(ui).is_completed()
-                {
-                    fade_in = None;
-                }
-
-                if let Some((fade, _)) = &fade_out {
-                    fade.render(ui);
-                }
             })
             .await?;
 
-        if let Some((fade, event)) = &fade_out {
-            if fade.is_completed() {
-                return Ok(event.clone());
-            }
-
-            continue;
-        }
-
         if let Some(event) = event {
-            if event.fade_out() && !store.testing() {
-                fade_out = Some((Fade::new(FadeDir::Out), event));
-            } else {
-                return Ok(event);
-            }
+            return Ok(event);
         }
     }
 }
@@ -122,8 +107,8 @@ enum Event {
     GoBack,
 }
 
-impl Event {
-    fn fade_out(&self) -> bool {
+impl FadeCtrlEvent for Event {
+    fn needs_fade_out(&self) -> bool {
         matches!(self, Event::Play(_))
     }
 }

@@ -63,7 +63,14 @@ perf:
 
 # ---
 
-demo:
+create-demo:
+    sudo nixos-container create demo --flake .
+    sudo nixos-container start demo
+    @echo
+    @echo "ready:"
+    @echo "http://$(nixos-container show-ip demo)"
+
+update-demo:
     sudo nixos-container update demo --flake .
     sudo nixos-container start demo
     @echo

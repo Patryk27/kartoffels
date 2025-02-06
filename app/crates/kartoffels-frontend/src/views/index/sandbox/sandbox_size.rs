@@ -12,14 +12,14 @@ pub enum SandboxSize {
 
 impl SandboxSize {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('s'), format!("size: {val}"))
+        Button::new(format!("size: {val}"), KeyCode::Char('s'))
             .throwing(Event::FocusOn(Some(Focus::SandboxSize)))
             .render(ui);
     }
 
     pub fn render_choice(ui: &mut Ui<Event>) {
         for val in Self::all() {
-            Button::new(val.key(), val.to_string())
+            Button::new(val.to_string(), val.key())
                 .throwing(Event::SetSize(val))
                 .render(ui);
         }

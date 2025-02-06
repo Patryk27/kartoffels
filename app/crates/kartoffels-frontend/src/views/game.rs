@@ -174,7 +174,7 @@ impl State {
             }
         }
 
-        Clear::render(ui);
+        ui.add(Clear);
 
         for area in [side_area, bottom_area] {
             for y in area.top()..area.bottom() {

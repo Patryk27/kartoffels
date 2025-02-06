@@ -80,12 +80,8 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
 
     game.join(world.clone()).await?;
 
-    utils::map::build(store, &world, |mut mapb, mut rng| async move {
-        let map = theme.create_map(&mut rng)?;
-
-        mapb.reveal(map, &mut rng).await;
-
-        Ok(mapb.finish())
+    utils::map::build(store, game, &world, |mut rng, map| async move {
+        theme.build(&mut rng, map).await
     })
     .await?;
 

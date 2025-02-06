@@ -29,7 +29,7 @@ impl IdleSidePanel {
             Mode::Default => {
                 if !state.config.hero_mode {
                     btns.push(
-                        Button::new(KeyCode::Char('j'), "join-bot")
+                        Button::new("join-bot", KeyCode::Char('j'))
                             .throwing(Event::OpenJoinBotModal)
                             .enabled(!state.snapshot.bots.is_empty()),
                     );
@@ -37,7 +37,7 @@ impl IdleSidePanel {
 
                 if state.config.can_upload_bots {
                     btns.push(
-                        Button::new(KeyCode::Char('u'), "upload-bot").throwing(
+                        Button::new("upload-bot", KeyCode::Char('u')).throwing(
                             Event::OpenUploadBotModal {
                                 request: UploadBotRequest::new(
                                     BotSource::Upload,
@@ -49,7 +49,7 @@ impl IdleSidePanel {
 
                 if state.config.can_spawn_bots {
                     btns.push(
-                        Button::new(KeyCode::Char('S'), "spawn-bot")
+                        Button::new("spawn-bot", KeyCode::Char('S'))
                             .throwing(Event::OpenSpawnBotModal),
                     );
                 }

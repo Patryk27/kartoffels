@@ -11,6 +11,6 @@ pub enum HelpMsgEvent {
 
 impl HelpMsgEvent {
     pub fn close() -> MsgButton<Self> {
-        MsgButton::new(KeyCode::Escape, "close", Self::Close).right_aligned()
+        MsgButton::new("close", KeyCode::Escape, Self::Close).right_aligned()
     }
 }

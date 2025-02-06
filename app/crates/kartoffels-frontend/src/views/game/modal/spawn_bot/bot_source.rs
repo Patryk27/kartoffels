@@ -11,7 +11,7 @@ pub enum BotSource {
 
 impl BotSource {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('s'), format!("source: {val}"))
+        Button::new(format!("source: {val}"), KeyCode::Char('s'))
             .throwing(Event::FocusOn(Some(Focus::BotSource)))
             .render(ui);
     }
@@ -22,7 +22,7 @@ impl BotSource {
                 ui.space(1);
             }
 
-            Button::new(val.key(), val.to_string())
+            Button::new(val.to_string(), val.key())
                 .help(val.desc())
                 .throwing(Event::SetBotSource(val))
                 .render(ui);

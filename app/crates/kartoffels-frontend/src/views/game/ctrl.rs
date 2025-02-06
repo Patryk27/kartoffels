@@ -71,7 +71,7 @@ impl GameCtrl {
 
         self.open_modal(move |ui| {
             let event = ui.catch(|ui| {
-                msg.render(ui);
+                ui.add(msg);
             });
 
             if let Some(event) = event

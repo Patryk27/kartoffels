@@ -46,7 +46,7 @@ pub mod prelude {
         DeadBotSnapshot, DeadBotsSnapshot, ObjectsSnapshot, QueuedBotSnapshot,
         QueuedBotsSnapshot, Snapshot, SnapshotStream,
     };
-    pub use crate::theme::{ArenaTheme, DungeonTheme, Theme};
+    pub use crate::theme::{ArenaTheme, CaveTheme, Theme};
     pub use crate::utils::Dir;
 }
 
@@ -72,6 +72,7 @@ use bevy_ecs::event::EventRegistry;
 use bevy_ecs::schedule::{ExecutorKind, IntoSystemConfigs, Schedule};
 use bevy_ecs::system::Res;
 use bevy_ecs::world::World;
+use futures_util::FutureExt;
 use kartoffels_utils::Id;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -94,7 +95,13 @@ pub fn create(config: Config) -> Handle {
     let map = config
         .theme
         .as_ref()
-        .map(|theme| theme.create_map(&mut rng).unwrap())
+        .map(|theme| {
+            theme
+                .build(&mut rng, MapBuilder::detached())
+                .now_or_never()
+                .unwrap()
+                .unwrap()
+        })
         .unwrap_or_default();
 
     let res = Resources {

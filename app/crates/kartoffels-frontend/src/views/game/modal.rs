@@ -67,11 +67,7 @@ impl Modal {
             }
 
             Modal::Help(this) => {
-                let event = ui.catch(|ui| {
-                    this.render(ui);
-                });
-
-                if let Some(event) = event {
+                if let Some(event) = ui.catch(|ui| ui.add(&**this)) {
                     ui.throw(match event {
                         HelpMsgEvent::Copy { payload } => {
                             Event::Copy { payload }

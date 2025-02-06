@@ -30,7 +30,7 @@ pub async fn run(frame: &mut Frame, bg: &Background, err: Error) -> Result<()> {
                     ui.add_at(text_area, &err);
 
                     ui.add_at(footer_area, {
-                        Button::new(KeyCode::Enter, "close")
+                        Button::new("close", KeyCode::Enter)
                             .throwing(())
                             .right_aligned()
                     });

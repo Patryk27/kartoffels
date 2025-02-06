@@ -33,7 +33,7 @@ impl ErrorModal {
             ui.add_at(text_area, &self.error);
 
             ui.add_at(footer_area, {
-                Button::new(KeyCode::Enter, "close")
+                Button::new("close", KeyCode::Enter)
                     .throwing(Event::CloseModal)
                     .right_aligned()
             });

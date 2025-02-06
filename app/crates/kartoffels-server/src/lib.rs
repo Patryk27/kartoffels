@@ -93,7 +93,7 @@ impl Cmd {
     }
 
     async fn start(self) -> Result<()> {
-        info!(?self, "starting");
+        info!("starting");
 
         let store = Store::new(Some(&self.data), self.secret)
             .await
@@ -145,6 +145,8 @@ impl Cmd {
 
             Ok(())
         };
+
+        kartoffels_frontend::init();
 
         try_join!(http, ssh, shutdown)?;
 

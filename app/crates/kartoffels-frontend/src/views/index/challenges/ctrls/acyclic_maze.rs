@@ -130,7 +130,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
 
     game.join(world.clone()).await?;
 
-    utils::map::build(store, &world, create_map).await?;
+    utils::map::build(store, game, &world, create_map).await?;
 
     game.sync(world.version()).await?;
     game.set_config(CONFIG).await?;
@@ -139,14 +139,14 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
     Ok((world, timmy))
 }
 
-async fn create_map(mut map: MapBuilder, mut rng: impl RngCore) -> Result<Map> {
-    map.init(SIZE);
+async fn create_map(mut rng: impl RngCore, mut map: MapBuilder) -> Result<Map> {
+    map.begin(SIZE);
 
     utils::map::draw_borders(&mut map, AREA).await;
-    utils::map::draw_maze(&mut map, &mut rng, AREA, TIMMY_POS).await;
+    utils::map::draw_maze(&mut rng, &mut map, AREA, TIMMY_POS).await;
     draw_entrance(&mut map).await;
 
-    Ok(map.finish())
+    Ok(map.commit())
 }
 
 async fn draw_entrance(map: &mut MapBuilder) {
@@ -210,7 +210,7 @@ mod tests {
 
         let (map, _) = MapBuilder::new();
         let rng = ChaCha8Rng::from_seed(Default::default());
-        let map = create_map(map, rng).await.unwrap();
+        let map = create_map(rng, map).await.unwrap();
 
         Asserter::new(dir).assert("expected.txt", map.to_string());
     }
