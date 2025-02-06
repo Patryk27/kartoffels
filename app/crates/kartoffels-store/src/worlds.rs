@@ -84,7 +84,6 @@ impl Worlds {
         Ok(entries)
     }
 
-    #[instrument(skip(self, dir, testing))]
     pub fn create(
         &self,
         testing: bool,
@@ -92,7 +91,7 @@ impl Worlds {
         ty: WorldType,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
-        debug!("creating world");
+        debug!(?ty, ?config, "creating world");
 
         assert!(config.id.is_none());
         assert!(config.path.is_none());
