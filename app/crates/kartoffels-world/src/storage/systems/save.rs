@@ -71,7 +71,7 @@ pub fn save(
     let world = SerializedWorld {
         bots: MaybeOwned::Borrowed(&bots),
         map: MaybeOwned::Borrowed(&map),
-        name: MaybeOwned::Borrowed(&name.0),
+        name: MaybeOwned::Owned(name.0.load().to_string()),
         policy: MaybeOwned::Borrowed(&policy),
         rng: MaybeOwned::Borrowed(&rng.0),
         lives: MaybeOwned::Borrowed(&lives),

@@ -68,6 +68,7 @@ pub(crate) use self::storage::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
 use anyhow::Result;
+use arc_swap::ArcSwap;
 use bevy_ecs::event::EventRegistry;
 use bevy_ecs::schedule::{ExecutorKind, IntoSystemConfigs, Schedule};
 use bevy_ecs::system::Res;
@@ -77,6 +78,7 @@ use kartoffels_utils::Id;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::path::Path;
+use std::sync::Arc;
 use std::thread;
 use tokio::runtime::Handle as TokioHandle;
 use tokio::sync::{broadcast, mpsc, watch};
@@ -110,7 +112,7 @@ pub fn create(config: Config) -> Handle {
         id: WorldId(id),
         lives: Default::default(),
         map,
-        name: WorldName(config.name),
+        name: WorldName(Arc::new(ArcSwap::from_pointee(config.name))),
         path: config.path.map(WorldPath),
         policy: config.policy,
         rng: WorldRng(rng),
@@ -122,6 +124,7 @@ pub fn create(config: Config) -> Handle {
 
 pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     let world = storage::load(path)?;
+    let name = Arc::new(ArcSwap::from_pointee(world.name.into_owned()));
 
     let res = Resources {
         bots: world.bots.into_owned(),
@@ -129,7 +132,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         id: WorldId(id),
         lives: world.lives.into_owned(),
         map: world.map.into_owned(),
-        name: WorldName(world.name.into_owned()),
+        name: WorldName(name),
         path: Some(WorldPath(path.to_owned())),
         policy: world.policy.into_owned(),
         rng: WorldRng(ChaCha8Rng::from_entropy()),
@@ -228,7 +231,7 @@ fn create_handle(world: &mut World, emit_events: bool) -> Handle {
     let id = world.resource::<WorldId>().0;
     let name = world.resource::<WorldName>().0.clone();
 
-    Handle::new(HandleShared {
+    Handle::new(SharedHandle {
         tx,
         id,
         name,

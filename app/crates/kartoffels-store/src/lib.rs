@@ -88,6 +88,10 @@ impl Store {
         )
     }
 
+    pub async fn rename_world(&self, id: Id, name: String) -> Result<()> {
+        self.worlds.rename(id, name).await
+    }
+
     pub async fn delete_world(&self, id: Id) -> Result<()> {
         self.worlds.delete(self.dir.as_deref(), id).await
     }

@@ -6,6 +6,7 @@ use crate::{
     Snapshot, SnapshotStream,
 };
 use anyhow::{anyhow, Context, Result};
+use arc_swap::{ArcSwap, Guard};
 use bevy_ecs::system::Resource;
 use derivative::Derivative;
 use glam::IVec2;
@@ -16,7 +17,7 @@ use tokio::sync::{broadcast, mpsc, oneshot, watch};
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
 pub struct Handle {
-    shared: Arc<HandleShared>,
+    shared: Arc<SharedHandle>,
 
     #[derivative(Debug = "ignore")]
     on_last_drop: Option<Arc<Box<dyn FnOnce() + Send + Sync>>>,
@@ -25,7 +26,7 @@ pub struct Handle {
 impl Handle {
     pub(crate) const ERR: &'static str = "world has crashed";
 
-    pub(crate) fn new(shared: HandleShared) -> Self {
+    pub(crate) fn new(shared: SharedHandle) -> Self {
         Self {
             shared: Arc::new(shared),
             on_last_drop: None,
@@ -36,8 +37,8 @@ impl Handle {
         self.shared.id
     }
 
-    pub fn name(&self) -> &str {
-        &self.shared.name
+    pub fn name(&self) -> Guard<Arc<String>> {
+        self.shared.name.load()
     }
 
     pub fn events(&self) -> Result<EventStream> {
@@ -96,6 +97,14 @@ impl Handle {
         let (tx, rx) = oneshot::channel();
 
         self.send(Request::Shutdown { tx }).await?;
+
+        rx.await.context(Self::ERR)
+    }
+
+    pub async fn rename(&self, name: String) -> Result<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(Request::Rename { name, tx }).await?;
 
         rx.await.context(Self::ERR)
     }
@@ -213,10 +222,10 @@ impl Drop for Handle {
 }
 
 #[derive(Clone, Debug)]
-pub struct HandleShared {
+pub struct SharedHandle {
     pub tx: mpsc::Sender<Request>,
     pub id: Id,
-    pub name: String,
+    pub name: Arc<ArcSwap<String>>,
     pub events: Option<broadcast::Sender<EventLetter>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
@@ -245,6 +254,13 @@ pub enum Request {
     },
 
     Shutdown {
+        #[derivative(Debug = "ignore")]
+        tx: oneshot::Sender<()>,
+    },
+
+    Rename {
+        name: String,
+
         #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },

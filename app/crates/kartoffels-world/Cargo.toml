@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 ahash.workspace = true
 anyhow.workspace = true
+arc-swap.workspace = true
 bevy_ecs.workspace = true
 chrono.workspace = true
 ciborium.workspace = true

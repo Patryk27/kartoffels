@@ -2144,6 +2144,7 @@ version = "0.6.0"
 dependencies = [
  "ahash",
  "anyhow",
+ "arc-swap",
  "bevy_ecs",
  "chrono",
  "ciborium",

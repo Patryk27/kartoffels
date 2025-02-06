@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::fs;
-use tracing::{debug, info};
+use tracing::{debug, info, instrument};
 
 #[derive(Debug)]
 pub struct Worlds {
@@ -38,7 +38,10 @@ impl Worlds {
         })
     }
 
+    #[instrument]
     async fn load(dir: &Path) -> Result<AHashMap<Id, WorldEntry>> {
+        info!("loading worlds");
+
         let mut entries = AHashMap::new();
         let mut files = fs::read_dir(dir).await?;
 
@@ -81,6 +84,7 @@ impl Worlds {
         Ok(entries)
     }
 
+    #[instrument(skip(self, dir, testing))]
     pub fn create(
         &self,
         testing: bool,
@@ -88,44 +92,28 @@ impl Worlds {
         ty: WorldType,
         config: WorldConfig,
     ) -> Result<WorldHandle> {
-        debug!(?dir, ?ty, ?config, "creating world");
+        debug!("creating world");
 
         assert!(config.id.is_none());
         assert!(config.path.is_none());
 
-        let id = self.create_alloc(testing, ty, &config)?;
+        let id = self.create_alloc(testing, ty)?;
         let config = self.create_config(dir, ty, config, id);
         let handle = self.create_spawn(ty, config);
 
-        self.create_reindex(ty, &handle);
+        if let WorldType::Public = ty {
+            self.rebuild_public_idx();
+        }
 
-        info!(?id, ?ty, "world created");
+        info!(?id, "world created");
 
         Ok(handle)
     }
 
-    fn create_alloc(
-        &self,
-        testing: bool,
-        ty: WorldType,
-        config: &WorldConfig,
-    ) -> Result<Id> {
+    fn create_alloc(&self, testing: bool, ty: WorldType) -> Result<Id> {
         let mut id = None;
 
         self.entries.try_rcu(|entries| {
-            if let WorldType::Public = ty {
-                if entries
-                    .values()
-                    .filter_map(|entry| entry.handle.as_ref())
-                    .any(|entry| entry.name() == config.name)
-                {
-                    return Err(anyhow!(
-                        "world named `{}` already exists",
-                        config.name
-                    ));
-                }
-            }
-
             if entries.len() >= Self::MAX_WORLDS {
                 return Err(anyhow!(
                     "ouch, the server is currently overloaded"
@@ -201,26 +189,38 @@ impl Worlds {
         }
     }
 
-    fn create_reindex(&self, ty: WorldType, handle: &WorldHandle) {
-        if let WorldType::Public = ty {
-            self.public_idx.rcu(|handles| {
-                let mut handles = (**handles).clone();
+    #[instrument(skip(self))]
+    pub async fn rename(&self, id: Id, name: String) -> Result<()> {
+        debug!("renaming world");
 
-                handles.push(handle.clone());
-                handles.sort_by(|a, b| a.name().cmp(b.name()));
-                handles
-            });
+        let entries = self.entries.load();
+
+        let entry = entries
+            .get(&id)
+            .with_context(|| format!("couldn't find world `{id}`"))?;
+
+        if let Some(handle) = &entry.handle {
+            handle.rename(name).await?;
+
+            if let WorldType::Public = entry.ty {
+                self.rebuild_public_idx();
+            }
+
+            info!("world renamed");
         }
+
+        Ok(())
     }
 
+    #[instrument(skip(self, dir))]
     pub async fn delete(&self, dir: Option<&Path>, id: Id) -> Result<()> {
-        debug!(?dir, ?id, "deleting world");
+        debug!("deleting world");
 
         let entry = self.delete_remove(id)?;
 
         self.delete_cleanup(dir, id, entry).await?;
 
-        debug!(?id, "world deleted");
+        info!("world deleted");
 
         Ok(())
     }
@@ -336,6 +336,12 @@ impl Worlds {
 
         Ok(())
     }
+
+    fn rebuild_public_idx(&self) {
+        let public_idx = build_public_idx(&*self.entries.load());
+
+        self.public_idx.swap(Arc::new(public_idx));
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -349,11 +355,13 @@ fn path(dir: &Path, id: Id) -> PathBuf {
 }
 
 fn build_public_idx(entries: &AHashMap<Id, WorldEntry>) -> Vec<WorldHandle> {
+    // TODO sorting here is mildly invalid, since `a.name()` / `b.name()` can
+    //      change in-between calls if someone happens to invoke `self.rename()`
     entries
         .values()
         .filter(|entry| matches!(entry.ty, WorldType::Public))
         .filter_map(|entry| entry.handle.clone())
-        .sorted_by(|a, b| a.name().cmp(b.name()))
+        .sorted_by(|a, b| a.name().as_str().cmp(b.name().as_str()))
         .collect()
 }
 

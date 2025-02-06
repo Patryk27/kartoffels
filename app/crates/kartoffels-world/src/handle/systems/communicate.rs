@@ -1,8 +1,9 @@
 use crate::{
     Bots, Clock, CreateBot, Fuel, HandleRx, KillBot, Map, Objects, Paused,
-    Request, Shutdown, Spawn, WorldRng,
+    Request, Shutdown, Spawn, WorldName, WorldRng,
 };
-use bevy_ecs::system::{Commands, ResMut};
+use bevy_ecs::system::{Commands, Res, ResMut};
+use std::sync::Arc;
 use tokio::sync::mpsc::error::TryRecvError;
 use tracing::debug;
 
@@ -18,6 +19,7 @@ pub fn communicate(
     mut rng: ResMut<WorldRng>,
     mut rx: ResMut<HandleRx>,
     mut spawn: ResMut<Spawn>,
+    name: Res<WorldName>,
 ) {
     fuel.tick(&clock);
 
@@ -61,6 +63,11 @@ pub fn communicate(
             Ok(Request::Shutdown { tx }) => {
                 cmds.insert_resource(Shutdown { tx: Some(tx) });
                 return;
+            }
+
+            Ok(Request::Rename { name: new_name, tx }) => {
+                name.0.swap(Arc::new(new_name));
+                _ = tx.send(());
             }
 
             Ok(Request::CreateBot { req, tx }) => {

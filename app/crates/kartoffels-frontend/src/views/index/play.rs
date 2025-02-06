@@ -51,13 +51,17 @@ async fn run_once(
         return Ok(Event::GoBack);
     }
 
+    let worlds: Vec<_> =
+        worlds.iter().map(|world| (world, world.name())).collect();
+
     let mut world_btns: Vec<_> = worlds
         .iter()
         .enumerate()
-        .map(|(idx, world)| {
+        .map(|(idx, (world, world_name))| {
             let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-            Button::new(world.name(), key).throwing(Event::Play(world.clone()))
+            Button::new(world_name.as_str(), key)
+                .throwing(Event::Play((*world).clone()))
         })
         .collect();
 

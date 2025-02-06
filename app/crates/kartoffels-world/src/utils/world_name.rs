@@ -1,4 +1,6 @@
+use arc_swap::ArcSwap;
 use bevy_ecs::system::Resource;
+use std::sync::Arc;
 
-#[derive(Debug, PartialEq, Eq, Resource)]
-pub struct WorldName(pub String);
+#[derive(Debug, Resource)]
+pub struct WorldName(pub Arc<ArcSwap<String>>);
