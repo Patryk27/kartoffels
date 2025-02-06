@@ -71,11 +71,11 @@
 
             default = pkgs.linkFarm "kartoffels" [
               {
-                name = "kartoffels";
+                name = "app";
                 path = app;
               }
               {
-                name = "kartoffels-web";
+                name = "web";
                 path = web;
               }
             ];
