@@ -8,7 +8,6 @@ use std::str::FromStr;
 
 #[derive(Debug, Parser)]
 pub struct CreateWorldCmd {
-    #[clap(long)]
     name: String,
 
     #[clap(long, default_value = "")]
