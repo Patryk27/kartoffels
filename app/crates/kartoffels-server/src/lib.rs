@@ -93,7 +93,7 @@ impl Cmd {
     }
 
     async fn start(self) -> Result<()> {
-        info!(?self, "starting");
+        info!("starting");
 
         let store = Store::new(Some(&self.data), self.secret)
             .await

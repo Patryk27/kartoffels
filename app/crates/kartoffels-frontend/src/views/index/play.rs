@@ -4,7 +4,9 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
+use kartoffels_ui::{
+    Button, FadeCtrl, FadeCtrlEvent, Frame, KeyCode, UiWidget,
+};
 use kartoffels_world::prelude::Handle as WorldHandle;
 use std::iter;
 use tracing::debug;
@@ -67,59 +69,34 @@ async fn run_once(
         .chain(iter::once(&go_back_btn))
         .map(|btn| btn.width())
         .max()
-        .unwrap_or(0)
-        .max(11);
+        .unwrap();
 
     let height = world_btns.len() as u16 + 2;
 
-    let mut fade_in = if fade_in && !store.testing() {
-        Some(Fade::new(FadeDir::In))
-    } else {
-        None
-    };
-
-    let mut fade_out: Option<(Fade, Event)> = None;
+    let mut fade = FadeCtrl::default()
+        .animate(!store.testing())
+        .fade_in(fade_in);
 
     loop {
         let event = frame
             .update(|ui| {
-                bg.render(ui);
+                fade.render(ui, |ui| {
+                    bg.render(ui);
 
-                ui.info_window(width, height, Some(" play "), |ui| {
-                    for btn in &mut world_btns {
-                        ui.add(btn);
-                    }
+                    ui.info_window(width, height, Some(" play "), |ui| {
+                        for btn in &mut world_btns {
+                            ui.add(btn);
+                        }
 
-                    ui.space(1);
-                    ui.add(&mut go_back_btn);
+                        ui.space(1);
+                        ui.add(&mut go_back_btn);
+                    });
                 });
-
-                if let Some(fade) = &fade_in
-                    && fade.render(ui).is_completed()
-                {
-                    fade_in = None;
-                }
-
-                if let Some((fade, _)) = &fade_out {
-                    fade.render(ui);
-                }
             })
             .await?;
 
-        if let Some((fade, event)) = &fade_out {
-            if fade.is_completed() {
-                return Ok(event.clone());
-            }
-
-            continue;
-        }
-
         if let Some(event) = event {
-            if event.fade_out() && !store.testing() {
-                fade_out = Some((Fade::new(FadeDir::Out), event));
-            } else {
-                return Ok(event);
-            }
+            return Ok(event);
         }
     }
 }
@@ -130,8 +107,8 @@ enum Event {
     GoBack,
 }
 
-impl Event {
-    fn fade_out(&self) -> bool {
+impl FadeCtrlEvent for Event {
+    fn needs_fade_out(&self) -> bool {
         matches!(self, Event::Play(_))
     }
 }

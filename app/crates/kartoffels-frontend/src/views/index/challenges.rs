@@ -5,7 +5,9 @@ use crate::views::game;
 use crate::Background;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
+use kartoffels_ui::{
+    Button, FadeCtrl, FadeCtrlEvent, Frame, KeyCode, UiWidget,
+};
 use ratatui::widgets::{Paragraph, Wrap};
 use tracing::debug;
 
@@ -43,19 +45,13 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
-    let mut fade_in = if fade_in && !store.testing() {
-        Some(Fade::new(FadeDir::In))
-    } else {
-        None
-    };
-
-    let mut fade_out: Option<(Fade, Event)> = None;
+    let mut fade = FadeCtrl::default()
+        .animate(!store.testing())
+        .fade_in(fade_in);
 
     loop {
         let event = frame
             .update(|ui| {
-                bg.render(ui);
-
                 let width = (ui.area.width - 2).min(60);
 
                 // TODO doing manual layouting sucks sometimes
@@ -75,47 +71,29 @@ async fn run_once(
                     (height + 1) as u16
                 };
 
-                ui.info_window(width, height, Some(" challenges "), |ui| {
-                    for chl in CHALLENGES {
-                        Button::new(chl.name, chl.key)
-                            .help(chl.desc)
-                            .throwing(Event::Play(chl))
+                fade.render(ui, |ui| {
+                    bg.render(ui);
+
+                    ui.info_window(width, height, Some(" challenges "), |ui| {
+                        for chl in CHALLENGES {
+                            Button::new(chl.name, chl.key)
+                                .help(chl.desc)
+                                .throwing(Event::Play(chl))
+                                .render(ui);
+
+                            ui.space(1);
+                        }
+
+                        Button::new("go-back", KeyCode::Escape)
+                            .throwing(Event::GoBack)
                             .render(ui);
-
-                        ui.space(1);
-                    }
-
-                    Button::new("go-back", KeyCode::Escape)
-                        .throwing(Event::GoBack)
-                        .render(ui);
+                    });
                 });
-
-                if let Some(fade) = &fade_in
-                    && fade.render(ui).is_completed()
-                {
-                    fade_in = None;
-                }
-
-                if let Some((fade, _)) = &fade_out {
-                    fade.render(ui);
-                }
             })
             .await?;
 
-        if let Some((fade, event)) = &fade_out {
-            if fade.is_completed() {
-                return Ok(*event);
-            }
-
-            continue;
-        }
-
         if let Some(event) = event {
-            if event.fade_out() && !store.testing() {
-                fade_out = Some((Fade::new(FadeDir::Out), event));
-            } else {
-                return Ok(event);
-            }
+            return Ok(event);
         }
     }
 }
@@ -126,8 +104,8 @@ enum Event {
     GoBack,
 }
 
-impl Event {
-    fn fade_out(&self) -> bool {
+impl FadeCtrlEvent for Event {
+    fn needs_fade_out(&self) -> bool {
         matches!(self, Event::Play(_))
     }
 }

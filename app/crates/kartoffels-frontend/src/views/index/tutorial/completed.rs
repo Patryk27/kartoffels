@@ -1,11 +1,11 @@
 use anyhow::Result;
 use kartoffels_ui::{
-    theme, Clear, Fade, FadeDir, Frame, Msg, MsgButton, MsgLine, UiWidget,
+    theme, Clear, FadeCtrl, FadeCtrlEvent, Frame, Msg, MsgButton, MsgLine,
 };
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
     title: Some(" tutorial "),
 
     body: vec![
@@ -22,45 +22,39 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "be gay, do crime, have fun and remember the power of potato!",
+            "be gay, do crime, have fun, and remember the power of potato!",
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("complete", ())],
+    buttons: vec![MsgButton::confirm("complete", Event::Complete)],
 });
 
 pub async fn run(frame: &mut Frame) -> Result<()> {
-    let mut fade_in = Some(Fade::new(FadeDir::In));
-    let mut fade_out: Option<Fade> = None;
+    let mut fade = FadeCtrl::default().fade_in(true);
 
     loop {
         let event = frame
             .update(|ui| {
-                Clear::render(ui);
-                MSG.render(ui);
-
-                if let Some(fade) = &fade_in
-                    && fade.render(ui).is_completed()
-                {
-                    fade_in = None;
-                }
-
-                if let Some(fade) = &fade_out {
-                    fade.render(ui);
-                }
+                fade.render(ui, |ui| {
+                    ui.add(Clear);
+                    ui.add(&*MSG);
+                });
             })
             .await?;
 
-        if let Some(fade) = &fade_out {
-            if fade.is_completed() {
-                return Ok(());
-            }
-
-            continue;
-        }
-
         if event.is_some() {
-            fade_out = Some(Fade::new(FadeDir::Out));
+            return Ok(());
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Event {
+    Complete,
+}
+
+impl FadeCtrlEvent for Event {
+    fn needs_fade_out(&self) -> bool {
+        true
     }
 }

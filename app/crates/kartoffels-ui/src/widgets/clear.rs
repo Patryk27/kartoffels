@@ -1,3 +1,4 @@
+use super::UiWidget;
 use crate::{theme, Ui};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
@@ -6,10 +7,6 @@ use ratatui::layout::Rect;
 pub struct Clear;
 
 impl Clear {
-    pub fn render<T>(ui: &mut Ui<T>) {
-        Self::render_ex(ui.area, ui.buf)
-    }
-
     pub fn render_ex(area: Rect, buf: &mut Buffer) {
         for x in area.left()..area.right() {
             for y in area.top()..area.bottom() {
@@ -17,5 +14,13 @@ impl Clear {
                 buf[(x, y)].set_fg(theme::FG).set_bg(theme::BG);
             }
         }
+    }
+}
+
+impl<T> UiWidget<T> for Clear {
+    type Response = ();
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
+        Self::render_ex(ui.area, ui.buf);
     }
 }

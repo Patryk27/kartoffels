@@ -83,14 +83,18 @@ impl<T> Ui<'_, T> {
         }
     }
 
-    pub fn add(&mut self, widget: impl UiWidget<T>) {
-        widget.render(self);
+    pub fn add<W>(&mut self, widget: W) -> W::Response
+    where
+        W: UiWidget<T>,
+    {
+        widget.render(self)
     }
 
-    pub fn add_at(&mut self, area: Rect, widget: impl UiWidget<T>) {
-        self.clamp(area, |ui| {
-            ui.add(widget);
-        });
+    pub fn add_at<W>(&mut self, area: Rect, widget: W) -> W::Response
+    where
+        W: UiWidget<T>,
+    {
+        self.clamp(area, |ui| ui.add(widget))
     }
 
     pub fn line<'x>(&mut self, line: impl Into<Text<'x>>) -> u16 {
@@ -112,8 +116,7 @@ impl<T> Ui<'_, T> {
     }
 
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
-        Clear::render(self);
-
+        self.add(Clear);
         self.add(&block);
         self.clamp(block.inner(self.area), f);
     }

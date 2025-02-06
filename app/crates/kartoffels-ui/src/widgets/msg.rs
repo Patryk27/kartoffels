@@ -12,11 +12,13 @@ pub struct Msg<T = ()> {
     pub buttons: Vec<MsgButton<T>>,
 }
 
-impl<T> Msg<T>
+impl<T> UiWidget<T> for &Msg<T>
 where
     T: Clone,
 {
-    pub fn render(&self, ui: &mut Ui<T>) {
+    type Response = ();
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let body = {
             let text: Text = self
                 .body
@@ -37,7 +39,7 @@ where
 
             ui.row(|ui| {
                 for button in &self.buttons {
-                    button.inner.clone().render(ui);
+                    ui.add(button.inner.clone());
                 }
             });
         });
