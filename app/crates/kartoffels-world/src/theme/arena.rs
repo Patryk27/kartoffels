@@ -64,3 +64,27 @@ impl FromStr for ArenaTheme {
         Ok(Self::new(radius))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures_util::FutureExt;
+    use kartoffels_utils::Asserter;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha8Rng;
+
+    #[test]
+    fn build() {
+        let mut rng = ChaCha8Rng::from_seed(Default::default());
+
+        let map = ArenaTheme::from_str("radius=16")
+            .unwrap()
+            .build(&mut rng, MapBuilder::detached())
+            .now_or_never()
+            .unwrap()
+            .unwrap();
+
+        Asserter::new("src/theme/arena/tests")
+            .assert("build.txt", map.to_string());
+    }
+}

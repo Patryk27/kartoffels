@@ -231,3 +231,25 @@ impl FromStr for CaveTheme {
         Ok(Self::new(uvec2(width, height)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use futures_util::FutureExt;
+    use kartoffels_utils::Asserter;
+
+    #[test]
+    fn build() {
+        let mut rng = ChaCha8Rng::from_seed(Default::default());
+
+        let map = CaveTheme::from_str("width=64,height=32")
+            .unwrap()
+            .build(&mut rng, MapBuilder::detached())
+            .now_or_never()
+            .unwrap()
+            .unwrap();
+
+        Asserter::new("src/theme/cave/tests")
+            .assert("build.txt", map.to_string());
+    }
+}
