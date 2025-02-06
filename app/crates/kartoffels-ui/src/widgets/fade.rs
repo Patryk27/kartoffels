@@ -47,13 +47,15 @@ impl<T> UiWidget<T> for &Fade {
             for x in 0..ui.area.width {
                 let cell = &mut ui.buf[(x, y)];
 
-                if let Color::Rgb(r, g, b) = &mut cell.fg {
-                    *r = ((*r as f32) * alpha) as u8;
-                    *g = ((*g as f32) * alpha) as u8;
-                    *b = ((*b as f32) * alpha) as u8;
-                } else {
-                    // Should be unreachable, since we rely on RGB colors
-                    // everywhere, but let's avoid panicking just in case
+                for color in [&mut cell.fg, &mut cell.bg] {
+                    if let Color::Rgb(r, g, b) = color {
+                        *r = ((*r as f32) * alpha) as u8;
+                        *g = ((*g as f32) * alpha) as u8;
+                        *b = ((*b as f32) * alpha) as u8;
+                    } else {
+                        // Should be unreachable, since we rely on RGB colors
+                        // everywhere, but let's avoid panicking just in case
+                    }
                 }
             }
         }
