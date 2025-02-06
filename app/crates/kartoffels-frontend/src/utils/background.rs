@@ -45,6 +45,13 @@ impl Background {
 
         Self { stream, camera }
     }
+
+    pub fn init() {
+        // Borrow the stream to force it to initialize - this way the first
+        // person to connect won't get a black background, since it'll have been
+        // initialized by then.
+        STREAM.borrow();
+    }
 }
 
 impl<T> UiWidget<T> for &Background {

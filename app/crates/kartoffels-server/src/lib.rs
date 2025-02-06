@@ -146,6 +146,8 @@ impl Cmd {
             Ok(())
         };
 
+        kartoffels_frontend::init();
+
         try_join!(http, ssh, shutdown)?;
 
         Ok(())
