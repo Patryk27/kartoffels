@@ -286,7 +286,7 @@ fn main_schedule() -> Schedule {
 }
 
 fn main(mut world: World, mut schedule: Schedule) {
-    info!(name=?world.resource::<WorldName>().0, "ready");
+    info!(name=?world.resource::<WorldName>().0.load(), "ready");
 
     let shutdown = loop {
         schedule.run(&mut world);
@@ -300,5 +300,5 @@ fn main(mut world: World, mut schedule: Schedule) {
         _ = tx.send(());
     }
 
-    info!(name=?world.resource::<WorldName>().0, "shut down");
+    info!(name=?world.resource::<WorldName>().0.load(), "shut down");
 }
