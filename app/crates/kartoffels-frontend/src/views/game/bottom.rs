@@ -91,17 +91,17 @@ impl BottomPanel {
             ui.space(2);
 
             Button::multi("overclock")
-                .option(
+                .throwing_on(
                     KeyCode::Char('1'),
                     Event::Overclock {
                         clock: Clock::Normal,
                     },
                 )
-                .option(
+                .throwing_on(
                     KeyCode::Char('2'),
                     Event::Overclock { clock: Clock::Fast },
                 )
-                .option(
+                .throwing_on(
                     KeyCode::Char('3'),
                     Event::Overclock {
                         clock: Clock::Faster,

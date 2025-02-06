@@ -8,7 +8,7 @@ use termwiz::input::{KeyCode, Modifiers};
 #[derive(Clone, Debug)]
 pub struct Button<'a, T> {
     label: Cow<'a, str>,
-    options: Vec<(Option<KeyCode>, Option<T>)>,
+    options: Vec<ButtonOption<T>>,
     help: Option<Cow<'a, str>>,
     alignment: Alignment,
     enabled: bool,
@@ -22,7 +22,10 @@ impl<'a, T> Button<'a, T> {
     ) -> Self {
         Self {
             label: label.into(),
-            options: vec![(key.into(), None)],
+            options: vec![ButtonOption {
+                key: key.into(),
+                event: None,
+            }],
             help: None,
             alignment: Alignment::Left,
             enabled: true,
@@ -41,13 +44,19 @@ impl<'a, T> Button<'a, T> {
         }
     }
 
-    pub fn option(mut self, key: KeyCode, event: T) -> Self {
-        self.options.push((Some(key), Some(event)));
+    pub fn throwing(mut self, event: T) -> Self {
+        assert!(self.options.len() == 1);
+
+        self.options[0].event = Some(event);
         self
     }
 
-    pub fn throwing(mut self, event: T) -> Self {
-        self.options.last_mut().unwrap().1 = Some(event);
+    pub fn throwing_on(mut self, key: KeyCode, event: T) -> Self {
+        self.options.push(ButtonOption {
+            key: Some(key),
+            event: Some(event),
+        });
+
         self
     }
 
@@ -72,23 +81,28 @@ impl<'a, T> Button<'a, T> {
     }
 
     pub fn width(&self) -> u16 {
-        if self.is_mouse_only() {
-            self.label.len() as u16 + 2
-        } else {
+        if self.supports_kbd() {
             let keys = self
                 .options
                 .iter()
-                .map(|(key, _)| Self::key_name_len(key.unwrap()))
+                .map(|opt| key_name_len(opt.key.unwrap()))
                 .sum::<u16>();
 
             let slashes = (self.options.len() - 1) as u16;
 
             keys + slashes + self.label.len() as u16 + 3
+        } else {
+            self.label.len() as u16 + 2
         }
     }
 
-    fn is_mouse_only(&self) -> bool {
-        self.options.len() == 1 && self.options[0].0.is_none()
+    fn supports_kbd(&self) -> bool {
+        self.options.iter().any(|opt| opt.key.is_some())
+    }
+
+    fn supports_mouse(&self) -> bool {
+        // TODO support multi-buttons
+        self.options.len() == 1
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
@@ -110,17 +124,15 @@ impl<'a, T> Button<'a, T> {
 
     fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
         if !ui.enabled || !self.enabled {
-            return ButtonResponse {
-                hovered: false,
-                pressed: false,
-                option: None,
-            };
+            return Default::default();
         }
 
-        let hovered = ui.mouse_over(area);
+        let hovered = self.supports_mouse() && ui.mouse_over(area);
 
-        let mouse_option = if ui.mouse_over(area) && ui.mouse_pressed() {
-            // TODO support multi-buttons
+        let mouse_option = if self.supports_mouse()
+            && ui.mouse_over(area)
+            && ui.mouse_pressed()
+        {
             Some(0)
         } else {
             None
@@ -130,8 +142,8 @@ impl<'a, T> Button<'a, T> {
             .options
             .iter()
             .enumerate()
-            .filter_map(|(idx, &(key, _))| {
-                let key = key?;
+            .filter_map(|(idx, opt)| {
+                let key = opt.key?;
 
                 if ui.key(key, Modifiers::NONE) {
                     Some(idx)
@@ -171,34 +183,6 @@ impl<'a, T> Button<'a, T> {
 
         (key, label)
     }
-
-    fn key_name(key: KeyCode) -> Cow<'static, str> {
-        match key {
-            KeyCode::Char(' ') => Cow::Borrowed("spc"),
-            KeyCode::Char(ch) => Cow::Owned(ch.to_string()),
-            KeyCode::Tab => Cow::Borrowed("tab"),
-            KeyCode::Enter => Cow::Borrowed("enter"),
-            KeyCode::Escape => Cow::Borrowed("esc"),
-            KeyCode::UpArrow => Cow::Borrowed("↑"),
-            KeyCode::DownArrow => Cow::Borrowed("↓"),
-
-            key => unimplemented!("{:?}", key),
-        }
-    }
-
-    fn key_name_len(key: KeyCode) -> u16 {
-        match key {
-            KeyCode::Char(' ') => 3,
-            KeyCode::Char(_) => 1,
-            KeyCode::Tab => 3,
-            KeyCode::Enter => 5,
-            KeyCode::Escape => 3,
-            KeyCode::UpArrow => 1,
-            KeyCode::DownArrow => 1,
-
-            key => unimplemented!("{:?}", key),
-        }
-    }
 }
 
 impl<T> Styled for Button<'_, T> {
@@ -221,27 +205,31 @@ impl<T> UiWidget<T> for Button<'_, T> {
     type Response = ButtonResponse;
 
     fn render(mut self, ui: &mut Ui<T>) -> Self::Response {
+        (&mut self).render(ui)
+    }
+}
+
+impl<T> UiWidget<T> for &mut Button<'_, T> {
+    type Response = ButtonResponse;
+
+    fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
-        let is_mouse_only = self.is_mouse_only();
+        let has_keys = self.supports_kbd();
 
         ui.clamp(area, |ui| {
             ui.row(|ui| {
-                if is_mouse_only {
-                    ui.span(Span::styled("[", label_style));
-                    ui.span(Span::styled(self.label, key_style));
-                    ui.span(Span::styled("]", label_style));
-                } else {
+                if has_keys {
                     ui.span(Span::styled("[", label_style));
 
-                    for (idx, (key, _)) in self.options.iter().enumerate() {
+                    for (idx, opt) in self.options.iter().enumerate() {
                         if idx > 0 {
                             ui.span(Span::styled("/", label_style));
                         }
 
                         ui.span(Span::styled(
-                            Self::key_name(key.unwrap()),
+                            key_name(opt.key.unwrap()),
                             key_style,
                         ));
                     }
@@ -249,9 +237,13 @@ impl<T> UiWidget<T> for Button<'_, T> {
                     ui.span(Span::styled("] ", label_style));
 
                     ui.span(Span::styled(
-                        self.label,
+                        self.label.as_str(),
                         label_style.patch(self.style),
                     ));
+                } else {
+                    ui.span(Span::styled("[", label_style));
+                    ui.span(Span::styled(self.label.as_str(), key_style));
+                    ui.span(Span::styled("]", label_style));
                 }
             });
         });
@@ -262,18 +254,18 @@ impl<T> UiWidget<T> for Button<'_, T> {
             ui.space(area.height);
         }
 
-        if let Some(help) = self.help {
+        if let Some(help) = &self.help {
             assert!(ui.layout.is_col());
 
             ui.row(|ui| {
                 ui.space(4);
-                ui.line(Text::raw(help).fg(theme::GRAY));
+                ui.line(Text::raw(help.as_str()).fg(theme::GRAY));
             });
         }
 
         if resp.pressed
             && let Some(idx) = resp.option
-            && let Some(event) = self.options.swap_remove(idx).1
+            && let Some(event) = self.options[idx].event.take()
         {
             ui.throw(event);
         }
@@ -282,9 +274,43 @@ impl<T> UiWidget<T> for Button<'_, T> {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
+struct ButtonOption<T> {
+    key: Option<KeyCode>,
+    event: Option<T>,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 pub struct ButtonResponse {
     pub hovered: bool,
     pub pressed: bool,
     pub option: Option<usize>,
+}
+
+fn key_name(key: KeyCode) -> Cow<'static, str> {
+    match key {
+        KeyCode::Char(' ') => Cow::Borrowed("spc"),
+        KeyCode::Char(ch) => Cow::Owned(ch.to_string()),
+        KeyCode::Tab => Cow::Borrowed("tab"),
+        KeyCode::Enter => Cow::Borrowed("enter"),
+        KeyCode::Escape => Cow::Borrowed("esc"),
+        KeyCode::UpArrow => Cow::Borrowed("↑"),
+        KeyCode::DownArrow => Cow::Borrowed("↓"),
+
+        key => unimplemented!("{:?}", key),
+    }
+}
+
+fn key_name_len(key: KeyCode) -> u16 {
+    match key {
+        KeyCode::Char(' ') => 3,
+        KeyCode::Char(_) => 1,
+        KeyCode::Tab => 3,
+        KeyCode::Enter => 5,
+        KeyCode::Escape => 3,
+        KeyCode::UpArrow => 1,
+        KeyCode::DownArrow => 1,
+
+        key => unimplemented!("{:?}", key),
+    }
 }
