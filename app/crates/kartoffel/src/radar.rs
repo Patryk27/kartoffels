@@ -189,7 +189,7 @@ pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
 ///
 /// # Coordinate system
 ///
-/// [`Self::at()`] and [`Self::bot_at()`] work in robot-centric coordinate
+/// [`Self::at()`] and [`Self::bot_at()`] work in a robot-centric coordinate
 /// system, that is:
 ///
 /// - `.at(0, 0)` returns the robot itself (`'@'`),
