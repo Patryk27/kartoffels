@@ -337,7 +337,7 @@ impl Worlds {
     }
 
     fn rebuild_public_idx(&self) {
-        let public_idx = build_public_idx(&*self.entries.load());
+        let public_idx = build_public_idx(&self.entries.load());
 
         self.public_idx.swap(Arc::new(public_idx));
     }
