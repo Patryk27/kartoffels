@@ -276,10 +276,10 @@ impl InspectBotModal {
             }
 
             let join =
-                Button::new(KeyCode::Enter, "join").throwing(Event::JoinBot);
+                Button::new("join", KeyCode::Enter).throwing(Event::JoinBot);
 
             let close =
-                Button::new(KeyCode::Escape, "close").throwing(Event::GoBack);
+                Button::new("close", KeyCode::Escape).throwing(Event::GoBack);
 
             let [_, join_area, _, close_area] = Layout::horizontal([
                 Constraint::Fill(1),
@@ -336,9 +336,9 @@ impl Tab {
 
     fn btn(&self) -> Button<Event> {
         let btn = match self {
-            Tab::Stats => Button::new(KeyCode::Char('s'), "stats"),
-            Tab::Events => Button::new(KeyCode::Char('e'), "events"),
-            Tab::Lives => Button::new(KeyCode::Char('l'), "lives"),
+            Tab::Stats => Button::new("stats", KeyCode::Char('s')),
+            Tab::Events => Button::new("events", KeyCode::Char('e')),
+            Tab::Lives => Button::new("lives", KeyCode::Char('l')),
         };
 
         btn.throwing(Event::ChangeTab(*self))

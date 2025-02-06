@@ -11,7 +11,7 @@ pub enum BotPosition {
 
 impl BotPosition {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('p'), format!("position: {val}"))
+        Button::new(format!("position: {val}"), KeyCode::Char('p'))
             .throwing(Event::FocusOn(Some(Focus::BotPosition)))
             .render(ui);
     }
@@ -22,7 +22,7 @@ impl BotPosition {
                 ui.space(1);
             }
 
-            Button::new(val.key(), val.to_string())
+            Button::new(val.to_string(), val.key())
                 .help(val.desc())
                 .throwing(Event::SetBotPosition(val))
                 .render(ui);

@@ -16,11 +16,11 @@ impl JoinBotModal {
             ui.space(1);
 
             ui.row(|ui| {
-                Button::new(KeyCode::Escape, "cancel")
+                Button::new("cancel", KeyCode::Escape)
                     .throwing(Event::CloseModal)
                     .render(ui);
 
-                if Button::new(KeyCode::Enter, "join")
+                if Button::new("join", KeyCode::Enter)
                     .right_aligned()
                     .render(ui)
                     .pressed

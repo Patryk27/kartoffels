@@ -148,25 +148,25 @@ impl BotsModal {
 
     fn render_footer(&mut self, ui: &mut Ui<Event>) {
         ui.row(|ui| {
-            Button::new(KeyCode::Char('w'), "scroll-up")
+            Button::new("scroll-up", KeyCode::Char('w'))
                 .throwing(Event::ScrollUp)
                 .enabled(self.selected.is_nth())
                 .render(ui);
 
             ui.space(4);
 
-            Button::new(KeyCode::UpArrow, "select-up")
+            Button::new("select-up", KeyCode::UpArrow)
                 .throwing(Event::SelectUp)
                 .enabled(self.selected.is_nth())
                 .render(ui);
 
             if self.selected.is_nth() {
-                Button::new(KeyCode::Char('t'), "track-id")
+                Button::new("track-id", KeyCode::Char('t'))
                     .throwing(Event::TrackId)
                     .right_aligned()
                     .render(ui);
             } else {
-                Button::new(KeyCode::Char('t'), "track-nth")
+                Button::new("track-nth", KeyCode::Char('t'))
                     .throwing(Event::TrackNth)
                     .right_aligned()
                     .render(ui);
@@ -174,19 +174,19 @@ impl BotsModal {
         });
 
         ui.row(|ui| {
-            Button::new(KeyCode::Char('s'), "scroll-down")
+            Button::new("scroll-down", KeyCode::Char('s'))
                 .throwing(Event::ScrollDown)
                 .enabled(self.selected.is_nth())
                 .render(ui);
 
             ui.space(2);
 
-            Button::new(KeyCode::DownArrow, "select-down")
+            Button::new("select-down", KeyCode::DownArrow)
                 .throwing(Event::SelectDown)
                 .enabled(self.selected.is_nth())
                 .render(ui);
 
-            Button::new(KeyCode::Escape, "close")
+            Button::new("close", KeyCode::Escape)
                 .throwing(Event::Parent(ParentEvent::CloseModal))
                 .right_aligned()
                 .render(ui);
@@ -328,7 +328,7 @@ impl UiWidget<Event> for Row<'_> {
         let inspect = {
             let key = is_selected.then_some(KeyCode::Enter);
 
-            Button::new(key, "inspect").throwing(Event::Parent(
+            Button::new("inspect", key).throwing(Event::Parent(
                 ParentEvent::InspectBot { id: self.bot.id },
             ))
         };

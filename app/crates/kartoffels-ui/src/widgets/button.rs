@@ -17,8 +17,8 @@ pub struct Button<'a, T> {
 
 impl<'a, T> Button<'a, T> {
     pub fn new(
-        key: impl Into<Option<KeyCode>>,
         label: impl Into<Cow<'a, str>>,
+        key: impl Into<Option<KeyCode>>,
     ) -> Self {
         Self {
             label: label.into(),
@@ -30,7 +30,6 @@ impl<'a, T> Button<'a, T> {
         }
     }
 
-    // TODO separate into a different widget
     pub fn multi(label: impl Into<Cow<'a, str>>) -> Self {
         Self {
             label: label.into(),

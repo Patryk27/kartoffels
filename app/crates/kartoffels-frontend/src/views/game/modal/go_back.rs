@@ -12,11 +12,11 @@ impl GoBackModal {
             ui.line("");
 
             ui.row(|ui| {
-                Button::new(KeyCode::Char('n'), "no")
+                Button::new("no", KeyCode::Char('n'))
                     .throwing(Event::CloseModal)
                     .render(ui);
 
-                Button::new(KeyCode::Char('y'), "yes")
+                Button::new("yes", KeyCode::Char('y'))
                     .throwing(Event::GoBack { confirm: false })
                     .right_aligned()
                     .render(ui);

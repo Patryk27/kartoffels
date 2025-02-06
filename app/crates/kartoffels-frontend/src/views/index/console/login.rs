@@ -24,11 +24,11 @@ pub async fn run(
                     ui.space(1);
 
                     ui.row(|ui| {
-                        Button::new(KeyCode::Escape, "go-back")
+                        Button::new("go-back", KeyCode::Escape)
                             .throwing(InnerEvent::GoBack)
                             .render(ui);
 
-                        if Button::new(KeyCode::Enter, "login")
+                        if Button::new("login", KeyCode::Enter)
                             .right_aligned()
                             .render(ui)
                             .pressed

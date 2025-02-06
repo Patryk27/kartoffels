@@ -42,7 +42,7 @@ impl BottomPanel {
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
-        Button::new(KeyCode::Escape, "go-back")
+        Button::new("go-back", KeyCode::Escape)
             .throwing(Event::GoBack { confirm: true })
             .render(ui);
     }
@@ -53,7 +53,7 @@ impl BottomPanel {
         let label = if state.paused { "resume" } else { "pause" };
         let enabled = state.config.can_pause;
 
-        Button::new(KeyCode::Char(' '), label)
+        Button::new(label, KeyCode::Char(' '))
             .throwing(Event::TogglePause)
             .enabled(enabled)
             .render(ui);
@@ -62,7 +62,7 @@ impl BottomPanel {
     fn render_restart_btn(ui: &mut Ui<Event>) {
         ui.space(2);
 
-        Button::new(KeyCode::Char('r'), "restart")
+        Button::new("restart", KeyCode::Char('r'))
             .throwing(Event::Restart)
             .render(ui);
     }
@@ -70,7 +70,7 @@ impl BottomPanel {
     fn render_help_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
-        Button::new(KeyCode::Char('h'), "help")
+        Button::new("help", KeyCode::Char('h'))
             .throwing(Event::OpenHelpModal)
             .enabled(state.help.is_some())
             .render(ui);
@@ -80,7 +80,7 @@ impl BottomPanel {
         if !state.config.hero_mode {
             ui.space(2);
 
-            Button::new(KeyCode::Char('b'), "bots")
+            Button::new("bots", KeyCode::Char('b'))
                 .throwing(Event::OpenBotsModal)
                 .render(ui);
         }

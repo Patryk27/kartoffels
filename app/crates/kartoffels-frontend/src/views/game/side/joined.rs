@@ -108,7 +108,7 @@ impl JoinedSidePanel {
         let mut btns = Vec::new();
 
         btns.push(
-            Button::new(KeyCode::Char('i'), "inspect-bot")
+            Button::new("inspect-bot", KeyCode::Char('i'))
                 .throwing(Event::InspectBot { id: bot.id }),
         );
 
@@ -119,12 +119,12 @@ impl JoinedSidePanel {
                 "follow-bot"
             };
 
-            Button::new(KeyCode::Char('f'), label).throwing(Event::FollowBot)
+            Button::new(label, KeyCode::Char('f')).throwing(Event::FollowBot)
         });
 
         if state.config.can_restart_bots {
             btns.push(
-                Button::new(KeyCode::Char('R'), "restart-bot")
+                Button::new("restart-bot", KeyCode::Char('R'))
                     .throwing(Event::RestartBot)
                     .enabled(!state.paused),
             );
@@ -132,7 +132,7 @@ impl JoinedSidePanel {
 
         if state.config.can_delete_bots {
             btns.push(
-                Button::new(KeyCode::Char('D'), "delete-bot")
+                Button::new("delete-bot", KeyCode::Char('D'))
                     .throwing(Event::DeleteBot)
                     .enabled(!state.paused),
             );
@@ -140,7 +140,7 @@ impl JoinedSidePanel {
 
         if !state.config.hero_mode {
             btns.push(
-                Button::new(KeyCode::Char('l'), "leave-bot")
+                Button::new("leave-bot", KeyCode::Char('l'))
                     .throwing(Event::LeaveBot),
             );
         }

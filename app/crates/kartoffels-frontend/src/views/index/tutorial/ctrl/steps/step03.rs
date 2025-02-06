@@ -15,7 +15,7 @@ static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::new(KeyCode::Char('c'), "copy-command", "copy"),
+        MsgButton::new("copy-command", KeyCode::Char('c'), "copy"),
         MsgButton::confirm("next", "next"),
     ],
 });

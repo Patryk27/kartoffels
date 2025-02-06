@@ -77,7 +77,7 @@ async fn run_once(
 
                 ui.info_window(width, height, Some(" challenges "), |ui| {
                     for chl in CHALLENGES {
-                        Button::new(chl.key, chl.name)
+                        Button::new(chl.name, chl.key)
                             .help(chl.desc)
                             .throwing(Event::Play(chl))
                             .render(ui);
@@ -85,7 +85,7 @@ async fn run_once(
                         ui.space(1);
                     }
 
-                    Button::new(KeyCode::Escape, "go-back")
+                    Button::new("go-back", KeyCode::Escape)
                         .throwing(Event::GoBack)
                         .render(ui);
                 });

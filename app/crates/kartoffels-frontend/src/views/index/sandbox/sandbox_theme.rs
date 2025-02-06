@@ -10,14 +10,14 @@ pub enum SandboxTheme {
 
 impl SandboxTheme {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(KeyCode::Char('t'), format!("theme: {val}"))
+        Button::new(format!("theme: {val}"), KeyCode::Char('t'))
             .throwing(Event::FocusOn(Some(Focus::SandboxTheme)))
             .render(ui);
     }
 
     pub fn render_choice(ui: &mut Ui<Event>) {
         for val in SandboxTheme::all() {
-            Button::new(val.key(), val.to_string())
+            Button::new(val.to_string(), val.key())
                 .throwing(Event::SetTheme(val))
                 .render(ui);
         }

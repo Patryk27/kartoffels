@@ -74,14 +74,14 @@ async fn run_once(
                     for (idx, world) in worlds.iter().enumerate() {
                         let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-                        if Button::new(key, world.name()).render(ui).pressed {
+                        if Button::new(world.name(), key).render(ui).pressed {
                             ui.throw(Event::Play(world.clone()));
                         }
                     }
 
                     ui.space(1);
 
-                    Button::new(KeyCode::Escape, "go-back")
+                    Button::new("go-back", KeyCode::Escape)
                         .throwing(Event::GoBack)
                         .render(ui);
                 });

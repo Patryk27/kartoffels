@@ -207,12 +207,12 @@ impl Form<'_> {
         ui.space(1);
 
         ui.row(|ui| {
-            Button::new(KeyCode::Escape, "go-back")
+            Button::new("go-back", KeyCode::Escape)
                 .throwing(Event::GoBack)
                 .render(ui);
 
             if self.focus.is_none() {
-                Button::new(KeyCode::Enter, "create")
+                Button::new("create", KeyCode::Enter)
                     .right_aligned()
                     .throwing(Event::Confirm)
                     .render(ui);
