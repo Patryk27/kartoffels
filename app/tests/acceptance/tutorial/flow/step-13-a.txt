@@ -18,7 +18,7 @@
         │ overall, all of those functions should be used:              │
         │                                                              │
         │     - motor_wait()                                           │
-        │     - motor_step()                                           │
+        │     - motor_step_fw()                                        │
         │     - motor_turn_left()                                      │
         │     - motor_turn_right()                                     │
         │     - radar_wait()                                           │

@@ -39,9 +39,9 @@ pub fn arm_wait() {
     }
 }
 
-/// Stabs the bot in front of you, killing it.
+/// Stabs the robot in front of you, killing it.
 ///
-/// If there's no bot there, nothing happens (but the cooldown is still
+/// If there's no robot there, nothing happens (but the cooldown is still
 /// applied).
 ///
 /// # Cooldown

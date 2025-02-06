@@ -3,8 +3,8 @@ use crate::{rdi, MEM_COMPASS};
 /// Returns which direction the robot was facing at the time of the latest
 /// measurement, and then removes that measurement from the compass.
 ///
-/// The first measurement is available immediately after the bot is born, and it
-/// corresponds to the robot's direction right after spawning, while the next
+/// The first measurement is available immediately after the robot is born, and
+/// it corresponds to the robot's direction right after spawning, while the next
 /// measurements are provided automatically every ~128k ticks (~2s).
 ///
 /// Calling this function before the next measurement is ready returns zero,

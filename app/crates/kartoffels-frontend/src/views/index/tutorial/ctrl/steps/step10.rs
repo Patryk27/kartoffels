@@ -29,7 +29,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "make sure you removed the call to `motor_turn_right()` and upload \
-             the bot again",
+             the robot again",
         ),
     ],
 
@@ -42,7 +42,7 @@ static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new(
             "make sure you removed the call to `motor_turn_right()` and upload \
-             the bot again",
+             the robot again",
         ),
         MsgLine::web(""),
         MsgLine::web("!! don't forget to re-run `./build` !!"),

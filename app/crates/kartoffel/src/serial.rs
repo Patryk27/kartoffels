@@ -8,7 +8,8 @@ use core::fmt;
 /// first one.
 ///
 /// Note that this is a low-level function - for convenience you'll most likely
-/// want to use [`crate::print!()`] or [`crate::println!()`].
+/// want to use [`print!()`](crate::print!()) or
+/// [`println!()`](crate::println!()).
 ///
 /// See also: [`serial_buffer()`].
 ///
@@ -40,8 +41,8 @@ pub fn serial_write(ch: char) {
 /// In this mode all characters written into the serial port get buffered until
 /// you call [`serial_flush()`] or [`serial_clear()`].
 ///
-/// This comes handy for animations, interactive UIs etc., since it prevents the
-/// tearing artifact (seeing partially written text).
+/// This comes handy for animations, interactive UIs etc., since it prevents
+/// seeing partially written text (also known as _tearing_).
 ///
 /// # Example
 ///
@@ -82,7 +83,7 @@ pub fn serial_clear() {
 
 /// Allows to `write!()` and `writeln!()` into the serial port.
 ///
-/// See also: [`crate::print!()`], [`crate::println!()`].
+/// See also: [`print!()`](crate::print!()), [`println!()`](crate::println!()).
 ///
 /// # Example
 ///

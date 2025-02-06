@@ -1,9 +1,9 @@
 //! # kartoffel
 //!
-//! This crate provides basic building blocks for implementing custom robots for
-//! the [kartoffels](https://kartoffels.pwy.io) game.
+//! This crate provides building blocks for implementing a robot for the
+//! [kartoffels](https://kartoffels.pwy.io) game - see:
 //!
-//! For example usage, see <https://github.com/patryk27/kartoffel>.
+//! <https://github.com/patryk27/kartoffel>
 
 #![no_std]
 

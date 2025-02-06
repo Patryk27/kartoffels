@@ -1,24 +1,8 @@
 use crate::{cmd, rdi, wri, MEM_MOTOR};
 
-/// Returns whether the motor is ready and [`motor_step()`] or [`motor_turn()`]
-/// can be invoked.
+/// Returns whether the motor is ready and [`motor_pulse()`] can be invoked.
 ///
 /// See also: [`motor_wait()`].
-///
-/// # Example
-///
-/// ```no_run
-/// # use kartoffel::*;
-/// #
-/// loop {
-///     if is_motor_ready() {
-///         motor_wait();
-///         break;
-///     } else {
-///         // do something else while we're waiting
-///     }
-/// }
-/// ```
 #[inline(always)]
 pub fn is_motor_ready() -> bool {
     rdi(MEM_MOTOR, 0) == 1
@@ -37,7 +21,7 @@ pub fn is_motor_ready() -> bool {
 ///     motor_wait();
 ///     motor_turn_left();
 ///     motor_wait();
-///     motor_step();
+///     motor_step_fw();
 /// }
 /// ```
 #[inline(always)]
@@ -47,7 +31,41 @@ pub fn motor_wait() {
     }
 }
 
-/// Moves the bot one tile forward in the direction it's facing.
+/// Sends a pulse to the motors.
+///
+/// Outcome depends on the parameters - legal combinations are:
+///
+/// - `(1, 1)` - robot drives forward,
+/// - `(-1, -1)` - robot drives backward,
+/// - `(-1, 1)` - robot turns left (counterclockwise),
+/// - `(1, -1)` - robot turns right (clockwise).
+///
+/// Other values will cause the CPU to crash.
+///
+/// Note that this is a low-level function - for convenience you'll most likely
+/// want to use one of:
+///
+/// - [`motor_step_fw()`],
+/// - [`motor_step_bw()`],
+/// - [`motor_turn_left()`],
+/// - [`motor_turn_right()`].
+///
+/// # Cooldown
+///
+/// Depends on the parameters, see:
+///
+/// - [`motor_step_fw()`],
+/// - [`motor_step_bw()`],
+/// - [`motor_turn_left()`],
+/// - [`motor_turn_right()`],
+#[inline(always)]
+pub fn motor_pulse(left: i8, right: i8) {
+    wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
+}
+
+/// Moves the robot one tile forward in the direction it's facing.
+///
+/// See also: [`motor_step_bw()`], [`motor_pulse()`].
 ///
 /// # Cooldown
 ///
@@ -61,30 +79,21 @@ pub fn motor_wait() {
 /// # use kartoffel::*;
 /// #
 /// motor_wait();
-/// motor_step();
+/// motor_step_fw();
 /// ```
 #[inline(always)]
-pub fn motor_step() {
-    wri(MEM_MOTOR, 0, cmd(0x01, 0x00, 0x00, 0x00));
+pub fn motor_step_fw() {
+    motor_pulse(1, 1);
 }
 
-/// Turns the bot.
+/// Moves the robot one tile backward from the direction it's facing.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use [`motor_turn_left()`] or [`motor_turn_right()`].
-///
-/// # Input
-///
-/// - if dir == -1, the bot turns left (counterclockwise),
-/// - if dir == 1, the bot turns right (clockwise),
-/// - if dir == 0, the bot does nothing.
-///
-/// Other values of `dir` are illegal and will crash the firmware.
+/// See also: [`motor_step_fw()`], [`motor_pulse()`].
 ///
 /// # Cooldown
 ///
 /// ```text
-/// 10_000 +- 15% ticks (~150 ms)
+/// 30_000 +- 15% ticks (~468 ms)
 /// ```
 ///
 /// # Example
@@ -93,24 +102,21 @@ pub fn motor_step() {
 /// # use kartoffel::*;
 /// #
 /// motor_wait();
-/// motor_turn(-1); // turns left (counterclockwise)
-///
-/// motor_wait();
-/// motor_turn(1); // turns right (clockwise)
+/// motor_step_bw();
 /// ```
 #[inline(always)]
-pub fn motor_turn(dir: i8) {
-    wri(MEM_MOTOR, 0, cmd(0x02, dir as u8, 0x00, 0x00));
+pub fn motor_step_bw() {
+    motor_pulse(-1, -1);
 }
 
-/// Turns the bot left (counterclockwise).
+/// Turns the robot to its left (i.e. counterclockwise).
 ///
-/// See also: [`motor_turn()`], [`motor_turn_right()`].
+/// See also: [`motor_turn_right()`], [`motor_pulse()`].
 ///
 /// # Cooldown
 ///
 /// ```text
-/// 10_000 +- 15% ticks (~150 ms)
+/// 25_000 +- 15% ticks (~390 ms)
 /// ```
 ///
 /// # Example
@@ -123,17 +129,17 @@ pub fn motor_turn(dir: i8) {
 /// ```
 #[inline(always)]
 pub fn motor_turn_left() {
-    motor_turn(-1);
+    motor_pulse(-1, 1);
 }
 
-/// Turns the bot right (clockwise).
+/// Turns the robot to its right (i.e. clockwise).
 ///
-/// See also: [`motor_turn()`], [`motor_turn_left()`].
+/// See also: [`motor_turn_left()`], [`motor_pulse()`].
 ///
 /// # Cooldown
 ///
 /// ```text
-/// 10_000 +- 15% ticks (~150 ms)
+/// 25_000 +- 15% ticks (~390 ms)
 /// ```
 ///
 /// # Example
@@ -146,5 +152,5 @@ pub fn motor_turn_left() {
 /// ```
 #[inline(always)]
 pub fn motor_turn_right() {
-    motor_turn(1);
+    motor_pulse(1, -1);
 }

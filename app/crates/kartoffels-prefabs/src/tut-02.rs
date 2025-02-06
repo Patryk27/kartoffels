@@ -8,6 +8,6 @@ use kartoffel::*;
 fn main() {
     loop {
         motor_wait();
-        motor_step();
+        motor_step_fw();
     }
 }

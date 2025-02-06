@@ -20,7 +20,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "this boi returns a scan representing the 3x3 square around your \
-             bot, allowing you to see tiles and other bots:",
+             robot, allowing you to see tiles and other robots:",
         ),
         MsgLine::new(""),
         MsgLine::new("    let scan = radar_scan_3x3();"),

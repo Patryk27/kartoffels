@@ -22,16 +22,16 @@ fn main() {
         if scan.at(0, -1) == '.' {
             if scan.at(1, -1) == '-' || scan.at(1, -1) == '|' {
                 motor_wait();
-                motor_step();
+                motor_step_fw();
             } else {
                 motor_wait();
-                motor_step();
+                motor_step_fw();
 
                 motor_wait();
                 motor_turn_right();
 
                 motor_wait();
-                motor_step();
+                motor_step_fw();
             }
         } else {
             motor_wait();

@@ -24,15 +24,15 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("# arm_stab()"),
         MsgLine::new(""),
         MsgLine::new(
-            "stabs the bot that's directly in front of you, killing it and \
+            "stabs the robot that's directly in front of you, killing it and \
              giving your robot one point — note that you have to be _facing_ \
-             the other bot in order to stab it",
+             the other robot in order to stab it",
         ),
         MsgLine::new(""),
         MsgLine::new("easy enough, isn't it?"),
         MsgLine::new(""),
         MsgLine::new(
-            "now, to complete the tutorial, implement a bot that does a 3x3 \
+            "now, to complete the tutorial, implement a robot that does a 3x3 \
              radar scan, rotates towards the closest enemy (`'@'`), goes \
              forward and stabs it; when no enemy is in sight, let your robot \
              continue moving in its current direction",

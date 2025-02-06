@@ -289,7 +289,7 @@ fn drive(pos: &mut I8Vec2, dir: &mut Dir, target: I8Vec2) {
             print!("^ ");
 
             motor_wait();
-            motor_step();
+            motor_step_fw();
         }
 
         (Dir::N, Dir::W)
@@ -301,7 +301,7 @@ fn drive(pos: &mut I8Vec2, dir: &mut Dir, target: I8Vec2) {
             motor_wait();
             motor_turn_left();
             motor_wait();
-            motor_step();
+            motor_step_fw();
         }
 
         (Dir::N, Dir::E)
@@ -313,7 +313,7 @@ fn drive(pos: &mut I8Vec2, dir: &mut Dir, target: I8Vec2) {
             motor_wait();
             motor_turn_right();
             motor_wait();
-            motor_step();
+            motor_step_fw();
         }
 
         (Dir::N, Dir::S)
@@ -327,7 +327,7 @@ fn drive(pos: &mut I8Vec2, dir: &mut Dir, target: I8Vec2) {
             motor_wait();
             motor_turn_left();
             motor_wait();
-            motor_step();
+            motor_step_fw();
         }
     }
 
@@ -349,7 +349,7 @@ fn pick(map: &mut Map, pos: I8Vec2) -> bool {
         // don't do `*pos = *pos + target;` if `target` points at a flag, but
         // it's easier to actually just walk there.
         motor_wait();
-        motor_step();
+        motor_step_fw();
 
         map.set(pos, Tile::Floor);
 

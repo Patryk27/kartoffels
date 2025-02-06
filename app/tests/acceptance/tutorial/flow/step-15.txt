@@ -8,13 +8,13 @@
         │                                                              │
         │ # arm_stab()                                                 │
         │                                                              │
-        │ stabs the bot that's directly in front of you, killing it    │
+        │ stabs the robot that's directly in front of you, killing it  │
         │ and giving your robot one point — note that you have to be   │
-        │ facing the other bot in order to stab it                     │
+        │ facing the other robot in order to stab it                   │
         │                                                              │
         │ easy enough, isn't it?                                       │
         │                                                              │
-        │ now, to complete the tutorial, implement a bot that does a   │
+        │ now, to complete the tutorial, implement a robot that does a │
         │ 3x3 radar scan, rotates towards the closest enemy ('@'),     │
         │ goes forward and stabs it; when no enemy is in sight, let    │
         │ your robot continue moving in its current direction          │

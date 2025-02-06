@@ -4,14 +4,14 @@
         │                                                              │
         │ now let's try to unwrap what the code does:                  │
         │                                                              │
-        │ # motor_step()                                               │
+        │ # motor_step_fw()                                            │
         │                                                              │
-        │ this boi causes the bot to move one tile in the direction    │
-        │ the robot is currently facing (north / east / west / south)  │
+        │ this boi causes the robot to move one tile forward in the    │
+        │ direction it's facing (north / east / west / south)          │
         │                                                              │
         │ # motor_turn_*()                                             │
         │                                                              │
-        │ this boi causes the bot to turn left (counterclockwise) or   │
+        │ this boi causes the robot to turn left (counterclockwise) or │
         │ right (clockwise)                                            │
         │                                                              │
         │ # motor_wait()                                               │
@@ -20,9 +20,9 @@
         │ command                                                      │
         │                                                              │
         │ waiting for readiness is important, because the cpu is much  │
-        │ faster than motor, so calling motor_step() two times in a    │
+        │ faster than motor, so calling motor_step_fw() two times in a │
         │ row without motor_wait() in-between would actually move the  │
-        │ bot just one tile forward                                    │
+        │ machine just one tile forward                                │
         │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘

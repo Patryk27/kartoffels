@@ -19,7 +19,7 @@ fn main() {
 
     for _ in 0..2 {
         motor_wait();
-        motor_step();
+        motor_step_fw();
     }
 
     loop {
@@ -36,7 +36,7 @@ fn main() {
         match scan.at(0, -1) {
             '.' => {
                 motor_wait();
-                motor_step();
+                motor_step_fw();
             }
 
             '|' | '-' => {
@@ -92,7 +92,7 @@ fn attack_enemy(dx: i8, dy: i8) {
             }
         } else {
             motor_wait();
-            motor_step();
+            motor_step_fw();
         }
     } else {
         if dx < 0 {

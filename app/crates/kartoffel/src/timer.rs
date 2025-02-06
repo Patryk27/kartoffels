@@ -4,13 +4,13 @@ use crate::{rdi, MEM_TIMER};
 /// for hashmaps and the like.
 ///
 /// Note that this doesn't return a *new* random number each time it's called -
-/// the number is randomized once, when the bot is born.
+/// the number is randomized once, when the robot is born.
 #[inline(always)]
 pub fn timer_seed() -> u32 {
     rdi(MEM_TIMER, 0)
 }
 
-/// Returns the number of ticks that have passed since the bot's been born.
+/// Returns the number of ticks that have passed since the robot's been born.
 ///
 /// This counter overflows after about 18 hours, after which it will start
 /// counting from zero.

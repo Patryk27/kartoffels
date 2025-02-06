@@ -7,8 +7,8 @@
                    .................
         ┌──────────────────────────── help ────────────────────────────┐
         │ remove the call to motor_turn_right(), so that everything    │
-        │ the robot does is just motor_wait() and motor_step(), then   │
-        │ close this message and upload the updated bot                │
+        │ the robot does is just motor_wait() and motor_step_fw(),     │
+        │ then close this message and upload the new robot             │
         │                                                              │
         │ !! don't forget to re-run ./build !!                         │
         │                                                              │

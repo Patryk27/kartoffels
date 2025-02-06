@@ -5,6 +5,7 @@ use glam::IVec2;
 /// This exists mostly to avoid borrowck issues - e.g. moving a robot requires
 /// unique access to the entire `world.bots`, which conflicts with `.tick()`
 /// that needs unique access to the bot itself.
+// TODO ^ this is refactorable
 #[derive(Debug)]
 pub enum BotAction {
     ArmDrop { at: IVec2, idx: u8 },

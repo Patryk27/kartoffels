@@ -13,7 +13,7 @@ fn main() {
 
         if scan.at(0, -1) == '.' {
             motor_wait();
-            motor_step();
+            motor_step_fw();
         } else if scan.at(-1, 0) == '.' {
             motor_wait();
             motor_turn_left();

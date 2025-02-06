@@ -21,8 +21,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
             "remove the call to `motor_turn_right()`, so that everything the \
-             robot does is just `motor_wait()` and `motor_step()`, then close \
-             this message and upload the updated bot",
+             robot does is just `motor_wait()` and `motor_step_fw()`, then \
+             close this message and upload the new robot",
         ),
         MsgLine::web(""),
         MsgLine::web("!! don't forget to re-run `./build` !!"),

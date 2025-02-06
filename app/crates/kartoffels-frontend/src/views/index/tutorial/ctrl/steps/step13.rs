@@ -45,7 +45,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("overall, all of those functions should be used:"),
         MsgLine::new(""),
         MsgLine::new("\t- `motor_wait()`"),
-        MsgLine::new("\t- `motor_step()`"),
+        MsgLine::new("\t- `motor_step_fw()`"),
         MsgLine::new("\t- `motor_turn_left()`"),
         MsgLine::new("\t- `motor_turn_right()`"),
         MsgLine::new("\t- `radar_wait()`"),

@@ -27,7 +27,7 @@ impl BotMotor {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_MOTOR, [0x01, 0x00, 0x00, 0x00]) => {
+            (AliveBot::MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + *ctxt.dir,
@@ -39,23 +39,33 @@ impl BotMotor {
                 Ok(())
             }
 
-            (AliveBot::MEM_MOTOR, [0x02, 0x00, 0x00, 0x00]) => Ok(()),
-
-            (AliveBot::MEM_MOTOR, [0x02, 0x01, 0x00, 0x00]) => {
+            (AliveBot::MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
-                    *ctxt.dir = ctxt.dir.turned_right();
+                    *ctxt.action = Some(BotAction::MotorMove {
+                        at: ctxt.pos + ctxt.dir.turned_back(),
+                    });
 
-                    self.cooldown = ctxt.cooldown(15000, 15);
+                    self.cooldown = ctxt.cooldown(30_000, 15);
                 }
 
                 Ok(())
             }
 
-            (AliveBot::MEM_MOTOR, [0x02, 0xff, 0x00, 0x00]) => {
+            (AliveBot::MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
+                if self.cooldown == 0 {
+                    *ctxt.dir = ctxt.dir.turned_right();
+
+                    self.cooldown = ctxt.cooldown(25_000, 15);
+                }
+
+                Ok(())
+            }
+
+            (AliveBot::MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.dir = ctxt.dir.turned_left();
 
-                    self.cooldown = ctxt.cooldown(15000, 15);
+                    self.cooldown = ctxt.cooldown(25_000, 15);
                 }
 
                 Ok(())

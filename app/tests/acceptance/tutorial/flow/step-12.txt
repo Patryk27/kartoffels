@@ -10,7 +10,7 @@
         │ # radar_scan_3x3()                                           │
         │                                                              │
         │ this boi returns a scan representing the 3x3 square around   │
-        │ your bot, allowing you to see tiles and other bots:          │
+        │ your robot, allowing you to see tiles and other robots:      │
         │                                                              │
         │     let scan = radar_scan_3x3();                             │
         │     let tile_in_front = scan.at(0, -1);                      │

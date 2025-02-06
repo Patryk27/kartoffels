@@ -34,7 +34,7 @@ fn main() {
         if scan.at(0, -1) == '.' && got_enemy_in(&scan, -2..=2, -2..=1) {
             display.log('^');
             motor_wait();
-            motor_step();
+            motor_step_fw();
             continue;
         }
 
@@ -59,7 +59,13 @@ fn main() {
         if got_enemy_in(&scan, -2..=2, 1..=2) {
             display.log('v');
             motor_wait();
-            motor_turn(if rng.bool() { -1 } else { 1 });
+
+            if rng.bool() {
+                motor_turn_left();
+            } else {
+                motor_turn_right();
+            }
+
             continue;
         }
 
@@ -71,7 +77,7 @@ fn main() {
 
         if timer_ticks() < sample_dir_at {
             motor_wait();
-            motor_step();
+            motor_step_fw();
         } else {
             display.log('?');
 
@@ -97,7 +103,12 @@ fn main() {
 
                     3 if scan.at(0, 1) == '.' => {
                         motor_wait();
-                        motor_turn(if rng.bool() { -1 } else { 1 });
+
+                        if rng.bool() {
+                            motor_turn_left();
+                        } else {
+                            motor_turn_right();
+                        }
 
                         break false;
                     }
@@ -108,7 +119,7 @@ fn main() {
 
             if can_step {
                 motor_wait();
-                motor_step();
+                motor_step_fw();
 
                 sample_dir_at = timer_ticks() + (rng.u32() % 20) * 8000;
             }
