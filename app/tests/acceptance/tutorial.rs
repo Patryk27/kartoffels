@@ -251,6 +251,7 @@ async fn flow() {
     ctxt.upload_bot(TUT_04).await;
     ctxt.wait_for("watching").await;
     ctxt.wait_for("yay, you made it!").await;
+    ctxt.see_frame("tutorial/flow/step-16.txt").await;
 
     // ---
 
