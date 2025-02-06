@@ -6,6 +6,7 @@ use anyhow::Result;
 use kartoffels_store::{Session, Store};
 use kartoffels_ui::{Button, Fade, FadeDir, Frame, KeyCode, UiWidget};
 use kartoffels_world::prelude::Handle as WorldHandle;
+use std::iter;
 use tracing::debug;
 
 pub async fn run(
@@ -42,6 +43,35 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
+    let worlds = store.public_worlds();
+
+    if worlds.is_empty() {
+        return Ok(Event::GoBack);
+    }
+
+    let mut world_btns: Vec<_> = worlds
+        .iter()
+        .enumerate()
+        .map(|(idx, world)| {
+            let key = KeyCode::Char((b'1' + (idx as u8)) as char);
+
+            Button::new(world.name(), key).throwing(Event::Play(world.clone()))
+        })
+        .collect();
+
+    let mut go_back_btn =
+        Button::new("go-back", KeyCode::Escape).throwing(Event::GoBack);
+
+    let width = world_btns
+        .iter()
+        .chain(iter::once(&go_back_btn))
+        .map(|btn| btn.width())
+        .max()
+        .unwrap_or(0)
+        .max(11);
+
+    let height = world_btns.len() as u16 + 2;
+
     let mut fade_in = if fade_in && !store.testing() {
         Some(Fade::new(FadeDir::In))
     } else {
@@ -49,41 +79,19 @@ async fn run_once(
     };
 
     let mut fade_out: Option<(Fade, Event)> = None;
-    let worlds = store.public_worlds();
-
-    if worlds.is_empty() {
-        return Ok(Event::GoBack);
-    }
 
     loop {
         let event = frame
             .update(|ui| {
-                let width = store
-                    .public_worlds()
-                    .iter()
-                    .map(|world| world.name().len() as u16 + 4)
-                    .max()
-                    .unwrap_or(0)
-                    .max(11);
-
-                let height = store.public_worlds().len() as u16 + 2;
-
                 bg.render(ui);
 
                 ui.info_window(width, height, Some(" play "), |ui| {
-                    for (idx, world) in worlds.iter().enumerate() {
-                        let key = KeyCode::Char((b'1' + (idx as u8)) as char);
-
-                        if Button::new(world.name(), key).render(ui).pressed {
-                            ui.throw(Event::Play(world.clone()));
-                        }
+                    for btn in &mut world_btns {
+                        ui.add(btn);
                     }
 
                     ui.space(1);
-
-                    Button::new("go-back", KeyCode::Escape)
-                        .throwing(Event::GoBack)
-                        .render(ui);
+                    ui.add(&mut go_back_btn);
                 });
 
                 if let Some(fade) = &fade_in
