@@ -186,10 +186,10 @@ impl Form<'_> {
 
             SandboxTheme::Cave => {
                 let size = match self.size {
-                    SandboxSize::Tiny => uvec2(10, 10),
-                    SandboxSize::Small => uvec2(20, 15),
-                    SandboxSize::Medium => uvec2(60, 30),
-                    SandboxSize::Large => uvec2(80, 50),
+                    SandboxSize::Tiny => uvec2(16, 8),
+                    SandboxSize::Small => uvec2(24, 16),
+                    SandboxSize::Medium => uvec2(64, 32),
+                    SandboxSize::Large => uvec2(128, 64),
                 };
 
                 Theme::Cave(CaveTheme::new(size))
