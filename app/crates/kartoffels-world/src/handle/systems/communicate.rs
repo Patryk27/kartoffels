@@ -66,7 +66,7 @@ pub fn communicate(
             }
 
             Ok(Request::Rename { name: new_name, tx }) => {
-                name.0.swap(Arc::new(new_name));
+                name.0.store(Arc::new(new_name));
                 _ = tx.send(());
             }
 

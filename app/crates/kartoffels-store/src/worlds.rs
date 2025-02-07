@@ -298,8 +298,8 @@ impl Worlds {
 
         let public_idx = build_public_idx(&entries);
 
-        self.entries.swap(Arc::new(entries));
-        self.public_idx.swap(Arc::new(public_idx));
+        self.entries.store(Arc::new(entries));
+        self.public_idx.store(Arc::new(public_idx));
     }
 
     pub fn list(&self, ty: Option<WorldType>) -> Vec<(WorldType, WorldHandle)> {
@@ -339,7 +339,7 @@ impl Worlds {
     fn rebuild_public_idx(&self) {
         let public_idx = build_public_idx(&self.entries.load());
 
-        self.public_idx.swap(Arc::new(public_idx));
+        self.public_idx.store(Arc::new(public_idx));
     }
 }
 
