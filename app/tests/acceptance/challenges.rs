@@ -9,14 +9,12 @@ use termwiz::input::KeyCode;
 async fn acyclic_maze() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[c] challenges");
-
     ctxt.press(KeyCode::Char('c')).await;
     ctxt.wait_for("[a] acyclic-maze").await;
 
     ctxt.press(KeyCode::Char('a')).await;
-    ctxt.wait_for_modal("acyclic-maze").await;
+    ctxt.wait_for_window("acyclic-maze").await;
     ctxt.see_frame("challenges/acyclic-maze/1.txt").await;
 
     // ---
@@ -51,14 +49,12 @@ async fn acyclic_maze() {
 async fn diamond_heist() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[c] challenges");
-
     ctxt.press(KeyCode::Char('c')).await;
     ctxt.wait_for("[d] diamond-heist").await;
 
     ctxt.press(KeyCode::Char('d')).await;
-    ctxt.wait_for_modal("diamond-heist").await;
+    ctxt.wait_for_window("diamond-heist").await;
     ctxt.see_frame("challenges/diamond-heist/1.txt").await;
 
     // ---
@@ -91,14 +87,12 @@ async fn diamond_heist() {
 async fn personal_roomba() {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[c] challenges");
-
     ctxt.press(KeyCode::Char('c')).await;
     ctxt.wait_for("[p] personal-roomba").await;
 
     ctxt.press(KeyCode::Char('p')).await;
-    ctxt.wait_for_modal("personal-roomba").await;
+    ctxt.wait_for_window("personal-roomba").await;
     ctxt.see_frame("challenges/personal-roomba/1.txt").await;
 
     // ---

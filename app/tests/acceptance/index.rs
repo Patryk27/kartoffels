@@ -2,10 +2,10 @@ use crate::TestContext;
 
 #[tokio::test]
 async fn smoke() {
-    let mut ctxt = TestContext::new([]).await;
-
-    ctxt.wait_for(TestContext::INDEX).await;
-    ctxt.see_frame("index/smoke/1.txt").await;
+    TestContext::new([])
+        .await
+        .see_frame("index/smoke/1.txt")
+        .await;
 }
 
 #[tokio::test]

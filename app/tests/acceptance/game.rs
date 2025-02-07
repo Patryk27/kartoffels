@@ -35,7 +35,6 @@ async fn smoke() {
         TestContext::new([first, second, third]).await
     };
 
-    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see_frame("game/smoke/index-1.txt").await;
 
     ctxt.press(KeyCode::Char('p')).await;
@@ -64,7 +63,7 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Char('h')).await;
-    ctxt.wait_for_modal("help").await;
+    ctxt.wait_for_window("help").await;
     ctxt.see_frame("game/smoke/help-1.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
@@ -74,7 +73,7 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Char('b')).await;
-    ctxt.wait_for_modal("bots").await;
+    ctxt.wait_for_window("bots").await;
     ctxt.see_frame("game/smoke/bots-1.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
@@ -100,7 +99,7 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("go-back").await;
+    ctxt.wait_for_window("go-back").await;
     ctxt.see_frame("game/smoke/go-back-1.txt").await;
 
     ctxt.press(KeyCode::Char('n')).await;
@@ -108,7 +107,7 @@ async fn smoke() {
     ctxt.see_frame("game/smoke/go-back-2.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_modal("go-back").await;
+    ctxt.wait_for_window("go-back").await;
     ctxt.press(KeyCode::Char('y')).await;
     ctxt.wait_while_modal("go-back").await;
     ctxt.see_frame("game/smoke/go-back-3.txt").await;
@@ -131,7 +130,7 @@ async fn http_upload_ok() {
         TestContext::new([world]).await
     };
 
-    ctxt.wait_for(TestContext::INDEX).await;
+    ctxt.see("[p] play");
     ctxt.press(KeyCode::Char('p')).await;
 
     ctxt.wait_for("[1] world").await;
@@ -161,7 +160,7 @@ async fn http_upload_err() {
         TestContext::new([world]).await
     };
 
-    ctxt.wait_for(TestContext::INDEX).await;
+    ctxt.see("[p] play");
     ctxt.press(KeyCode::Char('p')).await;
 
     ctxt.wait_for("[1] world").await;
@@ -176,7 +175,7 @@ async fn http_upload_err() {
     let sess = ctxt.store().first_session_id();
 
     ctxt.upload_bot_http(sess, DUMMY).await;
-    ctxt.wait_for_modal("ouch").await;
+    ctxt.wait_for_window("ouch").await;
     ctxt.see("couldn't upload bot");
     ctxt.see_frame("game/http-upload-err/1.txt").await;
 
@@ -196,7 +195,7 @@ async fn cli_upload_err() {
         TestContext::new([world]).await
     };
 
-    ctxt.wait_for(TestContext::INDEX).await;
+    ctxt.see("[p] play");
     ctxt.press(KeyCode::Char('p')).await;
 
     ctxt.wait_for("[1] world").await;
@@ -205,7 +204,7 @@ async fn cli_upload_err() {
     ctxt.wait_for("[j] join-bot").await;
     ctxt.upload_bot(&[0x00]).await;
 
-    ctxt.wait_for_modal("ouch").await;
+    ctxt.wait_for_window("ouch").await;
     ctxt.see("couldn't upload bot");
     ctxt.see_frame("game/cli-upload-err/1.txt").await;
 }

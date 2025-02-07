@@ -1,0 +1,30 @@
+┌────────────────────────────────── console ───────────────────────────────────┐
+│ ; help                                                                       │
+│                                                                              │
+│ usage: kartoffels <command>                                                  │
+│                                                                              │
+│ commands:                                                                    │
+│   create-world                                                               │
+│   delete-world                                                               │
+│   list-worlds                                                                │
+│   rename-world                                                               │
+│   exit                                                                       │
+│   help          print this message or the help of the given subcommand(s)    │
+│                                                                              │
+│ options:                                                                     │
+│   -h, --help  print help                                                     │
+│                                                                              │
+│ > _                                                                          │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘

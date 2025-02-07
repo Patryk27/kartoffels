@@ -2,6 +2,7 @@
 
 mod acceptance {
     mod challenges;
+    mod console;
     mod game;
     mod index;
     mod tutorial;
@@ -43,7 +44,10 @@ impl TestContext {
         "welcome to kartoffels, a game where you're given a potato";
 
     pub async fn new(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
-        Self::new_ex(80, 30, worlds).await
+        let mut this = Self::new_ex(80, 30, worlds).await;
+
+        this.wait_for(Self::INDEX).await;
+        this
     }
 
     async fn new_ex(
@@ -135,6 +139,12 @@ impl TestContext {
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
     }
 
+    pub async fn write(&mut self, str: &str) {
+        for ch in str.chars() {
+            self.press(KeyCode::Char(ch)).await;
+        }
+    }
+
     #[track_caller]
     pub async fn sync(&mut self, version: u64) {
         self.wait_for(&format!("v{version}")).await;
@@ -158,7 +168,7 @@ impl TestContext {
     }
 
     #[track_caller]
-    pub async fn wait_for_modal(&mut self, title: &str) {
+    pub async fn wait_for_window(&mut self, title: &str) {
         self.wait_for(&format!("─ {title} ─")).await;
     }
 

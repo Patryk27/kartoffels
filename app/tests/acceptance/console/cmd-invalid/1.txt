@@ -1,0 +1,30 @@
+┌────────────────────────────────── console ───────────────────────────────────┐
+│ ; helpo                                                                      │
+│                                                                              │
+│ error: unrecognized subcommand 'helpo'                                       │
+│                                                                              │
+│   tip: a similar subcommand exists: 'help'                                   │
+│                                                                              │
+│ usage: kartoffels <command>                                                  │
+│                                                                              │
+│ for more information, try '--help'.                                          │
+│                                                                              │
+│ > _                                                                          │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘

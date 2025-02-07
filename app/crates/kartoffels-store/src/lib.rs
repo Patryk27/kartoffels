@@ -47,7 +47,8 @@ impl Store {
     }
 
     pub async fn test(worlds: impl IntoIterator<Item = WorldHandle>) -> Self {
-        let mut this = Self::new(None, None).await.unwrap();
+        let secret = "foobar".parse().unwrap();
+        let mut this = Self::new(None, Some(secret)).await.unwrap();
 
         this.worlds.set(worlds);
         this.testing = true;

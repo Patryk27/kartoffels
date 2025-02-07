@@ -1,0 +1,30 @@
+
+
+         ┌────────────────────────────────────────────────────────────┐
+         │ welcome to kartoffels, a game where you're given a potato: │
+         │                                                            │
+         │                           ██████                           │
+         │                         ██░░░░░░██                         │
+         │                       ██░░░░░░░░░░██                       │
+         │                       ██░░░░░░░░░░██                       │
+         │                         ██░░░░░░░░██                       │
+         │                         oo████████oo                       │
+         │                         oo        oo                       │
+         │                                                            │
+         │    ... and your job is to implement a firmware for it!     │
+         │                                                            │
+         │  you've got a 64 kHz cpu & 128 kB ram at hand and you can  │
+         │  either compete against other players in the online play   │
+         │      or indulge yourself in single-player challenges       │
+         │                                                            │
+         │                         have fun!                          │
+         └────────────────────────────────────────────────────────────┘
+
+
+                              ┌──────────────────┐
+                              │   [s] sandbox    │
+                              │   [t] tutorial   │
+                              │  [c] challenges  │
+                              └──────────────────┘
+
+                                                                       localhost

@@ -8,7 +8,6 @@ use tokio::time;
 async fn ctxt() -> TestContext {
     let mut ctxt = TestContext::new([]).await;
 
-    ctxt.wait_for(TestContext::INDEX).await;
     ctxt.see("[t] tutorial");
     ctxt.press(KeyCode::Char('t')).await;
 
@@ -66,25 +65,25 @@ async fn flow() {
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (2/16)").await;
+    ctxt.wait_for_window("tutorial (2/16)").await;
     ctxt.see_frame("tutorial/flow/step-02.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (3/16)").await;
+    ctxt.wait_for_window("tutorial (3/16)").await;
     ctxt.see_frame("tutorial/flow/step-03.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (4/16)").await;
+    ctxt.wait_for_window("tutorial (4/16)").await;
     ctxt.see_frame("tutorial/flow/step-04.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (5/16)").await;
+    ctxt.wait_for_window("tutorial (5/16)").await;
     ctxt.see_frame("tutorial/flow/step-05.txt").await;
 
     // ---
@@ -94,7 +93,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-05-a.txt").await;
 
     ctxt.press(KeyCode::Char('h')).await;
-    ctxt.wait_for_modal("help").await;
+    ctxt.wait_for_window("help").await;
     ctxt.see_frame("tutorial/flow/step-05-b.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
@@ -104,13 +103,13 @@ async fn flow() {
     // ---
 
     ctxt.upload_bot(TUT_01).await;
-    ctxt.wait_for_modal("tutorial (6/16)").await;
+    ctxt.wait_for_window("tutorial (6/16)").await;
     ctxt.see_frame("tutorial/flow/step-06.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (7/16)").await;
+    ctxt.wait_for_window("tutorial (7/16)").await;
     ctxt.see_frame("tutorial/flow/step-07-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -123,13 +122,13 @@ async fn flow() {
 
     // ---
 
-    ctxt.wait_for_modal("tutorial (8/16)").await;
+    ctxt.wait_for_window("tutorial (8/16)").await;
     ctxt.see_frame("tutorial/flow/step-08.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (9/16)").await;
+    ctxt.wait_for_window("tutorial (9/16)").await;
     ctxt.see_frame("tutorial/flow/step-09-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -137,7 +136,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-09-b.txt").await;
 
     ctxt.press(KeyCode::Char('h')).await;
-    ctxt.wait_for_modal("help").await;
+    ctxt.wait_for_window("help").await;
     ctxt.see_frame("tutorial/flow/step-09-c.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
@@ -147,7 +146,7 @@ async fn flow() {
     // ---
 
     ctxt.upload_bot(TUT_01).await;
-    ctxt.wait_for_modal("tutorial (10/16)").await;
+    ctxt.wait_for_window("tutorial (10/16)").await;
     ctxt.see_frame("tutorial/flow/step-10-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -157,7 +156,7 @@ async fn flow() {
     time::advance(Duration::from_secs(15)).await;
     time::resume();
 
-    ctxt.wait_for_modal("tutorial (10/16)").await;
+    ctxt.wait_for_window("tutorial (10/16)").await;
     ctxt.see_frame("tutorial/flow/step-10-b.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -174,19 +173,19 @@ async fn flow() {
 
     // ---
 
-    ctxt.wait_for_modal("tutorial (11/16)").await;
+    ctxt.wait_for_window("tutorial (11/16)").await;
     ctxt.see_frame("tutorial/flow/step-11.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (12/16)").await;
+    ctxt.wait_for_window("tutorial (12/16)").await;
     ctxt.see_frame("tutorial/flow/step-12.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (13/16)").await;
+    ctxt.wait_for_window("tutorial (13/16)").await;
     ctxt.see_frame("tutorial/flow/step-13-a.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -195,7 +194,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-13-b.txt").await;
 
     ctxt.press(KeyCode::Char('h')).await;
-    ctxt.wait_for_modal("help").await;
+    ctxt.wait_for_window("help").await;
     ctxt.see_frame("tutorial/flow/step-13-c.txt").await;
 
     ctxt.press(KeyCode::Escape).await;
@@ -203,7 +202,7 @@ async fn flow() {
     ctxt.see_frame("tutorial/flow/step-13-d.txt").await;
 
     ctxt.upload_bot(TUT_02).await;
-    ctxt.wait_for_modal("tutorial (13/16)").await;
+    ctxt.wait_for_window("tutorial (13/16)").await;
     ctxt.see_frame("tutorial/flow/step-13-e.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
@@ -225,13 +224,13 @@ async fn flow() {
 
     // ---
 
-    ctxt.wait_for_modal("tutorial (14/16)").await;
+    ctxt.wait_for_window("tutorial (14/16)").await;
     ctxt.see_frame("tutorial/flow/step-14.txt").await;
 
     // ---
 
     ctxt.press(KeyCode::Enter).await;
-    ctxt.wait_for_modal("tutorial (15/16)").await;
+    ctxt.wait_for_window("tutorial (15/16)").await;
     ctxt.see_frame("tutorial/flow/step-15.txt").await;
 
     ctxt.press(KeyCode::Enter).await;
