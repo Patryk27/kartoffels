@@ -308,6 +308,7 @@ impl Worlds {
             .values()
             .filter(|entry| ty.map_or(true, |ty| ty == entry.ty))
             .filter_map(|entry| Some((entry.ty, entry.handle.clone()?)))
+            .sorted_by(|(_, a), (_, b)| a.id().cmp(&b.id()))
             .collect()
     }
 
@@ -354,8 +355,6 @@ fn path(dir: &Path, id: Id) -> PathBuf {
 }
 
 fn build_public_idx(entries: &AHashMap<Id, WorldEntry>) -> Vec<WorldHandle> {
-    // TODO sorting here is mildly invalid, since `a.name()` / `b.name()` can
-    //      change in-between calls if someone happens to invoke `self.rename()`
     entries
         .values()
         .filter(|entry| matches!(entry.ty, WorldType::Public))
