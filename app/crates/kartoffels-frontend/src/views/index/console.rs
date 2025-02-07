@@ -57,18 +57,17 @@ pub async fn run(
 
             if sep {
                 _ = writeln!(term);
-                _ = writeln!(term, "-----");
             } else {
                 sep = true;
             }
 
-            _ = writeln!(term, "> {cmd}");
+            _ = writeln!(term, "; {cmd}");
             _ = writeln!(term);
 
             let cmd = match shellwords::split(&cmd) {
                 Ok(cmd) => cmd,
                 Err(err) => {
-                    _ = writeln!(term, "{err}");
+                    _ = writeln!(term, "{}", err.to_string().to_lowercase());
                     continue;
                 }
             };
@@ -80,7 +79,7 @@ pub async fn run(
                     Ok(cmd) => cmd,
 
                     Err(err) => {
-                        _ = write!(term, "{err}");
+                        _ = write!(term, "{}", err.to_string().to_lowercase());
                         continue;
                     }
                 }

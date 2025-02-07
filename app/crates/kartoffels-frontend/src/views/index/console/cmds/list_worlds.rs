@@ -13,7 +13,7 @@ pub struct ListWorldsCmd {
 impl ListWorldsCmd {
     pub(super) fn run(self, store: &Store, term: &mut Term) -> Result<()> {
         for (ty, handle) in store.worlds(self.ty) {
-            writeln!(term, "{}: {} ({ty})", handle.id(), handle.name())?;
+            writeln!(term, "{} | {} | {ty}", handle.id(), handle.name())?;
         }
 
         Ok(())

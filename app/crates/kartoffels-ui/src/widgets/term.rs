@@ -9,7 +9,7 @@ use termwiz::input::{KeyCode, Modifiers};
 pub struct Term {
     stdin: Input,
     stdout: String,
-    prev_stdin: Option<String>,
+    history: Option<String>,
 }
 
 impl Term {
@@ -39,31 +39,37 @@ impl fmt::Write for Term {
 
 impl UiWidget<String> for &mut Term {
     fn render(self, ui: &mut Ui<String>) -> Self::Response {
-        let [stdout_area, _, stdin_area] = Layout::vertical([
+        let [stdout_area, _, mut stdin_area] = Layout::vertical([
             Constraint::Fill(1),
             Constraint::Length(1),
             Constraint::Length(1),
         ])
         .areas(ui.area);
 
-        let stdout = {
+        if self.stdout.is_empty() {
+            stdin_area.y = stdout_area.y;
+        } else {
             let stdout =
                 Paragraph::new(self.stdout.as_str()).wrap(Default::default());
 
-            let scroll = stdout
-                .line_count(stdout_area.width)
-                .saturating_sub(stdout_area.height as usize);
+            let stdout_lines = stdout.line_count(stdout_area.width) as u16;
 
-            stdout.scroll((scroll as u16, 0))
-        };
+            if stdout_lines < stdout_area.height {
+                stdin_area.y = stdout_area.y + stdout_lines + 1;
+            }
 
-        ui.add_at(stdout_area, stdout);
+            let stdout = stdout
+                .scroll((stdout_lines.saturating_sub(stdout_area.height), 0));
+
+            ui.add_at(stdout_area, stdout);
+        }
+
         ui.add_at(stdin_area, &mut self.stdin);
 
         // ---
 
         if ui.key(KeyCode::UpArrow, Modifiers::NONE)
-            && let Some(prev_stdin) = &self.prev_stdin
+            && let Some(prev_stdin) = &self.history
         {
             *self.stdin.value_mut() = prev_stdin.clone();
         }
@@ -72,7 +78,7 @@ impl UiWidget<String> for &mut Term {
             let stdin = self.stdin.take_value().trim().to_owned();
 
             if !stdin.is_empty() {
-                self.prev_stdin = Some(stdin.clone());
+                self.history = Some(stdin.clone());
 
                 ui.throw(stdin);
             }
