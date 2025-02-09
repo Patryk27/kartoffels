@@ -30,7 +30,7 @@ const LOGO: &str = indoc! {r#"
 
 #[derive(Debug, Parser)]
 pub struct Cmd {
-    data: PathBuf,
+    store: PathBuf,
 
     #[clap(long)]
     http: Option<SocketAddr>,
@@ -95,10 +95,10 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!("starting");
 
-        let store = Store::new(Some(&self.data), self.secret)
+        let store = Store::new(Some(&self.store), self.secret)
             .await
             .with_context(|| {
-                format!("couldn't open store at `{}`", self.data.display())
+                format!("couldn't open store at `{}`", self.store.display())
             })?;
 
         if self.bench {

@@ -2,7 +2,7 @@ run *args:
     cd app \
     && cargo run --release -- \
            serve \
-           ../data \
+           ../store \
            --secret secret \
            --http 127.0.0.1:1313 \
            --ssh 127.0.0.1:1314 \
@@ -56,7 +56,7 @@ perf:
     && perf record --call-graph dwarf \
            ./target/release/kartoffels \
                serve \
-               ../data \
+               ../store \
                --debug \
                --bench \
                --ssh 127.0.0.1:1314

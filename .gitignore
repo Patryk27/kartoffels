@@ -1,5 +1,5 @@
 *.new
 .tmp
-/data
-/data.*
 /result
+/store
+/store.*

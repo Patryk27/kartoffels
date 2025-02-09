@@ -22,7 +22,7 @@ in
           default = self.packages.${pkgs.system}.app;
         };
 
-        data = mkOption {
+        store = mkOption {
           type = types.str;
           default = "/var/lib/kartoffels";
         };
@@ -118,10 +118,10 @@ in
 
     systemd.services.kartoffels = {
       script = ''
-        mkdir -p "${cfg.app.data}"
+        mkdir -p "${cfg.app.store}"
 
         ${cfg.app.package}/bin/kartoffels serve \
-            '${cfg.app.data}' \
+            '${cfg.app.store}' \
             ${optionalString cfg.app.debug "--debug"} \
             ${optionalString (cfg.app.secret != null) "--secret ${cfg.app.secret}"} \
             ${optionalString (cfg.app.http != null) "--http ${cfg.app.http}"} \
