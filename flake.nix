@@ -66,6 +66,25 @@
 
         in
         {
+          apps = {
+            default = utils.lib.mkApp {
+              drv = app;
+            };
+
+            web = utils.lib.mkApp {
+              drv =
+                let
+                  web' = web.overrideAttrs (_: {
+                    VITE_API_URL = "http://localhost:1313";
+                  });
+
+                in
+                pkgs.writeShellScriptBin "web" ''
+                  ${pkgs.python3}/bin/python -m http.server 5173 -d ${web'}
+                '';
+            };
+          };
+
           packages = {
             inherit app web;
 
@@ -79,10 +98,6 @@
                 path = web;
               }
             ];
-          };
-
-          devShell = pkgs.mkShell {
-            #
           };
         }
       );

@@ -21,6 +21,81 @@ kartoffel (🇩🇪)
 = slang for "slow machine"    
 = exactly what kartoffels are, slow machines indeed!
 
+## building
+
+so you want to launch kartoffels on your own machine? easy!
+
+### using nix
+
+```bash
+# step i: clone repository
+$ git clone https://github.com/patryk27/kartoffels
+$ cd kartoffels
+
+# step ii: create a place for storing kartoffels, server keys etc.
+$ mkdir store
+
+# step iii: launch server
+$ nix run . -- serve ./store --ssh 127.0.0.1:1314
+
+# step iiii: join the game
+$ ssh 127.0.0.1 -p1314
+```
+
+note that this only starts the ssh server - if you want to use the web frontend,
+the instructions are slightly different:
+
+```bash
+# step iii: launch server (note the `--http` argument)
+$ nix run . -- serve ./store --http 127.0.0.1:1313
+
+# step iiii: launch frontend
+$ nix run .#web
+
+# step iiiii: join the game at http://localhost:5173
+```
+
+### on linux / macos
+
+```bash
+# step i: clone repository
+$ git clone https://github.com/patryk27/kartoffels
+$ cd kartoffels
+
+# step ii: build application
+$ cd app
+$ cargo build --release
+$ cd ..
+
+# step iii: create a place for storing kartoffels, server keys etc.
+$ mkdir store
+
+# step iiii: launch server
+$ ./app/target/release/kartoffels serve ./store --ssh 127.0.0.1:1314
+
+# step iiiii: join the game
+$ ssh 127.0.0.1 -p1314
+```
+
+note that this only starts the ssh server - if you want to use the web frontend,
+the instructions are slightly different:
+
+```bash
+# step iiii: launch server (note the `--http` argument)
+$ ./app/target/release/kartoffels serve ./store --http 127.0.0.1:1313
+
+# step iiiii: launch frontend
+$ cd web
+$ npm install
+$ npm run dev
+
+# step iiiiii: join the game at http://localhost:5173
+```
+
+### on windows
+
+i'd suggest installing wsl and following the linux instructions
+
 ## license
 
 copyright (c) 2024, patryk wychowaniec (`pwychowaniec @at@ pm.me`).
