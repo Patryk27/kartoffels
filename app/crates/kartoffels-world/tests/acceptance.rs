@@ -362,7 +362,7 @@ async fn resume() {
 }
 
 #[tokio::test]
-async fn err_too_many_robots_queued() {
+async fn err_too_many_bots_queued() {
     let world = kartoffels_world::create(Config {
         policy: Policy {
             auto_respawn: true,
@@ -385,7 +385,7 @@ async fn err_too_many_robots_queued() {
         .unwrap_err()
         .to_string();
 
-    assert_eq!("too many robots queued, try again in a moment", err);
+    assert_eq!("too many bots queued, try again in a moment", err);
 }
 
 #[tokio::test]

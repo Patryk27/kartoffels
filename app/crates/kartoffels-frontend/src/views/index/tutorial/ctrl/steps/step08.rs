@@ -11,15 +11,15 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("# motor_step_fw()"),
         MsgLine::new(""),
         MsgLine::new(
-            "this boi causes the robot to move one tile forward in the \
-             direction it's facing (north / east / west / south)",
+            "this boi causes the bot to move one tile forward in the direction \
+             it's facing (north / east / west / south)",
         ),
         MsgLine::new(""),
         MsgLine::new("# motor_turn_*()"),
         MsgLine::new(""),
         MsgLine::new(
-            "this boi causes the robot to turn left (counterclockwise) or \
-             right (clockwise)",
+            "this boi causes the bot to turn left (counterclockwise) or right \
+             (clockwise)",
         ),
         MsgLine::new(""),
         MsgLine::new("# motor_wait()"),

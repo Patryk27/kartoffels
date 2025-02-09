@@ -86,7 +86,7 @@ pub fn create(
         } else {
             if bots.queued.len() >= policy.max_queued_bots {
                 _ = tx.send(Err(anyhow!(
-                    "too many robots queued, try again in a moment"
+                    "too many bots queued, try again in a moment"
                 )));
 
                 continue;

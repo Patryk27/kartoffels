@@ -10,7 +10,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "now it's time for you to learn about *the radar*, using which you \
-             can program the robot to avoid falling out the map",
+             can program the bot to avoid falling out the map",
         ),
     ],
 

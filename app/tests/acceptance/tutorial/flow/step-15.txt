@@ -4,20 +4,20 @@
         │ # arm_wait()                                                 │
         │                                                              │
         │ as you can guess, this boi waits until the arm is ready      │
-        │ (until it's armed, you could say)                            │
+        │ (until it's armed you could say, heh)                        │
         │                                                              │
         │ # arm_stab()                                                 │
         │                                                              │
-        │ stabs the robot that's directly in front of you, killing it  │
-        │ and giving your robot one point — note that you have to be   │
-        │ facing the other robot in order to stab it                   │
+        │ stabs the bot that's directly in front of you, killing it    │
+        │ and giving you one point — note that you have to be facing   │
+        │ the other machine in order to stab it                        │
         │                                                              │
         │ easy enough, isn't it?                                       │
         │                                                              │
-        │ now, to complete the tutorial, implement a robot that does a │
-        │ 3x3 radar scan, rotates towards the closest enemy ('@'),     │
-        │ goes forward and stabs it; when no enemy is in sight, let    │
-        │ your robot continue moving in its current direction          │
+        │ now, to complete the tutorial, implement a bot that performs │
+        │ a 3x3 scan, rotates towards the closest enemy ('@'), drives  │
+        │ forward and stabs it; when no enemy is in sight, let your    │
+        │ bot continue moving in its current direction                 │
         │                                                              │
         │ for simplicity, the enemies will not try to kill you and     │
         │ they will be located directly north / east / west / south —  │

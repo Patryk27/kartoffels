@@ -6,12 +6,12 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new(
             "anyway, close this message to resume the game and let's see the \
-             robot in action",
+             bot in action",
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "if everything goes correctly, we should see the robot driving in \
-             squares, *how exquisite*!",
+            "if everything goes correctly, we should see the machine driving \
+             in squares, *how exquisite*!",
         ),
     ],
 

@@ -5,7 +5,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "radar returns a scan of the environment around the robot — to get \
+            "radar returns a scan of the environment around the bot — to get \
              started, you need to know about these two functions:",
         ),
         MsgLine::new(""),
@@ -20,20 +20,20 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "this boi returns a scan representing the 3x3 square around your \
-             robot, allowing you to see tiles and other robots:",
+             bot, allowing you to see tiles and other bots:",
         ),
         MsgLine::new(""),
         MsgLine::new("    let scan = radar_scan_3x3();"),
-        MsgLine::new("    let tile_in_front = scan.at(0, -1);"),
-        MsgLine::new("    let tile_in_back = scan.at(0, 1);"),
-        MsgLine::new("    let tile_to_left = scan.at(-1, 0);"),
-        MsgLine::new("    let tile_to_right = scan.at(1, 0);"),
+        MsgLine::new("    let front = scan.at(0, -1);"),
+        MsgLine::new("    let back = scan.at(0, 1);"),
+        MsgLine::new("    let left = scan.at(-1, 0);"),
+        MsgLine::new("    let right = scan.at(1, 0);"),
         MsgLine::new(""),
-        MsgLine::new("    if tile_in_front == '.' {"),
+        MsgLine::new("    if front == '.' {"),
         MsgLine::new("        // do something"),
         MsgLine::new("    }"),
         MsgLine::new(""),
-        MsgLine::new("    if tile_to_left == '@' || tile_to_right == '@' {"),
+        MsgLine::new("    if left == '@' || right == '@' {"),
         MsgLine::new("        // do something else"),
         MsgLine::new("    }"),
     ],

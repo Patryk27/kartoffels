@@ -1,6 +1,6 @@
 //! # kartoffel
 //!
-//! This crate provides building blocks for implementing a robot for the
+//! This crate provides building blocks for implementing a bot for the
 //! [kartoffels](https://kartoffels.pwy.io) game - see:
 //!
 //! <https://github.com/patryk27/kartoffel>

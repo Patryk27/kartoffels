@@ -5,13 +5,13 @@
                      .............
                     ...............
         ┌────────────────────── tutorial (10/16) ──────────────────────┐
-        │ hmm, your robot seems to be still alive                      │
+        │ hmm, your bot seems to be (still) alive                      │
         │                                                              │
         │ this wasn't a triumph, i'm making a note here, NOT a huge    │
         │ success                                                      │
         │                                                              │
         │ make sure you removed the call to motor_turn_right() and     │
-        │ upload the robot again                                       │
+        │ upload the firmware again                                    │
         │                                                              │
         │                                            [enter] try-again │
         └──────────────────────────────────────────────────────────────┘

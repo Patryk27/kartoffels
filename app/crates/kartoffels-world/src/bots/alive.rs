@@ -28,7 +28,7 @@ impl AliveBots {
         }
 
         let idx =
-            u8::try_from(self.entries.len()).expect("too many alive robots");
+            u8::try_from(self.entries.len()).expect("too many alive bots");
 
         self.id_to_idx.insert(bot.id, idx);
         self.pos_to_id.insert(bot.pos, bot.id);

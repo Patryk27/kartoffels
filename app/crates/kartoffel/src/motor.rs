@@ -35,10 +35,10 @@ pub fn motor_wait() {
 ///
 /// Outcome depends on the parameters - legal combinations are:
 ///
-/// - `(1, 1)` - robot drives forward,
-/// - `(-1, -1)` - robot drives backward,
-/// - `(-1, 1)` - robot turns left (counterclockwise),
-/// - `(1, -1)` - robot turns right (clockwise).
+/// - `(1, 1)` - bot drives forward,
+/// - `(-1, -1)` - bot drives backward,
+/// - `(-1, 1)` - bot turns left (counterclockwise),
+/// - `(1, -1)` - bot turns right (clockwise).
 ///
 /// Other values will cause the CPU to crash.
 ///
@@ -63,7 +63,7 @@ pub fn motor_pulse(left: i8, right: i8) {
     wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
 }
 
-/// Moves the robot one tile forward in the direction it's facing.
+/// Moves the bot one tile forward in the direction it's facing.
 ///
 /// See also: [`motor_step_bw()`], [`motor_pulse()`].
 ///
@@ -86,7 +86,7 @@ pub fn motor_step_fw() {
     motor_pulse(1, 1);
 }
 
-/// Moves the robot one tile backward from the direction it's facing.
+/// Moves the bot one tile away (backward) from the direction it's facing.
 ///
 /// See also: [`motor_step_fw()`], [`motor_pulse()`].
 ///
@@ -109,7 +109,7 @@ pub fn motor_step_bw() {
     motor_pulse(-1, -1);
 }
 
-/// Turns the robot to its left (i.e. counterclockwise).
+/// Turns the bot to its left (i.e. counterclockwise).
 ///
 /// See also: [`motor_turn_right()`], [`motor_pulse()`].
 ///
@@ -132,7 +132,7 @@ pub fn motor_turn_left() {
     motor_pulse(-1, 1);
 }
 
-/// Turns the robot to its right (i.e. clockwise).
+/// Turns the bot to its right (i.e. clockwise).
 ///
 /// See also: [`motor_turn_left()`], [`motor_pulse()`].
 ///

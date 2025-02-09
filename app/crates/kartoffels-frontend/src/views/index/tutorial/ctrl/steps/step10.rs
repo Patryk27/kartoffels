@@ -7,9 +7,9 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("yes... ha ha ha... *YES*!"),
         MsgLine::new(""),
         MsgLine::new(
-            "by telling the robot to always move forward instead of driving in \
-             squares, we should see the robot, well, moving forward and \
-             unknowingly falling out of the map",
+            "by telling the bot to always move forward instead of driving in \
+             squares, we should see it moving forward and, well, unknowingly \
+             falling out of the map",
         ),
     ],
 
@@ -20,7 +20,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (10/16) "),
 
     body: vec![
-        MsgLine::new("hmm, your robot seems to be still alive"),
+        MsgLine::new("hmm, your bot seems to be (still) alive"),
         MsgLine::new(""),
         MsgLine::new(
             "this wasn't a triumph, i'm making a note here, NOT a huge \
@@ -29,7 +29,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "make sure you removed the call to `motor_turn_right()` and upload \
-             the robot again",
+             the firmware again",
         ),
     ],
 
@@ -42,7 +42,7 @@ static HELP_RETRY: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new(
             "make sure you removed the call to `motor_turn_right()` and upload \
-             the robot again",
+             the firmware again",
         ),
         MsgLine::web(""),
         MsgLine::web("!! don't forget to re-run `./build` !!"),

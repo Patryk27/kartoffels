@@ -9,7 +9,7 @@
         │ couldn't upload bot                                          │
         │                                                              │
         │ caused by:                                                   │
-        │ too many robots queued, try again in a moment                │
+        │ too many bots queued, try again in a moment                  │
         │                                                              │
         │                                                [enter] close │
         └──────────────────────────────────────────────────────────────┘

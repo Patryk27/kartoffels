@@ -19,7 +19,7 @@ pub fn radar_wait() {
     }
 }
 
-/// Scans a square around the robot.
+/// Scans a square around the bot.
 ///
 /// This function performs an `r x r` scan, so e.g. `r=3` will do a `3x3` scan.
 /// Legal values of `r` are 3, 5, 7 or 9 - other values will cause the CPU to
@@ -41,7 +41,7 @@ pub fn radar_scan(r: u8) {
     wri(MEM_RADAR, 0, cmd(0x01, r, 0x00, 0x00));
 }
 
-/// Scans a 3x3 square around the robot and returns the scanned area.
+/// Scans a 3x3 square around the bot and returns the scanned area.
 ///
 /// # Cooldown
 ///
@@ -58,7 +58,7 @@ pub fn radar_scan(r: u8) {
 ///
 /// let scan = radar_scan_3x3();
 ///
-/// // If there's a robot in front of us, stab it
+/// // If there's someone in front of us, stab them
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
@@ -70,7 +70,7 @@ pub fn radar_scan_3x3() -> RadarScan<3> {
     RadarScan { _priv: () }
 }
 
-/// Scans a 5x5 square around the robot and returns the scanned area.
+/// Scans a 5x5 square around the bot and returns the scanned area.
 ///
 /// # Cooldown
 ///
@@ -87,7 +87,7 @@ pub fn radar_scan_3x3() -> RadarScan<3> {
 ///
 /// let scan = radar_scan_5x5();
 ///
-/// // If there's a robot in front of us, stab it
+/// // If there's someone in front of us, stab them
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
@@ -99,7 +99,7 @@ pub fn radar_scan_5x5() -> RadarScan<5> {
     RadarScan { _priv: () }
 }
 
-/// Scans a 7x7 square around the robot and returns the scanned area.
+/// Scans a 7x7 square around the bot and returns the scanned area.
 ///
 /// # Cooldown
 ///
@@ -116,7 +116,7 @@ pub fn radar_scan_5x5() -> RadarScan<5> {
 ///
 /// let scan = radar_scan_7x7();
 ///
-/// // If there's a robot in front of us, stab it
+/// // If there's someone in front of us, stab them
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
@@ -128,7 +128,7 @@ pub fn radar_scan_7x7() -> RadarScan<7> {
     RadarScan { _priv: () }
 }
 
-/// Scans a 9x9 square around the robot and returns the scanned area.
+/// Scans a 9x9 square around the bot and returns the scanned area.
 ///
 /// # Cooldown
 ///
@@ -145,7 +145,7 @@ pub fn radar_scan_7x7() -> RadarScan<7> {
 ///
 /// let scan = radar_scan_9x9();
 ///
-/// // If there's a robot in front of us, stab it
+/// // If there's someone in front of us, stab them
 /// if scan.at(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
@@ -172,10 +172,10 @@ pub fn radar_scan_9x9() -> RadarScan<9> {
 ///
 /// - `z=0` returns the tile located at `dx,dy` (see: [`RadarScan::at()`]),
 ///
-/// - `z=1` returns the higher 32 bits of the id of the robot located at `dx,dy`
+/// - `z=1` returns the higher 32 bits of the id of the bot located at `dx,dy`
 ///   (see: [`RadarScan::bot_at()`]),
 ///
-/// - `z=2` returns the lower 32 bits of the id of the robot located at `dx,dy`
+/// - `z=2` returns the lower 32 bits of the id of the bot located at `dx,dy`
 ///   (see: [`RadarScan::bot_at()`]).
 pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
     let x = (dx + (r as i8 / 2)) as usize;
@@ -189,14 +189,14 @@ pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
 ///
 /// # Coordinate system
 ///
-/// [`Self::at()`] and [`Self::bot_at()`] work in a robot-centric coordinate
+/// [`Self::at()`] and [`Self::bot_at()`] work in a bot-centric coordinate
 /// system, that is:
 ///
-/// - `.at(0, 0)` returns the robot itself (`'@'`),
-/// - `.at(-1, 0)` returns tile to the left of the robot,
-/// - `.at(1, 0)` returns tile to the right of the robot,
-/// - `.at(0, -1)` returns tile in the front of the robot,
-/// - `.at(0, 1)` returns tile in the back of the robot,
+/// - `at(0, 0)` returns the bot itself (`'@'`),
+/// - `at(-1, 0)` returns what's to the left of the bot,
+/// - `at(1, 0)` returns what's to the right of the bot,
+/// - `at(0, -1)` returns what's in front of the bot,
+/// - `at(0, 1)` returns what's behind the bot,
 /// - etc.
 ///
 /// This also means that the 3x3 scan allows you to access `at(-1..=1)`, 5x5
@@ -207,11 +207,11 @@ pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
 /// # Lazyness
 ///
 /// For performance reasons, this structure doesn't copy the scanned area into
-/// your robot's RAM - rather, the data is kept inside the radar's memory and
+/// your bot's RAM - rather, the data is kept inside the radar's memory and
 /// transparently accessed each time you call [`Self::at()`] etc.
 ///
-/// In practice, this means that consecutive scans *overwrite* previous results,
-/// like:
+/// In practice, this means that consecutive scans "overwrite" previous scans'
+/// results, like:
 ///
 /// ```no_run
 /// # use kartoffel::*;
@@ -240,7 +240,7 @@ pub struct RadarScan<const R: usize> {
 impl<const R: usize> RadarScan<R> {
     /// Returns the topmost thing visible at given coordinates:
     ///
-    /// - if there's a robot, returns `'@'`,
+    /// - if there's a bot, returns `'@'`,
     /// - otherwise, if there's an object, returns that object (e.g. `'*'`),
     /// - otherwise, if there's a tile, returns that tile (e.g. `'.'` or `'|'`),
     /// - otherwise returns `' '` (a space) representing void (driving into it
@@ -248,23 +248,22 @@ impl<const R: usize> RadarScan<R> {
     ///
     /// # Coordinate system
     ///
-    /// This function uses robot-centric coordinates, i.e. `at(0, -1)` points at
+    /// This function uses bot-centric coordinates, i.e. `at(0, -1)` points at
     /// the tile right in front of you - see [`RadarScan`] for details.
     pub fn at(&self, dx: i8, dy: i8) -> char {
         radar_read(R, dx, dy, 0) as u8 as char
     }
 
-    /// Returns id of the robot at given coordinates or `None` if there's no
-    /// robot there.
+    /// Returns id of the bot at given coordinates or `None` if there's no bot
+    /// there.
     ///
     /// Bot ids are random, unique, non-zero 64-bit numbers assigned to each bot
-    /// during its upload; ids are preserved when a robot is reincarnated.
+    /// during its upload; ids are preserved when a bot is reincarnated.
     ///
     /// # Coordinate system
     ///
-    /// This function uses robot-centric coordinates, i.e. `bot_at(0, -1)`
-    /// points at the robot right in front of you - see [`RadarScan`] for
-    /// details.
+    /// This function uses bot-centric coordinates, i.e. `bot_at(0, -1)` points
+    /// at the bot right in front of you - see [`RadarScan`] for details.
     pub fn bot_at(&self, dx: i8, dy: i8) -> Option<NonZeroU64> {
         let d1 = radar_read(R, dx, dy, 1) as u64;
         let d2 = radar_read(R, dx, dy, 2) as u64;

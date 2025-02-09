@@ -18,23 +18,23 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "as you can guess, this boi waits until the arm is ready (until \
-             it's _armed_, you could say)",
+             it's _armed_ you could say, heh)",
         ),
         MsgLine::new(""),
         MsgLine::new("# arm_stab()"),
         MsgLine::new(""),
         MsgLine::new(
-            "stabs the robot that's directly in front of you, killing it and \
-             giving your robot one point — note that you have to be _facing_ \
-             the other robot in order to stab it",
+            "stabs the bot that's directly in front of you, killing it and \
+             giving you one point — note that you have to be _facing_ the \
+             other machine in order to stab it",
         ),
         MsgLine::new(""),
         MsgLine::new("easy enough, isn't it?"),
         MsgLine::new(""),
         MsgLine::new(
-            "now, to complete the tutorial, implement a robot that does a 3x3 \
-             radar scan, rotates towards the closest enemy (`'@'`), goes \
-             forward and stabs it; when no enemy is in sight, let your robot \
+            "now, to complete the tutorial, implement a bot that performs a \
+             3x3 scan, rotates towards the closest enemy (`'@'`), drives \
+             forward and stabs it; when no enemy is in sight, let your bot \
              continue moving in its current direction",
         ),
         MsgLine::new(""),
@@ -49,8 +49,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
     body: vec![MsgLine::new(
-        "hmm, your robot seems to have died — delete it and upload something \
-         better",
+        "hmm, your bot seems to have died — delete it and upload something \
+         better, i know you have it in you",
     )],
     buttons: vec![MsgButton::confirm("try-again", ())],
 });

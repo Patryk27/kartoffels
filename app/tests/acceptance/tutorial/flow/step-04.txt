@@ -13,7 +13,7 @@
         │                                                              │
         │ like, you-dont-have-access-to-standard-library different     │
         │                                                              │
-        │ there's no std::fs, no std::net - everything your robot has  │
+        │ there's no std::fs, no std::net - everything your bot has    │
         │ access to is a bit of memory, motor, radar, and serial port  │
         │                                                              │
         │ you know, like the people in ancient rome did                │
