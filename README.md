@@ -42,8 +42,7 @@ $ nix run . -- serve ./store --ssh 127.0.0.1:1314
 $ ssh 127.0.0.1 -p1314
 ```
 
-note that this only starts the ssh server - if you want to use the web frontend,
-the instructions are slightly different:
+note that this only starts the ssh server - if you want to use the web frontend:
 
 ```bash
 # step iii: launch server (note the `--http` argument)
@@ -77,8 +76,7 @@ $ ./app/target/release/kartoffels serve ./store --ssh 127.0.0.1:1314
 $ ssh 127.0.0.1 -p1314
 ```
 
-note that this only starts the ssh server - if you want to use the web frontend,
-the instructions are slightly different:
+note that this only starts the ssh server - if you want to use the web frontend:
 
 ```bash
 # step iiii: launch server (note the `--http` argument)
