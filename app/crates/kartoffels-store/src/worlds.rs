@@ -38,9 +38,8 @@ impl Worlds {
         })
     }
 
-    #[instrument]
     async fn load(dir: &Path) -> Result<AHashMap<Id, WorldEntry>> {
-        info!("loading worlds");
+        info!(?dir, "loading worlds");
 
         let mut entries = AHashMap::new();
         let mut files = fs::read_dir(dir).await?;
