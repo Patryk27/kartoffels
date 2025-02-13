@@ -85,7 +85,7 @@ impl InspectBotModal {
             Layout::horizontal([Constraint::Fill(1); 3]).areas(ui.area);
 
         ui.clamp(col1, |ui| {
-            ui.line(format!("curr-life = #{}", stats.lives));
+            ui.line(format!("curr-life = #{}", world.lives.len(self.id)));
             ui.space(1);
 
             match world.bots.get(self.id) {
