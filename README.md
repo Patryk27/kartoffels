@@ -6,8 +6,8 @@
     <a href="https://github.com/patryk27/kartoffel">a firmware</a> for it:
 </p>
 
-![](./readme/img-v03.png)
-![](./readme/img-v02.png)
+![](./readme/595969d8-909e-438f-9c28-073186fcb598.png)
+![](./readme/e46b11bf-6b91-4415-af8a-c9e6169b28fb.png)
 
 <p align="center">
     <a href="https://kartoffels.pwy.io">play it in browser</a> or terminal:<br>
