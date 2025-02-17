@@ -305,7 +305,7 @@ impl Worlds {
         self.entries
             .load()
             .values()
-            .filter(|entry| ty.map_or(true, |ty| ty == entry.ty))
+            .filter(|entry| ty.is_none_or(|ty| ty == entry.ty))
             .filter_map(|entry| Some((entry.ty, entry.handle.clone()?)))
             .sorted_by(|(_, a), (_, b)| a.id().cmp(&b.id()))
             .collect()

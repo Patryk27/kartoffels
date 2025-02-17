@@ -39,8 +39,10 @@ impl CborMapExt for Vec<(Value, Value)> {
     }
 
     fn remove_entry(&mut self, key: &str) -> Option<Value> {
-        self.extract_if(|(entry_key, _)| entry_key.as_text().unwrap() == key)
-            .next()
-            .map(|(_, val)| val)
+        self.extract_if(.., |(entry_key, _)| {
+            entry_key.as_text().unwrap() == key
+        })
+        .next()
+        .map(|(_, val)| val)
     }
 }

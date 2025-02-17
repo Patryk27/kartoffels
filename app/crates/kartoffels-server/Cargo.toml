@@ -19,7 +19,6 @@ kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-ui = { path = "../kartoffels-ui" }
 kartoffels-world = { path = "../kartoffels-world" }
 rand.workspace = true
-russh-keys.workspace = true
 russh.workspace = true
 serde.workspace = true
 serde_json.workspace = true

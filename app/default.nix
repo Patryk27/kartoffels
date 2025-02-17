@@ -25,6 +25,8 @@ crane'.buildPackage {
       if p.name == "russh-cryptovec" then
         drv.overrideAttrs (_: {
           patches = [
+            # mlock() and munlock() are not available in NixOS containers, so
+            # let's patch 'em out:
             ./nix/patches/russh-cryptovec-mlock.patch
           ];
         })

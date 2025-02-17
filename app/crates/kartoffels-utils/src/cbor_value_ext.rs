@@ -76,7 +76,7 @@ fn lookup_mut_map<'a>(
         let curr_key = curr_key.as_text().unwrap_or_default();
 
         let curr_key_matches =
-            keys.as_ref().map_or(true, |keys| keys.contains(&curr_key));
+            keys.as_ref().is_none_or(|keys| keys.contains(&curr_key));
 
         if curr_key_matches {
             Some(curr_val)

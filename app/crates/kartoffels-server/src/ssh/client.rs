@@ -1,11 +1,10 @@
 use super::AppChannel;
 use ahash::AHashMap;
 use anyhow::{anyhow, Context, Error, Result};
-use axum::async_trait;
 use kartoffels_store::Store;
+use russh::keys::PublicKey;
 use russh::server::{self, Auth, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
-use russh_keys::PublicKey;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, info_span, Span};
@@ -43,7 +42,6 @@ impl AppClient {
     }
 }
 
-#[async_trait]
 impl server::Handler for AppClient {
     type Error = Error;
 

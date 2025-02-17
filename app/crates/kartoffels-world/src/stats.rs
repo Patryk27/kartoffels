@@ -16,7 +16,7 @@ pub fn update(
     lives: Res<Lives>,
     mut prev_run_at: Local<Option<Instant>>,
 ) {
-    if prev_run_at.map_or(false, |run| run.elapsed().as_secs() < 1) {
+    if prev_run_at.is_some_and(|run| run.elapsed().as_secs() < 1) {
         return;
     }
 
