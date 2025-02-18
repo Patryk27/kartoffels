@@ -39,14 +39,14 @@ impl UploadBotModal {
             }
 
             FrameType::Web => {
-                // For the web frame we don't render anything - rather, we
-                // request the native file picker and wait until the bot is
-                // uploaded via an HTTP endpoint.
-                if self.interest.is_none() {
-                    self.interest =
-                        Some(sess.with(|sess| sess.request_upload()));
-                }
+                // For the web frame we don't render anything - we request the
+                // native file picker and wait until the bot is uploaded via an
+                // HTTP endpoint.
             }
+        }
+
+        if self.interest.is_none() {
+            self.interest = Some(sess.with(|sess| sess.request_upload()));
         }
 
         if let Some(upload) = &mut self.interest
