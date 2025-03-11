@@ -146,6 +146,13 @@ fn is_pos_legal(
     objs: &Objects,
     pos: IVec2,
 ) -> bool {
+    for x in -1..1 {
+        for y in -1..1 {
+            if bots.lookup_at(pos + IVec2::new(x, y)).is_some() {
+                return false;
+            }
+        }
+    }
     map.get(pos).is_floor()
         && bots.lookup_at(pos).is_none()
         && objs.lookup_at(pos).is_none()
