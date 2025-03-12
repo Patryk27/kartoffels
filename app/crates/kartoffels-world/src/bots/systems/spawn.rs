@@ -90,7 +90,7 @@ fn determine_spawn_point(
     if let Some(pos) = bot.pos {
         let dir = bot.dir.unwrap_or_else(|| rng.gen());
 
-        return if is_pos_legal(map, bots, objs, pos) {
+        return if is_pos_legal(map, bots, objs, pos, false) {
             Some((pos, dir))
         } else {
             None
@@ -100,7 +100,7 @@ fn determine_spawn_point(
     if let Some(pos) = spawn.pos {
         let dir = spawn.dir.unwrap_or_else(|| rng.gen());
 
-        return if is_pos_legal(map, bots, objs, pos) {
+        return if is_pos_legal(map, bots, objs, pos, false) {
             Some((pos, dir))
         } else {
             None
@@ -126,7 +126,7 @@ fn sample_map(
     loop {
         let pos = map.sample_pos(rng);
 
-        if is_pos_legal(map, bots, objs, pos) {
+        if is_pos_legal(map, bots, objs, pos, true) {
             let dir = bot.dir.unwrap_or_else(|| rng.gen());
 
             return Some((pos, dir));
@@ -145,9 +145,13 @@ fn is_pos_legal(
     bots: &AliveBots,
     objs: &Objects,
     pos: IVec2,
+    check_neighborhood: bool,
 ) -> bool {
     if !map.get(pos).is_floor() || objs.lookup_at(pos).is_some() {
         return false;
+    }
+    if !check_neighborhood {
+        return true;
     }
     for x in -1..=1 {
         for y in -1..=1 {
