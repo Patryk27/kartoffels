@@ -33,7 +33,7 @@ impl BotBluetooth {
         }
     }
 
-    // current plan, actually return a [u8;4] constructed as [extra_info,_,first_value,second_value]
+    // current plan, actually return a [u8;4] constructed as [extra_info,_,first_value,NULL]
     // the extra_info would be stuff like "is this an actual value from a buffer here" "is the message buffer empty"
     // the buffer_index_of_first_value would give the reader an idea of where they were in the message read operation, just for double checking means
     fn read(&self, addr: u32) -> [u8; 4] {
@@ -43,7 +43,6 @@ impl BotBluetooth {
 
         let front = messages.peek().unwrap();
         out[2] = front[addr as usize];
-        out[3] = front[(addr + 1) as usize];
         out
     }
 
