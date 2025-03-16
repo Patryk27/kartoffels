@@ -4,154 +4,16 @@ use ringbuffer::{ConstGenericRingBuffer, RingBuffer};
 use serde::de::{self, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize as AutoDeserialize, Serialize};
+use std::mem;
+use std::sync::{Arc, RwLock};
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct BotBluetooth {
     cooldown: u32,
-    messages: ConstGenericRingBuffer<[u8; 32], 5>,
+    messages: Arc<RwLock<ConstGenericRingBuffer<[u8; 32], 5>>>, // I've stuck an Arc and RwLock on this buffer atm this seems like the way to write it
+    // but I should really test it as well I think it will work though
     out_message: [u8; 32],
-}
-
-impl Serialize for BotBluetooth {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("BotBluetooth", 2)?;
-        state.serialize_field("cooldown", &self.cooldown);
-        let vec: Vec<[u8; 32]> = self.messages.to_vec();
-        state.serialize_field("messages", &vec);
-        state.serialize_field("out_message", &self.out_message);
-
-        state.end()
-    }
-}
-// We need to implement Deserialize for BotBluetooth since we use a ring buffer
-impl<'de> AutoDeserialize<'de> for BotBluetooth {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[allow(non_camel_case_types)]
-        #[derive(AutoDeserialize)]
-        enum Field {
-            cooldown,
-            messages,
-            out_message,
-        }
-
-        struct BotBluetoothVisitor;
-
-        impl<'de> Visitor<'de> for BotBluetoothVisitor {
-            type Value = BotBluetooth;
-
-            fn expecting(
-                &self,
-                formatter: &mut std::fmt::Formatter,
-            ) -> std::fmt::Result {
-                formatter.write_str("struct BotBluetooth")
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::SeqAccess<'de>,
-            {
-                let cooldown = seq.next_element()?.ok_or_else(|| {
-                    <serde_json::error::Error as de::Error>::invalid_length(
-                        // this looks like the suggested de::Error doesn't have the correct type,
-                        // TODO Check the version of serde, make sure we have the correct stuff
-                        0, &self,
-                    )
-                });
-                let messages: Result<Vec<[u8; 32]>, _> =
-                    seq.next_element()?.ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::invalid_length(
-                            1, &self,
-                        )
-                    });
-                let out_message = seq.next_element()?.ok_or_else(|| {
-                    <serde_json::error::Error as de::Error>::invalid_length(
-                        2, &self,
-                    )
-                });
-                Ok(BotBluetooth {
-                    cooldown: cooldown.unwrap(),
-                    messages: ConstGenericRingBuffer::<[u8; 32], 5>::from(
-                        messages.unwrap(),
-                    ),
-                    out_message: out_message.unwrap(),
-                })
-            }
-
-            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::MapAccess<'de>,
-            {
-                let mut cooldown = None;
-                let mut messages: Option<Vec<[u8; 32]>> = None;
-                let mut out_message: Option<[u8; 32]> = None;
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::cooldown => {
-                            if cooldown.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "cooldown",
-                                ));
-                            }
-                            cooldown = Some(map.next_value()?);
-                        }
-                        Field::messages => {
-                            if messages.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "messages",
-                                ));
-                            }
-                            messages = Some(map.next_value()?);
-                        }
-                        Field::out_message => {
-                            if out_message.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "messages",
-                                ));
-                            }
-                            out_message = Some(map.next_value()?);
-                        }
-                    };
-                }
-                let cooldown = cooldown
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::missing_field(
-                            "cooldown",
-                        )
-                    })
-                    .unwrap();
-                let messages_holder: ConstGenericRingBuffer<[u8; 32], 5> =
-                    ConstGenericRingBuffer::<[u8; 32], 5>::from(
-                        messages
-                            .ok_or_else(|| <serde_json::error::Error as de::Error>::missing_field("messages"))
-                            .unwrap(),
-                    );
-                let out_message = out_message
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::missing_field(
-                            "out_message",
-                        )
-                    })
-                    .unwrap();
-                Ok(BotBluetooth {
-                    cooldown,
-                    messages: messages_holder,
-                    out_message,
-                })
-            }
-        }
-        const FIELDS: &[&str] = &["cooldown", "messages", "out_message"];
-        deserializer.deserialize_struct(
-            "BotBluetooth",
-            FIELDS,
-            BotBluetoothVisitor,
-        )
-    }
+    read_buffer_index: usize,
 }
 
 impl BotBluetooth {
@@ -164,26 +26,43 @@ impl BotBluetooth {
             AliveBot::MEM_BLUETOOTH => Ok((self.cooldown == 0) as u32),
             addr if addr >= AliveBot::MEM_BLUETOOTH + 4 => {
                 let idx = addr - AliveBot::MEM_BLUETOOTH + 4;
-                // we need to think of a way of reading from the message buffer here
-                // current plan, actually return a [u8;4] constructed as [extra_info,buffer_index_of_fist_value,first_value,second_value]
-                // the extra_info would be stuff like "is this an actual value from a buffer here" "is the message buffer empty"
-                // the buffer_index_of_first_value would give the reader an idea of where they were in the message read operation, just for double checking means
-                todo!();
+                let byte_group = self.read(idx);
+                Ok(u32::from_le_bytes(byte_group))
             }
             _ => Err(()),
         }
     }
 
-    pub fn recieve_message(self, message: [u8; 32]) -> Result<(), ()> {
-        if self.messages.is_full() {
+    // current plan, actually return a [u8;4] constructed as [extra_info,_,first_value,second_value]
+    // the extra_info would be stuff like "is this an actual value from a buffer here" "is the message buffer empty"
+    // the buffer_index_of_first_value would give the reader an idea of where they were in the message read operation, just for double checking means
+    fn read(&self, addr: u32) -> [u8; 4] {
+        let mut out: [u8; 4] = [0; 4];
+        let messages = self.messages.read().unwrap();
+        out[0] = messages.len() as u8;
+
+        let front = messages.peek().unwrap();
+        out[2] = front[addr as usize];
+        out[3] = front[(addr + 1) as usize];
+        out
+    }
+
+    fn recieve_message(&self, message: [u8; 32]) -> Result<(), ()> {
+        let mut messages = self.messages.write().unwrap(); // deal with .unwrap later
+        if messages.is_full() {
             return Err(());
         }
-        self.messages.push(message);
+        messages.push(message);
         Ok(())
     }
 
-    pub fn is_buffer_full(&mut self) -> bool {
-        self.messages.is_full()
+    fn remove_front(&self) -> Result<(), ()> {
+        let mut messages = self.messages.write().unwrap();
+        if messages.is_empty() {
+            return Err(());
+        }
+        messages.dequeue();
+        Ok(())
     }
 
     pub fn mmio_store(
@@ -211,6 +90,10 @@ impl BotBluetooth {
                 self.out_message = [0; 32];
                 Ok(())
             }
+            (AliveBot::MEM_BLUETOOTH, [0x04, _, _, _]) => {
+                self.remove_front();
+                Ok(())
+            }
             // TODO: Maybe add a feature for checking if a bot has an open spot in their buffer
             _ => Err(()),
         }
@@ -231,7 +114,7 @@ impl BotBluetooth {
 
                 if let Some(bot_id) = ctxt.bots.lookup_at(pos) {
                     let bot = ctxt.bots.get(bot_id).unwrap(); // the bot might die inbetween these instructions??
-                    bot.bluetooth.recieve_message(self.out_message);
+                    bot.bluetooth.recieve_message(self.out_message); // deal with this as well
                 }
             }
         }
@@ -243,7 +126,12 @@ impl Default for BotBluetooth {
     fn default() -> Self {
         Self {
             cooldown: 0,
-            messages: ConstGenericRingBuffer::<[u8; 32], 5>::new(),
+            messages: Arc::new(RwLock::new(ConstGenericRingBuffer::<
+                [u8; 32],
+                5,
+            >::new())),
+            out_message: [0; 32],
+            read_buffer_index: 0,
         }
     }
 }
@@ -280,3 +168,183 @@ impl BotBluetoothRange {
     }
 }
 // TODO TESTS
+
+impl Serialize for BotBluetooth {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("BotBluetooth", 2)?;
+        state.serialize_field("cooldown", &self.cooldown);
+        let vec: Vec<[u8; 32]> = self.messages.read().unwrap().to_vec();
+        state.serialize_field("messages", &vec);
+        state.serialize_field("out_message", &self.out_message);
+        state.serialize_field("read_buffer_index", &self.read_buffer_index);
+
+        state.end()
+    }
+}
+// We need to implement Deserialize for BotBluetooth since we use a ring buffer
+impl<'de> AutoDeserialize<'de> for BotBluetooth {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[allow(non_camel_case_types)]
+        #[derive(AutoDeserialize)]
+        enum Field {
+            cooldown,
+            messages,
+            out_message,
+            read_buffer_index,
+        }
+
+        struct BotBluetoothVisitor;
+
+        impl<'de> Visitor<'de> for BotBluetoothVisitor {
+            type Value = BotBluetooth;
+
+            fn expecting(
+                &self,
+                formatter: &mut std::fmt::Formatter,
+            ) -> std::fmt::Result {
+                formatter.write_str("struct BotBluetooth")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let cooldown = seq
+                    .next_element()?
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::invalid_length(
+                            // this looks like the suggested de::Error doesn't have the correct type,
+                            // TODO Check the version of serde, make sure we have the correct stuff
+                            0, &self,
+                        )
+                    })
+                    .unwrap();
+                let messages: Result<Vec<[u8; 32]>, _> =
+                    seq.next_element()?.ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::invalid_length(
+                            1, &self,
+                        )
+                    });
+                let out_message = seq
+                    .next_element()?
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::invalid_length(
+                            2, &self,
+                        )
+                    })
+                    .unwrap();
+                let read_buffer_index = seq
+                    .next_element()?
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::invalid_length(
+                            3, &self,
+                        )
+                    })
+                    .unwrap();
+                Ok(BotBluetooth {
+                    cooldown,
+                    messages: Arc::new(RwLock::new(ConstGenericRingBuffer::<
+                        [u8; 32],
+                        5,
+                    >::from(
+                        messages.unwrap()
+                    ))),
+                    out_message,
+                    read_buffer_index,
+                })
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                let mut cooldown = None;
+                let mut messages: Option<Vec<[u8; 32]>> = None;
+                let mut out_message: Option<[u8; 32]> = None;
+                let mut read_buffer_index: Option<usize> = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::cooldown => {
+                            if cooldown.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    "cooldown",
+                                ));
+                            }
+                            cooldown = Some(map.next_value()?);
+                        }
+                        Field::messages => {
+                            if messages.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    "messages",
+                                ));
+                            }
+                            messages = Some(map.next_value()?);
+                        }
+                        Field::out_message => {
+                            if out_message.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    "messages",
+                                ));
+                            }
+                            out_message = Some(map.next_value()?);
+                        }
+                        Field::read_buffer_index => {
+                            if read_buffer_index.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    "read_buffer_index",
+                                ));
+                            }
+                            read_buffer_index = Some(map.next_value()?);
+                        }
+                    };
+                }
+                let cooldown = cooldown
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::missing_field(
+                            "cooldown",
+                        )
+                    })
+                    .unwrap();
+                let messages_holder: ConstGenericRingBuffer<[u8; 32], 5> =
+                    ConstGenericRingBuffer::<[u8; 32], 5>::from(
+                        messages
+                            .ok_or_else(|| <serde_json::error::Error as de::Error>::missing_field("messages"))
+                            .unwrap(),
+                    );
+                let out_message = out_message
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::missing_field(
+                            "out_message",
+                        )
+                    })
+                    .unwrap();
+                let read_buffer_index = read_buffer_index
+                    .ok_or_else(|| {
+                        <serde_json::error::Error as de::Error>::missing_field(
+                            "read_buffer_index",
+                        )
+                    })
+                    .unwrap();
+                Ok(BotBluetooth {
+                    cooldown,
+                    messages: Arc::new(RwLock::new(messages_holder)),
+                    out_message,
+                    read_buffer_index,
+                })
+            }
+        }
+        const FIELDS: &[&str] =
+            &["cooldown", "messages", "out_message", "read_buffer_index"];
+        deserializer.deserialize_struct(
+            "BotBluetooth",
+            FIELDS,
+            BotBluetoothVisitor,
+        )
+    }
+}
