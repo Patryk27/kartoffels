@@ -26,6 +26,7 @@ sha256.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+ringbuffer = "0.15.0"
 
 [dev-dependencies]
 indoc.workspace = true

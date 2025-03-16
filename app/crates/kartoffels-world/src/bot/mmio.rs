@@ -1,6 +1,6 @@
 use super::{
-    BotAction, BotArm, BotBattery, BotCompass, BotMotor, BotRadar, BotSerial,
-    BotTimer,
+    BotAction, BotArm, BotBattery, BotBluetooth, BotCompass, BotMotor,
+    BotRadar, BotSerial, BotTimer,
 };
 use crate::{AliveBots, Dir, Map, Objects};
 use glam::IVec2;
@@ -16,6 +16,7 @@ pub struct BotMmio<'a> {
     pub radar: &'a mut BotRadar,
     pub serial: &'a mut BotSerial,
     pub timer: &'a mut BotTimer,
+    pub bluetooth: &'a mut BotBluetooth,
     pub ctxt: BotMmioContext<'a>,
 }
 
@@ -29,6 +30,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.arm.mmio_load(addr))
             .or_else(|_| self.radar.mmio_load(addr))
             .or_else(|_| self.compass.mmio_load(addr))
+            .or_else(|_| self.bluetooth.mmio_load(addr))
     }
 
     fn store(mut self, addr: u32, val: u32) -> Result<(), ()> {
@@ -39,6 +41,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.motor.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.arm.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.radar.mmio_store(&mut self.ctxt, addr, val))
+            .or_else(|_| self.bluetooth.mmio_store(&mut self.ctxt, addr, val))
     }
 }
 
