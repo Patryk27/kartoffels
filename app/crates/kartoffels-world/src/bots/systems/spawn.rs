@@ -151,7 +151,7 @@ fn is_pos_legal(
         return false;
     }
     if !check_neighborhood {
-        return true;
+        return bots.lookup_at(pos).is_none();
     }
     for x in -1..=1 {
         for y in -1..=1 {
