@@ -1,19 +1,95 @@
 use crate::{AliveBot, BotMmioContext};
 use glam::{ivec2, IVec2};
-use ringbuffer::{ConstGenericRingBuffer, RingBuffer};
-use serde::de::{self, Visitor};
-use serde::ser::SerializeStruct;
-use serde::{Deserialize as AutoDeserialize, Serialize};
-use std::mem;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
+use tracing::{self, info, trace};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BotBluetooth {
     cooldown: u32,
-    messages: Arc<RwLock<ConstGenericRingBuffer<[u8; 32], 5>>>, // I've stuck an Arc and RwLock on this buffer atm this seems like the way to write it
+    messages: Arc<RwLock<MessageBuffer>>, // I've stuck an Arc and RwLock on this buffer atm this seems like the way to write it
     // but I should really test it as well I think it will work though
-    out_message: [u8; 32],
-    read_buffer_index: usize,
+    out_message: Message,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Copy, Default)]
+pub struct Message {
+    pub sender_id: u64,
+    pub message: [u8; 32],
+}
+
+impl Message {
+    pub fn len() -> usize {
+        32 + 8
+    }
+
+    pub fn read(&self, addr: usize) -> Result<[u8; 4], ()> {
+        match addr {
+            0..=28 => Ok(self.message[addr..addr + 4].try_into().unwrap()),
+            32 => {
+                let id_front: u32 = (self.sender_id >> 32) as u32;
+                Ok(id_front.to_le_bytes())
+            }
+            36 => Ok((self.sender_id as u32).to_le_bytes()),
+            _ => Err(()),
+        }
+    }
+
+    pub fn write(&mut self, addr: usize, val: u8) -> Result<(), ()> {
+        if addr >= self.message.len() {
+            return Err(());
+        }
+        self.message[addr] = val;
+        Ok(())
+    }
+
+    pub fn clear(&mut self) {
+        self.message = [0; 32];
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Copy)]
+pub struct MessageBuffer {
+    pub buffer: [Message; 5],
+    pub front: usize,
+    pub length: usize,
+}
+
+impl MessageBuffer {
+    pub fn new() -> Self {
+        MessageBuffer {
+            buffer: [Message::default(); 5],
+            front: 0,
+            length: 0,
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.length == self.buffer.len()
+    }
+
+    pub fn write(&mut self, v: Message) -> Result<(), ()> {
+        if self.is_full() {
+            return Err(());
+        }
+        let address = (self.front + self.length) % self.buffer.len();
+        self.buffer[address] = v;
+        self.length += 1;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Result<(), ()> {
+        if self.is_empty() {
+            return Err(());
+        }
+        self.front = (self.front + 1) % 5;
+        self.length -= 1;
+        Ok(())
+    }
 }
 
 impl BotBluetooth {
@@ -21,38 +97,42 @@ impl BotBluetooth {
         self.cooldown = self.cooldown.saturating_sub(1);
     }
 
+    // Every increase in 1 by the rdi offset increases the the addr by 4
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
             AliveBot::MEM_BLUETOOTH => Ok((self.cooldown == 0) as u32),
             addr if addr >= AliveBot::MEM_BLUETOOTH + 4 => {
-                let idx = addr - AliveBot::MEM_BLUETOOTH + 4;
-                let byte_group = self.read(idx);
+                let idx = addr - (AliveBot::MEM_BLUETOOTH + 4);
+                let byte_group = self.read(idx as usize)?;
                 Ok(u32::from_le_bytes(byte_group))
             }
             _ => Err(()),
         }
     }
 
-    // current plan, actually return a [u8;4] constructed as [extra_info,_,first_value,NULL]
-    // the extra_info would be stuff like "is this an actual value from a buffer here" "is the message buffer empty"
-    // the buffer_index_of_first_value would give the reader an idea of where they were in the message read operation, just for double checking means
-    fn read(&self, addr: u32) -> [u8; 4] {
-        let mut out: [u8; 4] = [0; 4];
+    // the first byte is the recieved message buffer info [front_address,length,is_empty,how many bytes per mesasge]
+    // beyond that is message 1, 2, 3, 4, and 5
+    fn read(&self, addr: usize) -> Result<[u8; 4], ()> {
         let messages = self.messages.read().unwrap();
-        out[0] = messages.len() as u8;
-
-        let front = messages.peek().unwrap();
-        out[2] = front[addr as usize];
-        out
-    }
-
-    fn recieve_message(&self, message: [u8; 32]) -> Result<(), ()> {
-        let mut messages = self.messages.write().unwrap(); // deal with .unwrap later
-        if messages.is_full() {
+        if addr == 0 {
+            let mut out: [u8; 4] = [0; 4];
+            out[0] = messages.front as u8;
+            out[1] = messages.length as u8;
+            out[2] = messages.is_empty() as u8;
+            out[3] = Message::len() as u8;
+            return Ok(out);
+        }
+        if messages.is_empty() {
             return Err(());
         }
-        messages.push(message);
-        Ok(())
+        let message_number: usize = addr / Message::len();
+        let inner_addr = addr % Message::len();
+        messages.buffer[message_number].read(inner_addr)
+    }
+
+    fn recieve_message(&self, message: &Message) -> Result<(), ()> {
+        let mut messages = self.messages.write().unwrap(); // deal with .unwrap later
+        messages.write(*message)
     }
 
     fn remove_front(&self) -> Result<(), ()> {
@@ -60,7 +140,7 @@ impl BotBluetooth {
         if messages.is_empty() {
             return Err(());
         }
-        messages.dequeue();
+        let _ = messages.pop();
         Ok(())
     }
 
@@ -80,19 +160,15 @@ impl BotBluetooth {
                 }
                 Ok(())
             }
-            (AliveBot::MEM_BLUETOOTH, [0x02, index, v, _]) if index < 32 => {
+            (AliveBot::MEM_BLUETOOTH, [0x02, index, v, _]) => {
                 // we write to the out_message
-                self.out_message[index as usize] = v;
-                Ok(())
+                self.out_message.write(index as usize, v)
             }
             (AliveBot::MEM_BLUETOOTH, [0x03, _, _, _]) => {
-                self.out_message = [0; 32];
+                self.out_message.clear();
                 Ok(())
             }
-            (AliveBot::MEM_BLUETOOTH, [0x04, _, _, _]) => {
-                self.remove_front();
-                Ok(())
-            }
+            (AliveBot::MEM_BLUETOOTH, [0x04, _, _, _]) => self.remove_front(),
             // TODO: Maybe add a feature for checking if a bot has an open spot in their buffer
             _ => Err(()),
         }
@@ -103,6 +179,9 @@ impl BotBluetooth {
         ctxt: &mut BotMmioContext,
         range: BotBluetoothRange,
     ) {
+        let self_id = ctxt.bots.lookup_at(ctxt.pos).unwrap().get().get();
+        self.out_message.sender_id = self_id;
+
         for y in 0..range.len() {
             for x in 0..range.len() {
                 let pos = {
@@ -113,7 +192,7 @@ impl BotBluetooth {
 
                 if let Some(bot_id) = ctxt.bots.lookup_at(pos) {
                     let bot = ctxt.bots.get(bot_id).unwrap(); // the bot might die inbetween these instructions??
-                    bot.bluetooth.recieve_message(self.out_message); // deal with this as well
+                    let _ = bot.bluetooth.recieve_message(&self.out_message); // deal with this as well
                 }
             }
         }
@@ -125,18 +204,14 @@ impl Default for BotBluetooth {
     fn default() -> Self {
         Self {
             cooldown: 0,
-            messages: Arc::new(RwLock::new(ConstGenericRingBuffer::<
-                [u8; 32],
-                5,
-            >::new())),
-            out_message: [0; 32],
-            read_buffer_index: 0,
+            messages: Arc::new(RwLock::new(MessageBuffer::new())),
+            out_message: Message::default(),
         }
     }
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, AutoDeserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum BotBluetoothRange {
     D3 = 3,
     D5 = 5,
@@ -167,183 +242,3 @@ impl BotBluetoothRange {
     }
 }
 // TODO TESTS
-
-impl Serialize for BotBluetooth {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("BotBluetooth", 2)?;
-        state.serialize_field("cooldown", &self.cooldown);
-        let vec: Vec<[u8; 32]> = self.messages.read().unwrap().to_vec();
-        state.serialize_field("messages", &vec);
-        state.serialize_field("out_message", &self.out_message);
-        state.serialize_field("read_buffer_index", &self.read_buffer_index);
-
-        state.end()
-    }
-}
-// We need to implement Deserialize for BotBluetooth since we use a ring buffer
-impl<'de> AutoDeserialize<'de> for BotBluetooth {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[allow(non_camel_case_types)]
-        #[derive(AutoDeserialize)]
-        enum Field {
-            cooldown,
-            messages,
-            out_message,
-            read_buffer_index,
-        }
-
-        struct BotBluetoothVisitor;
-
-        impl<'de> Visitor<'de> for BotBluetoothVisitor {
-            type Value = BotBluetooth;
-
-            fn expecting(
-                &self,
-                formatter: &mut std::fmt::Formatter,
-            ) -> std::fmt::Result {
-                formatter.write_str("struct BotBluetooth")
-            }
-
-            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::SeqAccess<'de>,
-            {
-                let cooldown = seq
-                    .next_element()?
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::invalid_length(
-                            // this looks like the suggested de::Error doesn't have the correct type,
-                            // TODO Check the version of serde, make sure we have the correct stuff
-                            0, &self,
-                        )
-                    })
-                    .unwrap();
-                let messages: Result<Vec<[u8; 32]>, _> =
-                    seq.next_element()?.ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::invalid_length(
-                            1, &self,
-                        )
-                    });
-                let out_message = seq
-                    .next_element()?
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::invalid_length(
-                            2, &self,
-                        )
-                    })
-                    .unwrap();
-                let read_buffer_index = seq
-                    .next_element()?
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::invalid_length(
-                            3, &self,
-                        )
-                    })
-                    .unwrap();
-                Ok(BotBluetooth {
-                    cooldown,
-                    messages: Arc::new(RwLock::new(ConstGenericRingBuffer::<
-                        [u8; 32],
-                        5,
-                    >::from(
-                        messages.unwrap()
-                    ))),
-                    out_message,
-                    read_buffer_index,
-                })
-            }
-
-            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::MapAccess<'de>,
-            {
-                let mut cooldown = None;
-                let mut messages: Option<Vec<[u8; 32]>> = None;
-                let mut out_message: Option<[u8; 32]> = None;
-                let mut read_buffer_index: Option<usize> = None;
-                while let Some(key) = map.next_key()? {
-                    match key {
-                        Field::cooldown => {
-                            if cooldown.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "cooldown",
-                                ));
-                            }
-                            cooldown = Some(map.next_value()?);
-                        }
-                        Field::messages => {
-                            if messages.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "messages",
-                                ));
-                            }
-                            messages = Some(map.next_value()?);
-                        }
-                        Field::out_message => {
-                            if out_message.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "messages",
-                                ));
-                            }
-                            out_message = Some(map.next_value()?);
-                        }
-                        Field::read_buffer_index => {
-                            if read_buffer_index.is_some() {
-                                return Err(de::Error::duplicate_field(
-                                    "read_buffer_index",
-                                ));
-                            }
-                            read_buffer_index = Some(map.next_value()?);
-                        }
-                    };
-                }
-                let cooldown = cooldown
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::missing_field(
-                            "cooldown",
-                        )
-                    })
-                    .unwrap();
-                let messages_holder: ConstGenericRingBuffer<[u8; 32], 5> =
-                    ConstGenericRingBuffer::<[u8; 32], 5>::from(
-                        messages
-                            .ok_or_else(|| <serde_json::error::Error as de::Error>::missing_field("messages"))
-                            .unwrap(),
-                    );
-                let out_message = out_message
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::missing_field(
-                            "out_message",
-                        )
-                    })
-                    .unwrap();
-                let read_buffer_index = read_buffer_index
-                    .ok_or_else(|| {
-                        <serde_json::error::Error as de::Error>::missing_field(
-                            "read_buffer_index",
-                        )
-                    })
-                    .unwrap();
-                Ok(BotBluetooth {
-                    cooldown,
-                    messages: Arc::new(RwLock::new(messages_holder)),
-                    out_message,
-                    read_buffer_index,
-                })
-            }
-        }
-        const FIELDS: &[&str] =
-            &["cooldown", "messages", "out_message", "read_buffer_index"];
-        deserializer.deserialize_struct(
-            "BotBluetooth",
-            FIELDS,
-            BotBluetoothVisitor,
-        )
-    }
-}
