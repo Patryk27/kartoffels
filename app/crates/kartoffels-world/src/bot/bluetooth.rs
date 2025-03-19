@@ -104,7 +104,8 @@ impl BotBluetooth {
             addr if addr >= AliveBot::MEM_BLUETOOTH + 4 => {
                 let idx = addr - (AliveBot::MEM_BLUETOOTH + 4);
                 let byte_group = self.read(idx as usize)?;
-                Ok(u32::from_le_bytes(byte_group))
+                let out = u32::from_le_bytes(byte_group);
+                Ok(out)
             }
             _ => Err(()),
         }
@@ -125,8 +126,9 @@ impl BotBluetooth {
         if messages.is_empty() {
             return Err(());
         }
-        let message_number: usize = addr / Message::len();
-        let inner_addr = addr % Message::len();
+        let msg_reader = addr - 4;
+        let message_number: usize = msg_reader / Message::len();
+        let inner_addr = msg_reader % Message::len();
         messages.buffer[message_number].read(inner_addr)
     }
 

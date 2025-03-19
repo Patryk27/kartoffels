@@ -20,6 +20,8 @@ bots!([
     static CHL_PERSONAL_ROOMBA = "chl-personal-roomba";
     static DUMMY = "dummy";
     static ROBERTO = "roberto";
+    static IANTHE = "ianthe";
+    static CORONABETH = "coronabeth";
     static TUT_01 = "tut-01";
     static TUT_02 = "tut-02";
     static TUT_03 = "tut-03";
