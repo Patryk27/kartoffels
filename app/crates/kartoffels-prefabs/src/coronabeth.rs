@@ -1,4 +1,4 @@
-//! coronabeth - reciever bot in the Tridentarius pair currently used for testing sending / recieving bluetooth messages
+//! coronabeth - receiver bot in the Tridentarius pair currently used for testing sending / receiving bluetooth messages
 
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
@@ -12,7 +12,7 @@ use kartoffel::*;
 fn main() {
     let mut display = Display::default();
     loop {
-        if let Some(message) = pop_bluetooth_buffer() {
+        if let Some(message) = bluetooth_pop_read_buffer() {
             // check that each value is the same
             match unique(message.message) {
                 Some(v) => {

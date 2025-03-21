@@ -1,4 +1,4 @@
-//! Ianthe - Sender bot in the Tridentarius pair currently used for testing sending / recieving bluetooth messages
+//! Ianthe - Sender bot in the Tridentarius pair currently used for testing sending / receiving bluetooth messages
 
 #![cfg_attr(target_arch = "riscv32", no_std, no_main)]
 
