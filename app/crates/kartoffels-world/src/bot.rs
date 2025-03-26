@@ -25,6 +25,7 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
+use crate::messages::Messages;
 use crate::{AliveBots, Clock, Dir, Map, Objects, Ticks, WorldRng};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
@@ -108,6 +109,7 @@ impl AliveBot {
         map: &Map,
         objects: &Objects,
         rng: &mut WorldRng,
+        messages: &mut Messages,
     ) -> Result<Option<BotAction>, Box<str>> {
         let mut action = None;
 
@@ -137,6 +139,7 @@ impl AliveBot {
                 objects,
                 pos: self.pos,
                 rng: &mut rng.0,
+                msgs: messages,
             },
         })?;
 

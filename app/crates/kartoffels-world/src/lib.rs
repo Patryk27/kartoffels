@@ -16,6 +16,7 @@ mod handle;
 mod lifecycle;
 mod lives;
 mod map;
+mod messages;
 mod object;
 mod objects;
 mod policy;
@@ -75,6 +76,7 @@ use bevy_ecs::system::Res;
 use bevy_ecs::world::World;
 use futures_util::FutureExt;
 use kartoffels_utils::Id;
+use messages::Messages;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::path::Path;
@@ -117,6 +119,7 @@ pub fn create(config: Config) -> Handle {
         policy: config.policy,
         rng: WorldRng(rng),
         theme: config.theme,
+        messages: Messages::default(),
     };
 
     create_or_resume(res, config.events)
@@ -137,6 +140,7 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
         policy: world.policy.into_owned(),
         rng: WorldRng(ChaCha8Rng::from_entropy()),
         theme: world.theme.map(|theme| theme.into_owned()),
+        messages: Messages::default(), // TODO: Storage and loading of messages
     };
 
     Ok(create_or_resume(res, false))
@@ -153,6 +157,7 @@ struct Resources {
     policy: Policy,
     rng: WorldRng,
     theme: Option<Theme>,
+    messages: Messages,
 }
 
 fn create_or_resume(res: Resources, emit_events: bool) -> Handle {
@@ -176,6 +181,7 @@ fn create_world(res: Resources) -> World {
     world.insert_resource(res.policy);
     world.insert_resource(res.rng);
     world.insert_resource(res.lives);
+    world.insert_resource(res.messages);
 
     if let Some(path) = res.path {
         world.insert_resource(path);
@@ -282,6 +288,7 @@ fn main_schedule() -> Schedule {
         lifecycle::log,
         clock::sleep,
         bevy_ecs::event::event_update_system,
+        messages::tick,
     ))
 }
 

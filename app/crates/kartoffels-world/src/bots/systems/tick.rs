@@ -1,3 +1,4 @@
+use crate::messages::Messages;
 use crate::{
     AliveBot, BotAction, Bots, Clock, Event, KillBot, Map, Objects, TileKind,
     WorldRng,
@@ -11,6 +12,7 @@ pub fn tick(
     mut bots: ResMut<Bots>,
     mut objects: ResMut<Objects>,
     mut rng: ResMut<WorldRng>,
+    mut messages: ResMut<Messages>,
 ) {
     for _ in 0..clock.ticks() {
         let mut idx = 0;
@@ -29,6 +31,7 @@ pub fn tick(
                     &mut objects,
                     &mut rng,
                     bot,
+                    &mut messages,
                 );
 
                 bots.alive.insert(idx, id, pos, bot);
@@ -47,8 +50,9 @@ fn tick_bot(
     objects: &mut Objects,
     rng: &mut WorldRng,
     mut bot: Box<AliveBot>,
+    messages: &mut Messages,
 ) -> Option<Box<AliveBot>> {
-    match bot.tick(&bots.alive, map, objects, rng) {
+    match bot.tick(&bots.alive, map, objects, rng, messages) {
         Ok(Some(BotAction::ArmDrop { at, idx })) => {
             if let Some((id, obj)) = bot.inventory.take(idx) {
                 bot.log(

@@ -2,6 +2,7 @@ use super::{
     BotAction, BotArm, BotBattery, BotBluetooth, BotCompass, BotMotor,
     BotRadar, BotSerial, BotTimer,
 };
+use crate::messages::Messages;
 use crate::{AliveBots, Dir, Map, Objects};
 use glam::IVec2;
 use kartoffels_cpu::Mmio;
@@ -53,6 +54,7 @@ pub struct BotMmioContext<'a> {
     pub objects: &'a Objects,
     pub pos: IVec2,
     pub rng: &'a mut ChaCha8Rng,
+    pub msgs: &'a mut Messages,
 }
 
 impl BotMmioContext<'_> {
