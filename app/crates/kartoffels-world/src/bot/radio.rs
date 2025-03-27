@@ -26,7 +26,7 @@ use std::sync::{Arc, RwLock};
 ///
 /// When sending a message there are 4 settings equivalent to the radar scans any bots in that area will (if their incoming message buffer isn't full) receive that message
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct BotBluetooth {
+pub struct BotRadio {
     /// Can only send when cooldown is 0
     /// scans create different cooldowns per range
     /// | Range | Ticks | +-% |
@@ -138,7 +138,7 @@ impl MessageBuffer {
     }
 }
 
-impl BotBluetooth {
+impl BotRadio {
     /// This function runs each tick!
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
@@ -155,10 +155,10 @@ impl BotBluetooth {
     /// Currently you can't read from the write buffer
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_BLUETOOTH => Ok((self.cooldown == 0) as u32),
-            addr if addr >= AliveBot::MEM_BLUETOOTH + 4 => {
+            AliveBot::MEM_RADIO => Ok((self.cooldown == 0) as u32),
+            addr if addr >= AliveBot::MEM_RADIO + 4 => {
                 // they want to read from the message buffer
-                let idx = addr - (AliveBot::MEM_BLUETOOTH + 4);
+                let idx = addr - (AliveBot::MEM_RADIO + 4);
                 let byte_group = self.read(idx as usize)?;
                 let out = u32::from_le_bytes(byte_group);
                 Ok(out)
@@ -188,7 +188,7 @@ impl BotBluetooth {
         messages.buffer[message_number].read(inner_addr)
     }
 
-    fn receive_message(&self, message: &Message) -> Result<(), ()> {
+    pub fn receive_message(&self, message: &Message) -> Result<(), ()> {
         let mut messages = self.messages.write().unwrap();
         messages.write(*message)
     }
@@ -218,7 +218,7 @@ impl BotBluetooth {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_BLUETOOTH, [0x01, range, _, _])
+            (AliveBot::MEM_RADIO, [0x01, range, _, _])
                 if let Some(range) = BotBluetoothRange::new(range) =>
             {
                 // the bot has been told to send a bluetooth message
@@ -227,15 +227,15 @@ impl BotBluetooth {
                 }
                 Ok(())
             }
-            (AliveBot::MEM_BLUETOOTH, [0x02, index, v, _]) => {
+            (AliveBot::MEM_RADIO, [0x02, index, v, _]) => {
                 // we write to the out_message
                 self.out_message.write(index as usize, v)
             }
-            (AliveBot::MEM_BLUETOOTH, [0x03, _, _, _]) => {
+            (AliveBot::MEM_RADIO, [0x03, _, _, _]) => {
                 self.out_message.clear();
                 Ok(())
             }
-            (AliveBot::MEM_BLUETOOTH, [0x04, _, _, _]) => self.remove_front(),
+            (AliveBot::MEM_RADIO, [0x04, _, _, _]) => self.remove_front(),
             _ => Err(()),
         }
     }
@@ -270,7 +270,7 @@ impl BotBluetooth {
     }
 }
 
-impl Default for BotBluetooth {
+impl Default for BotRadio {
     fn default() -> Self {
         Self {
             cooldown: 0,

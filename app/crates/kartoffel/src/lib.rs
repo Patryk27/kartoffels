@@ -38,7 +38,7 @@ const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
 const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
-const MEM_BLUETOOTH: *mut u32 = MEM.wrapping_byte_add(7 * 1024);
+const MEM_RADIO: *mut u32 = MEM.wrapping_byte_add(7 * 1024);
 
 #[inline(always)]
 fn rdi(ptr: *mut u32, off: usize) -> u32 {

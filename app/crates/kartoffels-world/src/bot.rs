@@ -1,7 +1,6 @@
 mod action;
 mod arm;
 mod battery;
-mod bluetooth;
 mod compass;
 mod events;
 mod id;
@@ -9,13 +8,13 @@ mod inventory;
 mod mmio;
 mod motor;
 mod radar;
+mod radio;
 mod serial;
 mod timer;
 
 pub use self::action::*;
 pub use self::arm::*;
 pub use self::battery::*;
-pub use self::bluetooth::*;
 pub use self::compass::*;
 pub use self::events::*;
 pub use self::id::*;
@@ -23,6 +22,7 @@ pub use self::inventory::*;
 pub use self::mmio::*;
 pub use self::motor::*;
 pub use self::radar::*;
+pub use self::radio::*;
 pub use self::serial::*;
 pub use self::timer::*;
 use crate::messages::Messages;
@@ -52,7 +52,7 @@ pub struct AliveBot {
     pub radar: BotRadar,
     pub serial: BotSerial,
     pub timer: BotTimer,
-    pub bluetooth: BotBluetooth,
+    pub radio: BotRadio,
 }
 
 impl AliveBot {
@@ -63,7 +63,7 @@ impl AliveBot {
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
     const MEM_COMPASS: u32 = 6 * 1024;
-    const MEM_BLUETOOTH: u32 = 7 * 1024;
+    const MEM_RADIO: u32 = 7 * 1024;
 
     pub fn new(
         rng: &mut impl RngCore,
@@ -91,7 +91,7 @@ impl AliveBot {
             radar: Default::default(),
             serial: Default::default(),
             timer: BotTimer::new(rng),
-            bluetooth: Default::default(),
+            radio: Default::default(),
         }
     }
 
@@ -119,7 +119,7 @@ impl AliveBot {
         self.motor.tick();
         self.radar.tick();
         self.compass.tick(self.dir);
-        self.bluetooth.tick();
+        self.radio.tick();
 
         self.cpu.tick(BotMmio {
             arm: &mut self.arm,
@@ -129,7 +129,7 @@ impl AliveBot {
             radar: &mut self.radar,
             serial: &mut self.serial,
             timer: &mut self.timer,
-            bluetooth: &mut self.bluetooth,
+            radio: &mut self.radio,
 
             ctxt: BotMmioContext {
                 action: &mut action,
