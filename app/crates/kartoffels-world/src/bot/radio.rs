@@ -3,6 +3,8 @@ use glam::{ivec2, IVec2};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 
+use super::AliveBots;
+
 // This is a simple implementation for the bluetooth concept
 // Currently the messages are a fixed size and the cooldown is based on distance sent
 //
@@ -46,66 +48,47 @@ pub struct BotRadio {
     /// you should *NEVER* read from the MessageBuffer when writing to another one at the same time
     messages: Arc<RwLock<MessageBuffer>>,
     /// This is the buffer holding the current message you are going to send at the moment this is written two by writing [0x02,index,value,_] to offset 0 where 0 <= index < 32 and value is any u8
-    out_message: Message,
+    out_message: Vec<u8>,
+    pub filter: Option<[u8; 4]>,
 }
 
-/// This is the current implementation of a message, obviously this restricts bots to only messaging 32 bytes at a time
-/// An interesting alternative could be to change the cooldown based on message size, this would mean we would need to change read and write functionality quite drastically as well
-#[derive(
-    Debug, Clone, Deserialize, Serialize, Copy, PartialEq, Eq, Default,
-)]
-pub struct Message {
-    pub sender_id: u64,
-    pub message: [u8; 32],
+#[derive(Debug, Clone, Deserialize, Serialize, Copy)]
+struct MessagePointer {
+    ptr: usize,
+    length: usize,
 }
 
-impl Message {
-    /// This is used to reduce the code's reliance on the message being 40 bytes long
-    /// In theory if you wanted to change a message to be 64 bytes for instance then changing these constants would do most of the work (you should make sure you change the bot's API bluetooth code as well as it is more hard coded on that end )
-    pub const BYTES: usize = 40;
-
-    /// When given a address return 4 bytes, the rdi function that drives this can only read every 4 bytes meaning we should always receive a multiple of 4
-    /// The first 32 bytes returned are the actual message the remaining 8 make up the u64 bot id
-    pub fn read(&self, addr: usize) -> Result<[u8; 4], ()> {
-        match addr {
-            0..=28 => Ok(self.message[addr..addr + 4].try_into().unwrap()),
-            32 => {
-                let id_front: u32 = (self.sender_id >> 32) as u32;
-                Ok(id_front.to_le_bytes())
-            }
-            36 => Ok((self.sender_id as u32).to_le_bytes()),
-            _ => Err(()),
-        }
-    }
-
-    pub fn write(&mut self, addr: usize, val: u8) -> Result<(), ()> {
-        if addr >= self.message.len() {
-            return Err(());
-        }
-        self.message[addr] = val;
-        Ok(())
-    }
-
-    pub fn clear(&mut self) {
-        self.message = [0; 32];
+impl MessagePointer {
+    fn to_mmio_output(&self) -> [u8; 4] {
+        let ptr_bytes = (self.ptr as u16).to_le_bytes();
+        [ptr_bytes[0], ptr_bytes[1], self.length as u8, 0x00]
     }
 }
 
 /// This is a custom circular buffer written for holding the messages
 /// Consider making this Generic and generally just *better* and probably breaking out into it's own file maybe moving read functionality around a bit as well
-#[derive(Debug, Clone, Deserialize, Serialize, Copy)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MessageBuffer {
-    pub buffer: [Message; 5],
-    pub front: usize,
+    pub buffer: Vec<u8>, // we use Vecs since serde doesn't serialize / deserialize for arrays bigger than 32 elements long
+    pub front_ptr: usize,
     pub length: usize,
+    pub message_ptrs: Vec<MessagePointer>,
 }
 
 impl MessageBuffer {
+    /// This is the number of messages that we can store in our buffer
+    /// since we *currently* have a 512B buffer and each message is atleast 4 bytes that gives us a maximum of 128 messages
+    const MESSAGE_PTRS_CAP: usize = 128;
+    const BUFFER_CAP: usize = 512;
+    const MESSAGE_BUFFER_SIZE: usize =
+        1 + MessageBuffer::BUFFER_CAP + MessageBuffer::MESSAGE_PTRS_CAP;
+
     pub fn new() -> Self {
         MessageBuffer {
-            buffer: [Message::default(); 5],
-            front: 0,
+            buffer: Vec::with_capacity(MessageBuffer::BUFFER_CAP),
+            front_ptr: 0,
             length: 0,
+            message_ptrs: Vec::with_capacity(MessageBuffer::MESSAGE_PTRS_CAP),
         }
     }
 
@@ -114,16 +97,39 @@ impl MessageBuffer {
     }
 
     pub fn is_full(&self) -> bool {
-        self.length == self.buffer.len()
+        self.available_space() < 4
     }
 
-    pub fn write(&mut self, v: Message) -> Result<(), ()> {
-        if self.is_full() {
+    pub fn available_space(&self) -> usize {
+        let last: MessagePointer = self.message_ptrs
+            [(self.front_ptr + self.length) % MessageBuffer::MESSAGE_PTRS_CAP];
+        if (last.ptr + last.length) / MessageBuffer::BUFFER_CAP >= 1 {
+            return self.message_ptrs[self.front_ptr].ptr
+                - (last.ptr + last.length);
+        }
+        return self.message_ptrs[self.front_ptr].ptr
+            + (MessageBuffer::MESSAGE_PTRS_CAP - (last.ptr + last.length));
+    }
+
+    pub fn write(&mut self, v: &[u8]) -> Result<(), ()> {
+        // we should make it so messages can only start at every 4th byte so the memory loads can always work alternatively write a more complicated read functionality
+        if v.len() > self.available_space() {
             return Err(());
         }
-        let address = (self.front + self.length) % self.buffer.len();
-        self.buffer[address] = v;
+        let last_index =
+            (self.front_ptr + self.length) % MessageBuffer::MESSAGE_PTRS_CAP;
+        let last: MessagePointer = self.message_ptrs[last_index];
+        let byte_index = (last.ptr + last.length) % MessageBuffer::BUFFER_CAP;
+        for (index, byte) in v.iter().enumerate() {
+            self.buffer[(byte_index + index) % MessageBuffer::BUFFER_CAP] =
+                *byte;
+        }
         self.length += 1;
+        self.message_ptrs[(last_index + 1) % MessageBuffer::MESSAGE_PTRS_CAP] =
+            MessagePointer {
+                ptr: byte_index,
+                length: v.len(),
+            };
         Ok(())
     }
 
@@ -132,13 +138,14 @@ impl MessageBuffer {
         if self.is_empty() {
             return Err(());
         }
-        self.front = (self.front + 1) % self.buffer.len();
         self.length -= 1;
+        self.front_ptr = (self.front_ptr + 1) % MessageBuffer::MESSAGE_PTRS_CAP;
         Ok(())
     }
 }
 
 impl BotRadio {
+    const SEND_BUFFER_SIZE: usize = 128;
     /// This function runs each tick!
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
@@ -149,48 +156,64 @@ impl BotRadio {
     /// | Addr beyond 7168 | What it returns |
     /// | --- | --- |
     /// | 0 | is ready to send a message? |
-    /// | 1 | info on the received message buffer [index of the front of the buffer, length of the buffer (how many messages you have), is received message buffer empty related to the last value, number of bytes of each message] |
-    /// | 2..| reading straight from the message buffer memory, make sure to add front * 40 to this value to get the oldest message in the buffer|
-    ///
-    /// Currently you can't read from the write buffer
+    /// | 1..128 | read the current message ready to send |
+    /// | 128..769 | read the message buffer memory, the first 4 bytes are info on the buffer, the next 128 are the ptrs to the messages, the final 512 are the actual messages|
+    ///  We currently don't read from the filter
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
             AliveBot::MEM_RADIO => Ok((self.cooldown == 0) as u32),
             addr if addr >= AliveBot::MEM_RADIO + 4 => {
-                // they want to read from the message buffer
-                let idx = addr - (AliveBot::MEM_RADIO + 4);
-                let byte_group = self.read(idx as usize)?;
-                let out = u32::from_le_bytes(byte_group);
-                Ok(out)
+                let idx = (addr - AliveBot::MEM_RADIO - 4) as usize;
+                // if it's the first 128 values read the send buffer
+                let out = match idx {
+                    0..BotRadio::SEND_BUFFER_SIZE => self
+                        .read_send_buffer(idx)
+                        .map(|v| u32::from_le_bytes(v)),
+                    BotRadio::SEND_BUFFER_SIZE
+                        ..MessageBuffer::MESSAGE_BUFFER_SIZE => self
+                        .read_message_buffer(idx - BotRadio::SEND_BUFFER_SIZE)
+                        .map(|v| u32::from_le_bytes(v)),
+                    _ => Err(()), // make sure if they are reading beyond these bounds they might be reading a module that has a further on adddress
+                };
+                return out;
             }
             _ => Err(()),
         }
     }
 
-    // the first byte is the received message buffer info [front_address,length,is_empty,how many bytes per message]
-    // beyond that is message 1, 2, 3, 4, and 5
-    fn read(&self, addr: usize) -> Result<[u8; 4], ()> {
-        let messages = self.messages.read().unwrap();
-        if addr == 0 {
-            let mut out: [u8; 4] = [0; 4];
-            out[0] = messages.front as u8;
-            out[1] = messages.length as u8;
-            out[2] = messages.is_empty() as u8;
-            out[3] = Message::BYTES as u8;
-            return Ok(out);
-        }
-        if messages.is_empty() {
-            return Err(());
-        }
-        let fixed_addr = addr - 4; // We now want to start indexing the message buffer's messages
-        let message_number: usize = fixed_addr / Message::BYTES;
-        let inner_addr = fixed_addr % Message::BYTES;
-        messages.buffer[message_number].read(inner_addr)
+    fn read_send_buffer(&self, addr: usize) -> Result<[u8; 4], ()> {
+        let arr: [u8; 4] =
+            <[u8; 4]>::try_from(&self.out_message[addr..addr + 4]).unwrap(); // TODO MATCH not unwrap I think
+        return Ok(arr);
     }
 
-    pub fn receive_message(&self, message: &Message) -> Result<(), ()> {
+    fn read_message_buffer(&self, addr: usize) -> Result<[u8; 4], ()> {
+        let messages = self.messages.try_read().unwrap();
+        match addr {
+            0 => Ok([
+                messages.front_ptr as u8,
+                messages.length as u8,
+                (MessageBuffer::MESSAGE_PTRS_CAP + 1) as u8,
+                0x00,
+            ]),
+            1..=MessageBuffer::MESSAGE_PTRS_CAP => {
+                Ok(messages.message_ptrs[addr - 1].to_mmio_output())
+            }
+            ..=MessageBuffer::MESSAGE_BUFFER_SIZE => {
+                let buff_ptr = addr - (MessageBuffer::MESSAGE_PTRS_CAP + 2);
+                Ok(<[u8; 4]>::try_from(
+                    &messages.buffer[buff_ptr..buff_ptr + 4],
+                )
+                .unwrap())
+            }
+            _ => Err(()),
+        }
+    }
+
+    pub fn receive_message(&self, message: Vec<u8>) -> Result<(), ()> {
+        // TODO Filtering
         let mut messages = self.messages.write().unwrap();
-        messages.write(*message)
+        messages.write(&message)
     }
 
     /// Cleans up the receive buffer (move the pointers forward)
@@ -218,24 +241,6 @@ impl BotRadio {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_RADIO, [0x01, range, _, _])
-                if let Some(range) = BotBluetoothRange::new(range) =>
-            {
-                // the bot has been told to send a bluetooth message
-                if self.cooldown == 0 {
-                    self.send_message(ctxt, range)
-                }
-                Ok(())
-            }
-            (AliveBot::MEM_RADIO, [0x02, index, v, _]) => {
-                // we write to the out_message
-                self.out_message.write(index as usize, v)
-            }
-            (AliveBot::MEM_RADIO, [0x03, _, _, _]) => {
-                self.out_message.clear();
-                Ok(())
-            }
-            (AliveBot::MEM_RADIO, [0x04, _, _, _]) => self.remove_front(),
             _ => Err(()),
         }
     }
@@ -249,24 +254,7 @@ impl BotRadio {
         ctxt: &mut BotMmioContext,
         range: BotBluetoothRange,
     ) {
-        let self_id = ctxt.bots.lookup_at(ctxt.pos).unwrap().get().get();
-        self.out_message.sender_id = self_id;
-
-        for y in 0..range.len() {
-            for x in 0..range.len() {
-                let pos = {
-                    let offset = ivec2(x as i32, y as i32)
-                        - IVec2::splat(range.len() as i32) / 2;
-                    ctxt.pos + ctxt.dir.as_vec().rotate(offset.perp())
-                };
-
-                if let Some(bot_id) = ctxt.bots.lookup_at(pos) {
-                    let bot = ctxt.bots.get(bot_id).unwrap();
-                    let _ = bot.bluetooth.receive_message(&self.out_message);
-                }
-            }
-        }
-        self.cooldown = range.cooldown(ctxt);
+        todo!()
     }
 }
 
@@ -275,7 +263,8 @@ impl Default for BotRadio {
         Self {
             cooldown: 0,
             messages: Arc::new(RwLock::new(MessageBuffer::new())),
-            out_message: Message::default(),
+            out_message: Vec::with_capacity(128),
+            filter: None,
         }
     }
 }
@@ -476,36 +465,36 @@ mod bluetooth_tests {
         assert_eq!(buff.buffer[0], test2_message, "Writing to a full buffer where the front should be pointing at the index 1 and the length 4 (write should be at 0 but wasn't)");
     }
 
-    #[test]
-    fn buffer_pop() {
-        let mut empty_buff = MessageBuffer::new();
-        assert!(
-            empty_buff.pop().is_err(),
-            "Popping an empty buffer didn't return empty"
-        );
+    // #[test]
+    // fn buffer_pop() {
+    //     let mut empty_buff = MessageBuffer::new();
+    //     assert!(
+    //         empty_buff.pop().is_err(),
+    //         "Popping an empty buffer didn't return empty"
+    //     );
 
-        let mut test_message_1 = TEST_MESSAGE;
-        let mut test_message_2 = TEST_MESSAGE;
-        test_message_1.message = [1; 32];
-        test_message_2.message = [2; 32];
-        let mut buf = MessageBuffer {
-            buffer: [
-                test_message_1,
-                test_message_2,
-                Message::default(),
-                Message::default(),
-                Message::default(),
-            ],
-            front: 0,
-            length: 2,
-        };
+    //     let mut test_message_1 = TEST_MESSAGE;
+    //     let mut test_message_2 = TEST_MESSAGE;
+    //     test_message_1.message = [1; 32];
+    //     test_message_2.message = [2; 32];
+    //     let mut buf = MessageBuffer {
+    //         buffer: [
+    //             test_message_1,
+    //             test_message_2,
+    //             Message::default(),
+    //             Message::default(),
+    //             Message::default(),
+    //         ],
+    //         front: 0,
+    //         length: 2,
+    //     };
 
-        let _ = buf.pop();
-        assert_eq!(
-            buf.buffer[buf.front], test_message_2,
-            "Pop didn't clear the last values added"
-        );
-    }
+    //     let _ = buf.pop();
+    //     assert_eq!(
+    //         buf.buffer[buf.front], test_message_2,
+    //         "Pop didn't clear the last values added"
+    //     );
+    // }
 
     // Test the overall read / write functionality of BotBluetooth ??
 }
