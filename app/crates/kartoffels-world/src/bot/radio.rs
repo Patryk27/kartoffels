@@ -112,7 +112,9 @@ impl MessageBuffer {
     }
 
     pub fn write(&mut self, v: &[u8]) -> Result<(), ()> {
-        // we should make it so messages can only start at every 4th byte so the memory loads can always work alternatively write a more complicated read functionality
+        // we should make it so messages can only start at every 4th byte so the
+        // memory loads can always read from the start of a message, alternatively
+        // write a more complicated read functionality
         if v.len() > self.available_space() {
             return Err(());
         }
@@ -161,7 +163,7 @@ impl BotRadio {
     ///  We currently don't read from the filter
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_RADIO => Ok((self.cooldown == 0) as u32),
+            AliveBot::MEM_RADIO => self.radio_status(),
             addr if addr >= AliveBot::MEM_RADIO + 4 => {
                 let idx = (addr - AliveBot::MEM_RADIO - 4) as usize;
                 // if it's the first 128 values read the send buffer
@@ -179,6 +181,19 @@ impl BotRadio {
             }
             _ => Err(()),
         }
+    }
+
+    fn radio_status(&self) -> Result<u32, ()> {
+        // first bit is for if it's on which atm is always 1
+        let mut out = 1u32;
+        if self.cooldown == 0 {
+            out += 2;
+        }
+        if !self.messages.read().unwrap().is_empty() {
+            out += 4;
+        }
+
+        return Ok(out);
     }
 
     fn read_send_buffer(&self, addr: usize) -> Result<[u8; 4], ()> {
@@ -211,7 +226,14 @@ impl BotRadio {
     }
 
     pub fn receive_message(&self, message: Vec<u8>) -> Result<(), ()> {
-        // TODO Filtering
+        if let Some(filter) = self.filter {
+            // basic filtering
+            for i in 0..4 {
+                if message[i] != filter[i] {
+                    return Ok(());
+                }
+            }
+        }
         let mut messages = self.messages.write().unwrap();
         messages.write(&message)
     }
@@ -230,17 +252,60 @@ impl BotRadio {
     /// The first byte dictates what the write will do
     /// | First byte | What it does |
     /// | --- | --- |
-    /// | 0x01 | send a bluetooth message in a range (dictated by 2nd byte |
-    /// | 0x02 | write a byte to the send buffer at at the index  [0x02 , index, byte, _ ] |
-    /// | 0x03 | clear the send buffer |
-    /// | 0x04 | move the circular buffer forward 1 (pop but without a return)
+    /// | 0x01 | radio on / off (not yet implemented) |
+    /// | 0x02 | send current item in send buffer |
+    /// | 0x03 | either half of a message filter (controlled by the second byte either being 0x00 or 0x01) or 0x02 remove the filter
+    /// Writing the next 128 bytes is the send buffer
     pub fn mmio_store(
         &mut self,
         ctxt: &mut BotMmioContext,
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
+        // TODO: Break out a bunch of these arms into their own functions for readability
         match (addr, val.to_le_bytes()) {
+            (AliveBot::MEM_RADIO, [0x01, _, _, _]) => todo!(), // this is for turning the radio on / off
+            (AliveBot::MEM_RADIO, [0x02, _, _, _]) => {
+                self.send_message(ctxt, BotBluetoothRange::D3)
+            }
+            (AliveBot::MEM_RADIO, [0x03, 0x00, a, b]) => {
+                match self.filter {
+                    Some(mut v) => {
+                        v[0] = a;
+                        v[1] = b;
+                    }
+                    None => {
+                        self.filter = Some([a, b, 0, 0]);
+                    }
+                }
+                Ok(())
+            }
+            (AliveBot::MEM_RADIO, [0x03, 0x01, a, b]) => {
+                match self.filter {
+                    Some(mut v) => {
+                        v[2] = a;
+                        v[3] = b;
+                    }
+                    None => {
+                        self.filter = Some([0, 0, a, b]);
+                    }
+                }
+                Ok(())
+            }
+            (AliveBot::MEM_RADIO, [0x03, 0x02, _, _]) => {
+                self.filter = None;
+                Ok(())
+            }
+            (addr, bytes)
+                if addr >= AliveBot::MEM_RADIO + 4
+                    && addr <= AliveBot::MEM_RADIO + 128 =>
+            {
+                let idx = (addr - (AliveBot::MEM_RADIO + 1)) as usize;
+                for (i, byte) in bytes.iter().enumerate() {
+                    self.out_message[idx + i] = *byte;
+                }
+                Ok(())
+            }
             _ => Err(()),
         }
     }
@@ -253,7 +318,7 @@ impl BotRadio {
         &mut self,
         ctxt: &mut BotMmioContext,
         range: BotBluetoothRange,
-    ) {
+    ) -> Result<(), ()> {
         todo!()
     }
 }
@@ -270,6 +335,7 @@ impl Default for BotRadio {
 }
 
 /// This is a copy of the radar range code, maybe consider breaking it out
+/// This will also be changed a bit for the new method of message power etc.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum BotBluetoothRange {
