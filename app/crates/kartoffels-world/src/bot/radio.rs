@@ -193,13 +193,13 @@ impl BotRadio {
             out += 4;
         }
 
-        return Ok(out);
+        Ok(out)
     }
 
     fn read_send_buffer(&self, addr: usize) -> Result<[u8; 4], ()> {
         let arr: [u8; 4] =
             <[u8; 4]>::try_from(&self.out_message[addr..addr + 4]).unwrap(); // TODO MATCH not unwrap I think
-        return Ok(arr);
+        Ok(arr)
     }
 
     fn read_message_buffer(&self, addr: usize) -> Result<[u8; 4], ()> {
@@ -225,7 +225,7 @@ impl BotRadio {
         }
     }
 
-    pub fn receive_message(&self, message: Vec<u8>) -> Result<(), ()> {
+    pub fn receive_message(&self, message: &[u8]) -> Result<(), ()> {
         if let Some(filter) = self.filter {
             // basic filtering
             for i in 0..4 {
@@ -266,7 +266,10 @@ impl BotRadio {
         match (addr, val.to_le_bytes()) {
             (AliveBot::MEM_RADIO, [0x01, _, _, _]) => todo!(), // this is for turning the radio on / off
             (AliveBot::MEM_RADIO, [0x02, _, _, _]) => {
-                self.send_message(ctxt, BotBluetoothRange::D3)
+                if self.cooldown == 0 {
+                    self.send_message(ctxt, BotBluetoothRange::D3);
+                }
+                Ok(())
             }
             (AliveBot::MEM_RADIO, [0x03, 0x00, a, b]) => {
                 match self.filter {
@@ -297,8 +300,8 @@ impl BotRadio {
                 Ok(())
             }
             (addr, bytes)
-                if addr >= AliveBot::MEM_RADIO + 4
-                    && addr <= AliveBot::MEM_RADIO + 128 =>
+                if (AliveBot::MEM_RADIO + 4..=AliveBot::MEM_RADIO + 128)
+                    .contains(&addr) =>
             {
                 let idx = (addr - (AliveBot::MEM_RADIO + 1)) as usize;
                 for (i, byte) in bytes.iter().enumerate() {
@@ -318,8 +321,10 @@ impl BotRadio {
         &mut self,
         ctxt: &mut BotMmioContext,
         range: BotBluetoothRange,
-    ) -> Result<(), ()> {
-        todo!()
+    ) {
+        ctxt.msgs
+            .add_message(&self.out_message, ctxt.pos, range.len());
+        self.cooldown = range.cooldown(ctxt);
     }
 }
 
@@ -355,8 +360,8 @@ impl BotBluetoothRange {
             _ => None,
         }
     }
-    fn len(&self) -> u32 {
-        *self as u32
+    fn len(&self) -> i32 {
+        *self as i32
     }
     fn cooldown(&self, ctxt: &mut BotMmioContext) -> u32 {
         match self {
