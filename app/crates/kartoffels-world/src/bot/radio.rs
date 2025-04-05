@@ -369,198 +369,75 @@ impl BotBluetoothRange {
 }
 
 #[cfg(test)]
-mod bluetooth_tests {
+mod radio_tests {
     use std::num::NonZeroU64;
 
     use pretty_assertions::assert_eq;
 
     use super::*;
 
-    const TEST_MESSAGE: Message = Message {
-        sender_id: u64::from_le_bytes([85u8; 8]), // a u64 of 010101...
-        message: [
-            65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81,
-            82, 83, 84, 85, 86, 87, 88, 89, 90, 65, 66, 67, 68, 69, 70,
-        ],
-    };
-
     #[test]
-    fn message_read() {
-        let test_message = TEST_MESSAGE;
-
-        // test the id reading
-        let front: u64 =
-            u32::from_le_bytes(test_message.read(32).unwrap()) as u64;
-        let back: u64 =
-            u32::from_le_bytes(test_message.read(36).unwrap()) as u64;
-        let out_id = NonZeroU64::new((front << 32) | back).unwrap();
-        assert_eq!(
-            NonZeroU64::new(test_message.sender_id).unwrap(),
-            out_id,
-            "Id read did not produce the same id"
-        );
-
-        // test reading the mesage
-        let mut counter = 65u8;
-        for (i, page) in (0..=28)
-            .step_by(4)
-            .map(|v| test_message.read(v).unwrap())
-            .enumerate()
-        {
-            for byte in page {
-                assert_eq!(byte,counter, "Message buffer read did not find the same value at group starting at address: {}",i*4);
-                counter += 1;
-                if counter > 90 {
-                    counter = 65;
-                }
-            }
-        }
-
-        // Test reading out of bounds
-        for addr in [29, 30, 31, 33, 34, 35, 37, 41, usize::MAX] {
-            assert!(
-                test_message.read(addr).is_err(),
-                "Out of bounds read returned value at address: {}",
-                addr
-            );
-        }
-    }
-
-    fn unique<T>(iter: T) -> Option<T::Item>
-    where
-        T: IntoIterator,
-        T::Item: Eq,
-    {
-        let mut iter = iter.into_iter();
-        let first = iter.next()?;
-
-        iter.all(|item| item == first).then_some(first)
-    }
-
-    #[test]
-    fn message_write() {
-        let mut test_message = TEST_MESSAGE;
-        (0..32).for_each(|index| {
-            assert!(
-                test_message.write(index, 1).is_ok(),
-                "Writing to index: {} failed",
-                index
-            )
-        });
-        // let's now check the actual values have been written
-        assert_eq!(
-            unique(test_message.message),
-            Some(1),
-            "Some write didn't write the correct byte in the message"
-        );
-    }
-
-    #[test]
-    fn message_clear() {
-        let mut test_message = TEST_MESSAGE;
-        test_message.clear();
-        assert_eq!(
-            unique(test_message.message),
-            Some(0),
-            "Clear didn't set all message bytes to 0"
-        )
-    }
-
-    #[test]
-    fn buffer_empty() {
+    fn message_buffer_write() {
         let mut buff = MessageBuffer::new();
-        assert!(buff.is_empty(), "Message buffer started not empty");
-
-        // this might break if write or pop are broken
-        let _ = buff.write(TEST_MESSAGE);
-        let _ = buff.pop();
-
-        assert!(
-            buff.is_empty(),
-            "Message buffer isn't empty after read and write"
+        let v: Vec<u8> = vec![1, 2, 3, 4, 5];
+        buff.write(&v);
+        // check the length is now 1
+        assert_eq!(buff.length, 1, "Buffer isn't the correct length");
+        // check the front value now has the length we set
+        assert_eq!(
+            buff.message_ptrs[buff.front_ptr].length,
+            v.len(),
+            "Writen message has changed length"
         );
     }
 
     #[test]
-    fn buffer_full() {
-        // this might fail if buff.write is broken in some way
+    fn message_buffer_read() {
         let mut buff = MessageBuffer::new();
-        for _ in 0..5 {
-            let _ = buff.write(TEST_MESSAGE);
-        }
-        assert!(
-            buff.is_full(),
-            "Buffer filled with values 5 values didn't report full"
-        );
+        let v: Vec<u8> = vec![1, 2, 3, 4, 5];
+        let v2: Vec<u8> = vec![4, 5, 6, 7, 8];
+        buff.write(&v);
+        buff.write(&v2);
+        let addr = buff.message_ptrs[buff.front_ptr].ptr;
+        let len = buff.message_ptrs[buff.front_ptr].length;
 
-        // this might break if pop or write are broken
-        let _ = buff.pop();
-        let _ = buff.write(TEST_MESSAGE);
+        let slice = &buff.buffer[addr..(addr + len)];
+        assert_eq!(slice, &v, "Read message was different to saved one");
+    }
 
+    #[test]
+    fn message_buffer_pop() {
+        let mut buff = MessageBuffer::new();
+        assert!(buff.pop().is_err(), "empty pop didn't return an error");
+        let v: Vec<u8> = vec![1, 2, 3, 4, 5, 6];
+        buff.write(&v);
+        let front_ptr_local = buff.front_ptr;
+        assert!(buff.pop().is_ok(), "buffer pop doesn't return ok");
+        assert!(buff.is_empty(), "Buff isn't empty after pop");
         assert!(
-            buff.is_full(),
-            "Buffer didn't report full after pop and write from full state"
+            buff.front_ptr != front_ptr_local,
+            "Front pointer has not been updated"
         );
     }
 
     #[test]
-    fn buffer_write() {
+    fn message_buffer_available_space() {
         let mut buff = MessageBuffer::new();
+        let v: Vec<u8> = vec![1, 2, 3, 4];
+        let old_size = buff.available_space();
+        buff.write(&v);
         assert!(
-            buff.write(TEST_MESSAGE).is_ok(),
-            "Empty buffer write did not return Ok()"
+            old_size - v.len() == buff.available_space(),
+            "Available space after writing 4 bytes is not correct"
         );
-        assert_eq!(buff.buffer[buff.front] ,TEST_MESSAGE, "Empty write with front = 0 didn't write to first position in buffer");
-
-        for _ in 0..4 {
-            let _ = buff.write(TEST_MESSAGE);
-        }
-        assert!(
-            buff.write(TEST_MESSAGE).is_err(),
-            "Writing to a full buffer didn't return Err()"
-        );
-
-        // Now test overwriting previously written values
-        let mut test2_message = TEST_MESSAGE;
-        test2_message.message = [1; 32];
-        let _ = buff.pop();
-        assert!(
-            buff.write(test2_message).is_ok(),
-            "Writing to a full buffer just popped produced an error"
-        );
-        assert_eq!(buff.buffer[0], test2_message, "Writing to a full buffer where the front should be pointing at the index 1 and the length 4 (write should be at 0 but wasn't)");
     }
 
-    // #[test]
-    // fn buffer_pop() {
-    //     let mut empty_buff = MessageBuffer::new();
-    //     assert!(
-    //         empty_buff.pop().is_err(),
-    //         "Popping an empty buffer didn't return empty"
-    //     );
-
-    //     let mut test_message_1 = TEST_MESSAGE;
-    //     let mut test_message_2 = TEST_MESSAGE;
-    //     test_message_1.message = [1; 32];
-    //     test_message_2.message = [2; 32];
-    //     let mut buf = MessageBuffer {
-    //         buffer: [
-    //             test_message_1,
-    //             test_message_2,
-    //             Message::default(),
-    //             Message::default(),
-    //             Message::default(),
-    //         ],
-    //         front: 0,
-    //         length: 2,
-    //     };
-
-    //     let _ = buf.pop();
-    //     assert_eq!(
-    //         buf.buffer[buf.front], test_message_2,
-    //         "Pop didn't clear the last values added"
-    //     );
-    // }
-
-    // Test the overall read / write functionality of BotBluetooth ??
+    #[test]
+    fn message_buffer_is_full() {
+        let mut buff = MessageBuffer::new();
+        assert!(!buff.is_full(), "Buffer reports full when it is empty");
+        let v: Vec<u8> = vec![1; MessageBuffer::BUFFER_CAP];
+        buff.write(&v);
+        assert!(buff.is_full(), "Buffer doesn't report full when it is");
+    }
 }
