@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::{BotId, Bots, WorldRng};
 use ahash::{HashSet, HashSetExt};
 use bevy_ecs::system::{ResMut, Resource};
