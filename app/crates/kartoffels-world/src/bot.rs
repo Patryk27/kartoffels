@@ -9,6 +9,7 @@ mod mmio;
 mod motor;
 mod radar;
 mod radio;
+mod radio_message_buffer;
 mod serial;
 mod timer;
 
@@ -23,6 +24,7 @@ pub use self::mmio::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::radio::*;
+pub use self::radio_message_buffer::*;
 pub use self::serial::*;
 pub use self::timer::*;
 use crate::messages::Messages;

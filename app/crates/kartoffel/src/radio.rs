@@ -13,7 +13,7 @@ pub struct Message {
 /// See also: [`bluetooth_wait()`]
 #[inline(always)]
 pub fn is_bluetooth_ready() -> bool {
-    rdi(MEM_BLUETOOTH, 0) == 1
+    rdi(MEM_RADIO, 0) == 1
 }
 
 /// Waits for the bluetooth sender to be ready
@@ -37,7 +37,7 @@ pub fn bluetooth_wait() {
 /// - [`bluetooth_send_9x9()`]
 #[inline(always)]
 pub fn send_bluetooth(r: u8) {
-    wri(MEM_BLUETOOTH, 0, cmd(0x01, r, 0x00, 0x00));
+    wri(MEM_RADIO, 0, cmd(0x01, r, 0x00, 0x00));
 }
 
 // these functions need better names
@@ -47,7 +47,7 @@ pub fn send_bluetooth(r: u8) {
 #[inline(always)]
 pub fn bluetooth_write_send_buffer(message: [u8; 32]) {
     for (i, byte) in message.iter().enumerate() {
-        wri(MEM_BLUETOOTH, 0, cmd(0x02, i as u8, *byte, 0x00));
+        wri(MEM_RADIO, 0, cmd(0x02, i as u8, *byte, 0x00));
     }
 }
 
@@ -59,13 +59,13 @@ pub fn bluetooth_write_send_buffer_byte(data: u8, addr: usize) {
     if addr >= 32 {
         return;
     }
-    wri(MEM_BLUETOOTH, 0, cmd(0x02, addr as u8, data, 0x00));
+    wri(MEM_RADIO, 0, cmd(0x02, addr as u8, data, 0x00));
 }
 
 /// This sets the bluetooth send buffer to [0;32] cleaning everything out so if you don't write over everything there is no reminants of the old sent message
 #[inline(always)]
 pub fn clear_bluetooth_send_buffer() {
-    wri(MEM_BLUETOOTH, 0, cmd(0x03, 0x00, 0x00, 0x00));
+    wri(MEM_RADIO, 0, cmd(0x03, 0x00, 0x00, 0x00));
 }
 
 /// This is used to move the front point ahead one and reduce the length by 1 in a circular buffer this effectively means removing the front (or oldest) item
@@ -75,7 +75,7 @@ pub fn clear_bluetooth_send_buffer() {
 /// - [`bluetooth_peek_read_buffer()`]
 #[inline(always)]
 pub fn bluetooth_remove_read_buffer_front() {
-    wri(MEM_BLUETOOTH, 0, cmd(0x04, 0x00, 0x00, 0x00));
+    wri(MEM_RADIO, 0, cmd(0x04, 0x00, 0x00, 0x00));
 }
 
 /// Read the front (oldest) item in your read buffer and clean up the space making it available to be written to
@@ -83,7 +83,7 @@ pub fn bluetooth_remove_read_buffer_front() {
 ///
 /// TODO Example
 pub fn bluetooth_pop_read_buffer() -> Option<Message> {
-    let [front, _, empty, bytes_per] = rdi(MEM_BLUETOOTH, 1).to_le_bytes();
+    let [front, _, empty, bytes_per] = rdi(MEM_RADIO, 1).to_le_bytes();
     if empty == 1 {
         return None;
     }
@@ -103,7 +103,7 @@ pub fn bluetooth_pop_read_buffer() -> Option<Message> {
 #[inline(always)]
 pub fn bluetooth_peek_read_buffer() -> Option<Message> {
     // let's get the important info here
-    let [front, _, empty, bytes_per] = rdi(MEM_BLUETOOTH, 1).to_le_bytes();
+    let [front, _, empty, bytes_per] = rdi(MEM_RADIO, 1).to_le_bytes();
     if empty == 1 {
         return None;
     }
@@ -122,7 +122,7 @@ pub fn bluetooth_peek_read_buffer() -> Option<Message> {
 /// TODO Example
 #[inline(always)]
 pub fn bluetooth_get_from_read_buffer(index: usize) -> Option<Message> {
-    let [front, length, empty, bytes_per] = rdi(MEM_BLUETOOTH, 1).to_le_bytes();
+    let [front, length, empty, bytes_per] = rdi(MEM_RADIO, 1).to_le_bytes();
     if empty == 1 || index > (length - 1) as usize {
         return None;
     }
@@ -147,14 +147,14 @@ fn read_message_from_offset(start_byte: usize, bytes_per: usize) -> Message {
         match off {
             0..=7 => {
                 let byte_group =
-                    rdi(MEM_BLUETOOTH, 1 + start_byte + off).to_le_bytes();
+                    rdi(MEM_RADIO, 1 + start_byte + off).to_le_bytes();
                 (0..4).for_each(|v| out[(off * 4) + v] = byte_group[v])
             }
             8 => {
-                d1 = rdi(MEM_BLUETOOTH, 1 + start_byte + off) as u64;
+                d1 = rdi(MEM_RADIO, 1 + start_byte + off) as u64;
             }
             9 => {
-                d2 = rdi(MEM_BLUETOOTH, 1 + start_byte + off) as u64;
+                d2 = rdi(MEM_RADIO, 1 + start_byte + off) as u64;
             }
             _ => {}
         }
@@ -168,13 +168,13 @@ fn read_message_from_offset(start_byte: usize, bytes_per: usize) -> Message {
 /// Is there anything in the read buffer
 #[inline(always)]
 pub fn bluetooth_is_read_buffer_empty() -> bool {
-    let [_, _, is_empty, _] = rdi(MEM_BLUETOOTH, 1).to_le_bytes();
+    let [_, _, is_empty, _] = rdi(MEM_RADIO, 1).to_le_bytes();
     is_empty != 0
 }
 
 /// How many elements in the read buffer, useful for: [`bluetooth_get_from_read_buffer()`]
 pub fn bluetooth_read_buffer_length() -> u8 {
-    let [_, l, _, _] = rdi(MEM_BLUETOOTH, 1).to_le_bytes();
+    let [_, l, _, _] = rdi(MEM_RADIO, 1).to_le_bytes();
     l
 }
 
