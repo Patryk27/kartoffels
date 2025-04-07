@@ -167,7 +167,7 @@ impl fmt::Display for AliveBotsSnapshot {
                 bot.id,
                 bot.pos,
                 bot.dir,
-                bot.age.seconds(),
+                bot.age.as_seconds(),
                 bot.score
             ]);
         }

@@ -61,7 +61,7 @@ impl JoinedSidePanel {
     fn render_alive_bot(ui: &mut Ui<Event>, bot: &AliveBotSnapshot) {
         ui.line("status".underlined());
         ui.line("alive".fg(theme::GREEN));
-        ui.line(format!("> age: {}", bot.age.time()).fg(theme::GRAY));
+        ui.line(format!("> age: {}", bot.age.as_time(None)).fg(theme::GRAY));
         ui.line(format!("> pos: {},{}", bot.pos.x, bot.pos.y).fg(theme::GRAY));
         ui.line(format!("> dir: {}", bot.dir).fg(theme::GRAY));
         ui.line(format!("> score: {}", bot.score).fg(theme::GRAY));

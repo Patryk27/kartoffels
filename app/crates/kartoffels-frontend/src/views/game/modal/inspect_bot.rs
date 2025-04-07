@@ -90,8 +90,8 @@ impl InspectBotModal {
 
             match world.bots.get(self.id) {
                 Some(BotSnapshot::Alive(bot)) => {
-                    ui.line(format!("age = {} ticks", bot.age.ticks()));
-                    ui.line(format!("    = {}", bot.age.time()));
+                    ui.line(format!("age = {} ticks", bot.age.as_ticks()));
+                    ui.line(format!("    = {}", bot.age.as_time(None)));
                 }
 
                 Some(BotSnapshot::Queued(bot)) => {
@@ -238,7 +238,7 @@ impl InspectBotModal {
             Row::new(vec![
                 Cell::new(born_at),
                 Cell::new(died_at),
-                Cell::new(age.time().to_string()),
+                Cell::new(age.as_time(None).to_string()),
                 Cell::new(life.score.to_string()),
             ])
         });

@@ -46,7 +46,7 @@ impl BotStats {
                 .filter_map(|life| {
                     life.age.or_else(|| bots.alive.get(id).map(|bot| bot.age()))
                 })
-                .map(|age| age.ticks() as u32)
+                .map(|age| age.as_ticks() as u32)
                 .collect();
 
             ages.sum /= Clock::HZ;
