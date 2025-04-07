@@ -1,6 +1,6 @@
 use crate::common;
 use anyhow::{anyhow, Result};
-use glam::uvec2;
+use glam::UVec2;
 use kartoffels_store::Store;
 use kartoffels_ui::{Frame, FrameType};
 use russh::server::{Handle as SessionHandle, Session};
@@ -60,8 +60,7 @@ impl AppChannel {
     pub async fn pty_request(
         &mut self,
         id: ChannelId,
-        width: u32,
-        height: u32,
+        size: UVec2,
         session: &mut Session,
     ) -> Result<()> {
         let AppChannelState::AwaitingPty { store, shutdown } = &mut self.state
@@ -73,13 +72,8 @@ impl AppChannel {
         let shutdown = shutdown.clone();
         let handle = session.handle();
 
-        let (term, stdin) = Self::create_term(
-            handle.clone(),
-            id,
-            width,
-            height,
-            self.span.clone(),
-        )?;
+        let (term, stdin) =
+            Self::create_term(handle.clone(), id, size, self.span.clone())?;
 
         task::spawn(
             common::start_session(store, term, shutdown)
@@ -114,8 +108,7 @@ impl AppChannel {
     fn create_term(
         handle: SessionHandle,
         id: ChannelId,
-        width: u32,
-        height: u32,
+        size: UVec2,
         span: Span,
     ) -> Result<(Frame, mpsc::Sender<Vec<u8>>)> {
         let (stdin_tx, stdin_rx) = mpsc::channel(1);
@@ -142,8 +135,7 @@ impl AppChannel {
             tx
         };
 
-        let size = uvec2(width, height);
-        let frame = Frame::new(FrameType::Ssh, stdin_rx, stdout, size)?;
+        let frame = Frame::new(FrameType::Ssh, size, stdin_rx, stdout)?;
 
         Ok((frame, stdin_tx))
     }

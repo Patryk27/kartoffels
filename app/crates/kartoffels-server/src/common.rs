@@ -13,7 +13,7 @@ pub async fn start_session(
     mut frame: Frame,
     shutdown: CancellationToken,
 ) {
-    _ = frame.create().await;
+    _ = frame.init().await;
 
     let sess = store.create_session();
 

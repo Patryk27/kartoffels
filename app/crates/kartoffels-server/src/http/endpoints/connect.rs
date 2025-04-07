@@ -79,11 +79,11 @@ async fn recv_hello_msg(socket: &mut WebSocket) -> Result<HelloMsg> {
 }
 
 fn create_frame(socket: WebSocket, hello: HelloMsg) -> Result<Frame> {
+    let size = uvec2(hello.cols, hello.rows);
     let (stdout, stdin) = socket.split();
     let stdin = create_term_stdin(stdin);
     let stdout = create_term_stdout(stdout);
-    let size = uvec2(hello.cols, hello.rows);
-    let frame = Frame::new(FrameType::Web, stdin, stdout, size)?;
+    let frame = Frame::new(FrameType::Web, size, stdin, stdout)?;
 
     Ok(frame)
 }

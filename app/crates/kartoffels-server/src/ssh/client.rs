@@ -1,6 +1,7 @@
 use super::AppChannel;
 use ahash::AHashMap;
 use anyhow::{anyhow, Context, Error, Result};
+use glam::uvec2;
 use kartoffels_store::Store;
 use russh::keys::PublicKey;
 use russh::server::{self, Auth, Msg, Session};
@@ -117,7 +118,7 @@ impl server::Handler for AppClient {
         session: &mut Session,
     ) -> Result<()> {
         self.channel_mut(id)?
-            .pty_request(id, width, height, session)
+            .pty_request(id, uvec2(width, height), session)
             .await?;
 
         Ok(())

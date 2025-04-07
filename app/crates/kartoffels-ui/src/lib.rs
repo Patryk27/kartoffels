@@ -46,9 +46,9 @@ pub type Stdout = mpsc::Sender<Vec<u8>>;
 #[derive(Debug)]
 pub struct Frame {
     ty: FrameType,
+    size: UVec2,
     stdin: Stdin,
     stdout: Stdout,
-    size: UVec2,
     term: Terminal<CrosstermBackend<WriterProxy>>,
     parser: InputParser,
     mouse: FrameMouse,
@@ -57,23 +57,48 @@ pub struct Frame {
 }
 
 impl Frame {
-    /// Opcode used to inform the frame that the client's terminal has been
+    /// Opcode used to inform the frame that the underlying terminal has been
     /// resized.
     ///
-    /// This is a rather hacky way, since we rely on in-band communication -
-    /// i.e. this opcode is artificially inserted into the stdin by the web or
-    /// ssh terminals.
+    /// Web terminal emits this code natively, while for the SSH terminal it's
+    /// the Rust backend itself which sorta "injects" this instruction into the
+    /// stdin.
     ///
-    /// 0x04 has been chosen with a fair dice roll - we basically never expect
-    /// to stumble upon this value during normal communication.
+    /// Overall, this is kind of a hack - ideally we'd have something like:
+    ///
+    /// ```no_run
+    /// enum StdinOpcode {
+    ///     Input(Vec<u8>),
+    ///     Resized(u8, u8),
+    /// }
+    /// ```
+    ///
+    /// ... but transmitting such enum efficiently over web sockets is awkward.
+    ///
+    /// As for the value, 0x04 has been chosen with a fair dice roll - we just
+    /// never expect to stumble upon this value during normal communication.
     pub const CMD_RESIZE: u8 = 0x04;
+
+    /// Minimum size of the frame.
+    ///
+    /// Chosen out of practicality - designing UI for any arbitrary size would
+    /// be impossible.
+    pub const MIN_SIZE: UVec2 = uvec2(80, 30);
+
+    /// Maximum size of the frame.
+    ///
+    /// Chosen out of practicaly as well - larger viewports take more resources
+    /// to handle, it just doesn't scale that well.
+    pub const MAX_SIZE: UVec2 = uvec2(160, 60);
 
     pub fn new(
         ty: FrameType,
+        size: UVec2,
         stdin: Stdin,
         stdout: Stdout,
-        size: UVec2,
     ) -> Result<Self> {
+        let size = size.min(Self::MAX_SIZE);
+
         let mut term = {
             let writer = WriterProxy::default();
             let backend = CrosstermBackend::new(writer);
@@ -89,9 +114,9 @@ impl Frame {
 
         Ok(Self {
             ty,
+            size,
             stdin,
             stdout,
-            size,
             term,
             parser: Default::default(),
             mouse: Default::default(),
@@ -108,7 +133,7 @@ impl Frame {
         self.size
     }
 
-    pub async fn create(&mut self) -> Result<()> {
+    pub async fn init(&mut self) -> Result<()> {
         let mut cmds = String::new();
 
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
@@ -162,7 +187,7 @@ impl Frame {
     {
         let mut event = None;
 
-        if self.size.x < 80 || self.size.y < 30 {
+        if self.size.cmplt(Self::MIN_SIZE).any() {
             self.term.draw(|frame| {
                 let area = frame.area();
                 let buf = frame.buffer_mut();
@@ -234,7 +259,7 @@ impl Frame {
         let cols = stdin.first().copied().unwrap_or(0);
         let rows = stdin.last().copied().unwrap_or(0);
 
-        self.size = uvec2(cols as u32, rows as u32);
+        self.size = uvec2(cols as u32, rows as u32).min(Self::MAX_SIZE);
         self.term.resize(Self::viewport_rect(self.size))?;
 
         Ok(())
