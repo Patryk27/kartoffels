@@ -22,7 +22,7 @@ impl BotsModal {
     const WIDTHS: &[u16] = &[
         5,                        // nth
         BotId::LENGTH as u16 + 1, // id
-        8,                        // age
+        7,                        // age
         6,                        // score
         18,                       // actions
     ];
@@ -322,7 +322,7 @@ impl UiWidget<Event> for Row<'_> {
 
         let nth = Span::raw(format!("#{}", self.nth + 1));
         let id = Span::raw(self.bot.id.to_string()).fg(self.bot.id.color());
-        let age = Span::raw(self.bot.age.as_time(8).to_string());
+        let age = Span::raw(self.bot.age.as_time(6).to_string());
         let score = Span::raw(self.bot.score.to_string());
 
         let inspect = {
