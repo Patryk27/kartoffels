@@ -134,7 +134,7 @@ impl server::Handler for AppClient {
         _: &mut Session,
     ) -> Result<()> {
         self.channel_mut(id)?
-            .window_change_request(width, height)
+            .window_change_request(uvec2(width, height))
             .await?;
 
         Ok(())

@@ -2,7 +2,7 @@ use crate::common;
 use anyhow::{anyhow, Result};
 use glam::UVec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Frame, FrameType};
+use kartoffels_ui::{Frame, FrameType, StdinEvent};
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ enum AppChannelState {
     },
 
     Ready {
-        stdin: mpsc::Sender<Vec<u8>>,
+        stdin: mpsc::Sender<StdinEvent>,
     },
 }
 
@@ -50,9 +50,9 @@ impl AppChannel {
         };
 
         stdin_tx
-            .send(data.to_vec())
+            .send(StdinEvent::Input(data.to_vec()))
             .await
-            .map_err(|_| anyhow!("lost ui"))?;
+            .map_err(|_| anyhow!("lost the frame"))?;
 
         Ok(())
     }
@@ -85,22 +85,15 @@ impl AppChannel {
         Ok(())
     }
 
-    pub async fn window_change_request(
-        &mut self,
-        width: u32,
-        height: u32,
-    ) -> Result<()> {
+    pub async fn window_change_request(&mut self, size: UVec2) -> Result<()> {
         let AppChannelState::Ready { stdin } = &mut self.state else {
             return Err(anyhow!("pty hasn't been allocated yet"));
         };
 
-        let width = width.min(255);
-        let height = height.min(255);
-
         stdin
-            .send(vec![Frame::CMD_RESIZE, width as u8, height as u8])
+            .send(StdinEvent::Resized(size))
             .await
-            .map_err(|_| anyhow!("lost ui"))?;
+            .map_err(|_| anyhow!("lost the frame"))?;
 
         Ok(())
     }
@@ -110,7 +103,7 @@ impl AppChannel {
         id: ChannelId,
         size: UVec2,
         span: Span,
-    ) -> Result<(Frame, mpsc::Sender<Vec<u8>>)> {
+    ) -> Result<(Frame, mpsc::Sender<StdinEvent>)> {
         let (stdin_tx, stdin_rx) = mpsc::channel(1);
 
         let stdout = {

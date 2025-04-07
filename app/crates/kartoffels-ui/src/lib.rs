@@ -40,7 +40,7 @@ use tokio::time::Interval;
 use tokio::{select, time};
 use tracing::warn;
 
-pub type Stdin = mpsc::Receiver<Vec<u8>>;
+pub type Stdin = mpsc::Receiver<StdinEvent>;
 pub type Stdout = mpsc::Sender<Vec<u8>>;
 
 #[derive(Debug)]
@@ -53,32 +53,10 @@ pub struct Frame {
     parser: InputParser,
     mouse: FrameMouse,
     event: Option<InputEvent>,
-    frames: Interval,
+    next_frame_in: Interval,
 }
 
 impl Frame {
-    /// Opcode used to inform the frame that the underlying terminal has been
-    /// resized.
-    ///
-    /// Web terminal emits this code natively, while for the SSH terminal it's
-    /// the Rust backend itself which sorta "injects" this instruction into the
-    /// stdin.
-    ///
-    /// Overall, this is kind of a hack - ideally we'd have something like:
-    ///
-    /// ```no_run
-    /// enum StdinOpcode {
-    ///     Input(Vec<u8>),
-    ///     Resized(u8, u8),
-    /// }
-    /// ```
-    ///
-    /// ... but transmitting such enum efficiently over web sockets is awkward.
-    ///
-    /// As for the value, 0x04 has been chosen with a fair dice roll - we just
-    /// never expect to stumble upon this value during normal communication.
-    pub const CMD_RESIZE: u8 = 0x04;
-
     /// Minimum size of the frame.
     ///
     /// Chosen out of practicality - designing UI for any arbitrary size would
@@ -121,7 +99,7 @@ impl Frame {
             parser: Default::default(),
             mouse: Default::default(),
             event: Default::default(),
-            frames: time::interval(theme::FRAME_TIME),
+            next_frame_in: time::interval(theme::FRAME_TIME),
         })
     }
 
@@ -227,46 +205,36 @@ impl Frame {
     async fn sleep(&mut self) -> Result<()> {
         select! {
             stdin = self.stdin.recv() => {
-                // After retrieving an input event, reset the "when next frame"
-                // interval, so that we don't refresh the interface needlessly.
+                self.handle(stdin.context("lost the stdin")?)?;
+
+                // Since we've just woken up and we'll refresh the frame anyway,
+                // let's restart the counter 'till the next auto-refresh.
+                self.next_frame_in.reset();
+            },
+
+            _ = self.next_frame_in.tick() => {
                 //
-                // The reasoning here goes: since the user will already get a
-                // brand new frame after pressing a keystroke, we're covered for
-                // the next `FRAME_TIME` milliseconds anyway.
-                self.frames.reset();
-                self.handle(stdin.context("lost stdin")?)?;
-            },
-
-            _ = self.frames.tick() => {
-                // Just a wake-up, so that we can refresh the interface
             },
         }
 
         Ok(())
     }
 
-    fn handle(&mut self, stdin: Vec<u8>) -> Result<()> {
-        if let Some(stdin) = stdin.strip_prefix(&[Self::CMD_RESIZE]) {
-            self.handle_resize(stdin)?;
-        } else {
-            self.handle_input(stdin)?;
+    fn handle(&mut self, event: StdinEvent) -> Result<()> {
+        match event {
+            StdinEvent::Input(input) => {
+                self.handle_input(input)?;
+            }
+            StdinEvent::Resized(size) => {
+                self.handle_resized(size)?;
+            }
         }
 
         Ok(())
     }
 
-    fn handle_resize(&mut self, stdin: &[u8]) -> Result<()> {
-        let cols = stdin.first().copied().unwrap_or(0);
-        let rows = stdin.last().copied().unwrap_or(0);
-
-        self.size = uvec2(cols as u32, rows as u32).min(Self::MAX_SIZE);
-        self.term.resize(Self::viewport_rect(self.size))?;
-
-        Ok(())
-    }
-
-    fn handle_input(&mut self, stdin: Vec<u8>) -> Result<()> {
-        let events = self.parser.parse_as_vec(&stdin, false);
+    fn handle_input(&mut self, input: Vec<u8>) -> Result<()> {
+        let events = self.parser.parse_as_vec(&input, false);
 
         for event in events {
             if let InputEvent::Key(event) = &event {
@@ -297,6 +265,13 @@ impl Frame {
                 }
             }
         }
+
+        Ok(())
+    }
+
+    fn handle_resized(&mut self, size: UVec2) -> Result<()> {
+        self.size = size.min(Self::MAX_SIZE);
+        self.term.resize(Self::viewport_rect(self.size))?;
 
         Ok(())
     }
@@ -398,4 +373,10 @@ enum FrameMouseClick {
     NotClicked,
     ClickedButNotReported,
     ClickedAndReported,
+}
+
+#[derive(Clone, Debug)]
+pub enum StdinEvent {
+    Input(Vec<u8>),
+    Resized(UVec2),
 }

@@ -9,7 +9,7 @@ use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
 use kartoffels_store::Store;
-use kartoffels_ui::{Frame, FrameType, Stdin, Stdout};
+use kartoffels_ui::{Frame, FrameType, Stdin, StdinEvent, Stdout};
 use serde::Deserialize;
 use std::io::Write;
 use std::net::SocketAddr;
@@ -81,27 +81,30 @@ async fn recv_hello_msg(socket: &mut WebSocket) -> Result<HelloMsg> {
 fn create_frame(socket: WebSocket, hello: HelloMsg) -> Result<Frame> {
     let size = uvec2(hello.cols, hello.rows);
     let (stdout, stdin) = socket.split();
-    let stdin = create_term_stdin(stdin);
-    let stdout = create_term_stdout(stdout);
+    let stdin = create_stdin(stdin);
+    let stdout = create_stdout(stdout);
     let frame = Frame::new(FrameType::Web, size, stdin, stdout)?;
 
     Ok(frame)
 }
 
-fn create_term_stdin(mut stdin: SplitStream<WebSocket>) -> Stdin {
+fn create_stdin(mut stdin: SplitStream<WebSocket>) -> Stdin {
     let (tx, rx) = mpsc::channel(1);
 
     task::spawn(
         async move {
             while let Some(msg) = stdin.next().await {
                 match msg {
-                    Ok(Message::Text(msg)) => {
-                        if tx.send(msg.into_bytes()).await.is_err() {
-                            break;
-                        }
-                    }
-
                     Ok(Message::Binary(msg)) => {
+                        let msg = if msg.len() == 3 && msg[0] == 0xff {
+                            StdinEvent::Resized(uvec2(
+                                msg[1] as u32,
+                                msg[2] as u32,
+                            ))
+                        } else {
+                            StdinEvent::Input(msg)
+                        };
+
                         if tx.send(msg).await.is_err() {
                             break;
                         }
@@ -124,7 +127,7 @@ fn create_term_stdin(mut stdin: SplitStream<WebSocket>) -> Stdin {
     rx
 }
 
-fn create_term_stdout(mut stdout: SplitSink<WebSocket, Message>) -> Stdout {
+fn create_stdout(mut stdout: SplitSink<WebSocket, Message>) -> Stdout {
     let (tx, mut rx) = mpsc::channel::<Vec<u8>>(1);
 
     task::spawn(

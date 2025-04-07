@@ -75,7 +75,7 @@ document.fonts.ready.then(() => {
     term.onResize((event) => {
       const packet = new Uint8Array(3);
 
-      packet[0] = 0x04;
+      packet[0] = 0xff;
       packet[1] = Math.min(event.cols, 255);
       packet[2] = Math.min(event.rows, 255);
 
@@ -123,9 +123,8 @@ document.fonts.ready.then(() => {
     input.type = "file";
 
     input.oncancel = () => {
-      // HACK backend knows that an empty paste means that the user has aborted
-      //      the uploading; ideally we'd have a dedicated message for that, but
-      //      well
+      // Empty paste means that the user has aborted the uploading, backend has
+      // a special check for that.
       term.paste("");
     };
 
