@@ -5,6 +5,8 @@ bin = [
     { name = "chl-personal-roomba", path = "src/chl-personal-roomba.rs" },
     { name = "dummy", path = "src/dummy.rs" },
     { name = "roberto", path = "src/roberto.rs" },
+    { name = "ianthe", path = "src/ianthe.rs" },
+    { name = "coronabeth", path = "src/coronabeth.rs" },
     { name = "tut-01", path = "src/tut-01.rs" },
     { name = "tut-02", path = "src/tut-02.rs" },
     { name = "tut-03", path = "src/tut-03.rs" },

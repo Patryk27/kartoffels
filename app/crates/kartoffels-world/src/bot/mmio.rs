@@ -1,7 +1,8 @@
 use super::{
-    BotAction, BotArm, BotBattery, BotCompass, BotMotor, BotRadar, BotSerial,
-    BotTimer,
+    BotAction, BotArm, BotBattery, BotCompass, BotMotor, BotRadar, BotRadio,
+    BotSerial, BotTimer,
 };
+use crate::messages::Messages;
 use crate::{AliveBots, Dir, Map, Objects};
 use glam::IVec2;
 use kartoffels_cpu::Mmio;
@@ -16,6 +17,7 @@ pub struct BotMmio<'a> {
     pub radar: &'a mut BotRadar,
     pub serial: &'a mut BotSerial,
     pub timer: &'a mut BotTimer,
+    pub radio: &'a mut BotRadio,
     pub ctxt: BotMmioContext<'a>,
 }
 
@@ -29,6 +31,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.arm.mmio_load(addr))
             .or_else(|_| self.radar.mmio_load(addr))
             .or_else(|_| self.compass.mmio_load(addr))
+            .or_else(|_| self.radio.mmio_load(addr))
     }
 
     fn store(mut self, addr: u32, val: u32) -> Result<(), ()> {
@@ -39,6 +42,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.motor.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.arm.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.radar.mmio_store(&mut self.ctxt, addr, val))
+            .or_else(|_| self.radio.mmio_store(&mut self.ctxt, addr, val))
     }
 }
 
@@ -50,6 +54,7 @@ pub struct BotMmioContext<'a> {
     pub objects: &'a Objects,
     pub pos: IVec2,
     pub rng: &'a mut ChaCha8Rng,
+    pub msgs: &'a mut Messages,
 }
 
 impl BotMmioContext<'_> {
