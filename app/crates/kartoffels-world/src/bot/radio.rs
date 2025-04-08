@@ -165,9 +165,10 @@ impl BotRadio {
                     .contains(&addr) =>
             {
                 let idx = (addr - (AliveBot::MEM_RADIO + 1)) as usize;
-                for (i, byte) in bytes.iter().enumerate() {
-                    self.out_message[idx + i] = *byte;
-                }
+                let _ = self
+                    .out_message
+                    .splice(idx..idx + 4, bytes)
+                    .collect::<Vec<u8>>();
                 Ok(())
             }
             _ => Err(()),
