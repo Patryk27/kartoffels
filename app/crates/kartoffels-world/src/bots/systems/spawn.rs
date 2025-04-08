@@ -14,7 +14,7 @@ pub fn schedule_spawn(
     mut bots: ResMut<Bots>,
     policy: Res<Policy>,
 ) {
-    if bots.alive.count() >= policy.max_alive_bots {
+    if bots.alive.count() >= policy.max_alive_bots as usize {
         return;
     }
 

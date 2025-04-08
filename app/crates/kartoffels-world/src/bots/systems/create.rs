@@ -84,7 +84,7 @@ pub fn create(
                 requeue_if_cant_spawn: false,
             });
         } else {
-            if bots.queued.len() >= policy.max_queued_bots {
+            if bots.queued.len() >= policy.max_queued_bots as usize {
                 _ = tx.send(Err(anyhow!(
                     "too many bots queued, try again in a moment"
                 )));

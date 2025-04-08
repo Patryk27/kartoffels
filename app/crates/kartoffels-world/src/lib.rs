@@ -85,8 +85,6 @@ use tokio::sync::{broadcast, mpsc, watch};
 use tracing::{info, info_span};
 
 pub fn create(config: Config) -> Handle {
-    config.validate();
-
     let mut rng = config
         .seed
         .map(ChaCha8Rng::from_seed)

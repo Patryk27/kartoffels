@@ -4,6 +4,10 @@ use anyhow::Result;
 use glam::IVec2;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+/// Manages alive bots.
+///
+/// It's essentially `HashMap<BotId, AliveBot>`, but more optimized and with a
+/// couple of helper functions (for looking up bots via their position etc.).
 #[derive(Clone, Debug, Default)]
 pub struct AliveBots {
     entries: Vec<Option<Box<AliveBot>>>,
@@ -13,6 +17,16 @@ pub struct AliveBots {
 }
 
 impl AliveBots {
+    /// Adds given bot into the collection.
+    ///
+    /// Note that this function doesn't keep track of the policy, it's on the
+    /// caller's side to make sure the policy is fine with this.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if adding this bot would exceed the maximum limit
+    /// of `u8::MAX` alive bots. Normally this shouldn't happen, because policy
+    /// doesn't allow to specify more than 255 bots anyway.
     pub fn add(&mut self, bot: AliveBot) {
         for (idx, slot) in self.entries.iter_mut().enumerate() {
             let idx = idx as u8;
@@ -36,13 +50,21 @@ impl AliveBots {
         self.count += 1;
     }
 
+    /// Returns bot with the specified id.
+    ///
+    /// Note that calling this function during [`crate::bots::tick()`] will
+    /// return `None` for the currently-ticked bot, see [`Self::begin()`].
     pub fn get(&self, id: BotId) -> Option<&AliveBot> {
         let idx = *self.id_to_idx.get(&id)?;
-        let bot = self.entries[idx as usize].as_ref().unwrap();
+        let bot = self.entries[idx as usize].as_ref()?;
 
         Some(bot)
     }
 
+    /// Removes bot with the specified id.
+    ///
+    /// Note that calling this function during [`crate::bots::tick()`] will
+    /// return `None` for the currently-ticked bot, see [`Self::begin()`].
     pub fn remove(&mut self, id: BotId) -> Option<Box<AliveBot>> {
         let idx = self.id_to_idx.remove(&id)?;
         let bot = self.entries[idx as usize].take().unwrap();
@@ -61,11 +83,36 @@ impl AliveBots {
         self.pos_to_id.get(&pos).copied()
     }
 
-    pub fn take(&mut self, idx: usize) -> Option<Box<AliveBot>> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AliveBot> {
+        self.entries.iter_mut().flatten().map(|bot| &mut **bot)
+    }
+
+    pub fn contains(&self, id: BotId) -> bool {
+        self.id_to_idx.contains_key(&id)
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn count(&self) -> usize {
+        self.count
+    }
+
+    /// Removes bot with the specified index.
+    ///
+    /// This function is meant to be used in tandem with [`Self::commit()`] -
+    /// together both functions allow to modify a bot while also retaining
+    /// access to `self`.
+    ///
+    /// i.e. they allow to do something like `self.get_mut()` paired with
+    /// `self.iter()`, which comes handy for radar and whatnot.
+    pub fn begin(&mut self, idx: usize) -> Option<Box<AliveBot>> {
         self.entries[idx].take()
     }
 
-    pub fn insert(
+    /// See [`Self::begin()`].
+    pub fn commit(
         &mut self,
         idx: usize,
         id: BotId,
@@ -84,22 +131,6 @@ impl AliveBots {
             self.pos_to_id.remove(&pos);
             self.count -= 1;
         }
-    }
-
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut AliveBot> {
-        self.entries.iter_mut().flatten().map(|bot| &mut **bot)
-    }
-
-    pub fn contains(&self, id: BotId) -> bool {
-        self.id_to_idx.contains_key(&id)
-    }
-
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    pub fn count(&self) -> usize {
-        self.count
     }
 }
 

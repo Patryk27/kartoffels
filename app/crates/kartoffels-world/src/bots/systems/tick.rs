@@ -17,7 +17,7 @@ pub fn tick(
         let len = bots.alive.len();
 
         while idx < len {
-            if let Some(bot) = bots.alive.take(idx) {
+            if let Some(bot) = bots.alive.begin(idx) {
                 let id = bot.id;
                 let pos = bot.pos;
 
@@ -31,7 +31,7 @@ pub fn tick(
                     bot,
                 );
 
-                bots.alive.insert(idx, id, pos, bot);
+                bots.alive.commit(idx, id, pos, bot);
             }
 
             idx += 1;

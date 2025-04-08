@@ -9,8 +9,8 @@ use std::str::FromStr;
 )]
 pub struct Policy {
     pub auto_respawn: bool,
-    pub max_alive_bots: usize,
-    pub max_queued_bots: usize,
+    pub max_alive_bots: u8,
+    pub max_queued_bots: u16,
 }
 
 impl FromStr for Policy {

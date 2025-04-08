@@ -7,7 +7,7 @@ use kartoffels_world::prelude::{Config as WorldConfig, Policy, Theme};
 use std::future;
 use std::sync::LazyLock;
 
-const MAX_BOTS: usize = 16;
+const MAX_BOTS: u8 = 16;
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
     title: Some(" help "),
@@ -73,7 +73,7 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
         policy: Policy {
             auto_respawn: true,
             max_alive_bots: MAX_BOTS,
-            max_queued_bots: MAX_BOTS,
+            max_queued_bots: MAX_BOTS as u16,
         },
         ..Default::default()
     })?;
