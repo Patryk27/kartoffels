@@ -17,6 +17,10 @@ fn main() {
 
     let guards = find_guards();
 
+    if guards.len() != 4 {
+        panic!("where my friends at?");
+    }
+
     for _ in 0..2 {
         motor_wait();
         motor_step_fw();
