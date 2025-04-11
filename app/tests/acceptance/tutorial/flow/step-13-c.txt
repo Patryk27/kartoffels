@@ -18,13 +18,13 @@
         │     - motor_turn_left()                                      │
         │     - motor_turn_right()                                     │
         │     - radar_wait()                                           │
-        │     - radar_scan_3x3()                                       │
+        │     - radar_scan()                                           │
+        │     - radar_read()                                           │
         │                                                              │
         │ ... and println!() might come handy for debugging!           │
         │                                                              │
         │                                                  [esc] close │
         └──────────────────────────────────────────────────────────────┘
-
 
                                                        [u] upload-bot
 [esc] go-back  [spc] pause  [h] help                                     spd:∞

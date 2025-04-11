@@ -1,4 +1,4 @@
-use crate::{wri, MEM_SERIAL};
+use crate::*;
 use core::fmt;
 
 /// Writes a single character to the serial port.
@@ -31,7 +31,6 @@ use core::fmt;
 /// println!("Hello!");
 /// println!("Hello, {}!", "World");
 /// ```
-#[inline(always)]
 pub fn serial_write(ch: char) {
     wri(MEM_SERIAL, 0, ch as u32);
 }
@@ -58,7 +57,6 @@ pub fn serial_write(ch: char) {
 ///     serial_flush();
 /// }
 /// ```
-#[inline(always)]
 pub fn serial_buffer() {
     wri(MEM_SERIAL, 0, 0xffffff00);
 }
@@ -67,7 +65,6 @@ pub fn serial_buffer() {
 ///
 /// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
 /// nothing.
-#[inline(always)]
 pub fn serial_flush() {
     wri(MEM_SERIAL, 0, 0xffffff01);
 }
@@ -76,7 +73,6 @@ pub fn serial_flush() {
 ///
 /// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
 /// nothing.
-#[inline(always)]
 pub fn serial_clear() {
     wri(MEM_SERIAL, 0, 0xffffff02);
 }

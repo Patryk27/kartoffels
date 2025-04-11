@@ -1,4 +1,4 @@
-use crate::Serial;
+use crate::*;
 use core::fmt::Write;
 use core::panic::PanicInfo;
 

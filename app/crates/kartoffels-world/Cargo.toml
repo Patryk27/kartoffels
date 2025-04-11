@@ -14,6 +14,7 @@ derivative.workspace = true
 futures-util.workspace = true
 glam = { workspace = true, features = ["serde"] }
 itertools.workspace = true
+kartoffel = { path = "../kartoffel" }
 kartoffels-cpu = { path = "../kartoffels-cpu" }
 kartoffels-utils = { path = "../kartoffels-utils" }
 maybe-owned.workspace = true

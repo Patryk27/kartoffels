@@ -1,18 +1,54 @@
-use crate::{cmd, rdi, wri, MEM_RADAR};
-use core::num::NonZeroU64;
+use crate::*;
 
-/// Returns whether the radar is ready and [`radar_scan()`] can be invoked.
+/// Causes the radar to scan the surrounding tiles, such as floor (`.`) or walls
+/// (`#`).
+///
+/// This option increases cooldown by 4k ticks.
+///
+/// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
+pub const RADAR_SCAN_TILES: u8 = 1 << 0;
+
+/// Causes the radar to scan the surrounding bots (`@`).
+///
+/// This option increases cooldown by 4k ticks.
+///
+/// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
+pub const RADAR_SCAN_BOTS: u8 = 1 << 1;
+
+/// Causes the radar to scan the surrounding objects, such as diamonds (`*`).
+///
+/// This option increases cooldown by 4k ticks.
+///
+/// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
+pub const RADAR_SCAN_OBJS: u8 = 1 << 2;
+
+/// Causes the radar to scan ids of the surrounding things, see
+/// [`radar_read_id()`].
+///
+/// This option increases cooldown by 8k ticks.
+///
+/// This option is disabled by default - use [`radar_scan_ex()`] to activate it.
+pub const RADAR_SCAN_IDS: u8 = 1 << 3;
+
+/// When enabled, causes the radar to scan directions the surrounding things are
+/// facing, see [`radar_read_dir()`].
+///
+/// This option increases cooldown by 8k ticks.
+///
+/// This option is disabled by default - use [`radar_scan_ex()`] to activate it.
+pub const RADAR_SCAN_DIRS: u8 = 1 << 4;
+
+/// Returns whether the radar is ready and [`radar_scan()`] or
+/// [`radar_scan_ex()`] can be invoked.
 ///
 /// See also: [`radar_wait()`].
-#[inline(always)]
 pub fn is_radar_ready() -> bool {
     rdi(MEM_RADAR, 0) == 1
 }
 
-/// Waits for the radar to become ready.
+/// Waits until the radar is ready.
 ///
 /// See also: [`is_radar_ready()`].
-#[inline(always)]
 pub fn radar_wait() {
     while !is_radar_ready() {
         //
@@ -21,253 +57,264 @@ pub fn radar_wait() {
 
 /// Scans a square around the bot.
 ///
-/// This function performs an `r x r` scan, so e.g. `r=3` will do a `3x3` scan.
-/// Legal values of `r` are 3, 5, 7 or 9 - other values will cause the CPU to
+/// `range` defines the scanned square's length, e.g. `range=3` does a 3x3 scan;
+/// legal values are 3, 5, 7 or 9, other ranges will cause the firmware to
 /// crash.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use one of:
-///
-/// - [`radar_scan_3x3()`],
-/// - [`radar_scan_5x5()`],
-/// - [`radar_scan_7x7()`],
-/// - [`radar_scan_9x9()`].
-///
-/// # Accessing scanned tiles
-///
-/// Use [`radar_read()`] to access the scanned data.
-#[inline(always)]
-pub fn radar_scan(r: u8) {
-    wri(MEM_RADAR, 0, cmd(0x01, r, 0x00, 0x00));
-}
-
-/// Scans a 3x3 square around the bot and returns the scanned area.
+/// See also [`radar_scan_ex()`], which allows you to specify custom scanning
+/// options such as [`RADAR_SCAN_IDS`].
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 10_000 +- 10% ticks (~150 ms)
-/// ```
+/// - 3x3 scan = ~16k ticks (~250 ms)
+/// - 5x5 scan = ~20k ticks (~312 ms)
+/// - 7x7 scan = ~28k ticks (~437 ms)
+/// - 9x9 scan = ~44k ticks (~678 ms)
 ///
 /// # Example
 ///
 /// ```no_run
 /// # use kartoffel::*;
 /// #
-/// radar_wait();
-///
-/// let scan = radar_scan_3x3();
+/// radar_scan(3);
 ///
 /// // If there's someone in front of us, stab them
-/// if scan.at(0, -1) == '@' && is_arm_ready() {
+/// if radar_read(0, -1) == '@' && is_arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
-#[inline(always)]
-pub fn radar_scan_3x3() -> RadarScan<3> {
-    radar_scan(3);
-
-    RadarScan { _priv: () }
+pub fn radar_scan(range: u8) {
+    radar_scan_ex(range, 0);
 }
 
-/// Scans a 5x5 square around the bot and returns the scanned area.
+/// Scans a square around the bot, with custom options.
+///
+/// `range` defines the scanned square's length, as in [`radar_scan()`].
+///
+/// `opts` defines the scanning options, such as [`RADAR_SCAN_IDS`]; this is a
+/// bitmask.
+///
+/// This function is an advanced variant of [`radar_scan()`] - it allows you to
+/// perform either a faster scan or a more comprehensive one, see the examples
+/// below.
+///
+/// Note that for backward-compatibility reasons, `opts = 0` is equivalent to
+/// the default options:
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// # let range = todo!();
+/// #
+/// radar_scan_ex(range, 0);
+/// // ^ is equivalent to:
+/// radar_scan_ex(range, RADAR_SCAN_TILES | RADAR_SCAN_BOTS | RADAR_SCAN_OBJS);
+/// ```
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 15_000 +- 15% ticks (~230 ms)
+/// - 3x3 scan = ~4k ticks (~62 ms)
+/// - 5x5 scan = ~8k ticks (~125 ms)
+/// - 7x7 scan = ~16k ticks (~250 ms)
+/// - 9x9 scan = ~32k ticks (~500 ms)
+///
+/// ... plus sum of the cooldowns of the options you picked.
+///
+/// # Examples
+///
+/// If you don't care about scanning tiles, you just want to know whether
+/// there's a bot around you, you can call this function with `opts` equal to
+/// [`RADAR_SCAN_BOTS`] - this will be faster than calling `radar_scan(3)`, but
+/// it will return only information about the surrounding bots:
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// radar_scan_ex(3, RADAR_SCAN_BOTS);
+///
+/// // If there's someone in front of us, stab them
+/// if radar_read(0, -1) == '@' && is_arm_ready() {
+///     arm_stab();
+/// }
 /// ```
+///
+/// Or perhaps you need more information, in which case you can bundle a couple
+/// of flags together - this will take longer than `radar_scan(3)`, but it will
+/// also provide you more information:
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// radar_scan_ex(
+///     3,
+///     RADAR_SCAN_TILES
+///     | RADAR_SCAN_BOTS
+///     | RADAR_SCAN_OBJS
+///     | RADAR_SCAN_IDS
+///     | RADAR_SCAN_DIRS,
+/// );
+///
+/// // If there's someone in front of us and it's looking at us, stab them
+/// if radar_read(0, -1) == '@'
+///     && radar_read_dir(0, -1) == 'v'
+///     && is_arm_ready()
+/// {
+///     arm_stab();
+/// }
+/// ```
+pub fn radar_scan_ex(range: u8, opts: u8) {
+    // There are multiple ways of converting scan's two-dimensional indices,
+    // such as `(-1, -3)` or `(0, 0)`, into one-dimensional memory addresses.
+    //
+    // Up until v0.7, we've used the typical:
+    //
+    //     idx = y * range + x
+    //
+    // ... which proved to be a bit awkward, because it requires for all reading
+    // functions to be aware of the scan's range as well, so you'd do:
+    //
+    //     radar_scan(3);
+    //
+    // ... and then you'd carry around the range with you:
+    //
+    //     radar_read(3, /* ... */);
+    //
+    // Since v0.8 we use a new addressing mode, one that utilizes Szudzik's
+    // pairing function and thus has stable indices, ones that are irrespective
+    // of the scan's size.
+    let addr = 0x01;
+
+    wri(MEM_RADAR, 0, cmd(0x01, range, opts, addr));
+}
+
+/// Returns type of topmost thing visible at given coordinates.
+///
+/// - if there's a bot, returns `'@'`,
+/// - otherwise, if there's an object, returns that object (e.g. `'*'`),
+/// - otherwise, if there's a tile, returns that tile (e.g. `'.'`),
+/// - otherwise returns `' '` (a space) representing void (driving into it
+///   makes you fall out of the map and die).
+///
+/// Basically, it returns you the same character you see on the screen.
+///
+/// # Requirements
+///
+/// Using this function requires for the scan to be performed with at least
+/// one of the [`RADAR_SCAN_TILES`], [`RADAR_SCAN_BOTS`] or
+/// [`RADAR_SCAN_OBJS`] option enabled, otherwise this function will return
+/// zero.
+///
+/// Those options are enabled by default when you call [`radar_scan()`].
+///
+/// # Coordinate system
+///
+/// This function works in bot-centric coordinate system, that is:
+///
+/// - `radar_read(0, 0)` returns you,
+/// - `radar_read(0, -1)` returns whatever is in front of you,
+/// - `radar_read(0, 1)` returns whatever is behind you,
+/// - `radar_read(-1, 0)` returns whatever is to your left,
+/// - `radar_read(1, 0)` returns whatever is to your right,
+/// - etc.
+pub fn radar_read(x: i32, y: i32) -> char {
+    radar_read_ex(x, y, 0).to_le_bytes()[0] as char
+}
+
+/// Returns id of the topmost thing visible at given coordinates.
+///
+/// Calling this function makes sense only for inspecting bots (`@`) or objects
+/// (e.g. `*`), for other kinds of things the returned value will be zero.
 ///
 /// # Example
 ///
 /// ```no_run
 /// # use kartoffel::*;
 /// #
-/// radar_wait();
+/// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_IDS);
 ///
-/// let scan = radar_scan_5x5();
-///
-/// // If there's someone in front of us, stab them
-/// if scan.at(0, -1) == '@' && is_arm_ready() {
-///     arm_stab();
+/// if radar_read(0, -1) == '@' {
+///     print!("looking at you, {}", radar_read_id(0, -1));
 /// }
 /// ```
-#[inline(always)]
-pub fn radar_scan_5x5() -> RadarScan<5> {
-    radar_scan(5);
+///
+/// # Requirements
+///
+/// Using this function requires performing scan with the [`RADAR_SCAN_IDS`]
+/// option, which is disabled by default - see [`radar_scan_ex()`].
+///
+/// # Coordinate system
+///
+/// See [`radar_read()`].
+pub fn radar_read_id(x: i32, y: i32) -> u64 {
+    let hi = radar_read_ex(x, y, 1) as u64;
+    let lo = radar_read_ex(x, y, 2) as u64;
 
-    RadarScan { _priv: () }
+    (hi << 32) | lo
 }
 
-/// Scans a 7x7 square around the bot and returns the scanned area.
+/// Returns direction of the topmost thing visible at given coordinates; one
+/// of `'<'`, `'^'`, `'>'` or `'v'`.
 ///
-/// # Cooldown
+/// Calling this function makes sense only for inspecting bots (`@`), for
+/// other kinds of things the returned value will be zero.
 ///
-/// ```text
-/// 22_000 +- 25% ticks (~310 ms)
-/// ```
+/// You can't inspect your own direction, use [`compass_dir()`] for that.
 ///
 /// # Example
 ///
 /// ```no_run
 /// # use kartoffel::*;
 /// #
-/// radar_wait();
+/// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_DIRS);
 ///
-/// let scan = radar_scan_7x7();
-///
-/// // If there's someone in front of us, stab them
-/// if scan.at(0, -1) == '@' && is_arm_ready() {
-///     arm_stab();
+/// if radar_read(0, -1) == '@' && radar_read_dir(0, -1) == 'v' {
+///     print!("someone's watching me");
 /// }
 /// ```
-#[inline(always)]
-pub fn radar_scan_7x7() -> RadarScan<7> {
-    radar_scan(7);
-
-    RadarScan { _priv: () }
-}
-
-/// Scans a 9x9 square around the bot and returns the scanned area.
 ///
-/// # Cooldown
+/// # Requirements
 ///
-/// ```text
-/// 30_000 +- 30% ticks (~460 ms)
-/// ```
+/// Using this function requires performing scan with the [`RADAR_SCAN_DIRS`]
+/// option, which is disabled by default - see [`radar_scan_ex()`].
 ///
-/// # Example
+/// # Coordinate system
 ///
-/// ```no_run
-/// # use kartoffel::*;
-/// #
-/// radar_wait();
-///
-/// let scan = radar_scan_9x9();
-///
-/// // If there's someone in front of us, stab them
-/// if scan.at(0, -1) == '@' && is_arm_ready() {
-///     arm_stab();
-/// }
-/// ```
-#[inline(always)]
-pub fn radar_scan_9x9() -> RadarScan<9> {
-    radar_scan(9);
-
-    RadarScan { _priv: () }
+/// See [`radar_read()`].
+pub fn radar_read_dir(x: i32, y: i32) -> char {
+    radar_read_ex(x, y, 0).to_le_bytes()[1] as char
 }
 
 /// Reads data from the radar.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use [`RadarScan`], e.g. through [`radar_scan_3x3()`].
+/// This is a low-level function - for convenience you'll most likely want to
+/// use [`radar_read()`], [`radar_read_id()`] etc.
+///
+/// Meaning of the returned value depends on `z`, inspect [`radar_read()`],
+/// [`radar_read_dir()`] etc. for reference.
 ///
 /// # Coordinate system
 ///
-/// See: [`RadarScan`].
-///
-/// # Return value
-///
-/// Meaning of the returned number depends on `z`:
-///
-/// - `z=0` returns the tile located at `dx,dy` (see: [`RadarScan::at()`]),
-///
-/// - `z=1` returns the higher 32 bits of the id of the bot located at `dx,dy`
-///   (see: [`RadarScan::bot_at()`]),
-///
-/// - `z=2` returns the lower 32 bits of the id of the bot located at `dx,dy`
-///   (see: [`RadarScan::bot_at()`]).
-pub fn radar_read(r: usize, dx: i8, dy: i8, z: u8) -> u32 {
-    let x = (dx + (r as i8 / 2)) as usize;
-    let y = (dy + (r as i8 / 2)) as usize;
-    let z = z as usize;
-
-    rdi(MEM_RADAR, 1 + z * r * r + y * r + x)
+/// See [`radar_read()`].
+pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
+    rdi(MEM_RADAR, (1 + radar_addr(x, y, z)) as usize)
 }
 
-/// Outcome of a radar scan such as [`radar_scan_3x3()`].
+/// Maps given coordinates into an index which you can use to access radar's
+/// memory.
 ///
-/// # Coordinate system
+/// Note that while `x` and `y` are allowed to be arbitrary numbers, `z` must
+/// lie within `0..=2`.
 ///
-/// [`Self::at()`] and [`Self::bot_at()`] work in a bot-centric coordinate
-/// system, that is:
-///
-/// - `at(0, 0)` returns the bot itself (`'@'`),
-/// - `at(-1, 0)` returns what's to the left of the bot,
-/// - `at(1, 0)` returns what's to the right of the bot,
-/// - `at(0, -1)` returns what's in front of the bot,
-/// - `at(0, 1)` returns what's behind the bot,
-/// - etc.
-///
-/// This also means that the 3x3 scan allows you to access `at(-1..=1)`, 5x5
-/// gives you `at(-2..=2)` etc.
-///
-/// The same applies to [`Self::bot_at()`].
-///
-/// # Lazyness
-///
-/// For performance reasons, this structure doesn't copy the scanned area into
-/// your bot's RAM - rather, the data is kept inside the radar's memory and
-/// transparently accessed each time you call [`Self::at()`] etc.
-///
-/// In practice, this means that consecutive scans "overwrite" previous scans'
-/// results, like:
-///
-/// ```no_run
-/// # use kartoffel::*;
-/// #
-/// radar_wait();
-///
-/// let scan1 = radar_scan_5x5();
-///
-/// motor_wait();
-/// motor_step_fw();
-/// radar_wait();
-///
-/// let scan2 = radar_scan_5x5();
-///
-/// // whoopsie, scan1 will return the same data as scan2!
-/// // (i.e. it will return the newest scan)
-/// ```
-///
-/// If you need to preserve an older scan, you should call [`Self::at()`] etc.
-/// and store all the information you need elsewhere.
-#[derive(Debug)]
-pub struct RadarScan<const R: usize> {
-    _priv: (),
-}
+/// This is a low-level function - for convenience you'll most likely want to
+/// use [`radar_read()`], [`radar_read_id()`] etc.
+pub fn radar_addr(x: i32, y: i32, z: i32) -> i32 {
+    // We're using Szudzik's pairing function, see:
+    //
+    // - https://www.vertexfragment.com/ramblings/cantor-szudzik-pairing-functions/
+    // - http://szudzik.com/ElegantPairing.pdf
 
-impl<const R: usize> RadarScan<R> {
-    /// Returns the topmost thing visible at given coordinates:
-    ///
-    /// - if there's a bot, returns `'@'`,
-    /// - otherwise, if there's an object, returns that object (e.g. `'*'`),
-    /// - otherwise, if there's a tile, returns that tile (e.g. `'.'` or `'|'`),
-    /// - otherwise returns `' '` (a space) representing void (driving into it
-    ///   makes you fall out of the map and die).
-    ///
-    /// # Coordinate system
-    ///
-    /// This function uses bot-centric coordinates, i.e. `at(0, -1)` points at
-    /// the tile right in front of you - see [`RadarScan`] for details.
-    pub fn at(&self, dx: i8, dy: i8) -> char {
-        radar_read(R, dx, dy, 0) as u8 as char
-    }
+    let x = if x >= 0 { 2 * x } else { -2 * x - 1 };
+    let y = if y >= 0 { 2 * y } else { -2 * y - 1 };
+    let xy = if x >= y { x * x + x + y } else { y * y + x };
 
-    /// Returns id of the bot at given coordinates or `None` if there's no bot
-    /// there.
-    ///
-    /// Bot ids are random, unique, non-zero 64-bit numbers assigned to each bot
-    /// during its upload; ids are preserved when a bot is reincarnated.
-    ///
-    /// # Coordinate system
-    ///
-    /// This function uses bot-centric coordinates, i.e. `bot_at(0, -1)` points
-    /// at the bot right in front of you - see [`RadarScan`] for details.
-    pub fn bot_at(&self, dx: i8, dy: i8) -> Option<NonZeroU64> {
-        let d1 = radar_read(R, dx, dy, 1) as u64;
-        let d2 = radar_read(R, dx, dy, 2) as u64;
-
-        NonZeroU64::new((d1 << 32) | d2)
-    }
+    3 * xy + z
 }

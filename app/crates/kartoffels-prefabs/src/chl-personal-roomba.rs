@@ -147,10 +147,8 @@ fn scan(map: &mut Map, pos: I8Vec2, dir: Dir) -> bool {
 
     print!("scn:");
 
-    let scan = {
-        radar_wait();
-        radar_scan_9x9()
-    };
+    radar_wait();
+    radar_scan_ex(9, RADAR_SCAN_TILES | RADAR_SCAN_OBJS);
 
     // Number of discovered tiles
     let mut discovered = 0;
@@ -190,7 +188,7 @@ fn scan(map: &mut Map, pos: I8Vec2, dir: Dir) -> bool {
                 }
             };
 
-            let tile = match scan.at(x, y) {
+            let tile = match radar_read(x as i32, y as i32) {
                 '.' | '@' => Tile::Floor,
                 '=' => Tile::Flag,
                 _ => Tile::WallOrVoid,

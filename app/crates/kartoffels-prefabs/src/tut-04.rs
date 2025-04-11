@@ -8,16 +8,15 @@ use kartoffel::*;
 fn main() {
     loop {
         radar_wait();
+        radar_scan(3);
 
-        let scan = radar_scan_3x3();
-
-        if scan.at(0, -1) == '@' {
+        if radar_read(0, -1) == '@' {
             arm_wait();
             arm_stab();
-        } else if scan.at(-1, 0) == '@' {
+        } else if radar_read(-1, 0) == '@' {
             motor_wait();
             motor_turn_left();
-        } else if scan.at(1, 0) == '@' {
+        } else if radar_read(1, 0) == '@' {
             motor_wait();
             motor_turn_right();
         } else {

@@ -6,7 +6,6 @@ extern crate alloc;
 extern crate kartoffel;
 
 use alloc::vec::Vec;
-use core::num::NonZeroU64;
 use kartoffel::*;
 
 #[cfg_attr(target_arch = "riscv32", no_mangle)]
@@ -27,17 +26,15 @@ fn main() {
     }
 
     loop {
-        let scan = {
-            radar_wait();
-            radar_scan_3x3()
-        };
+        radar_wait();
+        radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_TILES | RADAR_SCAN_IDS);
 
-        if let Some((dx, dy)) = find_enemy(&guards, &scan) {
+        if let Some((dx, dy)) = find_enemy(&guards) {
             attack_enemy(dx, dy);
             continue;
         }
 
-        match scan.at(0, -1) {
+        match radar_read(0, -1) {
             '.' => {
                 motor_wait();
                 motor_step_fw();
@@ -53,18 +50,15 @@ fn main() {
     }
 }
 
-fn find_guards() -> Vec<NonZeroU64> {
-    let scan = radar_scan_5x5();
+fn find_guards() -> Vec<u64> {
+    radar_scan_ex(5, RADAR_SCAN_BOTS | RADAR_SCAN_IDS);
+
     let mut guards = Vec::new();
 
     for dx in -2..=2 {
         for dy in -2..=2 {
-            if dx == 1 && dy == 0 {
-                continue;
-            }
-
-            if let Some(id) = scan.bot_at(dx, dy) {
-                guards.push(id);
+            if radar_read(dx, dy) == '@' {
+                guards.push(radar_read_id(dx, dy));
             }
         }
     }
@@ -72,13 +66,13 @@ fn find_guards() -> Vec<NonZeroU64> {
     guards
 }
 
-fn find_enemy(guards: &[NonZeroU64], scan: &RadarScan<3>) -> Option<(i8, i8)> {
+fn find_enemy(guards: &[u64]) -> Option<(i32, i32)> {
     for dx in -1..=1 {
         for dy in -1..=1 {
-            if let Some(id) = scan.bot_at(dx, dy) {
-                if !guards.contains(&id) {
-                    return Some((dx, dy));
-                }
+            if radar_read(dx, dy) == '@'
+                && !guards.contains(&radar_read_id(dx, dy))
+            {
+                return Some((dx, dy));
             }
         }
     }
@@ -88,7 +82,7 @@ fn find_enemy(guards: &[NonZeroU64], scan: &RadarScan<3>) -> Option<(i8, i8)> {
 
 #[allow(clippy::collapsible_else_if)]
 #[allow(clippy::comparison_chain)]
-fn attack_enemy(dx: i8, dy: i8) {
+fn attack_enemy(dx: i32, dy: i32) {
     if dy == -1 {
         if dx == 0 {
             if is_arm_ready() {

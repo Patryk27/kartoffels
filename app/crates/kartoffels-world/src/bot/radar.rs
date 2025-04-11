@@ -1,14 +1,25 @@
 use crate::{AliveBot, BotMmioContext, TileKind};
-use glam::{ivec2, IVec2};
+use glam::{ivec2, IVec2, IVec3};
 use serde::{Deserialize, Serialize};
+use std::ops::RangeInclusive;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotRadar {
-    scan: Vec<u32>,
+    memory: Vec<u32>,
     cooldown: u32,
 }
 
 impl BotRadar {
+    const COOLDOWN_3X3: u32 = 4_000;
+    const COOLDOWN_5X5: u32 = 8_000;
+    const COOLDOWN_7X7: u32 = 16_000;
+    const COOLDOWN_9X9: u32 = 32_000;
+    const COOLDOWN_OPT_TILES: u32 = 4_000;
+    const COOLDOWN_OPT_BOTS: u32 = 4_000;
+    const COOLDOWN_OPT_OBJS: u32 = 4_000;
+    const COOLDOWN_OPT_IDS: u32 = 8_000;
+    const COOLDOWN_OPT_DIRS: u32 = 8_000;
+
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
     }
@@ -20,7 +31,7 @@ impl BotRadar {
             addr if addr >= AliveBot::MEM_RADAR + 4 => {
                 let idx = (addr - AliveBot::MEM_RADAR - 4) / 4;
 
-                self.scan.get(idx as usize).copied().ok_or(())
+                self.memory.get(idx as usize).copied().ok_or(())
             }
 
             _ => Err(()),
@@ -34,11 +45,14 @@ impl BotRadar {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_RADAR, [0x01, range, 0x00, 0x00])
-                if let Some(range) = BotRadarRange::new(range) =>
+            (AliveBot::MEM_RADAR, [0x01, range, opts, addr])
+                if let (Some(range), Some(addr)) =
+                    (BotRadarRange::new(range), BotRadarAddr::new(addr)) =>
             {
                 if self.cooldown == 0 {
-                    self.do_scan(ctxt, range);
+                    let opts = BotRadarOpts::new(opts);
+
+                    self.scan(ctxt, range, opts, addr);
                 }
 
                 Ok(())
@@ -48,50 +62,113 @@ impl BotRadar {
         }
     }
 
-    fn do_scan(&mut self, ctxt: &mut BotMmioContext, range: BotRadarRange) {
-        for y in 0..range.len() {
-            for x in 0..range.len() {
-                let pos = {
-                    let offset = ivec2(x as i32, y as i32)
-                        - IVec2::splat(range.len() as i32) / 2;
+    fn scan(
+        &mut self,
+        ctxt: &mut BotMmioContext,
+        range: BotRadarRange,
+        opts: BotRadarOpts,
+        addr: BotRadarAddr,
+    ) {
+        for off in range.iter_2d() {
+            let pos = ctxt.pos + ctxt.dir.as_vec().rotate(off.perp());
+            let [z0, z1, z2] = self.scan_one(ctxt, opts, pos);
 
-                    ctxt.pos + ctxt.dir.as_vec().rotate(offset.perp())
-                };
-
-                let out_z0;
-                let out_z1;
-                let out_z2;
-
-                if let Some(bot_id) = ctxt.bots.lookup_at(pos) {
-                    let bot_id = bot_id.get().get();
-
-                    out_z0 = TileKind::BOT as u32;
-                    out_z1 = (bot_id >> 32) as u32;
-                    out_z2 = bot_id as u32;
-                } else if let Some(object) = ctxt.objects.get_at(pos) {
-                    out_z0 = object.kind as u32;
-                    out_z1 = 0;
-                    out_z2 = 0;
-                } else {
-                    out_z0 = ctxt.map.get(pos).kind as u32;
-                    out_z1 = 0;
-                    out_z2 = 0;
-                }
-
-                self.scan[range.idx(x, y, 0)] = out_z0;
-                self.scan[range.idx(x, y, 1)] = out_z1;
-                self.scan[range.idx(x, y, 2)] = out_z2;
-            }
+            self.memory[addr.idx(range, off.extend(0))] = z0;
+            self.memory[addr.idx(range, off.extend(1))] = z1;
+            self.memory[addr.idx(range, off.extend(2))] = z2;
         }
 
-        self.cooldown = range.cooldown(ctxt);
+        self.cooldown = ctxt.cooldown(Self::cooldown(range, opts));
+    }
+
+    fn scan_one(
+        &mut self,
+        ctxt: &mut BotMmioContext,
+        opts: BotRadarOpts,
+        pos: IVec2,
+    ) -> [u32; 3] {
+        if opts.bots
+            && let Some(id) = ctxt.bots.lookup_at(pos)
+        {
+            let z0 = {
+                let dir = if opts.dirs
+                    && let Some(bot) = ctxt.bots.get(id)
+                {
+                    bot.dir.as_caret() as u8
+                } else {
+                    0
+                };
+
+                u32::from_le_bytes([TileKind::BOT, dir, 0, 0])
+            };
+
+            let [z1, z2] = if opts.ids {
+                let id = id.get().get();
+
+                [(id >> 32) as u32, id as u32]
+            } else {
+                [0, 0]
+            };
+
+            return [z0, z1, z2];
+        }
+
+        if opts.objs
+            && let Some(id) = ctxt.objects.lookup_at(pos)
+            && let Some(obj) = ctxt.objects.get(id)
+        {
+            let z0 = u32::from_le_bytes([obj.kind, 0, 0, 0]);
+
+            let [z1, z2] = if opts.ids {
+                let id = id.get().get();
+
+                [(id >> 32) as u32, id as u32]
+            } else {
+                [0, 0]
+            };
+
+            return [z0, z1, z2];
+        }
+
+        if opts.tiles {
+            return [ctxt.map.get(pos).kind as u32, 0, 0];
+        }
+
+        [0, 0, 0]
+    }
+
+    fn cooldown(range: BotRadarRange, opts: BotRadarOpts) -> u32 {
+        let mut val = match range {
+            BotRadarRange::R3 => Self::COOLDOWN_3X3,
+            BotRadarRange::R5 => Self::COOLDOWN_5X5,
+            BotRadarRange::R7 => Self::COOLDOWN_7X7,
+            BotRadarRange::R9 => Self::COOLDOWN_9X9,
+        };
+
+        if opts.tiles {
+            val += Self::COOLDOWN_OPT_TILES;
+        }
+        if opts.bots {
+            val += Self::COOLDOWN_OPT_BOTS;
+        }
+        if opts.objs {
+            val += Self::COOLDOWN_OPT_OBJS;
+        }
+        if opts.ids {
+            val += Self::COOLDOWN_OPT_IDS;
+        }
+        if opts.dirs {
+            val += Self::COOLDOWN_OPT_DIRS;
+        }
+
+        val
     }
 }
 
 impl Default for BotRadar {
     fn default() -> Self {
         Self {
-            scan: vec![0; 3 * 9 * 9],
+            memory: vec![0; 3 * 9 * 9],
             cooldown: 0,
         }
     }
@@ -100,39 +177,97 @@ impl Default for BotRadar {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum BotRadarRange {
-    D3 = 3,
-    D5 = 5,
-    D7 = 7,
-    D9 = 9,
+    R3 = 3,
+    R5 = 5,
+    R7 = 7,
+    R9 = 9,
 }
 
 impl BotRadarRange {
     fn new(r: u8) -> Option<Self> {
         match r {
-            3 => Some(Self::D3),
-            5 => Some(Self::D5),
-            7 => Some(Self::D7),
-            9 => Some(Self::D9),
+            3 => Some(Self::R3),
+            5 => Some(Self::R5),
+            7 => Some(Self::R7),
+            9 => Some(Self::R9),
             _ => None,
         }
     }
 
-    fn len(&self) -> u32 {
-        *self as u32
+    fn len(&self) -> i32 {
+        *self as i32
     }
 
-    fn idx(&self, x: u32, y: u32, z: u32) -> usize {
-        let len = self.len();
+    fn iter_1d(&self) -> RangeInclusive<i32> {
+        let t = self.len() / 2;
 
-        (z * len * len + y * len + x) as usize
+        -t..=t
     }
 
-    fn cooldown(&self, ctxt: &mut BotMmioContext) -> u32 {
+    fn iter_2d(self) -> impl Iterator<Item = IVec2> {
+        self.iter_1d()
+            .flat_map(move |y| self.iter_1d().map(move |x| ivec2(x, y)))
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct BotRadarOpts {
+    tiles: bool,
+    bots: bool,
+    objs: bool,
+    ids: bool,
+    dirs: bool,
+}
+
+impl BotRadarOpts {
+    fn new(opts: u8) -> Self {
+        if opts == 0 {
+            Self {
+                tiles: true,
+                bots: true,
+                objs: true,
+                ids: false,
+                dirs: false,
+            }
+        } else {
+            Self {
+                tiles: (opts & kartoffel::RADAR_SCAN_TILES) > 0,
+                bots: (opts & kartoffel::RADAR_SCAN_BOTS) > 0,
+                objs: (opts & kartoffel::RADAR_SCAN_OBJS) > 0,
+                ids: (opts & kartoffel::RADAR_SCAN_IDS) > 0,
+                dirs: (opts & kartoffel::RADAR_SCAN_DIRS) > 0,
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum BotRadarAddr {
+    Array,
+    Szudzik,
+}
+
+impl BotRadarAddr {
+    fn new(addr: u8) -> Option<Self> {
+        match addr {
+            0 => Some(Self::Array),
+            1 => Some(Self::Szudzik),
+            _ => None,
+        }
+    }
+
+    fn idx(&self, range: BotRadarRange, off: IVec3) -> usize {
         match self {
-            Self::D3 => ctxt.cooldown(10_000, 10),
-            Self::D5 => ctxt.cooldown(15_000, 15),
-            Self::D7 => ctxt.cooldown(22_000, 25),
-            Self::D9 => ctxt.cooldown(30_000, 30),
+            BotRadarAddr::Array => {
+                let len = range.len();
+                let off = off + IVec2::splat(len / 2).extend(0);
+
+                (off.z * len * len + off.y * len + off.x) as usize
+            }
+
+            BotRadarAddr::Szudzik => {
+                kartoffel::radar_addr(off.x, off.y, off.z) as usize
+            }
         }
     }
 }
@@ -143,60 +278,22 @@ mod tests {
     use crate::{
         AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind, Objects,
     };
-    use glam::uvec2;
+    use glam::{ivec3, uvec2};
     use indoc::indoc;
     use itertools::Itertools;
+    use kartoffels_utils::Id;
     use rand::SeedableRng;
     use rand_chacha::ChaCha8Rng;
     use test_case::test_case;
-
-    impl BotRadar {
-        fn scanned_bots(&self, range: BotRadarRange) -> Vec<(BotId, IVec2)> {
-            (0..range.len())
-                .flat_map(|y| {
-                    (0..range.len()).filter_map(move |x| {
-                        let d0 =
-                            self.mmio_load(range.addr(x, y, 1)).unwrap() as u64;
-
-                        let d1 =
-                            self.mmio_load(range.addr(x, y, 2)).unwrap() as u64;
-
-                        let id = BotId::try_new((d0 << 32) | d1)?;
-                        let pos = ivec2(x as i32, y as i32);
-
-                        Some((id, pos))
-                    })
-                })
-                .collect()
-        }
-
-        fn scanned_tiles(&self, range: BotRadarRange) -> String {
-            (0..range.len())
-                .map(|y| {
-                    (0..range.len())
-                        .map(|x| self.mmio_load(range.addr(x, y, 0)).unwrap())
-                        .map(|ch| ch as u8 as char)
-                        .join(" ")
-                })
-                .join("\n")
-        }
-    }
-
-    impl BotRadarRange {
-        fn addr(&self, x: u32, y: u32, z: u32) -> u32 {
-            let base = AliveBot::MEM_RADAR + 4;
-            let offset = 4 * self.idx(x, y, z) as u32;
-
-            base + offset
-        }
-    }
 
     struct TestCase {
         pos: IVec2,
         dir: Dir,
         range: u8,
-        expected_bots: &'static [(BotId, IVec2)],
-        expected_tiles: &'static str,
+        opts: u8,
+        expected_map: &'static str,
+        expected_ids: &'static [(IVec2, Id)],
+        expected_dirs: &'static [(IVec2, char)],
         expected_cooldown: u32,
     }
 
@@ -204,112 +301,302 @@ mod tests {
         pos: ivec2(3, 3),
         dir: Dir::N,
         range: 3,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(1, 0))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . @ .
             . . .
             . . .
         "},
-        expected_cooldown: 9374,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_3X3_2: TestCase = TestCase {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(1, 1))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . = .
             . @ .
             . . .
         "},
-        expected_cooldown: 9374,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_3X3_3: TestCase = TestCase {
         pos: ivec2(3, 1),
         dir: Dir::N,
         range: 3,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(1, 2))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . . .
             . = .
             . @ .
         "},
-        expected_cooldown: 9374,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_3X3_4: TestCase = TestCase {
         pos: ivec2(3, 0),
         dir: Dir::N,
         range: 3,
-        expected_bots: &[],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
 
             . . .
             . = .
         "},
-        expected_cooldown: 9374,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_5X5_N: TestCase = TestCase {
         pos: ivec2(3, 3),
         dir: Dir::N,
         range: 5,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(2, 1))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . . = . .
             . . @ . .
             . . . . .
             . . . . .
             . . . . .
         "},
-        expected_cooldown: 15592,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_5X5
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_5X5_E: TestCase = TestCase {
         pos: ivec2(3, 3),
         dir: Dir::E,
         range: 5,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(1, 2))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . . . . .
             . . . . .
             = @ . . .
             . . . . .
             . . . . .
         "},
-        expected_cooldown: 15592,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_5X5
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_5X5_W: TestCase = TestCase {
         pos: ivec2(3, 3),
         dir: Dir::W,
         range: 5,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(3, 2))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . . . . .
             . . . . .
             . . . @ =
             . . . . .
             . . . . .
         "},
-        expected_cooldown: 15592,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_5X5
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
     };
 
     const TEST_5X5_S: TestCase = TestCase {
         pos: ivec2(3, 3),
         dir: Dir::S,
         range: 5,
-        expected_bots: &[(BotId::new(112233445566778899), ivec2(2, 3))],
-        expected_tiles: indoc! {"
+        opts: 0,
+        expected_map: indoc! {"
             . . . . .
             . . . . .
             . . . . .
             . . @ . .
             . . = . .
         "},
-        expected_cooldown: 15592,
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_5X5
+            + BotRadar::COOLDOWN_OPT_TILES
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
+    };
+
+    const TEST_OPTS_TILES: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_TILES,
+        expected_map: indoc! {"
+            . . .
+            . . .
+            . . .
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_TILES,
+    };
+
+    const TEST_OPTS_BOTS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_BOTS,
+        expected_map: indoc! {"
+            \0 \0 \0
+            \0 @ \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3 + BotRadar::COOLDOWN_OPT_BOTS,
+    };
+
+    const TEST_OPTS_BOTS_AND_IDS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_IDS,
+        expected_map: indoc! {"
+            \0 \0 \0
+            \0 @ \0
+            \0 \0 \0
+        "},
+        expected_ids: &[(ivec2(0, 0), Id::new(0xcafed00d))],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_IDS,
+    };
+
+    const TEST_OPTS_BOTS_AND_DIRS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_DIRS,
+        expected_map: indoc! {"
+            \0 \0 \0
+            \0 @ \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[(ivec2(0, 0), '>')],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_DIRS,
+    };
+
+    const TEST_OPTS_OBJS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_OBJS,
+        expected_map: indoc! {"
+            \0 = \0
+            \0 \0 \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3 + BotRadar::COOLDOWN_OPT_OBJS,
+    };
+
+    const TEST_OPTS_OBJS_AND_IDS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_OBJS | kartoffel::RADAR_SCAN_IDS,
+        expected_map: indoc! {"
+            \0 = \0
+            \0 \0 \0
+            \0 \0 \0
+        "},
+        expected_ids: &[(ivec2(0, -1), Id::new(0xcafebabe))],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_OBJS
+            + BotRadar::COOLDOWN_OPT_IDS,
+    };
+
+    const TEST_OPTS_BOTS_AND_OBJS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_OBJS,
+        expected_map: indoc! {"
+            \0 = \0
+            \0 @ \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3
+            + BotRadar::COOLDOWN_OPT_BOTS
+            + BotRadar::COOLDOWN_OPT_OBJS,
+    };
+
+    /// Scanning just the ids is pretty much nonsensical, because it doesn't
+    /// return any information (you have to specify `| bots` or `| objs` as
+    /// well), but it's legal.
+    const TEST_OPTS_IDS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_IDS,
+        expected_map: indoc! {"
+            \0 \0 \0
+            \0 \0 \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3 + BotRadar::COOLDOWN_OPT_IDS,
+    };
+
+    /// Scanning just the dirs is pretty much nonsensical, because it doesn't
+    /// return any information (you have to specify `| bots` as well), but it's
+    /// legal.
+    const TEST_OPTS_DIRS: TestCase = TestCase {
+        pos: ivec2(3, 2),
+        dir: Dir::N,
+        range: 3,
+        opts: kartoffel::RADAR_SCAN_DIRS,
+        expected_map: indoc! {"
+            \0 \0 \0
+            \0 \0 \0
+            \0 \0 \0
+        "},
+        expected_ids: &[],
+        expected_dirs: &[],
+        expected_cooldown: BotRadar::COOLDOWN_3X3 + BotRadar::COOLDOWN_OPT_DIRS,
     };
 
     #[test_case(TEST_3X3_1)]
@@ -320,6 +607,15 @@ mod tests {
     #[test_case(TEST_5X5_E)]
     #[test_case(TEST_5X5_W)]
     #[test_case(TEST_5X5_S)]
+    #[test_case(TEST_OPTS_TILES)]
+    #[test_case(TEST_OPTS_BOTS)]
+    #[test_case(TEST_OPTS_BOTS_AND_IDS)]
+    #[test_case(TEST_OPTS_BOTS_AND_DIRS)]
+    #[test_case(TEST_OPTS_OBJS)]
+    #[test_case(TEST_OPTS_OBJS_AND_IDS)]
+    #[test_case(TEST_OPTS_BOTS_AND_OBJS)]
+    #[test_case(TEST_OPTS_IDS)]
+    #[test_case(TEST_OPTS_DIRS)]
     fn test(mut case: TestCase) {
         let map = {
             let mut map = Map::new(uvec2(7, 7));
@@ -332,7 +628,7 @@ mod tests {
             let mut objects = Objects::default();
 
             objects.add(
-                ObjectId::new(123),
+                ObjectId::new(0xcafebabe),
                 Object::new(ObjectKind::FLAG),
                 Some(ivec2(3, 1)),
             );
@@ -344,8 +640,9 @@ mod tests {
             let mut bots = AliveBots::default();
 
             bots.add(AliveBot {
-                id: BotId::new(112233445566778899),
+                id: BotId::new(0xcafed00d),
                 pos: ivec2(3, 2),
+                dir: Dir::E,
                 ..Default::default()
             });
 
@@ -365,23 +662,102 @@ mod tests {
             rng: &mut rng,
         };
 
-        radar
-            .mmio_store(
-                &mut ctxt,
-                AliveBot::MEM_RADAR,
-                u32::from_le_bytes([0x01, case.range, 0x00, 0x00]),
-            )
-            .unwrap();
+        for addr in [0x00, 0x01] {
+            radar.cooldown = 0;
 
-        let range = BotRadarRange::new(case.range).unwrap();
+            radar
+                .mmio_store(
+                    &mut ctxt,
+                    AliveBot::MEM_RADAR,
+                    u32::from_le_bytes([0x01, case.range, case.opts, addr]),
+                )
+                .unwrap();
 
-        assert_eq!(case.expected_bots, radar.scanned_bots(range));
+            let addr = BotRadarAddr::new(addr).unwrap();
+            let range = BotRadarRange::new(case.range).unwrap();
 
-        assert_eq!(
-            case.expected_tiles.trim(),
-            radar.scanned_tiles(range).trim()
-        );
+            dbg!(addr);
+            dbg!(range);
 
-        assert_eq!(case.expected_cooldown, radar.cooldown);
+            assert_eq!(
+                case.expected_map.trim(),
+                radar.read_map(range, addr).trim()
+            );
+
+            assert_eq!(
+                case.expected_ids,
+                radar.read_ids(range, addr).collect::<Vec<_>>()
+            );
+
+            assert_eq!(
+                case.expected_dirs,
+                radar.read_dirs(range, addr).collect::<Vec<_>>()
+            );
+
+            assert_eq!(case.expected_cooldown, radar.cooldown);
+        }
+    }
+
+    impl BotRadar {
+        fn read_map(&self, range: BotRadarRange, addr: BotRadarAddr) -> String {
+            range
+                .iter_1d()
+                .map(|y| {
+                    range
+                        .iter_1d()
+                        .map(|x| {
+                            self.mmio_load(addr.addr(range, ivec3(x, y, 0)))
+                                .unwrap()
+                        })
+                        .map(|ch| ch as u8 as char)
+                        .join(" ")
+                })
+                .join("\n")
+        }
+
+        fn read_ids(
+            &self,
+            range: BotRadarRange,
+            addr: BotRadarAddr,
+        ) -> impl Iterator<Item = (IVec2, Id)> + '_ {
+            range.iter_2d().filter_map(move |off| {
+                let hi = self
+                    .mmio_load(addr.addr(range, off.extend(1)))
+                    .unwrap() as u64;
+
+                let lo = self
+                    .mmio_load(addr.addr(range, off.extend(2)))
+                    .unwrap() as u64;
+
+                let id = Id::try_new((hi << 32) | lo)?;
+
+                Some((off, id))
+            })
+        }
+
+        fn read_dirs(
+            &self,
+            range: BotRadarRange,
+            addr: BotRadarAddr,
+        ) -> impl Iterator<Item = (IVec2, char)> + '_ {
+            range.iter_2d().filter_map(move |off| {
+                let dir = self
+                    .mmio_load(addr.addr(range, off.extend(0)))
+                    .unwrap()
+                    .to_le_bytes()[1];
+
+                if dir == 0 {
+                    None
+                } else {
+                    Some((off, dir as char))
+                }
+            })
+        }
+    }
+
+    impl BotRadarAddr {
+        fn addr(&self, range: BotRadarRange, off: IVec3) -> u32 {
+            AliveBot::MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
+        }
     }
 }

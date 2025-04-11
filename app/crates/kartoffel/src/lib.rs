@@ -1,9 +1,9 @@
 //! # kartoffel
 //!
-//! This crate provides building blocks for implementing a bot for the
-//! [kartoffels](https://kartoffels.pwy.io) game - see:
+//! This crate provides building blocks for implementing a kartoffel bot:
 //!
-//! <https://github.com/patryk27/kartoffel>
+//! - <https://github.com/patryk27/kartoffel>
+//! - <https://github.com/patryk27/kartoffels>
 
 #![no_std]
 
@@ -37,19 +37,16 @@ const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
 
-#[inline(always)]
 fn rdi(ptr: *mut u32, off: usize) -> u32 {
     unsafe { ptr::read_volatile(ptr.wrapping_add(off)) }
 }
 
-#[inline(always)]
 fn wri(ptr: *mut u32, off: usize, val: u32) {
     unsafe {
         ptr::write_volatile(ptr.wrapping_add(off), val);
     }
 }
 
-#[inline(always)]
 fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {
     u32::from_le_bytes([cmd, arg0, arg1, arg2])
 }
