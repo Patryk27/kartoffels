@@ -19,8 +19,8 @@ pub struct AliveBots {
 impl AliveBots {
     /// Adds given bot into the collection.
     ///
-    /// Note that this function doesn't keep track of the policy, it's on the
-    /// caller's side to make sure the policy is fine with this.
+    /// This function doesn't keep track of the policy, it's on the caller's
+    /// side to make sure the policy is fine with this.
     ///
     /// # Panics
     ///
@@ -52,8 +52,8 @@ impl AliveBots {
 
     /// Returns bot with the specified id.
     ///
-    /// Note that calling this function during [`crate::bots::tick()`] will
-    /// return `None` for the currently-ticked bot, see [`Self::begin()`].
+    /// Calling this function during [`crate::bots::tick()`] will return `None`
+    /// for the currently-ticked bot, see [`Self::begin()`].
     pub fn get(&self, id: BotId) -> Option<&AliveBot> {
         let idx = *self.id_to_idx.get(&id)?;
         let bot = self.entries[idx as usize].as_ref()?;
@@ -63,8 +63,8 @@ impl AliveBots {
 
     /// Removes bot with the specified id.
     ///
-    /// Note that calling this function during [`crate::bots::tick()`] will
-    /// return `None` for the currently-ticked bot, see [`Self::begin()`].
+    /// Calling this function during [`crate::bots::tick()`] will return `None`
+    /// for the currently-ticked bot, see [`Self::begin()`].
     pub fn remove(&mut self, id: BotId) -> Option<Box<AliveBot>> {
         let idx = self.id_to_idx.remove(&id)?;
         let bot = self.entries[idx as usize].take().unwrap();

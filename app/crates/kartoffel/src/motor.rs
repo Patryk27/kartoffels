@@ -41,8 +41,8 @@ pub fn motor_wait() {
 ///
 /// Other values will cause the firmware to crash.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use one of:
+/// This is a low-level function - for convenience you'll most likely/ want to
+/// use one of:
 ///
 /// - [`motor_step_fw()`],
 /// - [`motor_step_bw()`],

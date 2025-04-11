@@ -7,9 +7,8 @@ use core::fmt;
 /// writing 257th character shifts all the previous characters, removing the
 /// first one.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use [`print!()`](crate::print!()) or
-/// [`println!()`](crate::println!()).
+/// This is a low-level function - for convenience you'll most likely want to
+/// use [`print!()`](crate::print!()) or [`println!()`](crate::println!()).
 ///
 /// See also: [`serial_buffer()`].
 ///

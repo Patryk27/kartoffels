@@ -148,9 +148,9 @@ fn create_stdout(mut stdout: SplitSink<WebSocket, Message>) -> Stdout {
 }
 
 fn compress(frame: &[u8]) -> Vec<u8> {
-    // Note that while encoding is a blocking operation, since the dataset we're
-    // operating on is pretty small, using a dedicated thread-pool for encoding
-    // doesn't make much sense.
+    // While encoding is a blocking operation, since the dataset we're operating
+    // on is pretty small, using a dedicated thread-pool for encoding doesn't
+    // make much sense.
     //
     // Quick benchmark says an average call to `compress()` finishes in ~100µs,
     // which is good enough not to block the runtime.
