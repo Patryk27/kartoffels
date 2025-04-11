@@ -20,12 +20,10 @@ fn main() {
     println!("waiting for guard");
 
     loop {
-        let scan = {
-            radar_wait();
-            radar_scan_5x5()
-        };
+        radar_wait();
+        radar_scan_ex(5, RADAR_SCAN_BOTS);
 
-        if scan.at(0, -2) == '@' {
+        if radar_read(0, -2) == '@' {
             break;
         }
     }
@@ -79,12 +77,10 @@ fn main() {
     }
 
     loop {
-        let scan = {
-            radar_wait();
-            radar_scan_5x5()
-        };
+        radar_wait();
+        radar_scan_ex(5, RADAR_SCAN_BOTS);
 
-        if scan.at(1, -2) == '@' {
+        if radar_read(1, -2) == '@' {
             break;
         }
     }
@@ -101,12 +97,10 @@ fn main() {
     }
 
     loop {
-        let scan = {
-            radar_wait();
-            radar_scan_5x5()
-        };
+        radar_wait();
+        radar_scan_ex(5, RADAR_SCAN_BOTS);
 
-        if scan.at(1, -2) == '@' {
+        if radar_read(1, -2) == '@' {
             break;
         }
     }

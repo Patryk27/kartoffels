@@ -12,6 +12,7 @@ mod v12;
 mod v13;
 mod v14;
 mod v15;
+mod v16;
 
 use anyhow::Result;
 use ciborium::Value;
@@ -32,6 +33,7 @@ static MIGRATIONS: &[fn(&mut Value)] = &[
     v13::run,
     v14::run,
     v15::run,
+    v16::run,
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {
@@ -65,7 +67,6 @@ mod tests {
         if expected != actual {
             let actual = cbor_to_json(actual, false);
             let actual = serde_json::to_string_pretty(&actual).unwrap();
-
             let expected = serde_json::to_string_pretty(&expected).unwrap();
 
             pa::assert_eq!(expected.trim(), actual.trim());

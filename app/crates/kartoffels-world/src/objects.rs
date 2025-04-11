@@ -44,10 +44,6 @@ impl Objects {
         self.objects.get(&id).copied()
     }
 
-    pub fn get_at(&self, pos: IVec2) -> Option<Object> {
-        self.get(self.lookup_at(pos)?)
-    }
-
     pub fn remove(&mut self, id: ObjectId) -> Option<Object> {
         let obj = self.objects.remove(&id)?;
 

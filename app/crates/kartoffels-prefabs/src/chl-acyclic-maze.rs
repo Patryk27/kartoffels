@@ -9,18 +9,16 @@ use kartoffel::*;
 #[cfg_attr(target_arch = "riscv32", no_mangle)]
 fn main() {
     loop {
-        let scan = {
-            radar_wait();
-            radar_scan_3x3()
-        };
+        radar_wait();
+        radar_scan(3);
 
-        if scan.at(0, -1) == '@' {
+        if radar_read(0, -1) == '@' {
             arm_stab();
             break;
         }
 
-        if scan.at(0, -1) == '.' {
-            if scan.at(1, -1) == '-' || scan.at(1, -1) == '|' {
+        if radar_read(0, -1) == '.' {
+            if radar_read(1, -1) == '-' || radar_read(1, -1) == '|' {
                 motor_wait();
                 motor_step_fw();
             } else {
