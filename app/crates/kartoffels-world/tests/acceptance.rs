@@ -40,21 +40,21 @@ async fn pause_and_resume() {
             .unwrap();
     }
 
-    world.tick(10_000).await.unwrap();
+    world.tick(32_000).await.unwrap();
 
     let snap1 = world.snapshot().await;
 
-    world.tick(10_000).await.unwrap();
+    world.tick(32_000).await.unwrap();
 
     let snap2 = world.snapshot().await;
 
     world.pause().await.unwrap();
-    world.tick(10_000).await.unwrap();
+    world.tick(32_000).await.unwrap();
 
     let snap3 = world.snapshot().await;
 
     world.resume().await.unwrap();
-    world.tick(10_000).await.unwrap();
+    world.tick(32_000).await.unwrap();
 
     let snap4 = world.snapshot().await;
 

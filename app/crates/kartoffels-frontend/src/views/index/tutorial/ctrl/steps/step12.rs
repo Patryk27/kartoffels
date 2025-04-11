@@ -5,29 +5,17 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 
     body: vec![
         MsgLine::new(
-            "radar returns a scan of the environment around the bot — to get \
-             started, you need to know about these two functions:",
+            "radar returns a scan of the environment around the bot, it's as \
+             easy as:",
         ),
         MsgLine::new(""),
-        MsgLine::new("# radar_wait()"),
+        MsgLine::new("    radar_wait(); // wait until radar is ready"),
+        MsgLine::new("    radar_scan(3); // do a 3x3 scan"),
         MsgLine::new(""),
-        MsgLine::new(
-            "similarly to `motor_wait()`, this boi waits until the radar is \
-             ready to accept another command",
-        ),
-        MsgLine::new(""),
-        MsgLine::new("# radar_scan_3x3()"),
-        MsgLine::new(""),
-        MsgLine::new(
-            "this boi returns a scan representing the 3x3 square around your \
-             bot, allowing you to see tiles and other bots:",
-        ),
-        MsgLine::new(""),
-        MsgLine::new("    let scan = radar_scan_3x3();"),
-        MsgLine::new("    let front = scan.at(0, -1);"),
-        MsgLine::new("    let back = scan.at(0, 1);"),
-        MsgLine::new("    let left = scan.at(-1, 0);"),
-        MsgLine::new("    let right = scan.at(1, 0);"),
+        MsgLine::new("    let front = radar_read(0, -1);"),
+        MsgLine::new("    let back = radar_read(0, 1);"),
+        MsgLine::new("    let left = radar_read(-1, 0);"),
+        MsgLine::new("    let right = radar_read(1, 0);"),
         MsgLine::new(""),
         MsgLine::new("    if front == '.' {"),
         MsgLine::new("        // do something"),

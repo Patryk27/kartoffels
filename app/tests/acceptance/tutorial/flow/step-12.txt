@@ -1,22 +1,17 @@
+
+
+
         ┌────────────────────── tutorial (12/16) ──────────────────────┐
-        │ radar returns a scan of the environment around the bot — to  │
-        │ get started, you need to know about these two functions:     │
+        │ radar returns a scan of the environment around the bot, it's │
+        │ as easy as:                                                  │
         │                                                              │
-        │ # radar_wait()                                               │
+        │     radar_wait(); // wait until radar is ready               │
+        │     radar_scan(3); // do a 3x3 scan                          │
         │                                                              │
-        │ similarly to motor_wait(), this boi waits until the radar is │
-        │ ready to accept another command                              │
-        │                                                              │
-        │ # radar_scan_3x3()                                           │
-        │                                                              │
-        │ this boi returns a scan representing the 3x3 square around   │
-        │ your bot, allowing you to see tiles and other bots:          │
-        │                                                              │
-        │     let scan = radar_scan_3x3();                             │
-        │     let front = scan.at(0, -1);                              │
-        │     let back = scan.at(0, 1);                                │
-        │     let left = scan.at(-1, 0);                               │
-        │     let right = scan.at(1, 0);                               │
+        │     let front = radar_read(0, -1);                           │
+        │     let back = radar_read(0, 1);                             │
+        │     let left = radar_read(-1, 0);                            │
+        │     let right = radar_read(1, 0);                            │
         │                                                              │
         │     if front == '.' {                                        │
         │         // do something                                      │
@@ -27,4 +22,9 @@
         │     }                                                        │
         │                                                              │
         │                                                 [enter] next │
-[esc] go└──────────────────────────────────────────────────────────────┘ spd:∞
+        └──────────────────────────────────────────────────────────────┘
+                       .........
+
+
+                                                       [u] upload-bot
+[esc] go-back  [spc] pause  [h] help                                     spd:∞
