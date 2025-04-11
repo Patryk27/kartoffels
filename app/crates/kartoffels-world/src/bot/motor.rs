@@ -33,7 +33,7 @@ impl BotMotor {
                         at: ctxt.pos + *ctxt.dir,
                     });
 
-                    self.cooldown = ctxt.cooldown(20_000, 15);
+                    self.cooldown = ctxt.cooldown(20_000);
                 }
 
                 Ok(())
@@ -45,7 +45,7 @@ impl BotMotor {
                         at: ctxt.pos + ctxt.dir.turned_back(),
                     });
 
-                    self.cooldown = ctxt.cooldown(30_000, 15);
+                    self.cooldown = ctxt.cooldown(30_000);
                 }
 
                 Ok(())
@@ -55,7 +55,7 @@ impl BotMotor {
                 if self.cooldown == 0 {
                     *ctxt.dir = ctxt.dir.turned_right();
 
-                    self.cooldown = ctxt.cooldown(25_000, 15);
+                    self.cooldown = ctxt.cooldown(25_000);
                 }
 
                 Ok(())
@@ -65,7 +65,7 @@ impl BotMotor {
                 if self.cooldown == 0 {
                     *ctxt.dir = ctxt.dir.turned_left();
 
-                    self.cooldown = ctxt.cooldown(25_000, 15);
+                    self.cooldown = ctxt.cooldown(25_000);
                 }
 
                 Ok(())

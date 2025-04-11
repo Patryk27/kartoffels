@@ -73,6 +73,16 @@ impl Dir {
             Dir::W => ivec2(-1, 0),
         }
     }
+
+    #[must_use]
+    pub fn as_caret(&self) -> char {
+        match self {
+            Dir::N => '^',
+            Dir::E => '>',
+            Dir::S => 'v',
+            Dir::W => '<',
+        }
+    }
 }
 
 impl fmt::Display for Dir {

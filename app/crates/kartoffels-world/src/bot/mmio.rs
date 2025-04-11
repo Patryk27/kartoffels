@@ -53,8 +53,13 @@ pub struct BotMmioContext<'a> {
 }
 
 impl BotMmioContext<'_> {
-    pub fn cooldown(&mut self, base: u32, off_percentage: u32) -> u32 {
-        let off = base * off_percentage / 100;
+    pub fn cooldown(&mut self, base: u32) -> u32 {
+        #[cfg(test)]
+        let off = 0;
+
+        #[cfg(not(test))]
+        let off = base / 10;
+
         let min = base - off;
         let max = base + off;
 

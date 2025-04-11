@@ -34,7 +34,7 @@ impl BotArm {
                         at: ctxt.pos + *ctxt.dir,
                     });
 
-                    self.cooldown = ctxt.cooldown(60_000, 15);
+                    self.cooldown = ctxt.cooldown(60_000);
                 }
 
                 Ok(())
@@ -46,7 +46,7 @@ impl BotArm {
                         at: ctxt.pos + *ctxt.dir,
                     });
 
-                    self.cooldown = ctxt.cooldown(60_000, 15);
+                    self.cooldown = ctxt.cooldown(60_000);
                 }
 
                 Ok(())
@@ -59,7 +59,7 @@ impl BotArm {
                         idx,
                     });
 
-                    self.cooldown = ctxt.cooldown(60_000, 15);
+                    self.cooldown = ctxt.cooldown(60_000);
                 }
 
                 Ok(())
