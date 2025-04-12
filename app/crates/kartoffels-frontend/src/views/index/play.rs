@@ -83,7 +83,7 @@ async fn run_once(
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 fade.render(ui, |ui| {
                     bg.render(ui);
 

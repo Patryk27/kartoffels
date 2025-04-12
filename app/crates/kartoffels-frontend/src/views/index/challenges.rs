@@ -51,7 +51,7 @@ async fn run_once(
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 let width = (ui.area.width - 2).min(60);
 
                 // TODO doing manual layouting sucks sometimes

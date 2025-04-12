@@ -69,7 +69,7 @@ async fn run_once(
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 fade.render(ui, |ui| {
                     let [_, area, _] = Layout::horizontal([
                         Constraint::Fill(1),

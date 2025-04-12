@@ -40,7 +40,7 @@ pub async fn run(
 
     loop {
         let cmd = frame
-            .update(|ui| {
+            .tick(|ui| {
                 ui.info_window(
                     ui.area.width,
                     ui.area.height,

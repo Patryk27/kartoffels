@@ -15,7 +15,7 @@ pub async fn run(
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 ui.add(bg);
 
                 ui.info_window(30, 4, Some(" admin "), |ui| {

@@ -69,7 +69,7 @@ async fn run_once(
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 state.tick(tick.elapsed().as_secs_f32(), store);
                 state.render(ui, sess, store);
 

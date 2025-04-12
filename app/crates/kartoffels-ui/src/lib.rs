@@ -148,7 +148,7 @@ impl Frame {
         Ok(())
     }
 
-    pub async fn update<F, T>(&mut self, render: F) -> Result<Option<T>>
+    pub async fn tick<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
         F: FnOnce(&mut Ui<T>),
     {

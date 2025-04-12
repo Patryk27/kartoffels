@@ -34,7 +34,7 @@ pub async fn run(frame: &mut Frame) -> Result<()> {
 
     loop {
         let event = frame
-            .update(|ui| {
+            .tick(|ui| {
                 fade.render(ui, |ui| {
                     ui.add(Clear);
                     ui.add(&*MSG);
