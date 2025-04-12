@@ -1,4 +1,4 @@
-use crate::{rdi, MEM_COMPASS};
+use crate::*;
 
 /// Returns which direction the bot was facing at the time of the latest
 /// measurement, and then removes that measurement from the compass.

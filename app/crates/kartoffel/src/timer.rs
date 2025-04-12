@@ -1,11 +1,10 @@
-use crate::{rdi, MEM_TIMER};
+use crate::*;
 
 /// Returns a pseudorandom number that can be used as a source of randomness
 /// for hashmaps and the like.
 ///
 /// Note that this doesn't return a *new* random number each time it's called -
 /// the number is randomized once, when the bot is born.
-#[inline(always)]
 pub fn timer_seed() -> u32 {
     rdi(MEM_TIMER, 0)
 }
@@ -14,7 +13,6 @@ pub fn timer_seed() -> u32 {
 ///
 /// This counter overflows after about 18 hours, after which it will start
 /// counting from zero.
-#[inline(always)]
 pub fn timer_ticks() -> u32 {
     rdi(MEM_TIMER, 1)
 }
@@ -28,7 +26,6 @@ pub fn timer_ticks() -> u32 {
 /// #
 /// timer_wait(64000); // waits for one second
 /// ```
-#[inline(always)]
 pub fn timer_wait(ticks: u32) {
     let ticks = timer_ticks() + ticks;
 

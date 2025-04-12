@@ -1,4 +1,4 @@
-use crate::{cmd, rdi, wri, MEM_ARM};
+use crate::*;
 
 /// Returns whether the arm is ready and [`arm_stab()`] can be invoked.
 ///
@@ -15,12 +15,11 @@ use crate::{cmd, rdi, wri, MEM_ARM};
 ///     // run, forrest, run!
 /// }
 /// ```
-#[inline(always)]
 pub fn is_arm_ready() -> bool {
     rdi(MEM_ARM, 0) == 1
 }
 
-/// Waits for the arm to become ready.
+/// Waits until the arm is ready.
 ///
 /// See also: [`is_arm_ready()`].
 ///
@@ -32,7 +31,6 @@ pub fn is_arm_ready() -> bool {
 /// arm_wait();
 /// arm_stab();
 /// ```
-#[inline(always)]
 pub fn arm_wait() {
     while !is_arm_ready() {
         //
@@ -46,9 +44,7 @@ pub fn arm_wait() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 60_000 +- 15% ticks (~930 ms)
-/// ```
+/// ~60k ticks (~930 ms)
 ///
 /// # Example
 ///
@@ -58,7 +54,6 @@ pub fn arm_wait() {
 /// arm_wait();
 /// arm_stab();
 /// ```
-#[inline(always)]
 pub fn arm_stab() {
     wri(MEM_ARM, 0, cmd(0x01, 0x00, 0x00, 0x00));
 }
@@ -75,9 +70,7 @@ pub fn arm_stab() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 60_000 +- 15% ticks (~930 ms)
-/// ```
+/// ~60k ticks (~930 ms)
 ///
 /// # Example
 ///
@@ -87,7 +80,6 @@ pub fn arm_stab() {
 /// arm_wait();
 /// arm_pick();
 /// ```
-#[inline(always)]
 pub fn arm_pick() {
     wri(MEM_ARM, 0, cmd(0x02, 0x00, 0x00, 0x00));
 }
@@ -104,9 +96,7 @@ pub fn arm_pick() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 60_000 +- 15% ticks (~930 ms)
-/// ```
+/// ~60k ticks (~930 ms)
 ///
 /// # Example
 ///
@@ -119,7 +109,6 @@ pub fn arm_pick() {
 /// arm_wait();
 /// arm_drop(0); // drops whatever got picked before
 /// ```
-#[inline(always)]
 pub fn arm_drop(idx: u8) {
     wri(MEM_ARM, 0, cmd(0x03, idx, 0x00, 0x00));
 }

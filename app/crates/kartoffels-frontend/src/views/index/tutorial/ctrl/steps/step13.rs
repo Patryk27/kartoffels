@@ -49,7 +49,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("\t- `motor_turn_left()`"),
         MsgLine::new("\t- `motor_turn_right()`"),
         MsgLine::new("\t- `radar_wait()`"),
-        MsgLine::new("\t- `radar_scan_3x3()`"),
+        MsgLine::new("\t- `radar_scan()`"),
+        MsgLine::new("\t- `radar_read()`"),
         MsgLine::new(""),
         MsgLine::new("... and `println!()` might come handy for debugging!"),
     ]

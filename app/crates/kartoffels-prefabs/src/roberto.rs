@@ -17,13 +17,11 @@ fn main() {
     loop {
         display.log('.');
 
-        let scan = {
-            radar_wait();
-            radar_scan_5x5()
-        };
+        radar_wait();
+        radar_scan(5);
 
         // If there's an enemy right in front of us, attack, attack, attack!
-        if scan.at(0, -1) == '@' {
+        if radar_read(0, -1) == '@' {
             display.log('!');
             arm_wait();
             arm_stab();
@@ -31,7 +29,7 @@ fn main() {
         }
 
         // If there's an enemy somewhere in front of us, move forward
-        if scan.at(0, -1) == '.' && got_enemy_in(&scan, -2..=2, -2..=1) {
+        if radar_read(0, -1) == '.' && got_enemy_in(-2..=2, -2..=1) {
             display.log('^');
             motor_wait();
             motor_step_fw();
@@ -39,7 +37,7 @@ fn main() {
         }
 
         // If there's an enemy somewhere to the left of us, turn left
-        if got_enemy_in(&scan, -2..=0, -2..=2) {
+        if got_enemy_in(-2..=0, -2..=2) {
             display.log('<');
             motor_wait();
             motor_turn_left();
@@ -47,7 +45,7 @@ fn main() {
         }
 
         // If there's an enemy somewhere to the right of us, turn right
-        if got_enemy_in(&scan, 0..=2, -2..=2) {
+        if got_enemy_in(0..=2, -2..=2) {
             display.log('>');
             motor_wait();
             motor_turn_right();
@@ -56,7 +54,7 @@ fn main() {
 
         // If there's an enemy behind us, turn in random direction (hoping to
         // eventually turn back)
-        if got_enemy_in(&scan, -2..=2, 1..=2) {
+        if got_enemy_in(-2..=2, 1..=2) {
             display.log('v');
             motor_wait();
 
@@ -71,7 +69,7 @@ fn main() {
 
         // If the direction we're moving towards will cause us to fall outside
         // the map, change direction
-        if timer_ticks() < sample_dir_at && scan.at(0, -1) != '.' {
+        if timer_ticks() < sample_dir_at && radar_read(0, -1) != '.' {
             sample_dir_at = 0;
         }
 
@@ -83,25 +81,25 @@ fn main() {
 
             let can_step = loop {
                 match rng.u32() % 4 {
-                    0 if scan.at(-1, 0) == '.' => {
+                    0 if radar_read(-1, 0) == '.' => {
                         motor_wait();
                         motor_turn_left();
 
                         break true;
                     }
 
-                    1 if scan.at(0, -1) == '.' => {
+                    1 if radar_read(0, -1) == '.' => {
                         break true;
                     }
 
-                    2 if scan.at(1, 0) == '.' => {
+                    2 if radar_read(1, 0) == '.' => {
                         motor_wait();
                         motor_turn_right();
 
                         break true;
                     }
 
-                    3 if scan.at(0, 1) == '.' => {
+                    3 if radar_read(0, 1) == '.' => {
                         motor_wait();
 
                         if rng.bool() {
@@ -127,14 +125,10 @@ fn main() {
     }
 }
 
-fn got_enemy_in<const D: usize>(
-    scan: &RadarScan<D>,
-    xs: RangeInclusive<i8>,
-    ys: RangeInclusive<i8>,
-) -> bool {
+fn got_enemy_in(xs: RangeInclusive<i32>, ys: RangeInclusive<i32>) -> bool {
     for x in xs {
         for y in ys.clone() {
-            if scan.at(x, y) == '@' {
+            if radar_read(x, y) == '@' {
                 return true;
             }
         }

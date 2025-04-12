@@ -81,6 +81,10 @@ impl ObjectId {
     pub const fn new(id: u64) -> Self {
         Self(Id::new(id))
     }
+
+    pub fn get(&self) -> Id {
+        self.0
+    }
 }
 
 impl fmt::Display for ObjectId {

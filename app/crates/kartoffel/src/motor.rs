@@ -1,14 +1,14 @@
-use crate::{cmd, rdi, wri, MEM_MOTOR};
+use crate::*;
 
-/// Returns whether the motor is ready and [`motor_pulse()`] can be invoked.
+/// Returns whether the motor is ready and [`motor_pulse()`] etc. can be
+/// invoked.
 ///
 /// See also: [`motor_wait()`].
-#[inline(always)]
 pub fn is_motor_ready() -> bool {
     rdi(MEM_MOTOR, 0) == 1
 }
 
-/// Waits for the motor to become ready.
+/// Waits until the motor is ready.
 ///
 /// See also: [`is_motor_ready()`].
 ///
@@ -24,7 +24,6 @@ pub fn is_motor_ready() -> bool {
 ///     motor_step_fw();
 /// }
 /// ```
-#[inline(always)]
 pub fn motor_wait() {
     while !is_motor_ready() {
         //
@@ -40,10 +39,10 @@ pub fn motor_wait() {
 /// - `(-1, 1)` - bot turns left (counterclockwise),
 /// - `(1, -1)` - bot turns right (clockwise).
 ///
-/// Other values will cause the CPU to crash.
+/// Other values will cause the firmware to crash.
 ///
-/// Note that this is a low-level function - for convenience you'll most likely
-/// want to use one of:
+/// This is a low-level function - for convenience you'll most likely/ want to
+/// use one of:
 ///
 /// - [`motor_step_fw()`],
 /// - [`motor_step_bw()`],
@@ -58,7 +57,6 @@ pub fn motor_wait() {
 /// - [`motor_step_bw()`],
 /// - [`motor_turn_left()`],
 /// - [`motor_turn_right()`],
-#[inline(always)]
 pub fn motor_pulse(left: i8, right: i8) {
     wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
 }
@@ -69,9 +67,7 @@ pub fn motor_pulse(left: i8, right: i8) {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 20_000 +- 15% ticks (~310 ms)
-/// ```
+/// ~20k ticks (~310 ms)
 ///
 /// # Example
 ///
@@ -81,7 +77,6 @@ pub fn motor_pulse(left: i8, right: i8) {
 /// motor_wait();
 /// motor_step_fw();
 /// ```
-#[inline(always)]
 pub fn motor_step_fw() {
     motor_pulse(1, 1);
 }
@@ -92,9 +87,7 @@ pub fn motor_step_fw() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 30_000 +- 15% ticks (~468 ms)
-/// ```
+/// ~30k ticks (~468 ms)
 ///
 /// # Example
 ///
@@ -104,7 +97,6 @@ pub fn motor_step_fw() {
 /// motor_wait();
 /// motor_step_bw();
 /// ```
-#[inline(always)]
 pub fn motor_step_bw() {
     motor_pulse(-1, -1);
 }
@@ -115,9 +107,7 @@ pub fn motor_step_bw() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 25_000 +- 15% ticks (~390 ms)
-/// ```
+/// ~25k ticks (~390 ms)
 ///
 /// # Example
 ///
@@ -127,7 +117,6 @@ pub fn motor_step_bw() {
 /// motor_wait();
 /// motor_turn_left();
 /// ```
-#[inline(always)]
 pub fn motor_turn_left() {
     motor_pulse(-1, 1);
 }
@@ -138,9 +127,7 @@ pub fn motor_turn_left() {
 ///
 /// # Cooldown
 ///
-/// ```text
-/// 25_000 +- 15% ticks (~390 ms)
-/// ```
+/// ~25k ticks (~390 ms)
 ///
 /// # Example
 ///
@@ -150,7 +137,6 @@ pub fn motor_turn_left() {
 /// motor_wait();
 /// motor_turn_right();
 /// ```
-#[inline(always)]
 pub fn motor_turn_right() {
     motor_pulse(1, -1);
 }

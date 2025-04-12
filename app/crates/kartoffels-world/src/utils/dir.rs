@@ -73,6 +73,16 @@ impl Dir {
             Dir::W => ivec2(-1, 0),
         }
     }
+
+    #[must_use]
+    pub fn as_caret(&self) -> char {
+        match self {
+            Dir::N => '^',
+            Dir::E => '>',
+            Dir::S => 'v',
+            Dir::W => '<',
+        }
+    }
 }
 
 impl fmt::Display for Dir {
@@ -127,5 +137,27 @@ impl ops::Add<Dir> for IVec2 {
 
     fn add(self, rhs: Dir) -> Self::Output {
         self + rhs.as_vec()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+
+    #[test_case(Dir::N, ivec2(0, -1))]
+    #[test_case(Dir::E, ivec2(1, 0))]
+    #[test_case(Dir::S, ivec2(0, 1))]
+    #[test_case(Dir::W, ivec2(-1, 0))]
+    fn as_vec(lhs: Dir, rhs: IVec2) {
+        assert_eq!(lhs.as_vec(), rhs);
+    }
+
+    #[test_case(Dir::N, '^')]
+    #[test_case(Dir::E, '>')]
+    #[test_case(Dir::S, 'v')]
+    #[test_case(Dir::W, '<')]
+    fn as_caret(lhs: Dir, rhs: char) {
+        assert_eq!(lhs.as_caret(), rhs);
     }
 }
