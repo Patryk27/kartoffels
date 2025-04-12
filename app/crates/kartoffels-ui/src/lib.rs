@@ -163,7 +163,10 @@ impl Frame {
     where
         F: FnOnce(&mut Ui<T>),
     {
-        let mut event = None;
+        let mut thrown = None;
+
+        let mouse = self.mouse.report();
+        let event = self.event.take();
 
         if self.size.cmplt(Self::MIN_SIZE).any() {
             self.term.draw(|frame| {
@@ -188,18 +191,18 @@ impl Frame {
                     ty: self.ty,
                     buf: frame.buffer_mut(),
                     area,
-                    mouse: self.mouse.report().as_ref(),
-                    event: self.event.take().as_ref(),
+                    mouse: mouse.as_ref(),
+                    event: event.as_ref(),
                     layout: UiLayout::Col,
                     enabled: true,
-                    thrown: &mut event,
+                    thrown: &mut thrown,
                 });
             })?;
         }
 
         self.flush().await?;
 
-        Ok(event)
+        Ok(thrown)
     }
 
     async fn sleep(&mut self) -> Result<()> {
