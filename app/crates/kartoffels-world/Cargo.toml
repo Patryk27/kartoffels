@@ -22,6 +22,7 @@ rand = { workspace = true, features = ["std"] }
 rand_chacha = { workspace = true, features = ["serde1"] }
 serde.workspace = true
 serde_json.workspace = true
+serde_bytes.workspace = true
 sha256.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true

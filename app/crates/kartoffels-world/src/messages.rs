@@ -76,12 +76,12 @@ pub struct Messages {
 impl Messages {
     pub fn add_message(
         &mut self,
-        content: &[u8],
+        content: Vec<u8>,
         source: IVec2,
         strength: i32,
     ) {
         let new_message = Message {
-            content: Vec::from(content),
+            content,
             source,
             strength,
             curr_radius: 0,

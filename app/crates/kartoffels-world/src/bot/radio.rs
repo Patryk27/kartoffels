@@ -1,6 +1,5 @@
 use crate::{AliveBot, BotMmioContext, MessageBuffer};
 use serde::{Deserialize, Serialize};
-use std::array::TryFromSliceError;
 use std::sync::{Arc, RwLock};
 
 /// Radio module for the kartoffel bots
@@ -36,14 +35,12 @@ pub struct BotRadio {
     /// you should *NEVER* read from the MessageBuffer when writing to another one at the same time
     messages: Arc<RwLock<MessageBuffer>>,
     /// This is the buffer holding the current message you are going to send at the moment this is written to at the memory addresses 1..128
-    out_message: Vec<u8>,
     /// This is the message filter, any message recieved is first checked against this (if it is Some), any message not matching this filter is discarded
     /// Since messages can have random decay there is a chance this part of the message mangles and valid messages are dropped as they are seen as invalid (although to reduce this earlier bits in a message are less likely to be mangled)
     pub filter: Option<[u8; 4]>,
 }
 
 impl BotRadio {
-    const SEND_BUFFER_SIZE: usize = 128;
     /// This function runs each tick!
     pub fn tick(&mut self) {
         self.cooldown = self.cooldown.saturating_sub(1);
@@ -72,16 +69,8 @@ impl BotRadio {
             addr if addr >= AliveBot::MEM_RADIO + 4 => {
                 // Reading from the actual radio module data
                 let idx = (addr - AliveBot::MEM_RADIO - 4) as usize;
-                match idx {
-                    0..BotRadio::SEND_BUFFER_SIZE => self
-                        .read_send_buffer(idx)
-                        .map(u32::from_le_bytes)
-                        .ok_or(()),
-                    _ => self
-                        .read_message_buffer(idx - BotRadio::SEND_BUFFER_SIZE)
-                        .map(u32::from_le_bytes)
-                        .ok_or(()),
-                }
+                let messages = self.messages.read().unwrap();
+                messages.mmio_read(idx).map(|v| u32::from_le_bytes(v))
             }
             _ => Err(()),
         }
@@ -100,16 +89,6 @@ impl BotRadio {
         (messages.front_message_length() as u32) << 16 | out as u32
     }
 
-    fn read_send_buffer(&self, addr: usize) -> Option<[u8; 4]> {
-        <[u8; 4]>::try_from(&self.out_message[addr..addr + 4]).ok()
-    }
-
-    /// When reading from the recieved message buffer
-    fn read_message_buffer(&self, addr: usize) -> Option<[u8; 4]> {
-        let messages = self.messages.try_read().unwrap();
-        messages.mmio_reader_covered_read(addr)
-    }
-
     pub fn receive_message(&self, message: &[u8]) -> Result<(), ()> {
         if let Some(filter) = self.filter {
             // basic filtering
@@ -120,13 +99,10 @@ impl BotRadio {
             }
         }
         let mut messages = self.messages.write().unwrap();
-        messages.write(message).map(|_| ()).map_err(|_| ())
-    }
-
-    /// Cleans up the receive buffer (move the pointers forward)
-    fn remove_front(&self) {
-        let mut messages = self.messages.write().unwrap();
-        let _ = messages.pop(); // messages are checked for being empty inside pop
+        messages
+            .write_to_recieve(message)
+            .map(|_| ())
+            .map_err(|_| ())
     }
 
     /// This is for writing to the bluetooth module currently we don't care about the addr (beyond the BLUETOOTH offset itself)
@@ -156,20 +132,16 @@ impl BotRadio {
                 self.set_filter(mode, a, b);
                 Ok(())
             }
-            (AliveBot::MEM_RADIO, [0x04, _, _, _]) => {
-                self.remove_front();
-                Ok(())
+            (AliveBot::MEM_RADIO, [0x04, index, _, _]) => {
+                let mut messages = self.messages.write().unwrap();
+                messages.remove_recieve(index as usize)
             }
-            (addr, bytes)
-                if (AliveBot::MEM_RADIO + 4..=AliveBot::MEM_RADIO + 128) // check they are writing to the out_buffer
-                    .contains(&addr) =>
-            {
-                let idx = (addr - (AliveBot::MEM_RADIO + 1)) as usize;
-                let _ = self
-                    .out_message
-                    .splice(idx..idx + 4, bytes)
-                    .collect::<Vec<u8>>();
-                Ok(())
+            (idx, data) if idx == AliveBot::MEM_RADIO + 1 => {
+                let mut messages = self.messages.write().unwrap();
+                messages.mmio_write(
+                    (addr - (AliveBot::MEM_RADIO + 1)) as usize,
+                    &data,
+                )
             }
             _ => Err(()),
         }
@@ -207,7 +179,8 @@ impl BotRadio {
         if message_length > 128 {
             return;
         }
-        let message = &self.out_message[0..message_length];
+        let messages = self.messages.read().unwrap();
+        let message = messages.send_message[0..message_length].to_vec();
         ctxt.msgs.add_message(message, ctxt.pos, range.len());
         self.cooldown = range.cooldown(ctxt);
     }
@@ -218,7 +191,6 @@ impl Default for BotRadio {
         Self {
             cooldown: 0,
             messages: Arc::new(RwLock::new(MessageBuffer::new())),
-            out_message: Vec::with_capacity(128),
             filter: None,
         }
     }
