@@ -1,5 +1,15 @@
 use crate::*;
 
+pub const TIMER_PS_0: u16 = 1;
+pub const TIMER_PS_8: u16 = 2;
+pub const TIMER_PS_64: u16 = 3;
+pub const TIMER_PS_256: u16 = 4;
+pub const TIMER_PS_1024: u16 = 5;
+
+pub const TIMER_IRQ_SET: u16 = 0 << 2;
+pub const TIMER_IRQ_CLEAR: u16 = 1 << 2;
+pub const TIMER_IRQ_TOGGLE: u16 = 2 << 2;
+
 /// Returns a pseudorandom number that can be used as a source of randomness
 /// for hashmaps and the like.
 ///
@@ -32,4 +42,20 @@ pub fn timer_wait(ticks: u32) {
     while timer_ticks() < ticks {
         //
     }
+}
+
+pub fn timer_start(idx: u8, cfg: u8, count: u16) {
+    wri(
+        MEM_TIMER,
+        1 + idx as usize,
+        (cfg as u32) << 16 | (count as u32),
+    );
+}
+
+pub fn timer_reset(idx: u8) {
+    timer_start(idx, u8::MAX, 0);
+}
+
+pub fn timer_stop(idx: u8) {
+    timer_start(idx, 0, 0);
 }

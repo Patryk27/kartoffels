@@ -28,13 +28,11 @@ impl BotRadar {
         match addr {
             AliveBot::MEM_RADAR => Ok((self.cooldown == 0) as u32),
 
-            addr if addr >= AliveBot::MEM_RADAR + 4 => {
-                let idx = (addr - AliveBot::MEM_RADAR - 4) / 4;
-
-                self.memory.get(idx as usize).copied().ok_or(())
-            }
-
-            _ => Err(()),
+            _ => self
+                .memory
+                .get((addr - AliveBot::MEM_RADAR - 4) as usize / 4)
+                .copied()
+                .ok_or(()),
         }
     }
 

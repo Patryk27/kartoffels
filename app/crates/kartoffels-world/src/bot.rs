@@ -1,10 +1,10 @@
 mod action;
 mod arm;
-mod battery;
 mod compass;
 mod events;
 mod id;
 mod inventory;
+mod irq;
 mod mmio;
 mod motor;
 mod radar;
@@ -13,11 +13,11 @@ mod timer;
 
 pub use self::action::*;
 pub use self::arm::*;
-pub use self::battery::*;
 pub use self::compass::*;
 pub use self::events::*;
 pub use self::id::*;
 pub use self::inventory::*;
+pub use self::irq::*;
 pub use self::mmio::*;
 pub use self::motor::*;
 pub use self::radar::*;
@@ -35,7 +35,6 @@ use std::sync::Arc;
 #[cfg_attr(test, derive(Default))]
 pub struct AliveBot {
     pub arm: BotArm,
-    pub battery: BotBattery,
     pub compass: BotCompass,
     pub cpu: Cpu,
     pub dir: Dir,
@@ -43,6 +42,7 @@ pub struct AliveBot {
     pub fw: Firmware,
     pub id: BotId,
     pub inventory: BotInventory,
+    pub irq: BotIrq,
     pub motor: BotMotor,
     pub oneshot: bool,
     pub pos: IVec2,
@@ -53,7 +53,7 @@ pub struct AliveBot {
 
 impl AliveBot {
     const MEM_TIMER: u32 = 0;
-    const MEM_BATTERY: u32 = 1024;
+    const MEM_IRQ: u32 = 1024;
     const MEM_SERIAL: u32 = 2 * 1024;
     const MEM_MOTOR: u32 = 3 * 1024;
     const MEM_ARM: u32 = 4 * 1024;
@@ -72,7 +72,7 @@ impl AliveBot {
 
         Self {
             arm: Default::default(),
-            battery: Default::default(),
+            irq: Default::default(),
             compass: Default::default(),
             cpu: Cpu::new(&bot.fw),
             dir,
@@ -109,14 +109,14 @@ impl AliveBot {
         self.timer.tick();
         self.serial.tick();
         self.arm.tick();
-        self.motor.tick();
+        self.motor.tick(&mut self.irq);
         self.radar.tick();
         self.compass.tick(self.dir);
 
         self.cpu.tick(BotMmio {
             arm: &mut self.arm,
-            battery: &mut self.battery,
             compass: &mut self.compass,
+            irq: &mut self.irq,
             motor: &mut self.motor,
             radar: &mut self.radar,
             serial: &mut self.serial,

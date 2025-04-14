@@ -11,8 +11,8 @@ extern crate alloc;
 
 mod allocator;
 mod arm;
-mod battery;
 mod compass;
+mod irq;
 mod motor;
 mod panic;
 mod radar;
@@ -20,8 +20,8 @@ mod serial;
 mod timer;
 
 pub use self::arm::*;
-pub use self::battery::*;
 pub use self::compass::*;
+pub use self::irq::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
@@ -30,7 +30,7 @@ use core::ptr;
 
 const MEM: *mut u32 = 0x08000000 as *mut u32;
 const MEM_TIMER: *mut u32 = MEM;
-const MEM_BATTERY: *mut u32 = MEM.wrapping_byte_add(1024);
+const MEM_IRQ: *mut u32 = MEM.wrapping_byte_add(1024);
 const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
 const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
 const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
@@ -45,6 +45,13 @@ fn wri(ptr: *mut u32, off: usize, val: u32) {
     unsafe {
         ptr::write_volatile(ptr.wrapping_add(off), val);
     }
+}
+
+// TODO make atomic
+fn swi(ptr: *mut u32, off: usize, val: u32) -> u32 {
+    let old = rdi(ptr, off);
+    wri(ptr, off, val);
+    old
 }
 
 fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {

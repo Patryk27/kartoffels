@@ -1,5 +1,5 @@
 use super::{
-    BotAction, BotArm, BotBattery, BotCompass, BotMotor, BotRadar, BotSerial,
+    BotAction, BotArm, BotCompass, BotIrq, BotMotor, BotRadar, BotSerial,
     BotTimer,
 };
 use crate::{AliveBots, Dir, Map, Objects};
@@ -10,8 +10,8 @@ use rand_chacha::ChaCha8Rng;
 
 pub struct BotMmio<'a> {
     pub arm: &'a mut BotArm,
-    pub battery: &'a mut BotBattery,
     pub compass: &'a mut BotCompass,
+    pub irq: &'a mut BotIrq,
     pub motor: &'a mut BotMotor,
     pub radar: &'a mut BotRadar,
     pub serial: &'a mut BotSerial,
@@ -23,7 +23,7 @@ impl Mmio for BotMmio<'_> {
     fn load(&mut self, addr: u32) -> Result<u32, ()> {
         self.timer
             .mmio_load(addr)
-            .or_else(|_| self.battery.mmio_load(addr))
+            .or_else(|_| self.irq.mmio_load(addr))
             .or_else(|_| self.serial.mmio_load(addr))
             .or_else(|_| self.motor.mmio_load(addr))
             .or_else(|_| self.arm.mmio_load(addr))
@@ -34,9 +34,12 @@ impl Mmio for BotMmio<'_> {
     fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
         self.timer
             .mmio_store(addr, val)
-            .or_else(|_| self.battery.mmio_store(addr, val))
+            .or_else(|_| self.irq.mmio_store(addr, val))
             .or_else(|_| self.serial.mmio_store(addr, val))
-            .or_else(|_| self.motor.mmio_store(&mut self.ctxt, addr, val))
+            .or_else(|_| {
+                self.motor
+                    .mmio_store(&mut self.ctxt, &mut self.irq, addr, val)
+            })
             .or_else(|_| self.arm.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.radar.mmio_store(&mut self.ctxt, addr, val))
     }
