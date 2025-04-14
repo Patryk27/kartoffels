@@ -70,7 +70,7 @@ impl BotRadio {
                 // Reading from the actual radio module data
                 let idx = (addr - AliveBot::MEM_RADIO - 4) as usize;
                 let messages = self.messages.read().unwrap();
-                messages.mmio_read(idx).map(|v| u32::from_le_bytes(v))
+                messages.mmio_read(idx).map(u32::from_le_bytes)
             }
             _ => Err(()),
         }
@@ -136,10 +136,10 @@ impl BotRadio {
                 let mut messages = self.messages.write().unwrap();
                 messages.remove_recieve(index as usize)
             }
-            (idx, data) if idx == AliveBot::MEM_RADIO + 1 => {
+            (idx, data) if idx >= AliveBot::MEM_RADIO + 4 => {
                 let mut messages = self.messages.write().unwrap();
                 messages.mmio_write(
-                    (addr - (AliveBot::MEM_RADIO + 1)) as usize,
+                    (addr - (AliveBot::MEM_RADIO + 4)) as usize,
                     &data,
                 )
             }
@@ -179,8 +179,13 @@ impl BotRadio {
         if message_length > 128 {
             return;
         }
-        let messages = self.messages.read().unwrap();
-        let message = messages.send_message[0..message_length].to_vec();
+        let message: Vec<u8> = {
+            // Make sure self.messages reference is dropped before sending
+            // reduces the ways this function could feasably deadlock, although current implementation
+            // wouldn't; it is always better to be safe
+            let messages = self.messages.read().unwrap();
+            messages.send_message[0..message_length].to_vec()
+        };
         ctxt.msgs.add_message(message, ctxt.pos, range.len());
         self.cooldown = range.cooldown(ctxt);
     }

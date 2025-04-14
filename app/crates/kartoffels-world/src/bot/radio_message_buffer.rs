@@ -323,22 +323,22 @@ mod radio_message_buffer_tests {
         // a list of sequential writes
         let message_writes: Vec<&Vec<u8>> =
             vec![&a_msg, &a_msg, &b_msg, &c_msg, &b_msg, &b_msg, &c_msg];
-        for i in 0..5 {
+        (0..5).for_each(|i| {
             // write the first 5 elements
             assert!(buff.write_to_recieve(&(message_writes[i])[..]).is_ok());
             let read = buff.read_recieve(i);
             assert!(read.is_ok());
             assert_eq!(read.unwrap(), &message_writes[i][..]);
-        }
+        });
         // let's then do a couple of deletes
         assert!(buff.remove_recieve(1).is_ok());
         assert!(buff.remove_recieve(0).is_ok());
 
-        for i in 2..5 {
+        (2..5).for_each(|i| {
             let read = buff.read_recieve(i - 2);
             assert!(read.is_ok());
             assert_eq!(read.unwrap(), &message_writes[i][..]);
-        }
+        });
     }
 
     #[test]
