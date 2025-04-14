@@ -275,6 +275,7 @@ impl BotRadarAddr {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::messages::Messages;
     use crate::{
         AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind, Objects,
     };
@@ -660,6 +661,7 @@ mod tests {
             objects: &objects,
             pos: case.pos,
             rng: &mut rng,
+            msgs: &mut Messages::default(),
         };
 
         for addr in [0x00, 0x01] {

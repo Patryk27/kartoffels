@@ -8,6 +8,8 @@ mod inventory;
 mod mmio;
 mod motor;
 mod radar;
+mod radio;
+mod radio_message_buffer;
 mod serial;
 mod timer;
 
@@ -21,8 +23,11 @@ pub use self::inventory::*;
 pub use self::mmio::*;
 pub use self::motor::*;
 pub use self::radar::*;
+pub use self::radio::*;
+pub use self::radio_message_buffer::*;
 pub use self::serial::*;
 pub use self::timer::*;
+use crate::messages::Messages;
 use crate::{AliveBots, Clock, Dir, Map, Objects, Ticks, WorldRng};
 use glam::IVec2;
 use kartoffels_cpu::{Cpu, Firmware};
@@ -49,6 +54,7 @@ pub struct AliveBot {
     pub radar: BotRadar,
     pub serial: BotSerial,
     pub timer: BotTimer,
+    pub radio: BotRadio,
 }
 
 impl AliveBot {
@@ -59,6 +65,7 @@ impl AliveBot {
     const MEM_ARM: u32 = 4 * 1024;
     const MEM_RADAR: u32 = 5 * 1024;
     const MEM_COMPASS: u32 = 6 * 1024;
+    const MEM_RADIO: u32 = 7 * 1024;
 
     pub fn new(
         rng: &mut impl RngCore,
@@ -86,6 +93,7 @@ impl AliveBot {
             radar: Default::default(),
             serial: Default::default(),
             timer: BotTimer::new(rng),
+            radio: Default::default(),
         }
     }
 
@@ -103,6 +111,7 @@ impl AliveBot {
         map: &Map,
         objects: &Objects,
         rng: &mut WorldRng,
+        messages: &mut Messages,
     ) -> Result<Option<BotAction>, Box<str>> {
         let mut action = None;
 
@@ -112,6 +121,7 @@ impl AliveBot {
         self.motor.tick();
         self.radar.tick();
         self.compass.tick(self.dir);
+        self.radio.tick();
 
         self.cpu.tick(BotMmio {
             arm: &mut self.arm,
@@ -121,6 +131,7 @@ impl AliveBot {
             radar: &mut self.radar,
             serial: &mut self.serial,
             timer: &mut self.timer,
+            radio: &mut self.radio,
 
             ctxt: BotMmioContext {
                 action: &mut action,
@@ -130,6 +141,7 @@ impl AliveBot {
                 objects,
                 pos: self.pos,
                 rng: &mut rng.0,
+                msgs: messages,
             },
         })?;
 

@@ -16,6 +16,7 @@ mod compass;
 mod motor;
 mod panic;
 mod radar;
+mod radio;
 mod serial;
 mod timer;
 
@@ -24,6 +25,7 @@ pub use self::battery::*;
 pub use self::compass::*;
 pub use self::motor::*;
 pub use self::radar::*;
+pub use self::radio::*;
 pub use self::serial::*;
 pub use self::timer::*;
 use core::ptr;
@@ -36,6 +38,7 @@ const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
 const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
+const MEM_RADIO: *mut u32 = MEM.wrapping_byte_add(7 * 1024);
 
 fn rdi(ptr: *mut u32, off: usize) -> u32 {
     unsafe { ptr::read_volatile(ptr.wrapping_add(off)) }

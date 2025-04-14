@@ -2175,6 +2175,7 @@ dependencies = [
  "rand",
  "rand_chacha",
  "serde",
+ "serde_bytes",
  "serde_json",
  "sha256",
  "tempfile",
