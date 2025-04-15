@@ -33,7 +33,6 @@ ciborium = "0.2.2"
 clap = { version = "4.5.4", features = ["derive"] }
 derivative = "2.2.0"
 ed25519-dalek = "*"
-elf = "0.7.4"
 flate2 = "1.0.35"
 futures = "0.3.30"
 futures-util = { version = "0.3.30", features = ["sink"] }
@@ -42,6 +41,7 @@ indoc = "2.0.5"
 itertools = "0.13.0"
 maybe-owned = { version = "0.3.4", features = ["serde"] }
 num-traits = { version = "0.2.19", default-features = false }
+object = { version = "0.36.7", default-features = false, features = ["build", "compression", "elf", "read", "std", "write"] }
 ordinal = "0.3.2"
 pretty_assertions = "1.4.0"
 prettytable-rs = "0.10.0"
@@ -60,6 +60,7 @@ talc = "4.4.1"
 tempfile = "3.15.0"
 termwiz = "0.22.0"
 test-case = "3.3.1"
+thiserror = "2.0.12"
 tokio = { version = "1.37.0", features = ["full", "test-util"] }
 tokio-stream = { version = "0.1.15", features = ["sync"] }
 tokio-tungstenite = "0.21.0"

@@ -20,7 +20,7 @@ pub struct BotMmio<'a> {
 }
 
 impl Mmio for BotMmio<'_> {
-    fn load(self, addr: u32) -> Result<u32, ()> {
+    fn load(&mut self, addr: u32) -> Result<u32, ()> {
         self.timer
             .mmio_load(addr)
             .or_else(|_| self.battery.mmio_load(addr))
@@ -31,7 +31,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.compass.mmio_load(addr))
     }
 
-    fn store(mut self, addr: u32, val: u32) -> Result<(), ()> {
+    fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
         self.timer
             .mmio_store(addr, val)
             .or_else(|_| self.battery.mmio_store(addr, val))
@@ -39,6 +39,10 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.motor.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.arm.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.radar.mmio_store(&mut self.ctxt, addr, val))
+    }
+
+    fn is_atomic_allowed(&self, _: u32) -> bool {
+        false
     }
 }
 

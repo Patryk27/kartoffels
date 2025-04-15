@@ -11,5 +11,5 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * err = missized mmio load on 0x08000000+2
+ * err = invalid access on 0x08000000+2
  */

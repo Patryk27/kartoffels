@@ -400,7 +400,7 @@ async fn err_couldnt_parse_firmware_1() {
         couldn't parse firmware
 
         caused by:
-        could not read bytes in range [0x0, 0x10)
+        could not read file magic
     "};
 
     assert_eq!(expected.trim_end(), actual);

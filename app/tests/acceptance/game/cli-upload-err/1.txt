@@ -11,7 +11,7 @@
         │ couldn't parse firmware                                      │
         │                                                              │
         │ caused by:                                                   │
-        │ could not read bytes in range [0x0, 0x10)                    │
+        │ could not read file magic                                    │
         │                                                              │
         │                                                [enter] close │
         └──────────────────────────────────────────────────────────────┘

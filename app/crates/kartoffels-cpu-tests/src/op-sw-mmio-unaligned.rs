@@ -11,5 +11,5 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * err = unaligned mmio store on 0x08000002+4
+ * err = invalid access on 0x08000002+4
  */

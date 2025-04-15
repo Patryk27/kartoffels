@@ -10,5 +10,5 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * err = null-pointer load on 0x00000000+4
+ * err = null-pointer access on 0x00000000+4
  */

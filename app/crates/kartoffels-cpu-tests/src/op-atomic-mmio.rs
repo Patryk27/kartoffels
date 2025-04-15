@@ -12,5 +12,5 @@ kartoffels_cpu_tests::test! {
 }
 
 /*
- * err = atomic mmio load on 0x08000002+4
+ * err = invalid access on 0x08000002+4
  */

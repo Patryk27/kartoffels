@@ -25,7 +25,7 @@ pub use self::serial::*;
 pub use self::timer::*;
 use crate::{AliveBots, Clock, Dir, Map, Objects, Ticks, WorldRng};
 use glam::IVec2;
-use kartoffels_cpu::{Cpu, Firmware};
+use kartoffels_cpu::{Cpu, Firmware, TickError};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -103,7 +103,7 @@ impl AliveBot {
         map: &Map,
         objects: &Objects,
         rng: &mut WorldRng,
-    ) -> Result<Option<BotAction>, Box<str>> {
+    ) -> Result<Option<BotAction>, TickError> {
         let mut action = None;
 
         self.timer.tick();

@@ -122,14 +122,18 @@ struct TestMmio {
 }
 
 impl Mmio for &mut TestMmio {
-    fn load(self, addr: u32) -> Result<u32, ()> {
+    fn load(&mut self, addr: u32) -> Result<u32, ()> {
         self.mem.get(&addr).copied().ok_or(())
     }
 
-    fn store(self, addr: u32, val: u32) -> Result<(), ()> {
+    fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
         self.mem.insert(addr, val * val);
 
         Ok(())
+    }
+
+    fn is_atomic_allowed(&self, _: u32) -> bool {
+        false
     }
 }
 
