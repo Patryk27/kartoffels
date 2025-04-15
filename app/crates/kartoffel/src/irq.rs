@@ -36,6 +36,10 @@ pub fn irq_off() {
     wri(MEM_IRQ, 0, cmd(0x01, 0x00, 0x00, 0x00));
 }
 
+pub fn irq_ack(irq: u8) {
+    wri(MEM_IRQ, 0, cmd(0x02, irq, 0x00, 0x00));
+}
+
 pub fn irq_set(irq: u8, edge: u8, fun: IrqFn) {
     wri(MEM_IRQ, irq_idx(irq, edge), fun as usize as u32);
 }
@@ -52,11 +56,7 @@ pub fn irq_replace(irq: u8, edge: u8, fun: IrqFn) -> Option<IrqFn> {
     irq_fn(swi(MEM_IRQ, irq_idx(irq, edge), fun as usize as u32))
 }
 
-pub fn irq_ack(irq: u8) {
-    wri(MEM_IRQ, irq_idx(irq, IRQ_LEVEL), u32::MAX);
-}
-
-fn irq_idx(irq: u8, edge: u8) -> usize {
+pub fn irq_idx(irq: u8, edge: u8) -> usize {
     1 + 3 * irq as usize + edge as usize
 }
 

@@ -36,7 +36,7 @@ pub enum FwError {
     Object(#[from] object::Error),
 }
 
-#[derive(Clone, Copy, Debug, Error)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Error)]
 pub enum TickError {
     #[error("null-pointer access on 0x{addr:08x}+{size}")]
     NullPointerAccess { addr: u32, size: u8 },
@@ -48,5 +48,5 @@ pub enum TickError {
     UnknownInstruction { word: u32 },
 
     #[error("got `ebreak`")]
-    Ebreak,
+    GotEbreak,
 }

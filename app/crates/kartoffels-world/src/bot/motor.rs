@@ -34,7 +34,8 @@ impl BotMotor {
         match (addr, val.to_le_bytes()) {
             (AliveBot::MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
-                    irq.raise(kartoffel::IRQ_MOTOR_BUSY);
+                    // TODO argument
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, 0x00);
 
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + *ctxt.dir,
@@ -48,7 +49,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
-                    irq.raise(kartoffel::IRQ_MOTOR_BUSY);
+                    // TODO argument
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, 0x00);
 
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + ctxt.dir.turned_back(),
@@ -62,7 +64,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
-                    irq.raise(kartoffel::IRQ_MOTOR_BUSY);
+                    // TODO argument
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, 0x00);
 
                     *ctxt.dir = ctxt.dir.turned_right();
 
@@ -74,7 +77,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
-                    irq.raise(kartoffel::IRQ_MOTOR_BUSY);
+                    // TODO argument
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, 0x00);
 
                     *ctxt.dir = ctxt.dir.turned_left();
 

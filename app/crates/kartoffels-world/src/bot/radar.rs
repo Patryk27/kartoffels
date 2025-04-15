@@ -264,7 +264,7 @@ impl BotRadarAddr {
             }
 
             BotRadarAddr::Szudzik => {
-                kartoffel::radar_addr(off.x, off.y, off.z) as usize
+                kartoffel::radar_idx(off.x, off.y, off.z) as usize
             }
         }
     }

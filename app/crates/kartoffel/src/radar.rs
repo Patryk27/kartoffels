@@ -295,7 +295,7 @@ pub fn radar_read_dir(x: i32, y: i32) -> char {
 ///
 /// See [`radar_read()`].
 pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
-    rdi(MEM_RADAR, (1 + radar_addr(x, y, z)) as usize)
+    rdi(MEM_RADAR, (1 + radar_idx(x, y, z)) as usize)
 }
 
 /// Maps given coordinates into an index which you can use to access radar's
@@ -306,7 +306,7 @@ pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
 ///
 /// This is a low-level function - for convenience you'll most likely want to
 /// use [`radar_read()`], [`radar_read_id()`] etc.
-pub fn radar_addr(x: i32, y: i32, z: i32) -> i32 {
+pub fn radar_idx(x: i32, y: i32, z: i32) -> i32 {
     // We're using Szudzik's pairing function, see:
     //
     // - https://www.vertexfragment.com/ramblings/cantor-szudzik-pairing-functions/

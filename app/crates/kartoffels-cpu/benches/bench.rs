@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use kartoffels_cpu::{Cpu, Firmware};
+use kartoffels_cpu::{Cpu, Firmware, TickError};
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -25,7 +25,7 @@ fn bench(b: &mut Bencher) {
     b.iter(|| {
         let mut cpu = Cpu::new(&fw);
 
-        while cpu.try_tick(()).unwrap() {
+        while cpu.tick(()) != Err(TickError::GotEbreak) {
             //
         }
     });

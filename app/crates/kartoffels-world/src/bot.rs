@@ -112,6 +112,7 @@ impl AliveBot {
         self.motor.tick(&mut self.irq);
         self.radar.tick();
         self.compass.tick(self.dir);
+        self.irq.tick(&mut self.cpu);
 
         self.cpu.tick(BotMmio {
             arm: &mut self.arm,

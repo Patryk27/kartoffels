@@ -37,6 +37,7 @@ pub fn kill(
         let decision = if !killed.oneshot
             && policy.auto_respawn
             && bots.queued.len() < policy.max_queued_bots as usize
+            && false
         {
             Decision::Requeue
         } else {
