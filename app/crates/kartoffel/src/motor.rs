@@ -61,26 +61,6 @@ pub fn motor_pulse(left: i8, right: i8) {
     wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
 }
 
-// TODO
-pub fn motor_pulse_checked(left: i8, right: i8) -> Result<(), ()> {
-    static mut IRQ_RAISED: bool = false;
-
-    extern "C" fn irq(_: u32) {
-        unsafe {
-            IRQ_RAISED = true;
-        }
-    }
-
-    irq_replace(IRQ_MOTOR_BUSY, IRQ_RISING, irq);
-    motor_pulse(left, right);
-
-    if unsafe { IRQ_RAISED } {
-        Ok(())
-    } else {
-        Err(())
-    }
-}
-
 /// Moves the bot one tile forward in the direction it's facing.
 ///
 /// See also: [`motor_step_bw()`], [`motor_pulse()`].

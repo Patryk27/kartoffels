@@ -37,8 +37,7 @@ impl Mmio for BotMmio<'_> {
             .or_else(|_| self.irq.mmio_store(addr, val))
             .or_else(|_| self.serial.mmio_store(addr, val))
             .or_else(|_| {
-                self.motor
-                    .mmio_store(&mut self.ctxt, &mut self.irq, addr, val)
+                self.motor.mmio_store(&mut self.ctxt, self.irq, addr, val)
             })
             .or_else(|_| self.arm.mmio_store(&mut self.ctxt, addr, val))
             .or_else(|_| self.radar.mmio_store(&mut self.ctxt, addr, val))

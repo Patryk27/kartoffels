@@ -1,14 +1,14 @@
 use crate::*;
 
 pub const TIMER_PS_0: u16 = 1;
-pub const TIMER_PS_8: u16 = 2;
-pub const TIMER_PS_64: u16 = 3;
-pub const TIMER_PS_256: u16 = 4;
-pub const TIMER_PS_1024: u16 = 5;
 
-pub const TIMER_IRQ_SET: u16 = 0 << 2;
-pub const TIMER_IRQ_CLEAR: u16 = 1 << 2;
-pub const TIMER_IRQ_TOGGLE: u16 = 2 << 2;
+pub const TIMER_PS_8: u16 = 2;
+
+pub const TIMER_PS_64: u16 = 3;
+
+pub const TIMER_PS_256: u16 = 4;
+
+pub const TIMER_PS_1024: u16 = 5;
 
 /// Returns a pseudorandom number that can be used as a source of randomness
 /// for hashmaps and the like.
