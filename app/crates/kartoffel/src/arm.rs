@@ -16,7 +16,7 @@ use crate::*;
 /// }
 /// ```
 pub fn is_arm_ready() -> bool {
-    rdi(MEM_ARM, 0) == 1
+    unsafe { rdi(MEM_ARM, 0) == 1 }
 }
 
 /// Waits until the arm is ready.
@@ -55,7 +55,9 @@ pub fn arm_wait() {
 /// arm_stab();
 /// ```
 pub fn arm_stab() {
-    wri(MEM_ARM, 0, cmd(0x01, 0x00, 0x00, 0x00));
+    unsafe {
+        wri(MEM_ARM, 0, cmd(0x01, 0x00, 0x00, 0x00));
+    }
 }
 
 /// Picks the object in front of you and puts it into the inventory under the
@@ -81,7 +83,9 @@ pub fn arm_stab() {
 /// arm_pick();
 /// ```
 pub fn arm_pick() {
-    wri(MEM_ARM, 0, cmd(0x02, 0x00, 0x00, 0x00));
+    unsafe {
+        wri(MEM_ARM, 0, cmd(0x02, 0x00, 0x00, 0x00));
+    }
 }
 
 /// Takes object from the inventory and drops it in front of you, shifting
@@ -110,5 +114,7 @@ pub fn arm_pick() {
 /// arm_drop(0); // drops whatever got picked before
 /// ```
 pub fn arm_drop(idx: u8) {
-    wri(MEM_ARM, 0, cmd(0x03, idx, 0x00, 0x00));
+    unsafe {
+        wri(MEM_ARM, 0, cmd(0x03, idx, 0x00, 0x00));
+    }
 }

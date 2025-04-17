@@ -37,14 +37,12 @@ const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
 
-fn rdi(ptr: *mut u32, off: usize) -> u32 {
-    unsafe { ptr::read_volatile(ptr.wrapping_add(off)) }
+unsafe fn rdi(ptr: *mut u32, off: usize) -> u32 {
+    ptr::read_volatile(ptr.wrapping_add(off))
 }
 
-fn wri(ptr: *mut u32, off: usize, val: u32) {
-    unsafe {
-        ptr::write_volatile(ptr.wrapping_add(off), val);
-    }
+unsafe fn wri(ptr: *mut u32, off: usize, val: u32) {
+    ptr::write_volatile(ptr.wrapping_add(off), val);
 }
 
 // TODO make atomic

@@ -25,5 +25,5 @@ use crate::*;
 /// }
 /// ```
 pub fn compass_dir() -> u32 {
-    rdi(MEM_COMPASS, 0)
+    unsafe { rdi(MEM_COMPASS, 0) }
 }
