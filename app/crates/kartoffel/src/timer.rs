@@ -45,11 +45,13 @@ pub fn timer_wait(ticks: u32) {
 }
 
 pub fn timer_start(idx: u8, cfg: u8, count: u16) {
-    wri(
-        MEM_TIMER,
-        1 + idx as usize,
-        (cfg as u32) << 16 | (count as u32),
-    );
+    unsafe {
+        wri(
+            MEM_TIMER,
+            1 + idx as usize,
+            (cfg as u32) << 16 | (count as u32),
+        );
+    }
 }
 
 pub fn timer_reset(idx: u8) {

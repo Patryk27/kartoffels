@@ -13,11 +13,7 @@ pub struct BotIrq {
 
 impl BotIrq {
     pub fn raise(&mut self, irq: u8, arg: [u8; 3]) {
-        assert!((irq as u32) < u32::BITS);
-
         let irq = irq as usize;
-
-        self.args.resize(self.args.len().max(irq + 1), 0);
 
         self.args[irq] =
             u32::from_le_bytes([irq as u8, arg[0], arg[1], arg[2]]);
@@ -97,7 +93,7 @@ impl Default for BotIrq {
     fn default() -> Self {
         Self {
             memory: vec![0; 256],
-            args: Vec::new(),
+            args: vec![0; 32],
             flags: 0,
             enabled: false,
         }

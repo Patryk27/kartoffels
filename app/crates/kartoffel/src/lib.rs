@@ -26,7 +26,8 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
-use core::ptr;
+use core::sync::atomic::{AtomicU32, Ordering};
+use core::{mem, ptr};
 
 const MEM: *mut u32 = 0x08000000 as *mut u32;
 const MEM_TIMER: *mut u32 = MEM;
@@ -45,11 +46,8 @@ unsafe fn wri(ptr: *mut u32, off: usize, val: u32) {
     ptr::write_volatile(ptr.wrapping_add(off), val);
 }
 
-// TODO make atomic
-fn swi(ptr: *mut u32, off: usize, val: u32) -> u32 {
-    let old = rdi(ptr, off);
-    wri(ptr, off, val);
-    old
+unsafe fn swi(ptr: *mut u32, off: usize, val: u32) -> u32 {
+    AtomicU32::from_ptr(ptr.wrapping_add(off)).swap(val, Ordering::SeqCst)
 }
 
 fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {
