@@ -6,7 +6,7 @@ mod firmware;
 pub use self::error::*;
 pub use self::firmware::*;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, mem};
 
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Cpu {
@@ -14,6 +14,8 @@ pub struct Cpu {
     #[serde(with = "serde_bytes")]
     ram: Box<[u8]>,
     regs: Box<[i32; 32]>,
+    irq_pc: u32,
+    irq_regs: Box<[i32; 32]>,
 }
 
 impl Cpu {
@@ -23,9 +25,14 @@ impl Cpu {
 
     pub fn new(fw: &Firmware) -> Self {
         let (pc, ram) = fw.boot();
-        let regs = Box::new([0; 32]);
 
-        Self { pc, ram, regs }
+        Self {
+            pc,
+            ram,
+            regs: Box::new([0; 32]),
+            irq_pc: 0,
+            irq_regs: Box::new([0; 32]),
+        }
     }
 
     pub fn pc(&self) -> u32 {
@@ -40,7 +47,31 @@ impl Cpu {
         &self.regs
     }
 
+    pub fn is_executing_irq(&self) -> bool {
+        self.irq_pc > 0
+    }
+
+    pub fn irq(&mut self, pc: u32, arg: u32) {
+        assert!(!self.is_executing_irq());
+
+        mem::swap(&mut self.irq_pc, &mut self.pc);
+        mem::swap(&mut self.irq_regs, &mut self.regs);
+
+        self.pc = pc;
+        self.regs[1] = 0xcafebabe_u32 as i32;
+        self.regs[2] = self.irq_regs[2];
+        self.regs[10] = arg as i32;
+    }
+
     pub fn tick(&mut self, mmio: impl Mmio) -> TickResult<()> {
+        // TODO checking this on every tick is inefficient
+        if self.pc == 0xcafebabe && self.irq_pc > 0 {
+            mem::swap(&mut self.irq_pc, &mut self.pc);
+            mem::swap(&mut self.irq_regs, &mut self.regs);
+
+            self.irq_pc = 0;
+        }
+
         let word = self.mem_load::<()>(None, self.pc, 4)? as u32;
 
         let op = word & 0x7f;
@@ -604,7 +635,7 @@ impl Cpu {
 
                 match i_imm {
                     0x01 => {
-                        return Err(TickError::Ebreak);
+                        return Err(TickError::GotEbreak);
                     }
                     _ => {
                         return Err(TickError::UnknownInstruction { word });
@@ -790,14 +821,6 @@ impl Cpu {
     fn reg_store(&mut self, id: usize, val: i32) {
         if id != 0 {
             self.regs[id] = val;
-        }
-    }
-
-    pub fn try_tick(&mut self, mmio: impl Mmio) -> TickResult<bool> {
-        match self.tick(mmio) {
-            Ok(()) => Ok(true),
-            Err(TickError::Ebreak) => Ok(false),
-            Err(err) => Err(err),
         }
     }
 }

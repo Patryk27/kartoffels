@@ -1,4 +1,4 @@
-use super::BotAction;
+use super::{BotAction, BotIrq};
 use crate::{AliveBot, BotMmioContext};
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +8,11 @@ pub struct BotMotor {
 }
 
 impl BotMotor {
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self, irq: &mut BotIrq) {
+        if self.cooldown == 1 {
+            irq.raise(kartoffel::IRQ_MOTOR_IDLE, [0, 0, 0]);
+        }
+
         self.cooldown = self.cooldown.saturating_sub(1);
     }
 
@@ -23,12 +27,15 @@ impl BotMotor {
     pub fn mmio_store(
         &mut self,
         ctxt: &mut BotMmioContext,
+        irq: &mut BotIrq,
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
             (AliveBot::MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, [0x01, 0x01, 0x00]);
+
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + *ctxt.dir,
                     });
@@ -41,6 +48,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, [0xff, 0xff, 0x00]);
+
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + ctxt.dir.turned_back(),
                     });
@@ -53,6 +62,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, [0x01, 0xff, 0x00]);
+
                     *ctxt.dir = ctxt.dir.turned_right();
 
                     self.cooldown = ctxt.cooldown(25_000);
@@ -63,6 +74,8 @@ impl BotMotor {
 
             (AliveBot::MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
+                    irq.raise(kartoffel::IRQ_MOTOR_BUSY, [0xff, 0x01, 0x00]);
+
                     *ctxt.dir = ctxt.dir.turned_left();
 
                     self.cooldown = ctxt.cooldown(25_000);

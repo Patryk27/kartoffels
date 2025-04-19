@@ -5,7 +5,7 @@ use crate::*;
 ///
 /// See also: [`motor_wait()`].
 pub fn is_motor_ready() -> bool {
-    rdi(MEM_MOTOR, 0) == 1
+    unsafe { rdi(MEM_MOTOR, 0) == 1 }
 }
 
 /// Waits until the motor is ready.
@@ -58,7 +58,9 @@ pub fn motor_wait() {
 /// - [`motor_turn_left()`],
 /// - [`motor_turn_right()`],
 pub fn motor_pulse(left: i8, right: i8) {
-    wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
+    unsafe {
+        wri(MEM_MOTOR, 0, cmd(0x01, left as u8, right as u8, 0x00));
+    }
 }
 
 /// Moves the bot one tile forward in the direction it's facing.

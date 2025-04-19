@@ -31,7 +31,9 @@ use core::fmt;
 /// println!("Hello, {}!", "World");
 /// ```
 pub fn serial_write(ch: char) {
-    wri(MEM_SERIAL, 0, ch as u32);
+    unsafe {
+        wri(MEM_SERIAL, 0, ch as u32);
+    }
 }
 
 /// Enables buffering.
@@ -57,7 +59,9 @@ pub fn serial_write(ch: char) {
 /// }
 /// ```
 pub fn serial_buffer() {
-    wri(MEM_SERIAL, 0, 0xffffff00);
+    unsafe {
+        wri(MEM_SERIAL, 0, 0xffffff00);
+    }
 }
 
 /// Flushes buffered characters.
@@ -65,7 +69,9 @@ pub fn serial_buffer() {
 /// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
 /// nothing.
 pub fn serial_flush() {
-    wri(MEM_SERIAL, 0, 0xffffff01);
+    unsafe {
+        wri(MEM_SERIAL, 0, 0xffffff01);
+    }
 }
 
 /// Clears buffered characters.
@@ -73,7 +79,9 @@ pub fn serial_flush() {
 /// If buffering hasn't been enabled ([`serial_buffer()`]), this function does
 /// nothing.
 pub fn serial_clear() {
-    wri(MEM_SERIAL, 0, 0xffffff02);
+    unsafe {
+        wri(MEM_SERIAL, 0, 0xffffff02);
+    }
 }
 
 /// Allows to `write!()` and `writeln!()` into the serial port.

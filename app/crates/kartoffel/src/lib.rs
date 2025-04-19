@@ -11,8 +11,8 @@ extern crate alloc;
 
 mod allocator;
 mod arm;
-mod battery;
 mod compass;
+mod irq;
 mod motor;
 mod panic;
 mod radar;
@@ -20,31 +20,34 @@ mod serial;
 mod timer;
 
 pub use self::arm::*;
-pub use self::battery::*;
 pub use self::compass::*;
+pub use self::irq::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 pub use self::timer::*;
-use core::ptr;
+use core::sync::atomic::{AtomicU32, Ordering};
+use core::{mem, ptr};
 
 const MEM: *mut u32 = 0x08000000 as *mut u32;
 const MEM_TIMER: *mut u32 = MEM;
-const MEM_BATTERY: *mut u32 = MEM.wrapping_byte_add(1024);
+const MEM_IRQ: *mut u32 = MEM.wrapping_byte_add(1024);
 const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
 const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
 const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
 const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
 const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
 
-fn rdi(ptr: *mut u32, off: usize) -> u32 {
-    unsafe { ptr::read_volatile(ptr.wrapping_add(off)) }
+unsafe fn rdi(ptr: *mut u32, off: usize) -> u32 {
+    ptr::read_volatile(ptr.wrapping_add(off))
 }
 
-fn wri(ptr: *mut u32, off: usize, val: u32) {
-    unsafe {
-        ptr::write_volatile(ptr.wrapping_add(off), val);
-    }
+unsafe fn wri(ptr: *mut u32, off: usize, val: u32) {
+    ptr::write_volatile(ptr.wrapping_add(off), val);
+}
+
+unsafe fn swi(ptr: *mut u32, off: usize, val: u32) -> u32 {
+    AtomicU32::from_ptr(ptr.wrapping_add(off)).swap(val, Ordering::SeqCst)
 }
 
 fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {

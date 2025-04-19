@@ -43,7 +43,7 @@ pub const RADAR_SCAN_DIRS: u8 = 1 << 4;
 ///
 /// See also: [`radar_wait()`].
 pub fn is_radar_ready() -> bool {
-    rdi(MEM_RADAR, 0) == 1
+    unsafe { rdi(MEM_RADAR, 0) == 1 }
 }
 
 /// Waits until the radar is ready.
@@ -183,7 +183,9 @@ pub fn radar_scan_ex(range: u8, opts: u8) {
     // of the scan's size.
     let addr = 0x01;
 
-    wri(MEM_RADAR, 0, cmd(0x01, range, opts, addr));
+    unsafe {
+        wri(MEM_RADAR, 0, cmd(0x01, range, opts, addr));
+    }
 }
 
 /// Returns type of topmost thing visible at given coordinates.
@@ -295,7 +297,7 @@ pub fn radar_read_dir(x: i32, y: i32) -> char {
 ///
 /// See [`radar_read()`].
 pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
-    rdi(MEM_RADAR, (1 + radar_addr(x, y, z)) as usize)
+    unsafe { rdi(MEM_RADAR, (1 + radar_idx(x, y, z)) as usize) }
 }
 
 /// Maps given coordinates into an index which you can use to access radar's
@@ -306,7 +308,7 @@ pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
 ///
 /// This is a low-level function - for convenience you'll most likely want to
 /// use [`radar_read()`], [`radar_read_id()`] etc.
-pub fn radar_addr(x: i32, y: i32, z: i32) -> i32 {
+pub fn radar_idx(x: i32, y: i32, z: i32) -> i32 {
     // We're using Szudzik's pairing function, see:
     //
     // - https://www.vertexfragment.com/ramblings/cantor-szudzik-pairing-functions/
