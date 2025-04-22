@@ -23,7 +23,7 @@ async fn smoke() {
     world.assert(&mut asserter, "1.md").await;
     world.assert_json(&mut asserter, "1.json").await;
 
-    world.tick(256).await.unwrap();
+    world.tick(256_000).await.unwrap();
 
     world.assert(&mut asserter, "2.md").await;
     world.assert_json(&mut asserter, "2.json").await;
