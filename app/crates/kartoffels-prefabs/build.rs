@@ -19,6 +19,9 @@ fn main() {
         "-Clink-arg=-Triscv32-kartoffel-bot.ld",
     );
 
+    println!("cargo:rerun-if-changed=./src");
+    println!("cargo:rerun-if-changed=../kartoffel/src");
+
     let status = Command::new("cargo")
         .args([
             "build",
