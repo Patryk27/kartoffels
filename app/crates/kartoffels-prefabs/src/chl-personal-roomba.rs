@@ -28,7 +28,8 @@
 //! assumes that moving has a cost=1, which is not really true (e.g. reversing
 //! the bot has a higher cost than moving forward); but it's good enough.
 
-#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
+#![no_std]
+#![no_main]
 
 extern crate alloc;
 
@@ -40,7 +41,7 @@ use core::ops::Add;
 use glam::{i8vec2, I8Vec2};
 use kartoffel::*;
 
-#[cfg_attr(target_arch = "riscv32", no_mangle)]
+#[no_mangle]
 fn main() {
     // The World as we know it.
     //

@@ -13,7 +13,7 @@ use crate::*;
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::{*, println};
 /// #
 /// match compass_dir() {
 ///     0 => println!("measurement not ready yet"),

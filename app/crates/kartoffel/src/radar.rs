@@ -227,7 +227,7 @@ pub fn radar_read(x: i32, y: i32) -> char {
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::{*, print};
 /// #
 /// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_IDS);
 ///
@@ -262,7 +262,7 @@ pub fn radar_read_id(x: i32, y: i32) -> u64 {
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::{*, print};
 /// #
 /// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_DIRS);
 ///

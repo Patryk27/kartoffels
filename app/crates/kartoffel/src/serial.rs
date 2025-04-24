@@ -15,7 +15,7 @@ use core::fmt;
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::{*, println};
 /// #
 /// serial_write('H');
 /// serial_write('e');
@@ -45,7 +45,7 @@ pub fn serial_write(ch: char) {
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::{*, println};
 /// #
 /// loop {
 ///     serial_buffer();
@@ -83,13 +83,13 @@ pub fn serial_clear() {
 /// # Example
 ///
 /// ```no_run
-/// use kartoffel::*;
+/// # use kartoffel::{*, println};
 /// use core::fmt::Write;
 ///
 /// writeln!(&mut Serial, "Hello!").unwrap();
 /// writeln!(&mut Serial, "Hello, {}!", "World").unwrap();
 ///
-/// // or:
+/// // or just:
 ///
 /// println!("Hello!");
 /// println!("Hello, {}!", "World");
@@ -119,13 +119,12 @@ impl fmt::Write for Serial {
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::print;
 /// #
 /// print!("Hello");
 /// print!("{}!", "World");
 /// print!("\n");
 /// ```
-#[cfg(any(target_arch = "riscv32", doc))]
 #[macro_export]
 macro_rules! print {
     ($($t:tt)*) => {{
@@ -142,12 +141,11 @@ macro_rules! print {
 /// # Example
 ///
 /// ```no_run
-/// # use kartoffel::*;
+/// # use kartoffel::println;
 /// #
 /// println!("Hello!");
 /// println!("Hello, {}!", "World");
 /// ```
-#[cfg(any(target_arch = "riscv32", doc))]
 #[macro_export]
 macro_rules! println {
     ($($t:tt)*) => {{

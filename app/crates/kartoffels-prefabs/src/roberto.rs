@@ -1,6 +1,7 @@
 //! Roberto - a moderately challenging bot that likes to stab.
 
-#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
+#![no_std]
+#![no_main]
 
 extern crate alloc;
 
@@ -8,7 +9,7 @@ use alloc::collections::VecDeque;
 use core::ops::RangeInclusive;
 use kartoffel::*;
 
-#[cfg_attr(target_arch = "riscv32", no_mangle)]
+#[no_mangle]
 fn main() {
     let mut rng = Rng::new();
     let mut display = Display::default();

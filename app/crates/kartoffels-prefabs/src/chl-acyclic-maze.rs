@@ -1,12 +1,13 @@
 //! Solution for the `acyclic-maze` challenge.
 
-#![cfg_attr(target_arch = "riscv32", no_std, no_main)]
+#![no_std]
+#![no_main]
 
 extern crate kartoffel;
 
 use kartoffel::*;
 
-#[cfg_attr(target_arch = "riscv32", no_mangle)]
+#[no_mangle]
 fn main() {
     loop {
         radar_wait();
