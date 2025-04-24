@@ -8,7 +8,6 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use indoc::indoc;
 use kartoffels_store::{Secret, Store};
-use kartoffels_world::prelude::Clock;
 use std::env;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -43,9 +42,6 @@ pub struct Cmd {
 
     #[clap(long)]
     debug: bool,
-
-    #[clap(long)]
-    bench: bool,
 
     #[clap(long)]
     log_time: bool,
@@ -100,12 +96,6 @@ impl Cmd {
             .with_context(|| {
                 format!("couldn't open store at `{}`", self.store.display())
             })?;
-
-        if self.bench {
-            for world in store.public_worlds().iter() {
-                world.overclock(Clock::Unlimited).await?;
-            }
-        }
 
         let store = Arc::new(store);
         let shutdown = CancellationToken::new();

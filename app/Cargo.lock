@@ -2107,11 +2107,15 @@ dependencies = [
  "anyhow",
  "ciborium",
  "clap",
+ "glam",
+ "kartoffels-prefabs",
  "kartoffels-utils",
  "kartoffels-world",
  "rand",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
