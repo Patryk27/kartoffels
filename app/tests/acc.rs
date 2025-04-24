@@ -1,6 +1,6 @@
 #![feature(async_fn_track_caller)]
 
-mod acceptance {
+mod acc {
     mod challenges;
     mod console;
     mod game;
@@ -206,7 +206,7 @@ impl TestContext {
     #[track_caller]
     pub async fn see_frame(&mut self, expected_path: &str) {
         let actual = self.stdout();
-        let expected_path = format!("tests/acceptance/{expected_path}");
+        let expected_path = format!("tests/acc/{expected_path}");
 
         let expected =
             fs::read_to_string(&expected_path).await.unwrap_or_default();

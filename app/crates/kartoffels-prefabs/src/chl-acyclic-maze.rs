@@ -1,9 +1,5 @@
-//! Solution for the `acyclic-maze` challenge.
-
 #![no_std]
 #![no_main]
-
-extern crate kartoffel;
 
 use kartoffel::*;
 

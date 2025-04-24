@@ -187,6 +187,16 @@ pub struct AliveBotSnapshot {
     pub serial: Arc<VecDeque<u32>>,
 }
 
+impl AliveBotSnapshot {
+    pub fn serial(&self) -> String {
+        self.serial
+            .iter()
+            .copied()
+            .flat_map(char::from_u32)
+            .collect()
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct DeadBotsSnapshot {
     #[serde(with = "kartoffels_utils::serde::sorted_map")]

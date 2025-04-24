@@ -1,33 +1,4 @@
-use glam::{ivec2, uvec2};
-use indoc::indoc;
-use kartoffels_prefabs::{DUMMY, ROBERTO};
-use kartoffels_utils::{Asserter, ErrorExt};
-use kartoffels_world::prelude::*;
-use std::future::Future;
-use std::path::Path;
-use std::sync::Arc;
-use tempfile::NamedTempFile;
-
-#[tokio::test]
-async fn smoke() {
-    let world = kartoffels_world::create(config());
-    let mut asserter = asserter("smoke");
-
-    for _ in 0..16 {
-        world
-            .create_bot(CreateBotRequest::new(ROBERTO))
-            .await
-            .unwrap();
-    }
-
-    world.assert(&mut asserter, "1.md").await;
-    world.assert_json(&mut asserter, "1.json").await;
-
-    world.tick(256_000).await.unwrap();
-
-    world.assert(&mut asserter, "2.md").await;
-    world.assert_json(&mut asserter, "2.json").await;
-}
+use super::*;
 
 #[tokio::test]
 async fn pause_and_resume() {
@@ -389,7 +360,7 @@ async fn err_too_many_bots_queued() {
 }
 
 #[tokio::test]
-async fn err_couldnt_parse_firmware_1() {
+async fn err_couldnt_parse_firmware() {
     let actual = kartoffels_world::create(config())
         .create_bot(CreateBotRequest::new(&[0x00]))
         .await
@@ -404,88 +375,4 @@ async fn err_couldnt_parse_firmware_1() {
     "};
 
     assert_eq!(expected.trim_end(), actual);
-}
-
-#[tokio::test]
-async fn err_couldnt_parse_firmware_2() {
-    const BOT: &[u8] =
-        include_bytes!("./acceptance/err-couldnt-parse-firmware-2/bot.elf");
-
-    let actual = kartoffels_world::create(config())
-        .create_bot(CreateBotRequest::new(BOT))
-        .await
-        .unwrap_err()
-        .to_fmt_string();
-
-    let expected = indoc! {"
-        couldn't parse firmware
-
-        caused by:
-        expected a 32-bit binary, but got a 64-bit one
-
-        this is most likely the outcome of a backwards-incompatible change \
-        introduced in kartoffels v0.7 - if you're following the kartoffel \
-        repository, simply clone it again and copy your code there
-
-        sorry for the trouble and godspeed!
-    "};
-
-    assert_eq!(expected.trim_end(), actual);
-}
-
-fn config() -> Config {
-    Config {
-        clock: Clock::manual(),
-        events: false,
-        id: None,
-        name: "world".into(),
-        path: None,
-        policy: Policy {
-            auto_respawn: true,
-            max_alive_bots: 16,
-            max_queued_bots: 16,
-        },
-        seed: Some(Default::default()),
-        theme: Some(Theme::Arena(ArenaTheme::new(12))),
-    }
-}
-
-fn asserter(test: &str) -> Asserter {
-    Asserter::new(Path::new("tests").join("acceptance").join(test))
-}
-
-trait HandleExt {
-    fn snapshot(&self) -> impl Future<Output = Arc<Snapshot>>;
-
-    fn assert(
-        &self,
-        asserter: &mut Asserter,
-        file: &str,
-    ) -> impl Future<Output = ()>;
-
-    fn assert_json(
-        &self,
-        asserter: &mut Asserter,
-        file: &str,
-    ) -> impl Future<Output = ()>;
-}
-
-impl HandleExt for Handle {
-    async fn snapshot(&self) -> Arc<Snapshot> {
-        self.snapshots().next().await.unwrap()
-    }
-
-    async fn assert(&self, asserter: &mut Asserter, file: &str) {
-        let actual = self.snapshot().await;
-        let actual = format!("{}\n", actual.to_string().trim_end());
-
-        asserter.assert(file, actual);
-    }
-
-    async fn assert_json(&self, asserter: &mut Asserter, file: &str) {
-        let actual = self.snapshot().await;
-        let actual = serde_json::to_string_pretty(&actual).unwrap();
-
-        asserter.assert(file, actual);
-    }
 }

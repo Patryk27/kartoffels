@@ -5,8 +5,9 @@ use kartoffel::*;
 
 #[no_mangle]
 fn main() {
+    println!("Hello, World!");
+
     loop {
-        motor_wait();
-        motor_step_fw();
+        println!("{}", timer_ticks());
     }
 }

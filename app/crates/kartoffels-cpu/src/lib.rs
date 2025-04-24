@@ -604,7 +604,7 @@ impl Cpu {
 
                 match i_imm {
                     0x01 => {
-                        return Err(TickError::Ebreak);
+                        return Err(TickError::GotEbreak);
                     }
                     _ => {
                         return Err(TickError::UnknownInstruction { word });
@@ -794,14 +794,6 @@ impl Cpu {
     fn reg_store(&mut self, id: usize, val: i32) {
         if id != 0 {
             self.regs[id] = val;
-        }
-    }
-
-    pub fn try_tick(&mut self, mmio: impl Mmio) -> TickResult<bool> {
-        match self.tick(mmio) {
-            Ok(()) => Ok(true),
-            Err(TickError::Ebreak) => Ok(false),
-            Err(err) => Err(err),
         }
     }
 }

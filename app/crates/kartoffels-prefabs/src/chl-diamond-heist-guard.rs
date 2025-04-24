@@ -1,10 +1,7 @@
-//! Guard used for the `diamond-heist` challenge.
-
 #![no_std]
 #![no_main]
 
 extern crate alloc;
-extern crate kartoffel;
 
 use alloc::vec::Vec;
 use kartoffel::*;

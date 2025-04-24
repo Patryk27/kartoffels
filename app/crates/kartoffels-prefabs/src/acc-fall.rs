@@ -1,12 +1,11 @@
 #![no_std]
 #![no_main]
 
-extern crate kartoffel;
+use kartoffel::*;
 
 #[no_mangle]
 fn main() {
-    #[allow(clippy::empty_loop)]
     loop {
-        //
+        motor_step_fw();
     }
 }

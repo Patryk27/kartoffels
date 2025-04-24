@@ -33,7 +33,7 @@ pub mod cfg {
 }
 
 pub mod prelude {
-    pub use crate::bot::BotId;
+    pub use crate::bot::{BotEvent, BotId};
     pub use crate::clock::Clock;
     pub use crate::config::Config;
     pub use crate::events::{Event, EventLetter, EventStream};

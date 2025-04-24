@@ -1,5 +1,3 @@
-//! Bot used for tutorial's tests.
-
 #![no_std]
 #![no_main]
 

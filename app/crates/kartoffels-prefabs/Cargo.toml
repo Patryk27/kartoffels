@@ -1,10 +1,20 @@
 bin = [
+    { name = "dummy", path = "src/dummy.rs", test = false },
+    { name = "roberto", path = "src/roberto.rs", test = false },
+
+    # Bots for acceptance tests
+    { name = "acc-fall", path = "src/acc-fall.rs", test = false },
+    { name = "acc-panic", path = "src/acc-panic.rs", test = false },
+    { name = "acc-radar", path = "src/acc-radar.rs", test = false },
+    { name = "acc-serial", path = "src/acc-serial.rs", test = false },
+
+    # Bots for challenges
     { name = "chl-acyclic-maze", path = "src/chl-acyclic-maze.rs", test = false },
     { name = "chl-diamond-heist", path = "src/chl-diamond-heist.rs", test = false },
     { name = "chl-diamond-heist-guard", path = "src/chl-diamond-heist-guard.rs", test = false },
     { name = "chl-personal-roomba", path = "src/chl-personal-roomba.rs", test = false },
-    { name = "dummy", path = "src/dummy.rs", test = false },
-    { name = "roberto", path = "src/roberto.rs", test = false },
+
+    # Bots for tutorial
     { name = "tut-01", path = "src/tut-01.rs", test = false },
     { name = "tut-02", path = "src/tut-02.rs", test = false },
     { name = "tut-03", path = "src/tut-03.rs", test = false },

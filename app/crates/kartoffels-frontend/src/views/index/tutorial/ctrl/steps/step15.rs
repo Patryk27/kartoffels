@@ -90,12 +90,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
     ctxt.delete_bots().await?;
 
     ctxt.world
-        .set_map({
-            let mut map = Map::new(uvec2(20, 10));
-
-            map.rect(ivec2(0, 0), ivec2(19, 9), TileKind::FLOOR);
-            map
-        })
+        .set_map(Map::new(uvec2(20, 10)).filled_with(TileKind::FLOOR))
         .await?;
 
     ctxt.world.set_spawn(ivec2(10, 9), Dir::N).await?;

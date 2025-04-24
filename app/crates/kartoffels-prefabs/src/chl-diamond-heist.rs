@@ -1,9 +1,5 @@
-//! Solution for the `diamond-heist` challenge.
-
 #![no_std]
 #![no_main]
-
-extern crate kartoffel;
 
 use kartoffel::*;
 

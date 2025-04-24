@@ -54,6 +54,11 @@ impl Map {
         (map, anchors)
     }
 
+    pub fn filled_with(mut self, tile: impl Into<Tile>) -> Self {
+        self.fill(tile);
+        self
+    }
+
     pub fn get(&self, pos: IVec2) -> Tile {
         if let Some(idx) = self.pos_to_idx(pos) {
             self.tiles[idx]

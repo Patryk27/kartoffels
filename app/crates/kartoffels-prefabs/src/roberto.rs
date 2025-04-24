@@ -1,5 +1,3 @@
-//! Roberto - a moderately challenging bot that likes to stab.
-
 #![no_std]
 #![no_main]
 

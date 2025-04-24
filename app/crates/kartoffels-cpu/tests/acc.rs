@@ -1,4 +1,4 @@
-use kartoffels_cpu::{Cpu, Firmware, Mmio};
+use kartoffels_cpu::{Cpu, Firmware, Mmio, TickError};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -81,9 +81,9 @@ fn run_test(rs_path: PathBuf, elf_path: PathBuf) {
         let mut mmio = TestMmio::default();
 
         loop {
-            match cpu.try_tick(&mut mmio) {
-                Ok(true) => continue,
-                Ok(false) => break Ok(cpu.regs().to_owned()),
+            match cpu.tick(&mut mmio) {
+                Ok(_) => continue,
+                Err(TickError::GotEbreak) => break Ok(cpu.regs().to_owned()),
                 Err(err) => break Err(err),
             }
         }

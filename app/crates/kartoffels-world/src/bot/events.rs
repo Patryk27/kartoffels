@@ -42,3 +42,12 @@ pub struct BotEvent {
     pub at: DateTime<Utc>,
     pub msg: String,
 }
+
+impl BotEvent {
+    pub fn test(msg: impl Into<String>) -> Self {
+        Self {
+            at: "2018-01-01T12:00:00Z".parse().unwrap(),
+            msg: msg.into(),
+        }
+    }
+}
