@@ -8,7 +8,7 @@ use tokio::sync::oneshot;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Resource, Serialize)]
 pub enum Clock {
-    /// Simulates at 64k bot-ticks per second
+    /// Simulates 64k bot-ticks per second
     #[default]
     Normal,
 
@@ -21,8 +21,8 @@ pub enum Clock {
     /// Simulates as many ticks per second as the server can do
     Unlimited,
 
-    /// Manual clock, requires calling [`Handle::tick()`] for world to progress;
-    /// useful for testing.
+    /// Manual clock, requires calling [`Handle::tick()`] for the world to
+    /// progress; useful for testing.
     Manual { now: DateTime<Utc> },
 }
 
