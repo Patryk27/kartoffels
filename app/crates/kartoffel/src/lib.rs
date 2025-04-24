@@ -28,23 +28,51 @@ pub use self::serial::*;
 pub use self::timer::*;
 use core::ptr;
 
-const MEM: *mut u32 = 0x08000000 as *mut u32;
-const MEM_TIMER: *mut u32 = MEM;
-const MEM_BATTERY: *mut u32 = MEM.wrapping_byte_add(1024);
-const MEM_SERIAL: *mut u32 = MEM.wrapping_byte_add(2 * 1024);
-const MEM_MOTOR: *mut u32 = MEM.wrapping_byte_add(3 * 1024);
-const MEM_ARM: *mut u32 = MEM.wrapping_byte_add(4 * 1024);
-const MEM_RADAR: *mut u32 = MEM.wrapping_byte_add(5 * 1024);
-const MEM_COMPASS: *mut u32 = MEM.wrapping_byte_add(6 * 1024);
+const MEM: u32 = 0x08000000;
 
-fn rdi(ptr: *mut u32, off: usize) -> u32 {
-    unsafe { ptr::read_volatile(ptr.wrapping_add(off)) }
+/// Memory address for the clock peripheral.
+///
+/// Usually you don't have to use this directly, see [`timer_seed()`] and
+/// similar functions.
+pub const MEM_TIMER: u32 = MEM;
+
+pub const MEM_BATTERY: u32 = MEM + 1024;
+
+/// Memory address for the serial peripheral.
+///
+/// Usually you don't have to use this directly, see [`serial_write()`] and
+/// similar functions.
+pub const MEM_SERIAL: u32 = MEM + 2 * 1024;
+
+/// Memory address for the motor peripheral.
+///
+/// Usually you don't have to use this directly, see [`motor_pulse()`] and
+/// similar functions.
+pub const MEM_MOTOR: u32 = MEM + 3 * 1024;
+
+/// Memory address for the arm peripheral.
+///
+/// Usually you don't have to use this directly, see [`arm_stab()`] and similar
+/// functions.
+pub const MEM_ARM: u32 = MEM + 4 * 1024;
+
+/// Memory address for the radar peripheral.
+///
+/// Usually you don't have to use this directly, see [`radar_scan()`] and
+/// similar functions.
+pub const MEM_RADAR: u32 = MEM + 5 * 1024;
+
+/// Memory address for the compass peripheral.
+///
+/// Usually you don't have to use this directly, see [`compass_dir()`].
+pub const MEM_COMPASS: u32 = MEM + 6 * 1024;
+
+unsafe fn rdi(ptr: u32, off: usize) -> u32 {
+    ptr::read_volatile((ptr as *const u32).wrapping_add(off))
 }
 
-fn wri(ptr: *mut u32, off: usize, val: u32) {
-    unsafe {
-        ptr::write_volatile(ptr.wrapping_add(off), val);
-    }
+unsafe fn wri(ptr: u32, off: usize, val: u32) {
+    ptr::write_volatile((ptr as *mut u32).wrapping_add(off), val);
 }
 
 fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {

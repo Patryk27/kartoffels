@@ -6,5 +6,5 @@ use crate::*;
 /// useful.
 #[doc(hidden)]
 pub fn battery_energy() -> u32 {
-    rdi(MEM_BATTERY, 0)
+    unsafe { rdi(MEM_BATTERY, 0) }
 }

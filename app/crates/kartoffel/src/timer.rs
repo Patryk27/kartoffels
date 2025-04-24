@@ -6,7 +6,7 @@ use crate::*;
 /// Note that this doesn't return a *new* random number each time it's called -
 /// the number is randomized once, when the bot is born.
 pub fn timer_seed() -> u32 {
-    rdi(MEM_TIMER, 0)
+    unsafe { rdi(MEM_TIMER, 0) }
 }
 
 /// Returns the number of ticks that have passed since the bot's been born.
@@ -14,7 +14,7 @@ pub fn timer_seed() -> u32 {
 /// This counter overflows after about 18 hours, after which it will start
 /// counting from zero.
 pub fn timer_ticks() -> u32 {
-    rdi(MEM_TIMER, 1)
+    unsafe { rdi(MEM_TIMER, 1) }
 }
 
 /// Waits until given number of ticks has passed.

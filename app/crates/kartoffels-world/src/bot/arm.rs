@@ -1,6 +1,7 @@
 use super::BotAction;
-use crate::{AliveBot, BotMmioContext};
+use crate::BotMmioContext;
 use anyhow::Result;
+use kartoffel::MEM_ARM;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -15,7 +16,7 @@ impl BotArm {
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_ARM => Ok((self.cooldown == 0) as u32),
+            MEM_ARM => Ok((self.cooldown == 0) as u32),
 
             _ => Err(()),
         }
@@ -28,7 +29,7 @@ impl BotArm {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_ARM, [0x01, 0x00, 0x00, 0x00]) => {
+            (MEM_ARM, [0x01, 0x00, 0x00, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::ArmStab {
                         at: ctxt.pos + *ctxt.dir,
@@ -40,7 +41,7 @@ impl BotArm {
                 Ok(())
             }
 
-            (AliveBot::MEM_ARM, [0x02, 0x00, 0x00, 0x00]) => {
+            (MEM_ARM, [0x02, 0x00, 0x00, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::ArmPick {
                         at: ctxt.pos + *ctxt.dir,
@@ -52,7 +53,7 @@ impl BotArm {
                 Ok(())
             }
 
-            (AliveBot::MEM_ARM, [0x03, idx, 0x00, 0x00]) => {
+            (MEM_ARM, [0x03, idx, 0x00, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::ArmDrop {
                         at: ctxt.pos + *ctxt.dir,

@@ -1,5 +1,6 @@
-use crate::{AliveBot, BotMmioContext, TileKind};
+use crate::{BotMmioContext, TileKind};
 use glam::{ivec2, IVec2, IVec3};
+use kartoffel::MEM_RADAR;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;
 
@@ -26,15 +27,13 @@ impl BotRadar {
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_RADAR => Ok((self.cooldown == 0) as u32),
+            MEM_RADAR => Ok((self.cooldown == 0) as u32),
 
-            addr if addr >= AliveBot::MEM_RADAR + 4 => {
-                let idx = (addr - AliveBot::MEM_RADAR - 4) / 4;
-
-                self.memory.get(idx as usize).copied().ok_or(())
-            }
-
-            _ => Err(()),
+            _ => self
+                .memory
+                .get((addr - MEM_RADAR - 4) as usize / 4)
+                .copied()
+                .ok_or(()),
         }
     }
 
@@ -45,7 +44,7 @@ impl BotRadar {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_RADAR, [0x01, range, opts, addr])
+            (MEM_RADAR, [0x01, range, opts, addr])
                 if let (Some(range), Some(addr)) =
                     (BotRadarRange::new(range), BotRadarAddr::new(addr)) =>
             {
@@ -266,7 +265,7 @@ impl BotRadarAddr {
             }
 
             BotRadarAddr::Szudzik => {
-                kartoffel::radar_addr(off.x, off.y, off.z) as usize
+                kartoffel::radar_idx(off.x, off.y, off.z) as usize
             }
         }
     }
@@ -276,7 +275,8 @@ impl BotRadarAddr {
 mod tests {
     use super::*;
     use crate::{
-        AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind, Objects,
+        AliveBot, AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind,
+        Objects,
     };
     use glam::{ivec3, uvec2};
     use indoc::indoc;
@@ -668,7 +668,7 @@ mod tests {
             radar
                 .mmio_store(
                     &mut ctxt,
-                    AliveBot::MEM_RADAR,
+                    MEM_RADAR,
                     u32::from_le_bytes([0x01, case.range, case.opts, addr]),
                 )
                 .unwrap();
@@ -757,7 +757,7 @@ mod tests {
 
     impl BotRadarAddr {
         fn addr(&self, range: BotRadarRange, off: IVec3) -> u32 {
-            AliveBot::MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
+            MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
         }
     }
 }

@@ -673,9 +673,9 @@ impl Cpu {
         match Region::new(addr, size)? {
             Region::Mmio => mmio
                 .ok_or(TickError::InvalidAccess { addr, size })?
-                .load(addr - Self::MMIO_BASE),
+                .load(addr),
 
-            Region::Ram => self.ram_load(addr - Self::RAM_BASE, size),
+            Region::Ram => self.ram_load(addr, size),
         }
         .map(|value| value as i32)
         .map_err(|_| TickError::InvalidAccess { addr, size })
@@ -695,9 +695,9 @@ impl Cpu {
         match Region::new(addr, size)? {
             Region::Mmio => mmio
                 .ok_or(TickError::InvalidAccess { addr, size })?
-                .store(addr - Self::MMIO_BASE, value),
+                .store(addr, value),
 
-            Region::Ram => self.ram_store(addr - Self::RAM_BASE, size, value),
+            Region::Ram => self.ram_store(addr, size, value),
         }
         .map_err(|_| TickError::InvalidAccess { addr, size })
     }
@@ -725,8 +725,8 @@ impl Cpu {
         };
 
         let lhs = match &mut mmio {
-            Some(mmio) => mmio.load(addr - Self::MMIO_BASE),
-            None => self.ram_load(addr - Self::RAM_BASE, size),
+            Some(mmio) => mmio.load(addr),
+            None => self.ram_load(addr, size),
         }
         .map_err(|_| TickError::InvalidAccess { addr, size })?;
 
@@ -743,10 +743,10 @@ impl Cpu {
         };
 
         if let Some(mut mmio) = mmio {
-            mmio.store(addr - Self::MMIO_BASE, value)
+            mmio.store(addr, value)
                 .map_err(|_| TickError::InvalidAccess { addr, size })?;
         } else {
-            self.ram_store(addr - Self::RAM_BASE, size, value)
+            self.ram_store(addr, size, value)
                 .map_err(|_| TickError::InvalidAccess { addr, size })?;
         }
 
@@ -755,6 +755,8 @@ impl Cpu {
 
     #[inline(always)]
     fn ram_load(&self, addr: u32, size: u8) -> TickResult<u32, ()> {
+        let addr = addr - Self::RAM_BASE;
+
         if addr as usize + size as usize > self.ram.len() {
             return Err(());
         }
@@ -775,6 +777,8 @@ impl Cpu {
         size: u8,
         value: u32,
     ) -> TickResult<(), ()> {
+        let addr = addr - Self::RAM_BASE;
+
         if addr as usize + size as usize > self.ram.len() {
             return Err(());
         }

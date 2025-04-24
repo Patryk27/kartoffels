@@ -1,4 +1,4 @@
-use crate::AliveBot;
+use kartoffel::MEM_SERIAL;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::mem;
@@ -18,10 +18,6 @@ pub struct BotSerial {
 impl BotSerial {
     const CAPACITY: usize = 256;
 
-    pub fn tick(&mut self) {
-        // no-op
-    }
-
     pub fn snapshot(&mut self) -> Arc<VecDeque<u32>> {
         self.snapshot
             .get_or_insert_with(|| Arc::new(self.curr.clone()))
@@ -33,50 +29,49 @@ impl BotSerial {
     }
 
     pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
-        match addr {
-            AliveBot::MEM_SERIAL => {
-                match val {
-                    // serial_buffer()
-                    0xffffff00 => {
-                        self.buffering = true;
-                    }
+        match (addr, val) {
+            (MEM_SERIAL, 0xffffff00) => {
+                self.buffering = true;
 
-                    // serial_flush()
-                    0xffffff01 => {
-                        if self.buffering {
-                            self.snapshot = None;
-                            self.buffering = false;
-                            self.curr.clear();
+                Ok(())
+            }
 
-                            mem::swap(&mut self.curr, &mut self.next);
-                        }
-                    }
+            (MEM_SERIAL, 0xffffff01) => {
+                if self.buffering {
+                    self.snapshot = None;
+                    self.buffering = false;
+                    self.curr.clear();
 
-                    // serial_clear()
-                    0xffffff02 => {
-                        if self.buffering {
-                            self.buffering = false;
-                            self.next.clear();
-                        }
-                    }
+                    mem::swap(&mut self.curr, &mut self.next);
+                }
 
-                    val => {
-                        let buf = if self.buffering {
-                            &mut self.next
-                        } else {
-                            &mut self.curr
-                        };
+                Ok(())
+            }
 
-                        if buf.len() >= Self::CAPACITY {
-                            buf.pop_front();
-                        }
+            (MEM_SERIAL, 0xffffff02) => {
+                if self.buffering {
+                    self.buffering = false;
+                    self.next.clear();
+                }
 
-                        buf.push_back(val);
+                Ok(())
+            }
 
-                        if !self.buffering {
-                            self.snapshot = None;
-                        }
-                    }
+            (MEM_SERIAL, val) => {
+                let buf = if self.buffering {
+                    &mut self.next
+                } else {
+                    &mut self.curr
+                };
+
+                if buf.len() >= Self::CAPACITY {
+                    buf.pop_front();
+                }
+
+                buf.push_back(val);
+
+                if !self.buffering {
+                    self.snapshot = None;
                 }
 
                 Ok(())

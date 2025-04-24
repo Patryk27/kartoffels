@@ -1,5 +1,6 @@
 use super::BotAction;
-use crate::{AliveBot, BotMmioContext};
+use crate::BotMmioContext;
+use kartoffel::MEM_MOTOR;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -14,7 +15,7 @@ impl BotMotor {
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_MOTOR => Ok((self.cooldown == 0) as u32),
+            MEM_MOTOR => Ok((self.cooldown == 0) as u32),
 
             _ => Err(()),
         }
@@ -27,7 +28,7 @@ impl BotMotor {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (AliveBot::MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
+            (MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + *ctxt.dir,
@@ -39,7 +40,7 @@ impl BotMotor {
                 Ok(())
             }
 
-            (AliveBot::MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
+            (MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.action = Some(BotAction::MotorMove {
                         at: ctxt.pos + ctxt.dir.turned_back(),
@@ -51,7 +52,7 @@ impl BotMotor {
                 Ok(())
             }
 
-            (AliveBot::MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
+            (MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.dir = ctxt.dir.turned_right();
 
@@ -61,7 +62,7 @@ impl BotMotor {
                 Ok(())
             }
 
-            (AliveBot::MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
+            (MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
                 if self.cooldown == 0 {
                     *ctxt.dir = ctxt.dir.turned_left();
 

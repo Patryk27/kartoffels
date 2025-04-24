@@ -1,4 +1,4 @@
-use crate::AliveBot;
+use kartoffel::MEM_TIMER;
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 
@@ -27,8 +27,8 @@ impl BotTimer {
 
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_TIMER => Ok(self.seed),
-            const { AliveBot::MEM_TIMER + 4 } => Ok(self.ticks as u32),
+            MEM_TIMER => Ok(self.seed),
+            const { MEM_TIMER + 4 } => Ok(self.ticks as u32),
 
             _ => Err(()),
         }

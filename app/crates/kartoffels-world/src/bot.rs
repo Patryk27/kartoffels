@@ -52,14 +52,6 @@ pub struct AliveBot {
 }
 
 impl AliveBot {
-    const MEM_TIMER: u32 = 0;
-    const MEM_BATTERY: u32 = 1024;
-    const MEM_SERIAL: u32 = 2 * 1024;
-    const MEM_MOTOR: u32 = 3 * 1024;
-    const MEM_ARM: u32 = 4 * 1024;
-    const MEM_RADAR: u32 = 5 * 1024;
-    const MEM_COMPASS: u32 = 6 * 1024;
-
     pub fn new(
         rng: &mut impl RngCore,
         clock: &Clock,
@@ -107,7 +99,6 @@ impl AliveBot {
         let mut action = None;
 
         self.timer.tick();
-        self.serial.tick();
         self.arm.tick();
         self.motor.tick();
         self.radar.tick();

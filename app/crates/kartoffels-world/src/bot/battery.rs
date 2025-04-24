@@ -1,5 +1,5 @@
-use crate::AliveBot;
 use anyhow::Result;
+use kartoffel::MEM_BATTERY;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -10,7 +10,7 @@ pub struct BotBattery {
 impl BotBattery {
     pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
         match addr {
-            AliveBot::MEM_BATTERY => Ok(self.energy),
+            MEM_BATTERY => Ok(self.energy),
 
             _ => Err(()),
         }
