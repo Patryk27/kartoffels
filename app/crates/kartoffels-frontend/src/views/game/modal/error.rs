@@ -7,14 +7,15 @@ use ratatui::widgets::Paragraph;
 
 #[derive(Debug)]
 pub struct ErrorModal {
-    error: Paragraph<'static>,
+    error: Box<Paragraph<'static>>,
 }
 
 impl ErrorModal {
     pub fn new(error: Error) -> Self {
         Self {
-            error: Paragraph::new(error.to_fmt_string())
-                .wrap(Default::default()),
+            error: Box::new(
+                Paragraph::new(error.to_fmt_string()).wrap(Default::default()),
+            ),
         }
     }
 
@@ -30,7 +31,7 @@ impl ErrorModal {
             ])
             .areas(ui.area);
 
-            ui.add_at(text_area, &self.error);
+            ui.add_at(text_area, &*self.error);
 
             ui.add_at(footer_area, {
                 Button::new("close", KeyCode::Enter)

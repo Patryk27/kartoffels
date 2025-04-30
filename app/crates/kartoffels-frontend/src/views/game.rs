@@ -81,12 +81,11 @@ async fn run_once(
             })
             .await?;
 
-        if let Some(event) = event {
-            if let ControlFlow::Break(_) =
+        if let Some(event) = event
+            && let ControlFlow::Break(_) =
                 event.handle(frame, &mut state).await?
-            {
-                fade = Some(Fade::new(FadeDir::Out));
-            }
+        {
+            fade = Some(Fade::new(FadeDir::Out));
         }
 
         state.poll(frame, &mut ctrl).await?;

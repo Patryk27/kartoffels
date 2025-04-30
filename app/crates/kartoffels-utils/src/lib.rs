@@ -1,5 +1,4 @@
 #![feature(array_chunks)]
-#![feature(extract_if)]
 
 mod arc_swap_ext;
 mod asserter;

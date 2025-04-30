@@ -25,12 +25,13 @@ impl BotRadar {
         match addr {
             api::MEM_RADAR => Ok((bot.radar.cooldown == 0) as u32),
 
-            const { api::MEM_RADAR + 4 }..api::MEM_COMPASS => bot
-                .radar
-                .memory
-                .get((addr - api::MEM_RADAR - 4) as usize / 4)
-                .copied()
-                .ok_or(()),
+            addr if (api::MEM_RADAR + 4..api::MEM_COMPASS).contains(&addr) => {
+                bot.radar
+                    .memory
+                    .get((addr - api::MEM_RADAR - 4) as usize / 4)
+                    .copied()
+                    .ok_or(())
+            }
 
             _ => Err(()),
         }

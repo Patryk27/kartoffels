@@ -26,7 +26,7 @@ impl BotTimer {
     pub(crate) fn load(bot: &AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
             api::MEM_TIMER => Ok(bot.timer.seed),
-            const { api::MEM_TIMER + 4 } => Ok(bot.timer.ticks as u32),
+            addr if addr == api::MEM_TIMER + 4 => Ok(bot.timer.ticks as u32),
 
             _ => Err(()),
         }

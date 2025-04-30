@@ -74,7 +74,7 @@ impl fmt::Display for Id {
             .map(|[a, b]| format!("{a:02x}{b:02x}"))
             .join("-");
 
-        write!(f, "{}", id)
+        write!(f, "{id}")
     }
 }
 
