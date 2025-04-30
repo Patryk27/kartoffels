@@ -11,7 +11,6 @@ extern crate alloc;
 
 mod allocator;
 mod arm;
-mod battery;
 mod compass;
 mod motor;
 mod panic;
@@ -20,7 +19,6 @@ mod serial;
 mod timer;
 
 pub use self::arm::*;
-pub use self::battery::*;
 pub use self::compass::*;
 pub use self::motor::*;
 pub use self::radar::*;
@@ -35,8 +33,6 @@ const MEM: u32 = 0x08000000;
 /// Usually you don't have to use this directly, see [`timer_seed()`] and
 /// similar functions.
 pub const MEM_TIMER: u32 = MEM;
-
-pub const MEM_BATTERY: u32 = MEM + 1024;
 
 /// Memory address for the serial peripheral.
 ///
@@ -75,7 +71,8 @@ unsafe fn wri(ptr: u32, off: usize, val: u32) {
     ptr::write_volatile((ptr as *mut u32).wrapping_add(off), val);
 }
 
-fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {
+#[doc(hidden)]
+pub const fn cmd(cmd: u8, arg0: u8, arg1: u8, arg2: u8) -> u32 {
     u32::from_le_bytes([cmd, arg0, arg1, arg2])
 }
 

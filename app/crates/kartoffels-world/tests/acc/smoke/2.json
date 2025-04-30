@@ -1880,23 +1880,7 @@
     "objects": []
   },
   "stats": {
-    "entries": {
-      "a1a5-091f-e8b8-5b7f": {
-        "ages": {
-          "sum": 0,
-          "avg": 0.000015625,
-          "min": 0,
-          "max": 0
-        },
-        "scores": {
-          "sum": 0,
-          "avg": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "lives": 1
-      }
-    }
+    "entries": {}
   },
   "tiles": {
     "size": [

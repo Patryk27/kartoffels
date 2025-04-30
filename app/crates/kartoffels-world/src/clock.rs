@@ -1,12 +1,6 @@
-use anyhow::Result;
-use bevy_ecs::system::{Res, ResMut, Resource};
-use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
-use serde::Serialize;
-use std::thread;
-use std::time::{Duration, Instant};
-use tokio::sync::oneshot;
+use crate::*;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Resource, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub enum Clock {
     /// Simulates 64k bot-ticks per second
     #[default]
@@ -50,16 +44,10 @@ impl Clock {
         Metronome::new(Self::HZ)
     }
 
-    /// How many bot-ticks to simulate at once.
-    ///
-    /// This is a performance optimization that allows us to amortize the cost
-    /// of other systems in relation to `bots::tick()` - i.e. in practice it
-    /// makes sense to run `bots::tick()` more than once, since this allows us
-    /// to utilize CPU caches etc. better.
     pub(crate) fn ticks(&self) -> u32 {
         match self {
             Clock::Manual { .. } => 1,
-            _ => 32,
+            _ => 16,
         }
     }
 
@@ -73,7 +61,7 @@ impl Clock {
     }
 }
 
-#[derive(Clone, Debug, Resource)]
+#[derive(Clone, Debug)]
 pub struct Metronome {
     interval: Duration,
     deadline: Instant,
@@ -117,7 +105,7 @@ impl Metronome {
     }
 }
 
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Default)]
 pub struct Fuel {
     remaining: u32,
     callback: Option<oneshot::Sender<()>>,
@@ -144,8 +132,4 @@ impl Fuel {
     pub fn is_empty(&self) -> bool {
         self.remaining == 0
     }
-}
-
-pub fn sleep(clock: Res<Clock>, mut mtr: ResMut<Metronome>) {
-    mtr.sleep(&clock);
 }

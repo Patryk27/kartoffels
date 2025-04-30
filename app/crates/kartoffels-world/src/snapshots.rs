@@ -3,21 +3,8 @@ mod systems;
 
 pub use self::stream::*;
 pub use self::systems::*;
-use crate::{
-    BotEvent, BotId, BotLife, BotLives, BotStats, Clock, Dir, Map, Object,
-    ObjectId, Ticks,
-};
-use ahash::AHashMap;
-use bevy_ecs::system::Resource;
-use glam::IVec2;
-use itertools::Itertools;
+use crate::*;
 use prettytable::{row, Table};
-use serde::Serialize;
-use std::cmp::Reverse;
-use std::collections::VecDeque;
-use std::fmt;
-use std::sync::Arc;
-use tokio::sync::watch;
 
 #[derive(Debug, Default, Serialize)]
 pub struct Snapshot {
@@ -319,7 +306,7 @@ impl StatsSnapshot {
 
 pub type BotStatsSnapshot = BotStats;
 
-#[derive(Debug, Resource)]
+#[derive(Debug)]
 pub struct Snapshots {
     pub tx: watch::Sender<Arc<Snapshot>>,
 }

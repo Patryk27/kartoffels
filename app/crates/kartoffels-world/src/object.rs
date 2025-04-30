@@ -1,7 +1,4 @@
-use derivative::Derivative;
-use kartoffels_utils::Id;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
+use crate::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Object {
@@ -13,7 +10,7 @@ impl Object {
     pub fn new(kind: u8) -> Self {
         Self {
             kind,
-            meta: [0, 0, 0],
+            meta: [0x00, 0x00, 0x00],
         }
     }
 

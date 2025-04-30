@@ -1,27 +1,22 @@
-use super::{Event, EventLetter};
-use crate::{BotId, Handle};
-use anyhow::{Context, Result};
-use tokio::sync::broadcast;
+use crate::*;
 use tokio_stream::wrappers::errors::BroadcastStreamRecvError;
 use tokio_stream::wrappers::BroadcastStream;
-use tokio_stream::StreamExt;
-use tracing::warn;
 
 #[derive(Debug)]
 pub struct EventStream {
-    stream: BroadcastStream<EventLetter>,
-    pending: Option<EventLetter>,
+    stream: BroadcastStream<EventEnvelope>,
+    pending: Option<EventEnvelope>,
 }
 
 impl EventStream {
-    pub(crate) fn new(tx: &broadcast::Sender<EventLetter>) -> Self {
+    pub(crate) fn new(tx: &broadcast::Sender<EventEnvelope>) -> Self {
         Self {
             stream: BroadcastStream::new(tx.subscribe()),
             pending: None,
         }
     }
 
-    pub async fn next(&mut self) -> Result<EventLetter> {
+    pub async fn next(&mut self) -> Result<EventEnvelope> {
         if let Some(event) = self.pending.take() {
             return Ok(event);
         }

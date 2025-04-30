@@ -1,8 +1,4 @@
-use kartoffel::MEM_SERIAL;
-use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
-use std::mem;
-use std::sync::Arc;
+use crate::*;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotSerial {
@@ -24,44 +20,44 @@ impl BotSerial {
             .clone()
     }
 
-    pub fn mmio_load(&self, _addr: u32) -> Result<u32, ()> {
-        Err(())
-    }
-
-    pub fn mmio_store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    pub(super) fn store(
+        bot: &mut AliveBotBody,
+        addr: u32,
+        val: u32,
+    ) -> Result<(), ()> {
         match (addr, val) {
-            (MEM_SERIAL, 0xffffff00) => {
-                self.buffering = true;
+            (api::MEM_SERIAL, 0xffffff00) => {
+                bot.serial.buffering = true;
 
                 Ok(())
             }
 
-            (MEM_SERIAL, 0xffffff01) => {
-                if self.buffering {
-                    self.snapshot = None;
-                    self.buffering = false;
-                    self.curr.clear();
+            (api::MEM_SERIAL, 0xffffff01) => {
+                if bot.serial.buffering {
+                    bot.serial.snapshot = None;
+                    bot.serial.buffering = false;
+                    bot.serial.curr.clear();
 
-                    mem::swap(&mut self.curr, &mut self.next);
+                    mem::swap(&mut bot.serial.curr, &mut bot.serial.next);
                 }
 
                 Ok(())
             }
 
-            (MEM_SERIAL, 0xffffff02) => {
-                if self.buffering {
-                    self.buffering = false;
-                    self.next.clear();
+            (api::MEM_SERIAL, 0xffffff02) => {
+                if bot.serial.buffering {
+                    bot.serial.buffering = false;
+                    bot.serial.next.clear();
                 }
 
                 Ok(())
             }
 
-            (MEM_SERIAL, val) => {
-                let buf = if self.buffering {
-                    &mut self.next
+            (api::MEM_SERIAL, val) => {
+                let buf = if bot.serial.buffering {
+                    &mut bot.serial.next
                 } else {
-                    &mut self.curr
+                    &mut bot.serial.curr
                 };
 
                 if buf.len() >= Self::CAPACITY {
@@ -70,8 +66,8 @@ impl BotSerial {
 
                 buf.push_back(val);
 
-                if !self.buffering {
-                    self.snapshot = None;
+                if !bot.serial.buffering {
+                    bot.serial.snapshot = None;
                 }
 
                 Ok(())

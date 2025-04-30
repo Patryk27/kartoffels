@@ -1,8 +1,4 @@
-use crate::{Clock, Policy, Theme};
-use kartoffels_utils::Id;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
-use std::path::PathBuf;
+use crate::*;
 
 #[derive(Clone, Debug, Default)]
 pub struct Config {

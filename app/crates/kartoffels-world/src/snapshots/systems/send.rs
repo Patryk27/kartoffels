@@ -1,17 +1,7 @@
-use crate::{
-    AliveBotSnapshot, AliveBots, AliveBotsSnapshot, Bots, BotsSnapshot, Clock,
-    DeadBotSnapshot, DeadBots, DeadBotsSnapshot, Events, Lives, LivesSnapshot,
-    Map, ObjectSnapshot, Objects, ObjectsSnapshot, QueuedBotSnapshot,
-    QueuedBots, QueuedBotsSnapshot, Snapshot, Snapshots, Stats, StatsSnapshot,
-    Tile, TileKind,
-};
-use ahash::AHashMap;
-use bevy_ecs::system::{Local, Res, ResMut};
+use crate::*;
 use std::cmp::Reverse;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 
-pub struct State {
+struct State {
     next_run_at: Instant,
     version: u64,
 }
@@ -25,18 +15,9 @@ impl Default for State {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn send(
-    mut state: Local<State>,
-    mut bots: ResMut<Bots>,
-    mut events: Option<ResMut<Events>>,
-    clock: Res<Clock>,
-    lives: Res<Lives>,
-    map: Res<Map>,
-    objects: Res<Objects>,
-    snapshots: Res<Snapshots>,
-    stats: Res<Stats>,
-) {
+pub fn send(world: &mut World) {
+    let state = world.states.get_mut::<State>();
+
     if Instant::now() < state.next_run_at {
         return;
     }
@@ -45,26 +26,26 @@ pub fn send(
 
     let snapshot = {
         let bots = BotsSnapshot {
-            alive: prepare_alive_bots(&mut bots.alive, &lives),
-            dead: prepare_dead_bots(&mut bots.dead),
-            queued: prepare_queued_bots(&mut bots.queued),
+            alive: prepare_alive_bots(&mut world.bots.alive, &world.lives),
+            dead: prepare_dead_bots(&mut world.bots.dead),
+            queued: prepare_queued_bots(&mut world.bots.queued),
         };
 
         let stats = StatsSnapshot {
-            entries: stats.entries.clone(),
+            entries: world.stats.entries.clone(),
         };
 
         let lives = LivesSnapshot {
-            entries: lives.entries.clone(),
+            entries: world.lives.entries.clone(),
         };
 
-        let map = prepare_map(&bots, &map, &objects);
-        let objects = prepare_objects(&objects);
+        let map = prepare_map(&bots, &world.map, &world.objects);
+        let objects = prepare_objects(&world.objects);
         let tiles = map.clone();
 
         Arc::new(Snapshot {
             bots,
-            clock: clock.clone(),
+            clock: world.clock.clone(),
             lives,
             map,
             objects,
@@ -74,13 +55,10 @@ pub fn send(
         })
     };
 
-    snapshots.tx.send_replace(snapshot);
+    world.snapshots.tx.send_replace(snapshot);
+    world.events.send(state.version);
 
-    if let Some(events) = &mut events {
-        events.send(state.version);
-    }
-
-    state.next_run_at = match *clock {
+    state.next_run_at = match world.clock {
         Clock::Manual { .. } => Instant::now(),
         _ => Instant::now() + Duration::from_millis(33),
     };

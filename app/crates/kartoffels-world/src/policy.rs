@@ -1,12 +1,6 @@
-use crate::spec;
-use anyhow::{anyhow, Error, Result};
-use bevy_ecs::system::Resource;
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use crate::*;
 
-#[derive(
-    Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Resource,
-)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Policy {
     pub auto_respawn: bool,
     pub max_alive_bots: u8,

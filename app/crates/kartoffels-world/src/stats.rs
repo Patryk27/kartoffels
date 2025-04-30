@@ -1,34 +1,40 @@
-use crate::{BotId, BotLives, Bots, Clock, Lives};
-use ahash::AHashMap;
-use bevy_ecs::system::{Local, Res, ResMut, Resource};
-use serde::Serialize;
-use std::sync::Arc;
-use std::time::Instant;
+use crate::*;
 
-#[derive(Clone, Debug, Default, Resource)]
+#[derive(Clone, Debug, Default)]
 pub struct Stats {
     pub entries: Arc<AHashMap<BotId, BotStats>>,
 }
 
-pub fn update(
-    mut stats: ResMut<Stats>,
-    bots: Res<Bots>,
-    lives: Res<Lives>,
-    mut prev_run_at: Local<Option<Instant>>,
-) {
-    if prev_run_at.is_some_and(|run| run.elapsed().as_secs() < 1) {
+#[derive(Debug)]
+struct State {
+    prev_run_at: Instant,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            prev_run_at: Instant::now(),
+        }
+    }
+}
+
+pub fn update(world: &mut World) {
+    let state = world.states.get_mut::<State>();
+
+    if state.prev_run_at.elapsed().as_secs() < 1 {
         return;
     }
 
-    let entries = Arc::make_mut(&mut stats.entries);
+    let entries = Arc::make_mut(&mut world.stats.entries);
 
-    *entries = lives
+    *entries = world
+        .lives
         .entries
         .iter()
-        .map(|(id, lives)| (*id, BotStats::new(&bots, lives, *id)))
+        .map(|(id, lives)| (*id, BotStats::new(&world.bots, lives, *id)))
         .collect();
 
-    *prev_run_at = Some(Instant::now());
+    state.prev_run_at = Instant::now();
 }
 
 #[derive(Clone, Debug, Serialize)]

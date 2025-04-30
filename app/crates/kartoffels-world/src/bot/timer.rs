@@ -1,6 +1,4 @@
-use kartoffel::MEM_TIMER;
-use rand::{Rng, RngCore};
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -17,24 +15,28 @@ impl BotTimer {
         }
     }
 
-    pub fn tick(&mut self) {
-        self.ticks += 1;
-    }
-
     pub fn ticks(&self) -> u64 {
         self.ticks
     }
 
-    pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
+    pub(crate) fn tick(bot: &mut AliveBotBody) {
+        bot.timer.ticks += 1;
+    }
+
+    pub(crate) fn load(bot: &AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            MEM_TIMER => Ok(self.seed),
-            const { MEM_TIMER + 4 } => Ok(self.ticks as u32),
+            api::MEM_TIMER => Ok(bot.timer.seed),
+            const { api::MEM_TIMER + 4 } => Ok(bot.timer.ticks as u32),
 
             _ => Err(()),
         }
     }
 
-    pub fn mmio_store(&mut self, _addr: u32, _val: u32) -> Result<(), ()> {
+    pub(crate) fn store(
+        _bot: &mut AliveBotBody,
+        _addr: u32,
+        _val: u32,
+    ) -> Result<(), ()> {
         Err(())
     }
 }

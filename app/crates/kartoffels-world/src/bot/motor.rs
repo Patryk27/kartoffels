@@ -1,7 +1,4 @@
-use super::BotAction;
-use crate::BotMmioContext;
-use kartoffel::MEM_MOTOR;
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotMotor {
@@ -9,70 +6,101 @@ pub struct BotMotor {
 }
 
 impl BotMotor {
-    pub fn tick(&mut self) {
-        self.cooldown = self.cooldown.saturating_sub(1);
+    pub(super) fn tick(bot: &mut AliveBotBody) {
+        bot.motor.cooldown = bot.motor.cooldown.saturating_sub(1);
     }
 
-    pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
+    pub(super) fn load(bot: &AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            MEM_MOTOR => Ok((self.cooldown == 0) as u32),
-
+            api::MEM_MOTOR => Ok((bot.motor.cooldown == 0) as u32),
             _ => Err(()),
         }
     }
 
-    pub fn mmio_store(
-        &mut self,
-        ctxt: &mut BotMmioContext,
+    pub(super) fn store(
+        bot: &mut AliveBotBody,
+        world: &mut World,
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
-                if self.cooldown == 0 {
-                    *ctxt.action = Some(BotAction::MotorMove {
-                        at: ctxt.pos + *ctxt.dir,
-                    });
-
-                    self.cooldown = ctxt.cooldown(20_000);
-                }
-
+            (api::MEM_MOTOR, [0x01, 0x01, 0x01, 0x00]) => {
+                Self::do_move(bot, world, BotMotorOp::StepFw);
                 Ok(())
             }
 
-            (MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
-                if self.cooldown == 0 {
-                    *ctxt.action = Some(BotAction::MotorMove {
-                        at: ctxt.pos + ctxt.dir.turned_back(),
-                    });
-
-                    self.cooldown = ctxt.cooldown(30_000);
-                }
-
+            (api::MEM_MOTOR, [0x01, 0xff, 0xff, 0x00]) => {
+                Self::do_move(bot, world, BotMotorOp::StepBw);
                 Ok(())
             }
 
-            (MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
-                if self.cooldown == 0 {
-                    *ctxt.dir = ctxt.dir.turned_right();
-
-                    self.cooldown = ctxt.cooldown(25_000);
-                }
-
+            (api::MEM_MOTOR, [0x01, 0x01, 0xff, 0x00]) => {
+                Self::do_move(bot, world, BotMotorOp::TurnRight);
                 Ok(())
             }
 
-            (MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
-                if self.cooldown == 0 {
-                    *ctxt.dir = ctxt.dir.turned_left();
-
-                    self.cooldown = ctxt.cooldown(25_000);
-                }
-
+            (api::MEM_MOTOR, [0x01, 0xff, 0x01, 0x00]) => {
+                Self::do_move(bot, world, BotMotorOp::TurnLeft);
                 Ok(())
             }
 
             _ => Err(()),
         }
     }
+
+    fn do_move(bot: &mut AliveBotBody, world: &mut World, op: BotMotorOp) {
+        if bot.motor.cooldown > 0 {
+            return;
+        }
+
+        match op {
+            BotMotorOp::StepFw | BotMotorOp::StepBw => {
+                let at = match op {
+                    BotMotorOp::StepFw => bot.pos + bot.dir,
+                    _ => bot.pos + bot.dir.turned_back(),
+                };
+
+                match world.map.get(at).kind {
+                    TileKind::VOID => {
+                        bot.pos = AliveBotBody::FELL_INTO_VOID;
+                    }
+
+                    TileKind::FLOOR => {
+                        if world.bots.alive.lookup_at(at).is_none()
+                            && world.objects.lookup_at(at).is_none()
+                        {
+                            bot.pos = at;
+
+                            world
+                                .events
+                                .add(Event::BotMoved { id: bot.id, at });
+                        }
+                    }
+
+                    _ => (),
+                }
+            }
+
+            BotMotorOp::TurnLeft => {
+                bot.dir = bot.dir.turned_left();
+            }
+            BotMotorOp::TurnRight => {
+                bot.dir = bot.dir.turned_right();
+            }
+        }
+
+        bot.motor.cooldown = world.cooldown(match op {
+            BotMotorOp::StepFw => 20_000,
+            BotMotorOp::StepBw => 30_000,
+            _ => 25_000,
+        });
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum BotMotorOp {
+    StepFw,
+    StepBw,
+    TurnLeft,
+    TurnRight,
 }

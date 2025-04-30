@@ -1,10 +1,6 @@
-use crate::{Object, ObjectId};
-use ahash::AHashMap;
-use bevy_ecs::system::Resource;
-use glam::IVec2;
-use rand::{Rng, RngCore};
+use crate::*;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Resource)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Objects {
     objects: AHashMap<ObjectId, Object>,
     pos_to_id: AHashMap<IVec2, ObjectId>,
@@ -31,7 +27,14 @@ impl Objects {
         id
     }
 
-    pub fn add(&mut self, id: ObjectId, obj: Object, pos: Option<IVec2>) {
+    pub fn add(
+        &mut self,
+        id: ObjectId,
+        obj: Object,
+        pos: impl Into<Option<IVec2>>,
+    ) {
+        let pos = pos.into();
+
         self.objects.insert(id, obj);
 
         if let Some(pos) = pos {

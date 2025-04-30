@@ -3,14 +3,9 @@ mod cave;
 
 pub use self::arena::*;
 pub use self::cave::*;
-use crate::{Map, MapBuilder};
-use anyhow::{anyhow, Error, Result};
-use bevy_ecs::system::Resource;
-use rand::RngCore;
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use crate::*;
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Resource)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Theme {
     #[serde(rename = "arena")]

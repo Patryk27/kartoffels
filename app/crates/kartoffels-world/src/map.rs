@@ -1,16 +1,9 @@
 mod builder;
 
 pub use self::builder::*;
-use ahash::HashMap;
-use bevy_ecs::system::Resource;
-use glam::{ivec2, uvec2, IVec2, UVec2};
-use rand::{Rng, RngCore};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::Write;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::{cmp, fmt, mem};
+use crate::*;
 
-#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize, Resource)]
+#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
     tiles: Box<[Tile]>,
@@ -246,7 +239,7 @@ impl fmt::Display for Map {
 
 #[derive(Clone, Debug, Default)]
 pub struct Anchors {
-    anchors: HashMap<char, IVec2>,
+    anchors: AHashMap<char, IVec2>,
 }
 
 impl Anchors {

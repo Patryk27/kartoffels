@@ -6,6 +6,7 @@
 #![feature(let_chains)]
 #![feature(type_alias_impl_trait)]
 #![allow(clippy::result_unit_err)]
+#![allow(clippy::too_many_arguments)]
 
 mod bot;
 mod bots;
@@ -36,7 +37,7 @@ pub mod prelude {
     pub use crate::bot::{BotEvent, BotId};
     pub use crate::clock::Clock;
     pub use crate::config::Config;
-    pub use crate::events::{Event, EventLetter, EventStream};
+    pub use crate::events::{Event, EventEnvelope, EventStream};
     pub use crate::handle::{CreateBotRequest, Handle, Request};
     pub use crate::map::{Map, MapBuilder, Tile, TileKind};
     pub use crate::object::{Object, ObjectId, ObjectKind};
@@ -67,22 +68,41 @@ pub(crate) use self::stats::*;
 pub(crate) use self::storage::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
-use anyhow::Result;
+
+use ahash::{AHashMap, AHashSet};
+use anyhow::{anyhow, Context, Error, Result};
 use arc_swap::ArcSwap;
-use bevy_ecs::event::EventRegistry;
-use bevy_ecs::schedule::{ExecutorKind, IntoSystemConfigs, Schedule};
-use bevy_ecs::system::Res;
-use bevy_ecs::world::World;
+use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use derivative::Derivative;
 use futures_util::FutureExt;
+use glam::{ivec2, uvec2, IVec2, IVec3, UVec2};
+use itertools::Itertools;
+use kartoffel as api;
+use kartoffels_cpu::{Cpu, Firmware, Mmio};
 use kartoffels_utils::Id;
-use rand::{Rng, SeedableRng};
+use maybe_owned::MaybeOwned;
+use rand::distributions::Standard;
+use rand::prelude::Distribution;
+use rand::seq::SliceRandom;
+use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
-use std::path::Path;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::any::{Any, TypeId};
+use std::cmp::Reverse;
+use std::collections::{hash_map, VecDeque};
+use std::fmt::Write as _;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::io::{BufReader, Cursor, Read, Write};
+use std::ops::{ControlFlow, RangeInclusive};
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
-use std::thread;
-use tokio::runtime::Handle as TokioHandle;
-use tokio::sync::{broadcast, mpsc, watch};
-use tracing::{info, info_span};
+use std::time::{Duration, Instant};
+use std::{cmp, fmt, fs, iter, mem, ops, thread};
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tokio_stream::StreamExt;
+use tracing::{debug, info, info_span, trace, warn, Span};
 
 pub fn create(config: Config) -> Handle {
     let mut rng = config
@@ -104,199 +124,268 @@ pub fn create(config: Config) -> Handle {
         })
         .unwrap_or_default();
 
-    let res = Resources {
+    let boot = Bootstrap {
         bots: Default::default(),
         clock: config.clock,
-        id: WorldId(id),
+        id,
         lives: Default::default(),
         map,
-        name: WorldName(Arc::new(ArcSwap::from_pointee(config.name))),
-        path: config.path.map(WorldPath),
+        name: Arc::new(ArcSwap::from_pointee(config.name)),
+        path: config.path,
         policy: config.policy,
-        rng: WorldRng(rng),
+        rng,
         theme: config.theme,
     };
 
-    create_or_resume(res, config.events)
+    spawn(boot, config.events)
 }
 
 pub fn resume(id: Id, path: &Path) -> Result<Handle> {
     let world = storage::load(path)?;
-    let name = Arc::new(ArcSwap::from_pointee(world.name.into_owned()));
 
-    let res = Resources {
+    let boot = Bootstrap {
         bots: world.bots.into_owned(),
         clock: Default::default(),
-        id: WorldId(id),
+        id,
         lives: world.lives.into_owned(),
         map: world.map.into_owned(),
-        name: WorldName(name),
-        path: Some(WorldPath(path.to_owned())),
+        name: Arc::new(ArcSwap::from_pointee(world.name.into_owned())),
+        path: Some(path.to_owned()),
         policy: world.policy.into_owned(),
-        rng: WorldRng(ChaCha8Rng::from_entropy()),
-        theme: world.theme.map(|theme| theme.into_owned()),
+        rng: ChaCha8Rng::from_entropy(),
+        theme: world.theme.map(MaybeOwned::into_owned),
     };
 
-    Ok(create_or_resume(res, false))
+    Ok(spawn(boot, false))
 }
 
-struct Resources {
-    bots: Bots,
-    clock: Clock,
-    id: WorldId,
-    lives: Lives,
-    map: Map,
-    name: WorldName,
-    path: Option<WorldPath>,
-    policy: Policy,
-    rng: WorldRng,
-    theme: Option<Theme>,
-}
+fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
+    let (tx, rx) = mpsc::channel(cfg::REQUEST_STREAM_CAPACITY);
 
-fn create_or_resume(res: Resources, emit_events: bool) -> Handle {
-    let mut world = create_world(res);
-    let handle = create_handle(&mut world, emit_events);
+    let events =
+        with_events.then(|| broadcast::Sender::new(cfg::EVENT_STREAM_CAPACITY));
 
-    spawn(world);
+    let snapshots = watch::Sender::default();
+
+    let mut world = {
+        let events = Events {
+            tx: events.clone(),
+            pending: Default::default(),
+        };
+
+        let snapshots = Snapshots {
+            tx: snapshots.clone(),
+        };
+
+        boot.build(events, rx, snapshots)
+    };
+
+    let handle = Handle::new(SharedHandle {
+        tx,
+        id: world.id,
+        name: world.name.clone(),
+        events,
+        snapshots,
+    });
+
+    thread::spawn(move || {
+        let span = info_span!("world", id = %world.id);
+        let _span = span.entered();
+
+        info!(name=?world.name.load(), "ready");
+
+        loop {
+            if world.tick().is_break() {
+                break;
+            }
+        }
+
+        info!(name=?world.name.load(), "shut down");
+    });
 
     handle
 }
 
-fn create_world(res: Resources) -> World {
-    let mut world = World::new();
-
-    world.insert_resource(res.bots);
-    world.insert_resource(res.clock.metronome());
-    world.insert_resource(res.clock);
-    world.insert_resource(res.id);
-    world.insert_resource(res.map);
-    world.insert_resource(res.name);
-    world.insert_resource(res.policy);
-    world.insert_resource(res.rng);
-    world.insert_resource(res.lives);
-
-    if let Some(path) = res.path {
-        world.insert_resource(path);
-    }
-
-    if let Some(theme) = res.theme {
-        world.insert_resource(theme);
-    }
-
-    world.insert_resource(Fuel::default());
-    world.insert_resource(Objects::default()); // TODO persist
-    world.insert_resource(Paused::default());
-    world.insert_resource(Spawn::default());
-    world.insert_resource(Stats::default());
-
-    // ---
-
-    EventRegistry::register_event::<CreateBot>(&mut world);
-    EventRegistry::register_event::<Event>(&mut world);
-    EventRegistry::register_event::<KillBot>(&mut world);
-    EventRegistry::register_event::<SpawnBot>(&mut world);
-
-    // ---
-
-    world
+struct Bootstrap {
+    bots: Bots,
+    clock: Clock,
+    id: Id,
+    lives: Lives,
+    map: Map,
+    name: Arc<ArcSwap<String>>,
+    path: Option<PathBuf>,
+    policy: Policy,
+    rng: ChaCha8Rng,
+    theme: Option<Theme>,
 }
 
-fn create_handle(world: &mut World, emit_events: bool) -> Handle {
-    let (tx, rx) = mpsc::channel(cfg::REQUEST_STREAM_CAPACITY);
+impl Bootstrap {
+    fn build(
+        self,
+        events: Events,
+        requests: mpsc::Receiver<Request>,
+        snapshots: Snapshots,
+    ) -> World {
+        let metronome = self.clock.metronome();
 
-    let events =
-        emit_events.then(|| broadcast::Sender::new(cfg::EVENT_STREAM_CAPACITY));
-
-    let snapshots = watch::Sender::default();
-
-    // ---
-
-    world.insert_resource(HandleRx(rx));
-
-    world.insert_resource(Snapshots {
-        tx: snapshots.clone(),
-    });
-
-    if let Some(events) = &events {
-        world.insert_resource(Events {
-            tx: events.clone(),
-            pending: Default::default(),
-        });
-    }
-
-    // ---
-
-    let id = world.resource::<WorldId>().0;
-    let name = world.resource::<WorldName>().0.clone();
-
-    Handle::new(SharedHandle {
-        tx,
-        id,
-        name,
-        events,
-        snapshots,
-    })
-}
-
-fn spawn(world: World) {
-    let rt = TokioHandle::current();
-    let id = world.resource::<WorldId>().0;
-    let span = info_span!("world", %id);
-
-    thread::spawn(move || {
-        let _rt = rt.enter();
-        let _span = span.enter();
-        let schedule = main_schedule();
-
-        main(world, schedule);
-    });
-}
-
-fn schedule<M>(systems: impl IntoSystemConfigs<M>) -> Schedule {
-    let mut schedule = Schedule::default();
-
-    schedule.set_executor_kind(ExecutorKind::SingleThreaded);
-    schedule.add_systems(systems.chain());
-    schedule
-}
-
-fn main_schedule() -> Schedule {
-    fn active(paused: Res<Paused>) -> bool {
-        !paused.get()
-    }
-
-    schedule((
-        handle::communicate,
-        bots::create,
-        bots::schedule_spawn.run_if(active),
-        bots::spawn,
-        bots::tick.run_if(active),
-        bots::kill,
-        lives::update,
-        stats::update,
-        events::track,
-        snapshots::send,
-        storage::save,
-        lifecycle::log,
-        clock::sleep,
-        bevy_ecs::event::event_update_system,
-    ))
-}
-
-fn main(mut world: World, mut schedule: Schedule) {
-    info!(name=?world.resource::<WorldName>().0.load(), "ready");
-
-    let shutdown = loop {
-        schedule.run(&mut world);
-
-        if let Some(shutdown) = world.remove_resource::<Shutdown>() {
-            break shutdown;
+        World {
+            bots: self.bots,
+            clock: self.clock,
+            events,
+            fuel: Default::default(),
+            id: self.id,
+            lives: self.lives,
+            map: self.map,
+            metronome,
+            name: self.name,
+            objects: Default::default(), // TODO persist
+            path: self.path,
+            paused: Default::default(),
+            policy: self.policy,
+            requests,
+            rng: self.rng,
+            shutdown: Default::default(),
+            snapshots,
+            spawn: Default::default(),
+            states: Default::default(),
+            stats: Default::default(),
+            theme: self.theme,
         }
-    };
+    }
+}
 
-    if let Some(tx) = shutdown.tx {
-        _ = tx.send(());
+#[cfg(test)]
+impl Default for Bootstrap {
+    fn default() -> Self {
+        Self {
+            bots: Default::default(),
+            clock: Default::default(),
+            id: Id::new(1),
+            lives: Default::default(),
+            map: Default::default(),
+            name: Default::default(),
+            path: Default::default(),
+            policy: Default::default(),
+            rng: ChaCha8Rng::from_seed(Default::default()),
+            theme: Default::default(),
+        }
+    }
+}
+
+#[derive(Default)]
+struct States {
+    map: AHashMap<TypeId, Box<dyn Any + Send>>,
+}
+
+impl States {
+    fn get_mut<T>(&mut self) -> &mut T
+    where
+        T: Any + Send + Default,
+    {
+        self.map
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(T::default()))
+            .downcast_mut()
+            .unwrap()
+    }
+}
+
+struct World {
+    bots: Bots,
+    clock: Clock,
+    events: Events,
+    fuel: Fuel,
+    id: Id,
+    lives: Lives,
+    map: Map,
+    metronome: Metronome,
+    name: Arc<ArcSwap<String>>,
+    objects: Objects, // TODO persist
+    path: Option<PathBuf>,
+    paused: bool,
+    policy: Policy,
+    requests: mpsc::Receiver<Request>,
+    rng: ChaCha8Rng,
+    shutdown: Option<Shutdown>,
+    snapshots: Snapshots,
+    spawn: Spawn,
+    states: States,
+    stats: Stats,
+    theme: Option<Theme>,
+}
+
+impl World {
+    fn tick(&mut self) -> ControlFlow<(), ()> {
+        handle::communicate(self);
+
+        if !self.paused {
+            bots::dequeue(self);
+            bots::tick(self);
+        }
+
+        stats::update(self);
+        snapshots::send(self);
+        storage::save(self);
+        lifecycle::log(self);
+
+        if let Some(shutdown) = self.shutdown.take() {
+            if let Some(tx) = shutdown.tx {
+                _ = tx.send(());
+            }
+
+            ControlFlow::Break(())
+        } else {
+            self.metronome.sleep(&self.clock);
+
+            ControlFlow::Continue(())
+        }
     }
 
-    info!(name=?world.resource::<WorldName>().0.load(), "shut down");
+    fn kill_bot(
+        &mut self,
+        killed: Box<AliveBot>,
+        reason: String,
+        killer: Option<BotId>,
+    ) {
+        self.bots.kill(
+            &self.clock,
+            &mut self.events,
+            &mut self.lives,
+            &self.policy,
+            killed,
+            reason,
+            killer,
+        );
+    }
+
+    fn cooldown(&mut self, base: u32) -> u32 {
+        #[cfg(test)]
+        let off = 0;
+
+        #[cfg(not(test))]
+        let off = base / 10;
+
+        let min = base - off;
+        let max = base + off;
+
+        self.rng.gen_range(min..=max)
+    }
+}
+
+#[cfg(test)]
+impl Default for World {
+    fn default() -> Self {
+        let events = Events {
+            tx: None,
+            pending: Default::default(),
+        };
+
+        let (_, requests) = mpsc::channel(1);
+
+        let snapshots = Snapshots {
+            tx: watch::channel(Default::default()).0,
+        };
+
+        Bootstrap::default().build(events, requests, snapshots)
+    }
 }

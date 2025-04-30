@@ -1,75 +1,56 @@
-use crate::{cfg, BotId, Clock, Event, Ticks};
-use ahash::AHashMap;
-use bevy_ecs::event::EventReader;
-use bevy_ecs::system::{Res, ResMut, Resource};
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use std::collections::{hash_map, VecDeque};
-use std::sync::Arc;
+use crate::*;
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Resource)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Lives {
     pub entries: AHashMap<BotId, Arc<BotLives>>,
 }
 
 impl Lives {
+    pub fn on_bot_born(&mut self, clock: &Clock, id: BotId) {
+        match self.entries.entry(id) {
+            hash_map::Entry::Occupied(entry) => {
+                Arc::make_mut(entry.into_mut()).curr.born_at = clock.now();
+            }
+
+            hash_map::Entry::Vacant(entry) => {
+                entry.insert(Arc::new(BotLives {
+                    curr: CurrBotLife {
+                        score: 0,
+                        born_at: clock.now(),
+                    },
+                    prev: Default::default(),
+                    len: 0,
+                }));
+            }
+        }
+    }
+
+    pub fn on_bot_scored(&mut self, id: BotId) {
+        self.entries
+            .get_mut(&id)
+            .map(Arc::make_mut)
+            .unwrap()
+            .on_bot_scored();
+    }
+
+    pub fn on_bot_died(&mut self, clock: &Clock, id: BotId, age: Ticks) {
+        self.entries
+            .get_mut(&id)
+            .map(Arc::make_mut)
+            .unwrap()
+            .on_bot_died(clock, age);
+    }
+
+    pub fn on_bot_discarded(&mut self, id: BotId) {
+        self.entries.remove(&id);
+    }
+
     pub fn curr_score(&self, id: BotId) -> u32 {
         self.entries
             .get(&id)
             .map(|life| life.curr.score)
             .unwrap_or_default()
-    }
-}
-
-pub fn update(
-    clock: Res<Clock>,
-    mut lives: ResMut<Lives>,
-    mut events: EventReader<Event>,
-) {
-    for event in events.read() {
-        match *event {
-            Event::BotBorn { id } => match lives.entries.entry(id) {
-                hash_map::Entry::Occupied(entry) => {
-                    Arc::make_mut(entry.into_mut()).curr.born_at = clock.now();
-                }
-
-                hash_map::Entry::Vacant(entry) => {
-                    entry.insert(Arc::new(BotLives {
-                        curr: CurrBotLife {
-                            score: 0,
-                            born_at: clock.now(),
-                        },
-                        prev: Default::default(),
-                        len: 0,
-                    }));
-                }
-            },
-
-            Event::BotScored { id } => {
-                lives
-                    .entries
-                    .get_mut(&id)
-                    .map(Arc::make_mut)
-                    .unwrap()
-                    .on_bot_scored();
-            }
-
-            Event::BotDied { id, age } => {
-                lives
-                    .entries
-                    .get_mut(&id)
-                    .map(Arc::make_mut)
-                    .unwrap()
-                    .on_bot_died(&clock, age);
-            }
-
-            Event::BotDiscarded { id } => {
-                lives.entries.remove(&id);
-            }
-
-            _ => (),
-        }
     }
 }
 

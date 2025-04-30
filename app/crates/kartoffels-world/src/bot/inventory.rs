@@ -1,6 +1,4 @@
-use crate::{Object, ObjectId};
-use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+use crate::*;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotInventory {

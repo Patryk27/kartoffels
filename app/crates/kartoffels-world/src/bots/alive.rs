@@ -1,8 +1,4 @@
-use crate::{AliveBot, BotId};
-use ahash::AHashMap;
-use anyhow::Result;
-use glam::IVec2;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use crate::*;
 
 /// Manages alive bots.
 ///
@@ -166,8 +162,11 @@ mod tests {
 
     fn bot(id: u64, pos: IVec2) -> AliveBot {
         AliveBot {
-            id: BotId::new(id),
-            pos,
+            body: AliveBotBody {
+                id: BotId::new(id),
+                pos,
+                ..Default::default()
+            },
             ..Default::default()
         }
     }

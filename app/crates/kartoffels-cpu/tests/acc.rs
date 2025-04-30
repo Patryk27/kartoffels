@@ -131,10 +131,6 @@ impl Mmio for &mut TestMmio {
 
         Ok(())
     }
-
-    fn is_atomic_allowed(&self, _: u32) -> bool {
-        false
-    }
 }
 
 struct TestExpectation {

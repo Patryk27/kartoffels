@@ -1,18 +1,8 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::{
-    BotId, Clock, Dir, EventLetter, EventStream, Map, Object, ObjectId,
-    Snapshot, SnapshotStream,
-};
-use anyhow::{anyhow, Context, Result};
-use arc_swap::{ArcSwap, Guard};
-use bevy_ecs::system::Resource;
-use derivative::Derivative;
-use glam::IVec2;
-use kartoffels_utils::Id;
-use std::sync::Arc;
-use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use crate::*;
+use arc_swap::Guard;
 
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
@@ -226,12 +216,9 @@ pub struct SharedHandle {
     pub tx: mpsc::Sender<Request>,
     pub id: Id,
     pub name: Arc<ArcSwap<String>>,
-    pub events: Option<broadcast::Sender<EventLetter>>,
+    pub events: Option<broadcast::Sender<EventEnvelope>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
-
-#[derive(Debug, Resource)]
-pub struct HandleRx(pub mpsc::Receiver<Request>);
 
 #[derive(Derivative)]
 #[derivative(Debug)]

@@ -1,17 +1,8 @@
 use crate::storage::Header;
-use crate::{
-    Bots, Lives, Map, Metronome, Policy, SerializedWorld, Shutdown, Theme,
-    WorldName, WorldPath, WorldRng,
-};
-use anyhow::Context;
-use bevy_ecs::system::{Local, Res};
-use maybe_owned::MaybeOwned;
+use crate::*;
 use std::thread::JoinHandle;
-use std::time::{Duration, Instant};
-use std::{fs, thread};
-use tracing::{debug, warn, Span};
 
-pub struct State {
+struct State {
     next_run_at: Instant,
     ongoing_save: Option<JoinHandle<()>>,
 }
@@ -25,24 +16,14 @@ impl Default for State {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn save(
-    mut state: Local<State>,
-    bots: Res<Bots>,
-    lives: Res<Lives>,
-    map: Res<Map>,
-    name: Res<WorldName>,
-    path: Option<Res<WorldPath>>,
-    policy: Res<Policy>,
-    rng: Res<WorldRng>,
-    shutdown: Option<Res<Shutdown>>,
-    theme: Option<Res<Theme>>,
-) {
-    let Some(path) = path else {
+pub fn save(world: &mut World) {
+    let Some(path) = &world.path else {
         return;
     };
 
-    if Instant::now() < state.next_run_at && shutdown.is_none() {
+    let state = world.states.get_mut::<State>();
+
+    if Instant::now() < state.next_run_at && world.shutdown.is_none() {
         return;
     }
 
@@ -68,14 +49,14 @@ pub fn save(
 
     // ---
 
-    let world = SerializedWorld {
-        bots: MaybeOwned::Borrowed(&bots),
-        map: MaybeOwned::Borrowed(&map),
-        name: MaybeOwned::Owned(name.0.load().to_string()),
-        policy: MaybeOwned::Borrowed(&policy),
-        rng: MaybeOwned::Borrowed(&rng.0),
-        lives: MaybeOwned::Borrowed(&lives),
-        theme: theme.as_ref().map(|theme| MaybeOwned::Borrowed(&**theme)),
+    let world_ser = SerializedWorld {
+        bots: MaybeOwned::Borrowed(&world.bots),
+        map: MaybeOwned::Borrowed(&world.map),
+        name: MaybeOwned::Owned(world.name.load().to_string()),
+        policy: MaybeOwned::Borrowed(&world.policy),
+        rng: MaybeOwned::Borrowed(&world.rng),
+        lives: MaybeOwned::Borrowed(&world.lives),
+        theme: world.theme.as_ref().map(MaybeOwned::Borrowed),
     };
 
     // Serializing directly into the file would be faster, but it also makes
@@ -88,14 +69,14 @@ pub fn save(
             .write(&mut buffer)
             .context("couldn't write header")?;
 
-        ciborium::into_writer(&world, &mut buffer)
+        ciborium::into_writer(&world_ser, &mut buffer)
             .context("couldn't write state")?;
 
         Ok(buffer)
     })
     .expect("couldn't save the world");
 
-    let path = path.0.clone();
+    let path = path.clone();
     let path_new = path.with_extension("world.new");
     let span = Span::current();
 
@@ -124,7 +105,7 @@ pub fn save(
 
     // ---
 
-    if shutdown.is_some() {
+    if world.shutdown.is_some() {
         handle.join().expect("saving-thread crashed");
     } else {
         state.ongoing_save = Some(handle);

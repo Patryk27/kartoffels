@@ -1,6 +1,4 @@
-use crate::Dir;
-use kartoffel::MEM_COMPASS;
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotCompass {
@@ -9,18 +7,18 @@ pub struct BotCompass {
 }
 
 impl BotCompass {
-    pub fn tick(&mut self, dir: Dir) {
-        if let Some(time) = self.next_measurement_in.checked_sub(1) {
-            self.next_measurement_in = time;
+    pub(super) fn tick(bot: &mut AliveBotBody) {
+        if let Some(time) = bot.compass.next_measurement_in.checked_sub(1) {
+            bot.compass.next_measurement_in = time;
         } else {
-            self.dir = Some(dir);
-            self.next_measurement_in = 128_000;
+            bot.compass.dir = Some(bot.dir);
+            bot.compass.next_measurement_in = 128_000;
         }
     }
 
-    pub fn mmio_load(&mut self, addr: u32) -> Result<u32, ()> {
+    pub(super) fn load(bot: &mut AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            MEM_COMPASS => Ok(match self.dir.take() {
+            api::MEM_COMPASS => Ok(match bot.compass.dir.take() {
                 None => 0,
                 Some(Dir::N) => 1,
                 Some(Dir::E) => 2,
@@ -39,44 +37,56 @@ mod tests {
 
     #[test]
     fn smoke() {
-        let mut target = BotCompass::default();
+        let mut bot = AliveBot::default();
 
-        target.tick(Dir::N);
+        BotCompass::tick(&mut bot);
 
-        assert_eq!(Ok(1), target.mmio_load(MEM_COMPASS));
-        assert_eq!(Ok(0), target.mmio_load(MEM_COMPASS));
-
-        // ---
-
-        for _ in 0..128_000 {
-            target.tick(Dir::N);
-        }
-
-        target.tick(Dir::E);
-
-        assert_eq!(Ok(2), target.mmio_load(MEM_COMPASS));
-        assert_eq!(Ok(0), target.mmio_load(MEM_COMPASS));
+        assert_eq!(Ok(1), bot.load(api::MEM_COMPASS));
+        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
 
         // ---
 
+        bot.dir = Dir::N;
+
         for _ in 0..128_000 {
-            target.tick(Dir::N);
+            BotCompass::tick(&mut bot);
         }
 
-        target.tick(Dir::S);
+        bot.dir = Dir::E;
 
-        assert_eq!(Ok(3), target.mmio_load(MEM_COMPASS));
-        assert_eq!(Ok(0), target.mmio_load(MEM_COMPASS));
+        BotCompass::tick(&mut bot);
+
+        assert_eq!(Ok(2), bot.load(api::MEM_COMPASS));
+        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
 
         // ---
 
+        bot.dir = Dir::N;
+
         for _ in 0..128_000 {
-            target.tick(Dir::N);
+            BotCompass::tick(&mut bot);
         }
 
-        target.tick(Dir::W);
+        bot.dir = Dir::S;
 
-        assert_eq!(Ok(4), target.mmio_load(MEM_COMPASS));
-        assert_eq!(Ok(0), target.mmio_load(MEM_COMPASS));
+        BotCompass::tick(&mut bot);
+
+        assert_eq!(Ok(3), bot.load(api::MEM_COMPASS));
+        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
+
+        // ---
+
+        bot.dir = Dir::N;
+
+        for _ in 0..128_000 {
+            BotCompass::tick(&mut bot);
+        }
+
+        bot.dir = Dir::W;
+
+        BotCompass::tick(&mut bot);
+
+        assert_eq!(Ok(4), bot.load(api::MEM_COMPASS));
+        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
     }
 }

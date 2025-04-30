@@ -1,11 +1,4 @@
-use super::{Map, Tile};
-use crate::{Dir, TileKind};
-use glam::{ivec2, IVec2, UVec2};
-use rand::seq::SliceRandom;
-use rand::{Rng, RngCore};
-use std::cmp;
-use std::ops::Deref;
-use tokio::sync::mpsc;
+use crate::*;
 
 #[derive(Debug)]
 pub struct MapBuilder {
@@ -179,7 +172,7 @@ impl MapBuilder {
     }
 }
 
-impl Deref for MapBuilder {
+impl ops::Deref for MapBuilder {
     type Target = Map;
 
     fn deref(&self) -> &Self::Target {

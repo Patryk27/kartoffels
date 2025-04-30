@@ -1,6 +1,5 @@
-use anyhow::{Context, Result};
+use crate::*;
 use std::error::Error;
-use std::str::FromStr;
 
 pub fn entries<'a>(
     spec: &'a str,

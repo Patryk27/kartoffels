@@ -1,8 +1,4 @@
-use crate::{BotMmioContext, TileKind};
-use glam::{ivec2, IVec2, IVec3};
-use kartoffel::MEM_RADAR;
-use serde::{Deserialize, Serialize};
-use std::ops::RangeInclusive;
+use crate::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotRadar {
@@ -21,39 +17,37 @@ impl BotRadar {
     const COOLDOWN_OPT_IDS: u32 = 8_000;
     const COOLDOWN_OPT_DIRS: u32 = 8_000;
 
-    pub fn tick(&mut self) {
-        self.cooldown = self.cooldown.saturating_sub(1);
+    pub(super) fn tick(bot: &mut AliveBotBody) {
+        bot.radar.cooldown = bot.radar.cooldown.saturating_sub(1);
     }
 
-    pub fn mmio_load(&self, addr: u32) -> Result<u32, ()> {
+    pub(super) fn load(bot: &AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            MEM_RADAR => Ok((self.cooldown == 0) as u32),
+            api::MEM_RADAR => Ok((bot.radar.cooldown == 0) as u32),
 
-            _ => self
+            const { api::MEM_RADAR + 4 }..api::MEM_COMPASS => bot
+                .radar
                 .memory
-                .get((addr - MEM_RADAR - 4) as usize / 4)
+                .get((addr - api::MEM_RADAR - 4) as usize / 4)
                 .copied()
                 .ok_or(()),
+
+            _ => Err(()),
         }
     }
 
-    pub fn mmio_store(
-        &mut self,
-        ctxt: &mut BotMmioContext,
+    pub(super) fn store(
+        bot: &mut AliveBotBody,
+        world: &mut World,
         addr: u32,
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (MEM_RADAR, [0x01, range, opts, addr])
+            (api::MEM_RADAR, [0x01, range, opts, addr])
                 if let (Some(range), Some(addr)) =
                     (BotRadarRange::new(range), BotRadarAddr::new(addr)) =>
             {
-                if self.cooldown == 0 {
-                    let opts = BotRadarOpts::new(opts);
-
-                    self.scan(ctxt, range, opts, addr);
-                }
-
+                Self::do_scan(bot, world, range, BotRadarOpts::new(opts), addr);
                 Ok(())
             }
 
@@ -61,37 +55,36 @@ impl BotRadar {
         }
     }
 
-    fn scan(
-        &mut self,
-        ctxt: &mut BotMmioContext,
+    fn do_scan(
+        bot: &mut AliveBotBody,
+        world: &mut World,
         range: BotRadarRange,
         opts: BotRadarOpts,
         addr: BotRadarAddr,
     ) {
-        for off in range.iter_2d() {
-            let pos = ctxt.pos + ctxt.dir.as_vec().rotate(off.perp());
-            let [z0, z1, z2] = self.scan_one(ctxt, opts, pos);
-
-            self.memory[addr.idx(range, off.extend(0))] = z0;
-            self.memory[addr.idx(range, off.extend(1))] = z1;
-            self.memory[addr.idx(range, off.extend(2))] = z2;
+        if bot.radar.cooldown > 0 {
+            return;
         }
 
-        self.cooldown = ctxt.cooldown(Self::cooldown(range, opts));
+        for off in range.iter_2d() {
+            let pos = bot.pos + bot.dir.as_vec().rotate(off.perp());
+            let [z0, z1, z2] = Self::scan_one(world, opts, pos);
+
+            bot.radar.memory[addr.idx(range, off.extend(0))] = z0;
+            bot.radar.memory[addr.idx(range, off.extend(1))] = z1;
+            bot.radar.memory[addr.idx(range, off.extend(2))] = z2;
+        }
+
+        bot.radar.cooldown = world.cooldown(Self::cooldown(range, opts));
     }
 
-    fn scan_one(
-        &mut self,
-        ctxt: &mut BotMmioContext,
-        opts: BotRadarOpts,
-        pos: IVec2,
-    ) -> [u32; 3] {
+    fn scan_one(world: &World, opts: BotRadarOpts, pos: IVec2) -> [u32; 3] {
         if opts.bots
-            && let Some(id) = ctxt.bots.lookup_at(pos)
+            && let Some(id) = world.bots.alive.lookup_at(pos)
         {
             let z0 = {
                 let dir = if opts.dirs
-                    && let Some(bot) = ctxt.bots.get(id)
+                    && let Some(bot) = world.bots.alive.get(id)
                 {
                     bot.dir.as_caret() as u8
                 } else {
@@ -113,8 +106,8 @@ impl BotRadar {
         }
 
         if opts.objs
-            && let Some(id) = ctxt.objects.lookup_at(pos)
-            && let Some(obj) = ctxt.objects.get(id)
+            && let Some(id) = world.objects.lookup_at(pos)
+            && let Some(obj) = world.objects.get(id)
         {
             let z0 = u32::from_le_bytes([obj.kind, 0, 0, 0]);
 
@@ -130,7 +123,7 @@ impl BotRadar {
         }
 
         if opts.tiles {
-            return [ctxt.map.get(pos).kind as u32, 0, 0];
+            return [world.map.get(pos).kind as u32, 0, 0];
         }
 
         [0, 0, 0]
@@ -230,11 +223,11 @@ impl BotRadarOpts {
             }
         } else {
             Self {
-                tiles: (opts & kartoffel::RADAR_SCAN_TILES) > 0,
-                bots: (opts & kartoffel::RADAR_SCAN_BOTS) > 0,
-                objs: (opts & kartoffel::RADAR_SCAN_OBJS) > 0,
-                ids: (opts & kartoffel::RADAR_SCAN_IDS) > 0,
-                dirs: (opts & kartoffel::RADAR_SCAN_DIRS) > 0,
+                tiles: (opts & api::RADAR_SCAN_TILES) > 0,
+                bots: (opts & api::RADAR_SCAN_BOTS) > 0,
+                objs: (opts & api::RADAR_SCAN_OBJS) > 0,
+                ids: (opts & api::RADAR_SCAN_IDS) > 0,
+                dirs: (opts & api::RADAR_SCAN_DIRS) > 0,
             }
         }
     }
@@ -265,7 +258,7 @@ impl BotRadarAddr {
             }
 
             BotRadarAddr::Szudzik => {
-                kartoffel::radar_idx(off.x, off.y, off.z) as usize
+                api::radar_idx(off.x, off.y, off.z) as usize
             }
         }
     }
@@ -274,16 +267,9 @@ impl BotRadarAddr {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        AliveBot, AliveBots, BotId, Dir, Map, Object, ObjectId, ObjectKind,
-        Objects,
-    };
-    use glam::{ivec3, uvec2};
+    use glam::ivec3;
     use indoc::indoc;
-    use itertools::Itertools;
     use kartoffels_utils::Id;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
     use test_case::test_case;
 
     struct TestCase {
@@ -453,7 +439,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_TILES,
+        opts: api::RADAR_SCAN_TILES,
         expected_map: indoc! {"
             . . .
             . . .
@@ -469,7 +455,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_BOTS,
+        opts: api::RADAR_SCAN_BOTS,
         expected_map: indoc! {"
             \0 \0 \0
             \0 @ \0
@@ -484,7 +470,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_IDS,
+        opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
             \0 \0 \0
             \0 @ \0
@@ -501,7 +487,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_DIRS,
+        opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_DIRS,
         expected_map: indoc! {"
             \0 \0 \0
             \0 @ \0
@@ -518,7 +504,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_OBJS,
+        opts: api::RADAR_SCAN_OBJS,
         expected_map: indoc! {"
             \0 = \0
             \0 \0 \0
@@ -533,7 +519,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_OBJS | kartoffel::RADAR_SCAN_IDS,
+        opts: api::RADAR_SCAN_OBJS | api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
             \0 = \0
             \0 \0 \0
@@ -550,7 +536,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_BOTS | kartoffel::RADAR_SCAN_OBJS,
+        opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_OBJS,
         expected_map: indoc! {"
             \0 = \0
             \0 @ \0
@@ -570,7 +556,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_IDS,
+        opts: api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
             \0 \0 \0
             \0 \0 \0
@@ -588,7 +574,7 @@ mod tests {
         pos: ivec2(3, 2),
         dir: Dir::N,
         range: 3,
-        opts: kartoffel::RADAR_SCAN_DIRS,
+        opts: api::RADAR_SCAN_DIRS,
         expected_map: indoc! {"
             \0 \0 \0
             \0 \0 \0
@@ -616,62 +602,46 @@ mod tests {
     #[test_case(TEST_OPTS_BOTS_AND_OBJS)]
     #[test_case(TEST_OPTS_IDS)]
     #[test_case(TEST_OPTS_DIRS)]
-    fn test(mut case: TestCase) {
-        let map = {
-            let mut map = Map::new(uvec2(7, 7));
+    fn test(case: TestCase) {
+        let mut world = World::default();
 
-            map.rect(ivec2(0, 0), ivec2(6, 6), TileKind::FLOOR);
-            map
-        };
-
-        let objects = {
-            let mut objects = Objects::default();
-
-            objects.add(
-                ObjectId::new(0xcafebabe),
-                Object::new(ObjectKind::FLAG),
-                Some(ivec2(3, 1)),
-            );
-
-            objects
-        };
-
-        let bots = {
-            let mut bots = AliveBots::default();
-
-            bots.add(AliveBot {
+        world.bots.alive.add(AliveBot {
+            body: AliveBotBody {
                 id: BotId::new(0xcafed00d),
                 pos: ivec2(3, 2),
                 dir: Dir::E,
                 ..Default::default()
-            });
+            },
+            ..Default::default()
+        });
 
-            bots
-        };
+        world.map = Map::new(uvec2(7, 7));
+        world.map.rect(ivec2(0, 0), ivec2(6, 6), TileKind::FLOOR);
 
-        let mut radar = BotRadar::default();
-        let mut rng = ChaCha8Rng::from_seed(Default::default());
+        world.objects.add(
+            ObjectId::new(0xcafebabe),
+            Object::new(ObjectKind::FLAG),
+            Some(ivec2(3, 1)),
+        );
 
-        let mut ctxt = BotMmioContext {
-            action: &mut None,
-            bots: &bots,
-            dir: &mut case.dir,
-            map: &map,
-            objects: &objects,
+        // ---
+
+        let mut bot = AliveBotBody {
             pos: case.pos,
-            rng: &mut rng,
+            dir: case.dir,
+            ..Default::default()
         };
 
         for addr in [0x00, 0x01] {
-            radar.cooldown = 0;
+            bot.radar.cooldown = 0;
 
-            radar
-                .mmio_store(
-                    &mut ctxt,
-                    MEM_RADAR,
-                    u32::from_le_bytes([0x01, case.range, case.opts, addr]),
-                )
-                .unwrap();
+            BotRadar::store(
+                &mut bot,
+                &mut world,
+                api::MEM_RADAR,
+                u32::from_le_bytes([0x01, case.range, case.opts, addr]),
+            )
+            .unwrap();
 
             let addr = BotRadarAddr::new(addr).unwrap();
             let range = BotRadarRange::new(case.range).unwrap();
@@ -681,32 +651,36 @@ mod tests {
 
             assert_eq!(
                 case.expected_map.trim(),
-                radar.read_map(range, addr).trim()
+                BotRadar::read_map(&bot, range, addr).trim()
             );
 
             assert_eq!(
                 case.expected_ids,
-                radar.read_ids(range, addr).collect::<Vec<_>>()
+                BotRadar::read_ids(&bot, range, addr).collect::<Vec<_>>()
             );
 
             assert_eq!(
                 case.expected_dirs,
-                radar.read_dirs(range, addr).collect::<Vec<_>>()
+                BotRadar::read_dirs(&bot, range, addr).collect::<Vec<_>>()
             );
 
-            assert_eq!(case.expected_cooldown, radar.cooldown);
+            assert_eq!(case.expected_cooldown, bot.radar.cooldown);
         }
     }
 
     impl BotRadar {
-        fn read_map(&self, range: BotRadarRange, addr: BotRadarAddr) -> String {
+        fn read_map(
+            bot: &AliveBotBody,
+            range: BotRadarRange,
+            addr: BotRadarAddr,
+        ) -> String {
             range
                 .iter_1d()
                 .map(|y| {
                     range
                         .iter_1d()
                         .map(|x| {
-                            self.mmio_load(addr.addr(range, ivec3(x, y, 0)))
+                            BotRadar::load(bot, addr.get(range, ivec3(x, y, 0)))
                                 .unwrap()
                         })
                         .map(|ch| ch as u8 as char)
@@ -716,18 +690,16 @@ mod tests {
         }
 
         fn read_ids(
-            &self,
+            bot: &AliveBotBody,
             range: BotRadarRange,
             addr: BotRadarAddr,
         ) -> impl Iterator<Item = (IVec2, Id)> + '_ {
             range.iter_2d().filter_map(move |off| {
-                let hi = self
-                    .mmio_load(addr.addr(range, off.extend(1)))
-                    .unwrap() as u64;
+                let hi = addr.get(range, off.extend(1));
+                let lo = addr.get(range, off.extend(2));
 
-                let lo = self
-                    .mmio_load(addr.addr(range, off.extend(2)))
-                    .unwrap() as u64;
+                let hi = BotRadar::load(bot, hi).unwrap() as u64;
+                let lo = BotRadar::load(bot, lo).unwrap() as u64;
 
                 let id = Id::try_new((hi << 32) | lo)?;
 
@@ -736,13 +708,12 @@ mod tests {
         }
 
         fn read_dirs(
-            &self,
+            bot: &AliveBotBody,
             range: BotRadarRange,
             addr: BotRadarAddr,
         ) -> impl Iterator<Item = (IVec2, char)> + '_ {
             range.iter_2d().filter_map(move |off| {
-                let dir = self
-                    .mmio_load(addr.addr(range, off.extend(0)))
+                let dir = BotRadar::load(bot, addr.get(range, off.extend(0)))
                     .unwrap()
                     .to_le_bytes()[1];
 
@@ -756,8 +727,8 @@ mod tests {
     }
 
     impl BotRadarAddr {
-        fn addr(&self, range: BotRadarRange, off: IVec3) -> u32 {
-            MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
+        fn get(&self, range: BotRadarRange, off: IVec3) -> u32 {
+            api::MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
         }
     }
 }

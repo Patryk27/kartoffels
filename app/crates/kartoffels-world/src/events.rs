@@ -1,32 +1,38 @@
 mod stream;
-mod systems;
 
 pub use self::stream::*;
-pub use self::systems::*;
-use crate::{BotId, ObjectId, Ticks};
-use bevy_ecs::event::Event as BevyEvent;
-use bevy_ecs::system::Resource;
-use glam::IVec2;
-use tokio::sync::broadcast;
+use crate::*;
 
-#[derive(Debug, Resource)]
+#[derive(Debug)]
 pub struct Events {
-    pub tx: broadcast::Sender<EventLetter>,
+    pub tx: Option<broadcast::Sender<EventEnvelope>>,
     pub pending: Vec<Event>,
 }
 
 impl Events {
+    pub fn add(&mut self, event: Event) {
+        if self.tx.is_none() {
+            return;
+        }
+
+        self.pending.push(event);
+    }
+
     pub fn send(&mut self, version: u64) {
+        let Some(tx) = &mut self.tx else {
+            return;
+        };
+
         for event in self.pending.drain(..) {
-            _ = self.tx.send(EventLetter { event, version });
+            _ = tx.send(EventEnvelope { event, version });
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, BevyEvent)]
+#[derive(Clone, Copy, Debug)]
 pub enum Event {
     BotBorn { id: BotId },
-    BotDied { id: BotId, age: Ticks },
+    BotDied { id: BotId },
     BotMoved { id: BotId, at: IVec2 },
     BotScored { id: BotId },
     BotDiscarded { id: BotId },
@@ -35,7 +41,7 @@ pub enum Event {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct EventLetter {
+pub struct EventEnvelope {
     pub event: Event,
     pub version: u64,
 }

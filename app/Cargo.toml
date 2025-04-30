@@ -27,7 +27,6 @@ arc-swap = "1.7.1"
 avt = "0.14.0"
 axum = { version = "0.7.5", features = ["macros", "ws"] }
 base64 = "0.22.1"
-bevy_ecs = "0.15.1"
 chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 clap = { version = "4.5.4", features = ["derive"] }

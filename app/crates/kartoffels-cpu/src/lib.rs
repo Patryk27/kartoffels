@@ -460,13 +460,13 @@ impl Cpu {
                 match funct5 {
                     0b00000 => op! {
                         fn amoaddw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Add)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Add)?;
                         }
                     },
 
                     0b00001 => op! {
                         fn amoswapw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Swap)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Swap)?;
                         }
                     },
 
@@ -491,43 +491,43 @@ impl Cpu {
 
                     0b00100 => op! {
                         fn amoxorw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Xor)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Xor)?;
                         }
                     },
 
                     0b01100 => op! {
                         fn amoandw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::And)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::And)?;
                         }
                     },
 
                     0b01000 => op! {
                         fn amoorw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Or)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Or)?;
                         }
                     },
 
                     0b10000 => op! {
                         fn amominw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Min)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Min)?;
                         }
                     },
 
                     0b10100 => op! {
                         fn amomaxw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::Max)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::Max)?;
                         }
                     },
 
                     0b11000 => op! {
                         fn amominuw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::MinU)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::MinU)?;
                         }
                     },
 
                     0b11100 => op! {
                         fn amomaxuw(rd, rs1, rs2) {
-                            self.tick_atomic(Some(mmio), rd, rs1, rs2, Atomic::MaxU)?;
+                            self.tick_atomic(rd, rs1, rs2, Atomic::MaxU)?;
                         }
                     },
 
@@ -637,23 +637,15 @@ impl Cpu {
     }
 
     #[inline(always)]
-    fn tick_atomic<M>(
+    fn tick_atomic(
         &mut self,
-        mmio: Option<M>,
         rd: usize,
         rs1: usize,
         rs2: usize,
         op: Atomic,
-    ) -> TickResult<()>
-    where
-        M: Mmio,
-    {
-        let prev = self.mem_atomic(
-            mmio,
-            self.regs[rs1] as u32,
-            self.regs[rs2] as u32,
-            op,
-        )?;
+    ) -> TickResult<()> {
+        let prev =
+            self.mem_atomic(self.regs[rs1] as u32, self.regs[rs2] as u32, op)?;
 
         self.reg_store(rd, prev as i32);
 
@@ -703,32 +695,21 @@ impl Cpu {
     }
 
     #[inline(always)]
-    fn mem_atomic<M>(
+    fn mem_atomic(
         &mut self,
-        mmio: Option<M>,
         addr: u32,
         rhs: u32,
         op: Atomic,
-    ) -> TickResult<u32>
-    where
-        M: Mmio,
-    {
+    ) -> TickResult<u32> {
         let size = 4;
 
-        let mut mmio = match Region::new(addr, size)? {
-            Region::Mmio => Some(
-                mmio.filter(|mmio| mmio.is_atomic_allowed(addr))
-                    .ok_or(TickError::InvalidAccess { addr, size })?,
-            ),
-
-            Region::Ram => None,
-        };
-
-        let lhs = match &mut mmio {
-            Some(mmio) => mmio.load(addr),
-            None => self.ram_load(addr, size),
+        if let Region::Mmio = Region::new(addr, size)? {
+            return Err(TickError::InvalidAccess { addr, size });
         }
-        .map_err(|_| TickError::InvalidAccess { addr, size })?;
+
+        let lhs = self
+            .ram_load(addr, size)
+            .map_err(|_| TickError::InvalidAccess { addr, size })?;
 
         let value = match op {
             Atomic::Add => lhs.wrapping_add(rhs),
@@ -742,13 +723,8 @@ impl Cpu {
             Atomic::MaxU => lhs.max(rhs),
         };
 
-        if let Some(mut mmio) = mmio {
-            mmio.store(addr, value)
-                .map_err(|_| TickError::InvalidAccess { addr, size })?;
-        } else {
-            self.ram_store(addr, size, value)
-                .map_err(|_| TickError::InvalidAccess { addr, size })?;
-        }
+        self.ram_store(addr, size, value)
+            .map_err(|_| TickError::InvalidAccess { addr, size })?;
 
         Ok(lhs)
     }
@@ -848,7 +824,6 @@ enum Atomic {
 pub trait Mmio {
     fn load(&mut self, addr: u32) -> Result<u32, ()>;
     fn store(&mut self, addr: u32, value: u32) -> Result<(), ()>;
-    fn is_atomic_allowed(&self, addr: u32) -> bool;
 }
 
 impl Mmio for () {
@@ -858,9 +833,5 @@ impl Mmio for () {
 
     fn store(&mut self, _: u32, _: u32) -> Result<(), ()> {
         Err(())
-    }
-
-    fn is_atomic_allowed(&self, _: u32) -> bool {
-        false
     }
 }
