@@ -1,6 +1,27 @@
 //! # kartoffel
 //!
-//! This crate provides building blocks for implementing a kartoffel bot:
+//! Building blocks for a kartoffel bot:
+//!
+//! ```no_run
+//! #![no_std]
+//! #![no_main]
+//! #
+//! # extern crate std;
+//!
+//! use kartoffel::*;
+//!
+//! #[no_mangle]
+//! fn main() {
+//!     loop {
+//!         println!("stepping forward!");
+//!
+//!         motor_wait();
+//!         motor_step_fw();
+//!     }
+//! }
+//! ```
+//!
+//! ## Getting started
 //!
 //! - <https://github.com/patryk27/kartoffel>
 //! - <https://github.com/patryk27/kartoffels>
