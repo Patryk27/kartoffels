@@ -23,7 +23,7 @@ impl AliveBots {
     /// This function panics if adding this bot would exceed the maximum limit
     /// of `u8::MAX` alive bots. Normally this shouldn't happen, because policy
     /// doesn't allow to specify more than 255 bots anyway.
-    pub fn add(&mut self, bot: AliveBot) {
+    pub fn add(&mut self, bot: Box<AliveBot>) {
         for (idx, slot) in self.entries.iter_mut().enumerate() {
             let idx = idx as u8;
 
@@ -32,7 +32,7 @@ impl AliveBots {
                 self.pos_to_id.insert(bot.pos, bot.id);
                 self.count += 1;
 
-                *slot = Some(Box::new(bot));
+                *slot = Some(bot);
                 return;
             }
         }
@@ -42,7 +42,7 @@ impl AliveBots {
 
         self.id_to_idx.insert(bot.id, idx);
         self.pos_to_id.insert(bot.pos, bot.id);
-        self.entries.push(Some(Box::new(bot)));
+        self.entries.push(Some(bot));
         self.count += 1;
     }
 
@@ -145,7 +145,7 @@ impl<'de> Deserialize<'de> for AliveBots {
         D: Deserializer<'de>,
     {
         let mut this = Self::default();
-        let bots = Vec::<AliveBot>::deserialize(deserializer)?;
+        let bots = Vec::deserialize(deserializer)?;
 
         for bot in bots {
             this.add(bot);
@@ -160,15 +160,15 @@ mod tests {
     use super::*;
     use glam::ivec2;
 
-    fn bot(id: u64, pos: IVec2) -> AliveBot {
-        AliveBot {
+    fn bot(id: u64, pos: IVec2) -> Box<AliveBot> {
+        Box::new(AliveBot {
             body: AliveBotBody {
                 id: BotId::new(id),
                 pos,
                 ..Default::default()
             },
             ..Default::default()
-        }
+        })
     }
 
     #[test]

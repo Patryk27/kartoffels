@@ -606,7 +606,7 @@ mod tests {
     fn test(case: TestCase) {
         let mut world = World::default();
 
-        world.bots.alive.add(AliveBot {
+        world.bots.alive.add(Box::new(AliveBot {
             body: AliveBotBody {
                 id: BotId::new(0xcafed00d),
                 pos: ivec2(3, 2),
@@ -614,7 +614,7 @@ mod tests {
                 ..Default::default()
             },
             ..Default::default()
-        });
+        }));
 
         world.map = Map::new(uvec2(7, 7));
         world.map.rect(ivec2(0, 0), ivec2(6, 6), TileKind::FLOOR);

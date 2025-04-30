@@ -109,7 +109,7 @@ impl Bots {
             return Err((anyhow!("couldn't determine spawn point"), bot));
         };
 
-        let bot = AliveBot::new(rng, clock, pos, dir, *bot);
+        let bot = Box::new(AliveBot::new(rng, clock, pos, dir, *bot));
         let id = bot.id;
 
         trace!(?id, ?pos, ?dir, "spawning bot");
