@@ -40,6 +40,7 @@ impl Cpu {
         &self.regs
     }
 
+    #[inline(always)]
     pub fn tick(&mut self, mmio: impl Mmio) -> TickResult<()> {
         let word = self.mem_load::<()>(None, self.pc, 4)? as u32;
 
