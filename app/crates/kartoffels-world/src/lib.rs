@@ -187,8 +187,9 @@ fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
         snapshots,
     });
 
+    let span = info_span!("world", id = %world.id);
+
     thread::spawn(move || {
-        let span = info_span!("world", id = %world.id);
         let _span = span.entered();
 
         info!(name=?world.name.load(), "ready");
