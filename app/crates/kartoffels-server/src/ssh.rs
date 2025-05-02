@@ -5,22 +5,22 @@ mod server;
 use self::channel::*;
 use self::client::*;
 use self::server::*;
-use anyhow::{anyhow, Context, Result};
-use ed25519_dalek::SigningKey;
+use anyhow::{Context, Result};
 use itertools::Either;
 use kartoffels_store::Store;
 use rand::rngs::OsRng;
 use russh::keys::ssh_key::private::{Ed25519PrivateKey, KeypairData};
-use russh::keys::PrivateKey;
+use russh::keys::{Algorithm, PrivateKey};
 use russh::server::{Config, Server as _};
 use russh::{compression, Preferred};
 use std::borrow::Cow;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::{fs, select, time};
 use tokio_util::sync::CancellationToken;
-use tracing::info;
+use tracing::{info, instrument};
 
 pub async fn start(
     socket: TcpListener,
@@ -29,7 +29,7 @@ pub async fn start(
 ) -> Result<()> {
     info!(addr = ?socket.local_addr()?, "starting ssh server");
 
-    let key = load_key(&store).await?;
+    let key = load_key(&store.dir().join("ssh.key")).await?;
 
     let config = Arc::new(Config {
         inactivity_timeout: Some(Duration::from_secs(3600)),
@@ -72,30 +72,44 @@ pub async fn start(
     }
 }
 
-async fn load_key(store: &Store) -> Result<PrivateKey> {
-    let path = store.dir().join("ssh.key");
-
+#[instrument]
+async fn load_key(path: &Path) -> Result<PrivateKey> {
     if !path.exists() {
-        info!(?path, "generating server key");
+        info!("generating server key");
 
-        let key = SigningKey::generate(&mut OsRng {}).to_bytes();
+        let key = PrivateKey::random(&mut OsRng {}, Algorithm::Ed25519)
+            .context("couldn't generate server key")?
+            .to_bytes()
+            .context("couldn't generate server key")?;
 
-        fs::write(&path, key).await.with_context(|| {
-            format!("couldn't write server key to `{}`", path.display())
-        })?;
+        fs::write(&path, key)
+            .await
+            .context("couldn't write server key")?;
     }
 
-    info!(?path, "loading server key");
+    info!("loading server key");
 
-    let key = fs::read(&path).await.with_context(|| {
-        format!("couldn't load server key from `{}`", path.display())
-    })?;
+    let key = fs::read(&path).await.context("couldn't read server key")?;
 
-    let key = key.try_into().map_err(|_| {
-        anyhow!("couldn't parse server key from `{}`", path.display())
-    })?;
+    // TODO remove after kartoffels v0.9
+    let key = if let Ok(key) = key.as_slice().try_into() {
+        info!("converting server key to new format");
 
-    let key = Ed25519PrivateKey::from_bytes(&key);
+        let key = Ed25519PrivateKey::from_bytes(&key);
 
-    Ok(PrivateKey::new(KeypairData::Ed25519(key.into()), "")?)
+        let key = PrivateKey::new(KeypairData::Ed25519(key.into()), "")
+            .context("couldn't convert server key")?;
+
+        let key = key.to_bytes().context("couldn't convert server key")?;
+
+        fs::write(&path, key)
+            .await
+            .context("couldn't write server key")?;
+
+        fs::read(&path).await.context("couldn't read server key")?
+    } else {
+        key
+    };
+
+    PrivateKey::from_bytes(&key).context("couldn't parse server key")
 }
