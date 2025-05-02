@@ -12,7 +12,7 @@ use rand::rngs::OsRng;
 use russh::keys::ssh_key::private::{Ed25519PrivateKey, KeypairData};
 use russh::keys::{Algorithm, PrivateKey};
 use russh::server::{Config, Server as _};
-use russh::{compression, Preferred};
+use russh::{compression, Preferred, SshId};
 use std::borrow::Cow;
 use std::path::Path;
 use std::sync::Arc;
@@ -32,6 +32,10 @@ pub async fn start(
     let key = load_key(&store.dir().join("ssh.key")).await?;
 
     let config = Arc::new(Config {
+        server_id: SshId::Standard(format!(
+            "SSH-2.0-kartoffels_{}",
+            env!("CARGO_PKG_VERSION")
+        )),
         inactivity_timeout: Some(Duration::from_secs(3600)),
         auth_rejection_time: Duration::from_secs(3),
         auth_rejection_time_initial: Some(Duration::from_secs(0)),
