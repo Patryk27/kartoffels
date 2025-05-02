@@ -46,8 +46,8 @@ where
     CtrlFut: Future<Output = Result<()>>,
 {
     let (tx, rx) = GameCtrl::new();
-    let view = Box::pin(run_once(store, sess, frame, rx));
-    let ctrl = Box::pin(ctrl(tx));
+    let view = run_once(store, sess, frame, rx);
+    let ctrl = ctrl(tx);
 
     select! {
         result = view => result,

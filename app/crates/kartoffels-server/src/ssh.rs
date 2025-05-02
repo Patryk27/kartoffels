@@ -15,7 +15,6 @@ use russh::keys::PrivateKey;
 use russh::server::{Config, Server as _};
 use russh::{compression, Preferred};
 use std::borrow::Cow;
-use std::pin::pin;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpListener;
@@ -54,14 +53,9 @@ pub async fn start(
     let server = server.run_on_socket(config, &socket);
     let shutdown = shutdown.cancelled();
 
-    let result = {
-        let mut server = pin!(server);
-        let mut shutdown = pin!(shutdown);
-
-        select! {
-            result = &mut server => Either::Left(result),
-            _ = &mut shutdown => Either::Right(()),
-        }
+    let result = select! {
+        result = server => Either::Left(result),
+        _ = shutdown => Either::Right(()),
     };
 
     match result {
