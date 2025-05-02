@@ -63,12 +63,12 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
         let dummies = setup_map(ctxt).await?;
         let player = ctxt.events.next_born_bot().await?;
 
-        ctxt.game.set_status(Some("watching".into())).await?;
+        ctxt.game.set_label(Some("watching".into())).await?;
 
         let result = wait(ctxt, dummies, player).await?;
 
         ctxt.sync().await?;
-        ctxt.game.set_status(None).await?;
+        ctxt.game.set_label(None).await?;
 
         match result {
             ControlFlow::Continue(_) => {

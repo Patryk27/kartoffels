@@ -58,7 +58,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     init(store, theme, &game).await?;
 
     game.set_config(CONFIG).await?;
-    game.set_status(None).await?;
+    game.set_label(None).await?;
 
     future::pending().await
 }
@@ -66,7 +66,7 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
 async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
-    game.set_status(Some("building".into())).await?;
+    game.set_label(Some("building".into())).await?;
 
     let world = store.create_private_world(WorldConfig {
         name: "sandbox".into(),

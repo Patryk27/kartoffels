@@ -97,8 +97,8 @@ impl GameCtrl {
         Ok(())
     }
 
-    pub async fn set_status(&self, status: Option<String>) -> Result<()> {
-        self.send(GameCtrlEvent::SetStatus(status)).await?;
+    pub async fn set_label(&self, label: Option<String>) -> Result<()> {
+        self.send(GameCtrlEvent::SetLabel(label)).await?;
 
         Ok(())
     }
@@ -158,7 +158,7 @@ pub(super) enum GameCtrlEvent {
     SetConfig(Config),
     SetModal(Option<Box<dyn FnMut(&mut Ui<()>) + Send>>),
     SetHelp(Option<HelpMsgRef>),
-    SetStatus(Option<String>),
+    SetLabel(Option<String>),
     Copy(String),
     GetWorldVersion(oneshot::Sender<u64>),
     WaitForRestart(oneshot::Sender<()>),
@@ -201,8 +201,8 @@ impl GameCtrlEvent {
                 state.help = help;
             }
 
-            GameCtrlEvent::SetStatus(status) => {
-                state.status = status.map(|status| (status, Instant::now()));
+            GameCtrlEvent::SetLabel(label) => {
+                state.label = label.map(|status| (status, Instant::now()));
             }
 
             GameCtrlEvent::Copy(payload) => {

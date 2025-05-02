@@ -125,7 +125,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, IVec2)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG).await?;
-    game.set_status(Some("building".into())).await?;
+    game.set_label(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
         policy: Policy {
@@ -204,7 +204,7 @@ async fn watch(
     let mut events = world.events()?;
 
     game.sync(world.version()).await?;
-    game.set_status(None).await?;
+    game.set_label(None).await?;
     events.sync(world.version()).await?;
 
     let player = events.next_born_bot().await?;

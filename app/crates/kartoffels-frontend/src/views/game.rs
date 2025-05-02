@@ -113,7 +113,7 @@ struct State {
     restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
-    status: Option<(String, Instant)>,
+    label: Option<(String, Instant)>,
 }
 
 impl State {

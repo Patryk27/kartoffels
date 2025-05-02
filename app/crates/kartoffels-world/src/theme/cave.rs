@@ -19,7 +19,7 @@ impl CaveTheme {
             let mut idx = 0;
 
             loop {
-                map.set_status(format!("evaluating-subseed:{idx}"));
+                map.set_label(format!("evaluating-subseed:{idx}"));
                 map.notify().await;
 
                 idx += 1;
@@ -29,7 +29,7 @@ impl CaveTheme {
                 let sample_rng = ChaCha8Rng::from_seed(rng.gen());
 
                 let sample_map = self
-                    .build_once(&mut sample_rng.clone(), MapBuilder::detached())
+                    .build_ex(&mut sample_rng.clone(), MapBuilder::detached())
                     .await;
 
                 if self.is_good_enough(&sample_map) {
@@ -38,10 +38,10 @@ impl CaveTheme {
             }
         };
 
-        Ok(self.build_once(&mut rng, map).await)
+        Ok(self.build_ex(&mut rng, map).await)
     }
 
-    async fn build_once(
+    async fn build_ex(
         &self,
         rng: &mut impl RngCore,
         mut map: MapBuilder,
@@ -50,7 +50,7 @@ impl CaveTheme {
 
         self.rand_pass(rng, &mut map).await;
 
-        for idx in 0..5 {
+        for idx in 0..2 {
             self.smooth_pass(rng, &mut map, idx).await;
         }
 
@@ -60,8 +60,8 @@ impl CaveTheme {
     }
 
     async fn rand_pass(&self, rng: &mut impl RngCore, map: &mut MapBuilder) {
-        map.set_status("rand-pass");
-        map.set_notify_every(100);
+        map.set_label("rand-pass");
+        map.set_frequency(1.0);
 
         for pos in self.sample_points(rng) {
             let tile = if rng.gen_bool(0.45) {
@@ -80,8 +80,8 @@ impl CaveTheme {
         map: &mut MapBuilder,
         idx: u32,
     ) {
-        map.set_status(format!("smooth-pass:{idx}"));
-        map.set_notify_every(15 - idx);
+        map.set_label(format!("smooth-pass:{idx}"));
+        map.set_frequency(4.0);
 
         let prev_map = (*map).clone();
 
@@ -115,7 +115,8 @@ impl CaveTheme {
     }
 
     async fn fill_pass(&self, rng: &mut impl RngCore, map: &mut MapBuilder) {
-        map.set_status("fill-pass");
+        map.set_label("fill-pass");
+        map.set_frequency(12.0);
 
         let mut caves = Vec::new();
 
@@ -142,6 +143,7 @@ impl CaveTheme {
                 }
             }
 
+            cave.shuffle(rng);
             caves.push(cave);
         }
 
@@ -149,12 +151,12 @@ impl CaveTheme {
 
         // ---
 
-        map.set_notify_every(10);
+        let mut points: Vec<_> = caves.into_iter().skip(1).flatten().collect();
 
-        for cave in caves.iter().skip(1) {
-            for pos in cave {
-                map.set(*pos, TileKind::WALL).await;
-            }
+        points.shuffle(rng);
+
+        for pos in points {
+            map.set(pos, TileKind::WALL).await;
         }
     }
 

@@ -11,7 +11,7 @@ pub struct BottomPanel;
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
         if state.handle.is_some() {
-            Self::render_status(ui, state);
+            Self::render_label(ui, state);
         }
 
         ui.row(|ui| {
@@ -111,13 +111,13 @@ impl BottomPanel {
         }
     }
 
-    fn render_status(ui: &mut Ui<Event>, state: &State) {
+    fn render_label(ui: &mut Ui<Event>, state: &State) {
         let span = if state.paused {
             Some(Span::raw("paused").fg(theme::FG).bg(theme::RED))
-        } else if let Some((status, status_tt)) = &state.status {
-            let span = Span::raw(status);
+        } else if let Some((label, label_tt)) = &state.label {
+            let span = Span::raw(label);
 
-            if status_tt.elapsed().as_millis() % 1000 <= 500 {
+            if label_tt.elapsed().as_millis() % 1000 <= 500 {
                 Some(span.fg(theme::BG).bg(theme::YELLOW))
             } else {
                 Some(span.fg(theme::YELLOW))

@@ -73,11 +73,11 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 
     loop {
         ctxt.events.next_born_bot().await?;
-        ctxt.game.set_status(Some("watching".into())).await?;
+        ctxt.game.set_label(Some("watching".into())).await?;
 
         let succeeded = wait(ctxt).await?;
 
-        ctxt.game.set_status(None).await?;
+        ctxt.game.set_label(None).await?;
 
         if succeeded {
             break;

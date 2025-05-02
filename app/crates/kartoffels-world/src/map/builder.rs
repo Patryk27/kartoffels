@@ -3,10 +3,10 @@ use crate::*;
 #[derive(Debug)]
 pub struct MapBuilder {
     map: Map,
-    status: Option<String>,
-    tx: Option<mpsc::Sender<MapUpdate>>,
+    label: Option<String>,
+    tx: mpsc::Sender<MapUpdate>,
     changes: u32,
-    notify_every: u32,
+    frequency: u32,
 }
 
 impl MapBuilder {
@@ -14,21 +14,43 @@ impl MapBuilder {
         let (tx, rx) = mpsc::channel(1);
 
         let this = Self {
-            tx: Some(tx),
-            ..Self::detached()
+            map: Map::default(),
+            label: None,
+            tx,
+            changes: 0,
+            frequency: 10,
         };
 
         (this, rx)
     }
 
     pub fn detached() -> Self {
-        Self {
-            map: Default::default(),
-            status: None,
-            tx: None,
-            changes: 0,
-            notify_every: 10,
+        Self::new().0
+    }
+
+    pub fn set_label(&mut self, label: impl ToString) {
+        self.label = Some(label.to_string());
+    }
+
+    pub fn set_frequency(&mut self, freq: f32) {
+        assert!(self.map.size().length_squared() > 0);
+
+        self.frequency =
+            (1.0 / freq * self.map.size().as_vec2().length()) as u32;
+    }
+
+    pub async fn notify(&mut self) {
+        if self.tx.is_closed() {
+            return;
         }
+
+        _ = self
+            .tx
+            .send(MapUpdate {
+                map: self.map.clone(),
+                label: self.label.take(),
+            })
+            .await;
     }
 
     pub fn begin(&mut self, size: UVec2) {
@@ -45,7 +67,7 @@ impl MapBuilder {
 
     pub async fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
         if self.map.set(pos, tile) {
-            self.inc_changes().await;
+            self.tick().await;
         }
     }
 
@@ -82,7 +104,12 @@ impl MapBuilder {
 
         self.map = map;
 
-        if self.tx.is_none() {
+        // If there's no listener for our changes, exit early so that we don't
+        // touch `rng`.
+        //
+        // Comes handy for tests, because otherwise any change to the algorithm
+        // below could affect the PRNG and thus require reblessing the tests.
+        if self.tx.is_closed() {
             return;
         }
 
@@ -126,12 +153,7 @@ impl MapBuilder {
                     }
                 });
 
-                _ = self
-                    .tx
-                    .as_ref()
-                    .unwrap()
-                    .send(MapUpdate { map, status: None })
-                    .await;
+                _ = self.tx.send(MapUpdate { map, label: None }).await;
             }
 
             changes += 1;
@@ -142,29 +164,8 @@ impl MapBuilder {
         });
     }
 
-    pub fn set_status(&mut self, status: impl ToString) {
-        self.status = Some(status.to_string());
-    }
-
-    pub fn set_notify_every(&mut self, n: u32) {
-        self.notify_every = n;
-    }
-
-    pub async fn notify(&mut self) {
-        let Some(tx) = &self.tx else {
-            return;
-        };
-
-        _ = tx
-            .send(MapUpdate {
-                map: self.map.clone(),
-                status: self.status.take(),
-            })
-            .await;
-    }
-
-    pub async fn inc_changes(&mut self) {
-        if self.changes % self.notify_every == 0 {
+    async fn tick(&mut self) {
+        if self.changes % self.frequency == 0 {
             self.notify().await;
         }
 
@@ -183,5 +184,5 @@ impl ops::Deref for MapBuilder {
 #[derive(Clone, Debug)]
 pub struct MapUpdate {
     pub map: Map,
-    pub status: Option<String>,
+    pub label: Option<String>,
 }

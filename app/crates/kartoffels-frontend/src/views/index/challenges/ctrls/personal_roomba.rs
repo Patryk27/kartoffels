@@ -104,7 +104,7 @@ async fn init(
 ) -> Result<(Handle, Vec<ObjectId>)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
-    game.set_status(Some("building".into())).await?;
+    game.set_label(Some("building".into())).await?;
 
     let world = store.create_private_world(Config {
         policy: Policy {
@@ -137,7 +137,7 @@ async fn init(
 
     game.sync(world.version()).await?;
     game.set_config(CONFIG).await?;
-    game.set_status(None).await?;
+    game.set_label(None).await?;
 
     Ok((world, flags))
 }
@@ -149,7 +149,7 @@ async fn reset(
     flags: Option<Vec<ObjectId>>,
 ) -> Result<Vec<ObjectId>> {
     if let Some(flags) = flags {
-        game.set_status(Some("building".into())).await?;
+        game.set_label(Some("building".into())).await?;
 
         for flag in flags {
             world.delete_object(flag).await?;
@@ -180,7 +180,7 @@ async fn watch(game: &GameCtrl, world: &Handle) -> Result<ControlFlow<(), ()>> {
     let mut flags = 4;
 
     game.sync(world.version()).await?;
-    game.set_status(None).await?;
+    game.set_label(None).await?;
 
     loop {
         match events.next().await?.event {

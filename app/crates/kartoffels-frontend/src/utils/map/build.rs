@@ -41,8 +41,8 @@ where
     } else {
         let progress = async {
             while let Some(msg) = rx.recv().await {
-                if let Some(status) = msg.status {
-                    game.set_status(Some(format!("building:{status}"))).await?;
+                if let Some(label) = msg.label {
+                    game.set_label(Some(format!("building:{label}"))).await?;
                 }
 
                 world.set_map(msg.map).await?;

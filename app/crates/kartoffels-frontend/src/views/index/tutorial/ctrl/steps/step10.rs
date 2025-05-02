@@ -56,14 +56,14 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.game.resume().await?;
 
     loop {
-        ctxt.game.set_status(Some("watching".into())).await?;
+        ctxt.game.set_label(Some("watching".into())).await?;
 
         let result =
             time::timeout(Duration::from_secs(10), ctxt.events.next_died_bot())
                 .await;
 
         ctxt.delete_bots().await?;
-        ctxt.game.set_status(None).await?;
+        ctxt.game.set_label(None).await?;
 
         match result {
             Ok(result) => {
