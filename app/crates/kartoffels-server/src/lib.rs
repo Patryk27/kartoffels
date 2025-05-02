@@ -148,7 +148,7 @@ async fn wait_for_shutdown() {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
-            .expect("failed to install Ctrl+C handler");
+            .expect("failed to install C-c handler");
 
         info!("got the C-c signal, shutting down");
     };

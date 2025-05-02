@@ -42,9 +42,8 @@ pub async fn handle(
                 Ok(()) => {
                     info!("connection closed");
                 }
-
                 Err(err) => {
-                    info!("connection closed: {:?}", err);
+                    info!(?err, "connection closed");
                 }
             }
         }

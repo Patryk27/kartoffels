@@ -1,6 +1,6 @@
 use super::AppClient;
 use kartoffels_store::Store;
-use russh::server;
+use russh::server::Server;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
@@ -17,8 +17,7 @@ impl AppServer {
     }
 }
 
-// TODO consider some ddos / rate limiting mechanism
-impl server::Server for AppServer {
+impl Server for AppServer {
     type Handler = AppClient;
 
     fn new_client(&mut self, addr: Option<SocketAddr>) -> AppClient {
@@ -26,6 +25,6 @@ impl server::Server for AppServer {
             .map(|addr| addr.to_string())
             .unwrap_or_else(|| "-".into());
 
-        AppClient::new(addr, self.store.clone(), self.shutdown.clone())
+        AppClient::new(self.store.clone(), self.shutdown.clone(), addr)
     }
 }

@@ -32,12 +32,12 @@ pub async fn start_session(
 
     match result {
         Some(Ok(result)) => {
-            info!("session finished: {:?}", result);
+            info!(?result, "session finished");
         }
 
         Some(Err(err)) => {
             if let Some(err) = err.downcast_ref::<String>() {
-                info!("session crashed: {}", err);
+                info!(?err, "session crashed");
             } else {
                 info!("session crashed");
             }

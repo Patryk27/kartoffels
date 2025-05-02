@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context, Error, Result};
 use glam::uvec2;
 use kartoffels_store::Store;
 use russh::keys::PublicKey;
-use russh::server::{self, Auth, Msg, Session};
+use russh::server::{Auth, Handler, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
@@ -20,9 +20,9 @@ pub struct AppClient {
 
 impl AppClient {
     pub fn new(
-        addr: String,
         store: Arc<Store>,
         shutdown: CancellationToken,
+        addr: String,
     ) -> Self {
         let span = info_span!("ssh", %addr);
 
@@ -43,7 +43,7 @@ impl AppClient {
     }
 }
 
-impl server::Handler for AppClient {
+impl Handler for AppClient {
     type Error = Error;
 
     async fn auth_none(&mut self, _: &str) -> Result<Auth> {
@@ -138,5 +138,11 @@ impl server::Handler for AppClient {
             .await?;
 
         Ok(())
+    }
+}
+
+impl Drop for AppClient {
+    fn drop(&mut self) {
+        info!(parent: &self.span, "connection closed");
     }
 }
