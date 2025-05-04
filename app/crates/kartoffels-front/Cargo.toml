@@ -1,30 +1,26 @@
 [package]
-name = "kartoffels-server"
+name = "kartoffels-front"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-axum.workspace = true
-clap.workspace = true
-flate2.workspace = true
+base64.workspace = true
+chrono.workspace = true
 futures-util.workspace = true
+futures.workspace = true
 glam.workspace = true
 indoc.workspace = true
 itertools.workspace = true
-kartoffels-front = { path = "../kartoffels-front" }
+kartoffels-prefabs = { path = "../kartoffels-prefabs" }
 kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
-prettytable-rs.workspace = true
+ordinal.workspace = true
 rand.workspace = true
-russh.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-shellwords.workspace = true
+rand_chacha.workspace = true
+ratatui.workspace = true
+termwiz.workspace = true
 tokio-stream.workspace = true
-tokio-util.workspace = true
 tokio.workspace = true
-tower-http.workspace = true
-tracing-subscriber.workspace = true
 tracing.workspace = true

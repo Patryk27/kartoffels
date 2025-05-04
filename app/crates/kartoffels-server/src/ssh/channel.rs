@@ -1,8 +1,8 @@
 use crate::common;
 use anyhow::{anyhow, Result};
 use glam::UVec2;
+use kartoffels_front::{Frame, FrameType, StdinEvent};
 use kartoffels_store::Store;
-use kartoffels_ui::{Frame, FrameType, StdinEvent};
 use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
 use std::sync::Arc;

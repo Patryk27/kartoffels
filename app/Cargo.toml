@@ -5,12 +5,11 @@ members = [
     "crates/kartoffel",
     "crates/kartoffels-cpu",
     "crates/kartoffels-cpu-tests",
-    "crates/kartoffels-frontend",
+    "crates/kartoffels-front",
     "crates/kartoffels-prefabs",
     "crates/kartoffels-server",
     "crates/kartoffels-store",
     "crates/kartoffels-toolbox",
-    "crates/kartoffels-ui",
     "crates/kartoffels-utils",
     "crates/kartoffels-world",
 ]

@@ -1759,7 +1759,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kartoffels-frontend"
+name = "kartoffels-front"
 version = "0.7.0"
 dependencies = [
  "anyhow",
@@ -1772,13 +1772,13 @@ dependencies = [
  "itertools",
  "kartoffels-prefabs",
  "kartoffels-store",
- "kartoffels-ui",
  "kartoffels-utils",
  "kartoffels-world",
  "ordinal",
  "rand",
  "rand_chacha",
  "ratatui",
+ "termwiz",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -1804,9 +1804,8 @@ dependencies = [
  "glam",
  "indoc",
  "itertools",
- "kartoffels-frontend",
+ "kartoffels-front",
  "kartoffels-store",
- "kartoffels-ui",
  "kartoffels-utils",
  "kartoffels-world",
  "prettytable-rs",
@@ -1858,19 +1857,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "kartoffels-ui"
-version = "0.7.0"
-dependencies = [
- "anyhow",
- "futures-util",
- "glam",
- "ratatui",
- "termwiz",
- "tokio",
- "tracing",
 ]
 
 [[package]]

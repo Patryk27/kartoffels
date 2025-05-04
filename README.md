@@ -111,7 +111,7 @@ roughly three areas:
 
 - all things risc-v (`kartoffels-cpu`),
 - all things world-and-bot (`kartoffels-world`),
-- all things user-interface (`kartoffels-frontend`).
+- all things user-interface (`kartoffels-front`).
 
 so, say:
 
@@ -120,7 +120,7 @@ so, say:
 - if you wanted to introduce a new bot peripheral, you'd modify (mostly)
   `kartoffels-world`,
 - if you wanted to introduce a new challenge, you'd modify (mostly)
-  `kartoffels-frontend`.
+  `kartoffels-front`.
 
 note that those are just rough examples, different features or fixes might
 require touching different places

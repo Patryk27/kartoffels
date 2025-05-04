@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use futures_util::FutureExt;
+use kartoffels_front::Frame;
 use kartoffels_store::Store;
-use kartoffels_ui::Frame;
 use rand::rngs::OsRng;
 use russh::keys::ssh_key::private::{Ed25519PrivateKey, KeypairData};
 use russh::keys::{Algorithm, PrivateKey};
@@ -23,7 +23,7 @@ pub async fn start_session(
     let sess = store.create_session().await?;
 
     let result = {
-        let sess = kartoffels_frontend::main(&store, &sess, &mut frame);
+        let sess = kartoffels_front::main(&store, &sess, &mut frame);
         let sess = AssertUnwindSafe(sess).catch_unwind();
         let sess = pin!(sess);
 

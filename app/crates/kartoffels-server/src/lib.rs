@@ -107,7 +107,7 @@ impl Cmd {
     async fn start(self) -> Result<()> {
         info!("starting");
 
-        kartoffels_frontend::init();
+        kartoffels_front::init();
 
         let store =
             Store::open(Some(&self.store), false)
