@@ -35,82 +35,82 @@ async fn smoke() {
         TestContext::new([first, second, third]).await
     };
 
-    ctxt.see_frame("game/smoke/index-1.txt").await;
+    ctxt.see_frame("game/smoke/index-1.txt");
 
     ctxt.press(KeyCode::Char('p')).await;
     ctxt.wait_for("[1] first-world").await;
-    ctxt.see_frame("game/smoke/index-2.txt").await;
+    ctxt.see_frame("game/smoke/index-2.txt");
 
     ctxt.press(KeyCode::Char('2')).await;
     ctxt.wait_for("[j] join-bot").await;
-    ctxt.see_frame("game/smoke/game-1.txt").await;
+    ctxt.see_frame("game/smoke/game-1.txt");
 
     ctxt.press(KeyCode::Char('u')).await;
     ctxt.upload_bot(DUMMY).await;
     ctxt.wait_for("> score: 0").await;
-    ctxt.see_frame("game/smoke/game-2.txt").await;
+    ctxt.see_frame("game/smoke/game-2.txt");
 
     // ---
 
     ctxt.press(KeyCode::Char(' ')).await;
     ctxt.wait_for("paused").await;
-    ctxt.see_frame("game/smoke/pause-1.txt").await;
+    ctxt.see_frame("game/smoke/pause-1.txt");
 
     ctxt.press(KeyCode::Char(' ')).await;
     ctxt.wait_while("paused").await;
-    ctxt.see_frame("game/smoke/pause-2.txt").await;
+    ctxt.see_frame("game/smoke/pause-2.txt");
 
     // ---
 
     ctxt.press(KeyCode::Char('h')).await;
     ctxt.wait_for_window("help").await;
-    ctxt.see_frame("game/smoke/help-1.txt").await;
+    ctxt.see_frame("game/smoke/help-1.txt");
 
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_while_modal("help").await;
-    ctxt.see_frame("game/smoke/help-2.txt").await;
+    ctxt.see_frame("game/smoke/help-2.txt");
 
     // ---
 
     ctxt.press(KeyCode::Char('b')).await;
     ctxt.wait_for_window("bots").await;
-    ctxt.see_frame("game/smoke/bots-1.txt").await;
+    ctxt.see_frame("game/smoke/bots-1.txt");
 
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_while_modal("bots").await;
-    ctxt.see_frame("game/smoke/bots-2.txt").await;
+    ctxt.see_frame("game/smoke/bots-2.txt");
 
     // ---
 
     ctxt.press(KeyCode::Char('f')).await;
     ctxt.wait_for("[f] follow").await;
-    ctxt.see_frame("game/smoke/follow-1.txt").await;
+    ctxt.see_frame("game/smoke/follow-1.txt");
 
     ctxt.press(KeyCode::Char('f')).await;
     ctxt.wait_for("[f] stop-following").await;
-    ctxt.see_frame("game/smoke/follow-2.txt").await;
+    ctxt.see_frame("game/smoke/follow-2.txt");
 
     // ---
 
     ctxt.press(KeyCode::Char('l')).await;
     ctxt.wait_while("[l] leave").await;
-    ctxt.see_frame("game/smoke/leave.txt").await;
+    ctxt.see_frame("game/smoke/leave.txt");
 
     // ---
 
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_for_window("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-1.txt").await;
+    ctxt.see_frame("game/smoke/go-back-1.txt");
 
     ctxt.press(KeyCode::Char('n')).await;
     ctxt.wait_while_modal("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-2.txt").await;
+    ctxt.see_frame("game/smoke/go-back-2.txt");
 
     ctxt.press(KeyCode::Escape).await;
     ctxt.wait_for_window("go-back").await;
     ctxt.press(KeyCode::Char('y')).await;
     ctxt.wait_while_modal("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-3.txt").await;
+    ctxt.see_frame("game/smoke/go-back-3.txt");
 }
 
 #[tokio::test]
@@ -142,11 +142,11 @@ async fn http_upload_ok() {
     // Wait until session gets created
     time::sleep(Duration::from_millis(250)).await;
 
-    let sess = ctxt.store().first_session_id();
+    let sess = ctxt.session().await;
 
-    ctxt.upload_bot_http(sess, DUMMY).await;
+    ctxt.upload_bot_http(sess.id(), DUMMY).await;
     ctxt.wait_for("queued").await;
-    ctxt.see_frame("game/http-upload-ok/1.txt").await;
+    ctxt.see_frame("game/http-upload-ok/1.txt");
 }
 
 #[tokio::test]
@@ -172,16 +172,16 @@ async fn http_upload_err() {
     // Wait until session gets created
     time::sleep(Duration::from_millis(250)).await;
 
-    let sess = ctxt.store().first_session_id();
+    let sess = ctxt.session().await;
 
-    ctxt.upload_bot_http(sess, DUMMY).await;
+    ctxt.upload_bot_http(sess.id(), DUMMY).await;
     ctxt.wait_for_window("ouch").await;
     ctxt.see("couldn't upload bot");
-    ctxt.see_frame("game/http-upload-err/1.txt").await;
+    ctxt.see_frame("game/http-upload-err/1.txt");
 
     ctxt.press(KeyCode::Enter).await;
     ctxt.wait_while_modal("ouch").await;
-    ctxt.see_frame("game/http-upload-err/2.txt").await;
+    ctxt.see_frame("game/http-upload-err/2.txt");
 }
 
 #[tokio::test]
@@ -206,5 +206,5 @@ async fn cli_upload_err() {
 
     ctxt.wait_for_window("ouch").await;
     ctxt.see("couldn't upload bot");
-    ctxt.see_frame("game/cli-upload-err/1.txt").await;
+    ctxt.see_frame("game/cli-upload-err/1.txt");
 }

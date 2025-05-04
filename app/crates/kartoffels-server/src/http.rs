@@ -18,7 +18,7 @@ pub async fn start(
     store: Arc<Store>,
     shutdown: CancellationToken,
 ) -> Result<()> {
-    info!(addr = ?socket.local_addr()?, "starting http server");
+    info!(addr = ?socket.local_addr()?, "starting");
 
     let app = {
         let cors = CorsLayer::new()

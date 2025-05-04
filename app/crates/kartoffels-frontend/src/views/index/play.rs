@@ -3,11 +3,11 @@ mod ctrl;
 use crate::views::game;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::{Session, Store};
+use itertools::Itertools;
+use kartoffels_store::{Session, Store, World, WorldVis};
 use kartoffels_ui::{
     Button, FadeCtrl, FadeCtrlEvent, Frame, KeyCode, UiWidget,
 };
-use kartoffels_world::prelude::Handle as WorldHandle;
 use std::iter;
 use tracing::debug;
 
@@ -45,22 +45,25 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
-    let worlds = store.public_worlds();
+    let worlds: Vec<_> = store
+        .find_worlds(WorldVis::Public)
+        .await?
+        .into_iter()
+        .map(|world| (world.name().clone(), world))
+        .sorted_by(|(lhs_name, _), (rhs_name, _)| lhs_name.cmp(rhs_name))
+        .collect();
 
     if worlds.is_empty() {
         return Ok(Event::GoBack);
     }
 
-    let worlds: Vec<_> =
-        worlds.iter().map(|world| (world, world.name())).collect();
-
     let mut world_btns: Vec<_> = worlds
         .iter()
         .enumerate()
-        .map(|(idx, (world, world_name))| {
+        .map(|(idx, (name, world))| {
             let key = KeyCode::Char((b'1' + (idx as u8)) as char);
 
-            Button::new(world_name.as_str(), key)
+            Button::new(name.as_str(), key)
                 .throwing(Event::Play((*world).clone()))
         })
         .collect();
@@ -107,7 +110,7 @@ async fn run_once(
 
 #[derive(Clone, Debug)]
 enum Event {
-    Play(WorldHandle),
+    Play(World),
     GoBack,
 }
 

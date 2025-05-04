@@ -1,42 +1,55 @@
 #![feature(async_fn_track_caller)]
 
 mod acc {
+    mod admin;
     mod challenges;
-    mod console;
     mod game;
     mod index;
     mod tutorial;
 }
 
-use anyhow::Result;
+use anyhow::{Error, Result};
 use avt::Vt;
 use base64::Engine;
 use flate2::read::GzDecoder;
 use futures_util::{Sink, SinkExt, Stream, StreamExt};
-use kartoffels_store::{SessionId, Store};
+use kartoffels_store::{Session, SessionId, Store, World};
+use kartoffels_utils::Asserter;
 use kartoffels_world::prelude::Handle as WorldHandle;
-use std::env;
+use russh::keys::ssh_key::PublicKey;
+use russh::{client as ssh, ChannelId};
 use std::io::{Cursor, Read};
+use std::mem;
 use std::net::SocketAddr;
+use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use termwiz::input::{
     KeyCode, KeyCodeEncodeModes, KeyboardEncoding, Modifiers,
 };
 use tokio::net::TcpListener;
+use tokio::sync::oneshot;
 use tokio::task::{self, JoinHandle};
-use tokio::{fs, time};
+use tokio::time;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tokio_util::sync::CancellationToken;
 use tungstenite::Error as WsError;
 
+type Stdin = Box<dyn Sink<WsMessage, Error = WsError> + Unpin>;
+type Stdout = Box<dyn Stream<Item = Result<WsMessage, WsError>> + Unpin>;
+
 struct TestContext {
-    addr: SocketAddr,
     store: Arc<Store>,
-    server: JoinHandle<Result<()>>,
+
+    admin_addr: SocketAddr,
+    admin_server: JoinHandle<Result<()>>,
+
+    http_addr: SocketAddr,
+    http_server: JoinHandle<Result<()>>,
+
     term: Vt,
-    stdin: Box<dyn Sink<WsMessage, Error = WsError> + Unpin>,
-    stdout: Box<dyn Stream<Item = Result<WsMessage, WsError>> + Unpin>,
+    stdin: Stdin,
+    stdout: Stdout,
 }
 
 impl TestContext {
@@ -57,13 +70,64 @@ impl TestContext {
     ) -> Self {
         _ = tracing_subscriber::fmt().with_test_writer().try_init();
 
-        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
-        let store = Arc::new(Store::test(worlds).await);
+        let store = Self::open_store(worlds).await;
         let shutdown = CancellationToken::new();
-        let addr = listener.local_addr().unwrap();
+
+        let (admin_addr, admin_server) =
+            Self::start_admin_server(store.clone(), shutdown.clone()).await;
+
+        let (http_addr, http_server, stdin, stdout) =
+            Self::start_http_server(cols, rows, store.clone(), shutdown).await;
+
+        Self {
+            store,
+            admin_addr,
+            admin_server,
+            http_addr,
+            http_server,
+            term: Vt::new(cols, rows),
+            stdin,
+            stdout,
+        }
+    }
+
+    async fn start_admin_server(
+        store: Arc<Store>,
+        shutdown: CancellationToken,
+    ) -> (SocketAddr, JoinHandle<Result<()>>) {
+        let socket = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let addr = socket.local_addr().unwrap();
+
+        let server = task::spawn(kartoffels_server::admin::start(
+            None, socket, store, shutdown,
+        ));
+
+        (addr, server)
+    }
+
+    async fn open_store(
+        worlds: impl IntoIterator<Item = WorldHandle>,
+    ) -> Arc<Store> {
+        let store = Store::open(None, true).await.unwrap();
+
+        for world in worlds {
+            store.add_world(world).await.unwrap();
+        }
+
+        Arc::new(store)
+    }
+
+    async fn start_http_server(
+        cols: usize,
+        rows: usize,
+        store: Arc<Store>,
+        shutdown: CancellationToken,
+    ) -> (SocketAddr, JoinHandle<Result<()>>, Stdin, Stdout) {
+        let socket = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let addr = socket.local_addr().unwrap();
 
         let server = task::spawn(kartoffels_server::http::start(
-            listener,
+            socket,
             store.clone(),
             shutdown,
         ));
@@ -95,14 +159,11 @@ impl TestContext {
 
         stdout.next().await.unwrap().unwrap();
 
-        Self {
-            addr,
-            store,
-            server,
-            term: Vt::new(cols, rows),
-            stdin: Box::new(stdin),
-            stdout: Box::new(stdout),
-        }
+        (addr, server, Box::new(stdin), Box::new(stdout))
+    }
+
+    pub fn asserter(&self, dir: impl AsRef<Path>) -> Asserter {
+        Asserter::new(Path::new("tests").join("acc").join(dir))
     }
 
     pub async fn recv(&mut self) {
@@ -137,12 +198,6 @@ impl TestContext {
         };
 
         self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
-    }
-
-    pub async fn write(&mut self, str: &str) {
-        for ch in str.chars() {
-            self.press(KeyCode::Char(ch)).await;
-        }
     }
 
     #[track_caller]
@@ -204,27 +259,13 @@ impl TestContext {
     }
 
     #[track_caller]
-    pub async fn see_frame(&mut self, expected_path: &str) {
-        let actual = self.stdout();
-        let expected_path = format!("tests/acc/{expected_path}");
+    pub fn see_frame(&mut self, expected: impl AsRef<Path>) {
+        let expected = expected.as_ref();
+        let expected_dir = expected.parent().unwrap();
+        let expected_file = expected.file_name().unwrap();
 
-        let expected =
-            fs::read_to_string(&expected_path).await.unwrap_or_default();
-
-        let new_path = format!("{expected_path}.new");
-
-        if actual == expected {
-            _ = fs::remove_file(&new_path).await;
-        } else {
-            #[allow(clippy::collapsible_else_if)]
-            if env::var("BLESS").is_ok() {
-                fs::write(&expected_path, actual).await.unwrap();
-            } else {
-                fs::write(&new_path, actual).await.unwrap();
-
-                panic!("see_frame(\"{expected_path}\") failed");
-            }
-        }
+        self.asserter(expected_dir)
+            .assert(expected_file, self.stdout());
     }
 
     #[track_caller]
@@ -253,7 +294,7 @@ impl TestContext {
     }
 
     pub async fn upload_bot_http(&mut self, sess: SessionId, src: &[u8]) {
-        let url = format!("http://{}/sessions/{sess}/bots", self.addr);
+        let url = format!("http://{}/sessions/{sess}/bots", self.http_addr);
 
         reqwest::Client::new()
             .post(url)
@@ -265,17 +306,100 @@ impl TestContext {
             .unwrap();
     }
 
-    pub fn store(&self) -> &Store {
-        &self.store
+    pub async fn world(&self) -> World {
+        self.store
+            .find_worlds(None)
+            .await
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap()
+    }
+
+    pub async fn session(&self) -> Session {
+        self.store
+            .find_sessions(None)
+            .await
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap()
     }
 
     pub fn stdout(&self) -> String {
         self.term.text().join("\n")
     }
+
+    pub async fn cmd(&self, cmd: impl Into<String>) -> String {
+        #[derive(Debug)]
+        struct Client {
+            tx: Option<oneshot::Sender<Vec<u8>>>,
+            data: Vec<u8>,
+        }
+
+        impl ssh::Handler for Client {
+            type Error = Error;
+
+            async fn check_server_key(
+                &mut self,
+                _: &PublicKey,
+            ) -> Result<bool> {
+                Ok(true)
+            }
+
+            async fn data(
+                &mut self,
+                _: ChannelId,
+                data: &[u8],
+                _: &mut ssh::Session,
+            ) -> Result<()> {
+                self.data.extend(data);
+
+                Ok(())
+            }
+
+            async fn channel_close(
+                &mut self,
+                _: ChannelId,
+                _: &mut ssh::Session,
+            ) -> Result<()> {
+                _ = self.tx.take().unwrap().send(mem::take(&mut self.data));
+
+                Ok(())
+            }
+        }
+
+        let (tx, rx) = oneshot::channel();
+
+        let mut conn = {
+            let client = Client {
+                tx: Some(tx),
+                data: Vec::new(),
+            };
+
+            let config = Arc::new(ssh::Config::default());
+
+            ssh::connect(config, &self.admin_addr, client)
+                .await
+                .unwrap()
+        };
+
+        conn.authenticate_none("").await.unwrap();
+
+        conn.channel_open_session()
+            .await
+            .unwrap()
+            .exec(true, cmd.into().as_bytes())
+            .await
+            .unwrap();
+
+        String::from_utf8(rx.await.unwrap()).unwrap()
+    }
 }
 
 impl Drop for TestContext {
     fn drop(&mut self) {
-        self.server.abort();
+        self.admin_server.abort();
+        self.http_server.abort();
     }
 }

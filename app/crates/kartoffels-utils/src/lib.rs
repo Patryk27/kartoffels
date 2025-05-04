@@ -1,6 +1,5 @@
 #![feature(array_chunks)]
 
-mod arc_swap_ext;
 mod asserter;
 mod cbor_map_ext;
 mod cbor_transcoding;
@@ -9,7 +8,6 @@ mod error_ext;
 mod id;
 pub mod serde;
 
-pub use self::arc_swap_ext::*;
 pub use self::asserter::*;
 pub use self::cbor_map_ext::*;
 pub use self::cbor_transcoding::*;

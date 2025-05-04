@@ -3,7 +3,8 @@ run *args:
     && cargo run --release -- \
            serve \
            ../store \
-           --secret secret \
+           --admin 127.0.0.1:1312 \
+           --open-admin \
            --http 127.0.0.1:1313 \
            --ssh 127.0.0.1:1314 \
            {{ args }}

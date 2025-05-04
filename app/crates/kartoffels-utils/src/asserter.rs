@@ -22,14 +22,17 @@ impl Asserter {
 
     pub fn assert(
         &mut self,
-        fixture: impl AsRef<str>,
+        fixture: impl AsRef<Path>,
         actual: impl AsRef<str>,
     ) -> &mut Self {
         let fixture = fixture.as_ref();
         let actual = actual.as_ref();
 
         let expected_path = self.dir.join(fixture);
-        let expected_new_path = self.dir.join(format!("{fixture}.new"));
+
+        let expected_new_path =
+            self.dir.join(format!("{}.new", fixture.display()));
+
         let expected = fs::read_to_string(&expected_path).unwrap_or_default();
 
         if expected == actual {

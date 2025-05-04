@@ -1,56 +1,69 @@
-use anyhow::{anyhow, Error};
-use std::fmt;
-use std::str::FromStr;
+mod entry;
+mod id;
+mod vis;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum WorldType {
-    Public,
-    Private,
+pub use self::entry::*;
+pub use self::id::*;
+pub use self::vis::*;
+use kartoffels_world::prelude::Handle as WorldHandle;
+use std::ops::Deref;
+use std::path::Path;
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use tokio::task;
+
+#[derive(Clone, Debug)]
+pub struct World {
+    id: WorldId,
+    entry: Arc<WorldEntry>,
+    on_abandoned: Option<Arc<mpsc::Sender<WorldId>>>,
 }
 
-impl fmt::Display for WorldType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                WorldType::Public => "public",
-                WorldType::Private => "private",
-            }
-        )
-    }
-}
-
-impl FromStr for WorldType {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "public" => Ok(Self::Public),
-            "private" => Ok(Self::Private),
-            _ => Err(anyhow!("unknown world type: {s}")),
+impl World {
+    pub(crate) fn new(id: WorldId, entry: Arc<WorldEntry>) -> Self {
+        Self {
+            id,
+            entry,
+            on_abandoned: None,
         }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn display() {
-        assert_eq!("public", WorldType::Public.to_string());
-        assert_eq!("private", WorldType::Private.to_string());
+    pub fn id(&self) -> WorldId {
+        self.id
     }
 
-    #[test]
-    fn from_str() {
-        assert_eq!(WorldType::Public, WorldType::from_str("public").unwrap());
-        assert_eq!(WorldType::Private, WorldType::from_str("private").unwrap());
+    pub fn vis(&self) -> WorldVis {
+        self.entry.vis
+    }
 
-        assert_eq!(
-            "unknown world type: invalid",
-            WorldType::from_str("invalid").unwrap_err().to_string()
-        );
+    pub fn path(&self) -> Option<&Path> {
+        self.entry.path.as_deref()
+    }
+
+    pub(crate) fn on_abandoned(mut self, tx: mpsc::Sender<WorldId>) -> Self {
+        self.on_abandoned = Some(Arc::new(tx));
+        self
+    }
+}
+
+impl Deref for World {
+    type Target = WorldHandle;
+
+    fn deref(&self) -> &Self::Target {
+        &self.entry.handle
+    }
+}
+
+impl Drop for World {
+    fn drop(&mut self) {
+        if let Some(tx) = self.on_abandoned.take()
+            && let Ok(tx) = Arc::try_unwrap(tx)
+        {
+            let id = self.id;
+
+            task::spawn(async move {
+                _ = tx.send(id).await;
+            });
+        }
     }
 }

@@ -1,15 +1,15 @@
 use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
 use glam::ivec2;
-use kartoffels_store::Store;
+use kartoffels_store::{Store, World};
 use kartoffels_world::prelude::{
-    ArenaTheme, Clock, Config as WorldConfig, EventStream, Handle, Policy,
+    ArenaTheme, Clock, Config as WorldConfig, EventStream, Policy,
     SnapshotStream, Theme,
 };
 
 pub struct TutorialCtxt {
     pub game: GameCtrl,
-    pub world: Handle,
+    pub world: World,
     pub events: EventStream,
     pub snapshots: SnapshotStream,
 }
@@ -31,19 +31,21 @@ impl TutorialCtxt {
         })
         .await?;
 
-        let world = store.create_private_world(WorldConfig {
-            clock: Clock::Normal,
-            policy: Policy {
-                auto_respawn: false,
-                max_alive_bots: 16,
-                max_queued_bots: 16,
-            },
-            theme: Some(Theme::Arena(ArenaTheme::new(12))),
-            ..store.world_config("tutorial")
-        })?;
+        let world = store
+            .create_private_world(WorldConfig {
+                clock: Clock::Normal,
+                policy: Policy {
+                    auto_respawn: false,
+                    max_alive_bots: 16,
+                    max_queued_bots: 16,
+                },
+                theme: Some(Theme::Arena(ArenaTheme::new(12))),
+                ..store.world_config("tutorial")
+            })
+            .await?;
 
         world.set_spawn(ivec2(12, 12), None).await?;
-        game.join(world.clone()).await?;
+        game.join(&world).await?;
 
         Ok(Self {
             events: world.events()?,

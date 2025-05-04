@@ -16,7 +16,7 @@ impl SidePanel {
         ui.area.x += 1;
         ui.area.width -= 1;
 
-        ui.enable(state.handle.is_some(), |ui| {
+        ui.enable(state.world.is_some(), |ui| {
             if let Some(bot) = &state.bot {
                 JoinedSidePanel::render(ui, state, bot);
             } else {

@@ -6,7 +6,7 @@ use futures::future::BoxFuture;
 use glam::IVec2;
 use indoc::indoc;
 use kartoffels_prefabs::CHL_DIAMOND_HEIST_GUARD;
-use kartoffels_store::Store;
+use kartoffels_store::{Store, World};
 use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     Config, CreateBotRequest, Dir, Event, Handle, Map, Object, ObjectKind,
@@ -122,21 +122,23 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, IVec2)> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG).await?;
     game.set_label(Some("building".into())).await?;
 
-    let world = store.create_private_world(Config {
-        policy: Policy {
-            auto_respawn: false,
-            max_alive_bots: 16,
-            max_queued_bots: 16,
-        },
-        ..store.world_config("challenge:diamond-heist")
-    })?;
+    let world = store
+        .create_private_world(Config {
+            policy: Policy {
+                auto_respawn: false,
+                max_alive_bots: 16,
+                max_queued_bots: 16,
+            },
+            ..store.world_config("challenge:diamond-heist")
+        })
+        .await?;
 
-    game.join(world.clone()).await?;
+    game.join(&world).await?;
 
     // ---
 

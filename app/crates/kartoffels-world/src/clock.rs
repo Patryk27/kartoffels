@@ -88,21 +88,6 @@ impl Metronome {
             thread::sleep(delay);
         }
     }
-
-    pub fn measure<T>(f: impl FnOnce() -> T) -> (T, Duration) {
-        let tt = Instant::now();
-        let result = f();
-
-        (result, tt.elapsed())
-    }
-
-    pub fn try_measure<T>(
-        f: impl FnOnce() -> Result<T>,
-    ) -> Result<(T, Duration)> {
-        let (result, tt) = Self::measure(f);
-
-        Ok((result?, tt))
-    }
 }
 
 #[derive(Debug, Default)]

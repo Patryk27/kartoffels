@@ -32,5 +32,4 @@ indoc.workspace = true
 itertools.workspace = true
 kartoffels-prefabs = { path = "../kartoffels-prefabs" }
 pretty_assertions.workspace = true
-tempfile.workspace = true
 test-case.workspace = true

@@ -15,7 +15,7 @@ async fn acyclic_maze() {
 
     ctxt.press(KeyCode::Char('a')).await;
     ctxt.wait_for_window("acyclic-maze").await;
-    ctxt.see_frame("challenges/acyclic-maze/1.txt").await;
+    ctxt.see_frame("challenges/acyclic-maze/1.txt");
 
     // ---
 
@@ -23,11 +23,11 @@ async fn acyclic_maze() {
     ctxt.wait_while_modal("acyclic-maze").await;
     ctxt.wait_for("building").await;
     ctxt.wait_while("building").await;
-    ctxt.see_frame("challenges/acyclic-maze/2.txt").await;
+    ctxt.see_frame("challenges/acyclic-maze/2.txt");
 
     // ---
 
-    let world = ctxt.store().first_private_world();
+    let world = ctxt.world().await;
 
     world.overclock(Clock::manual()).await.unwrap();
     ctxt.upload_bot(CHL_ACYCLIC_MAZE).await;
@@ -37,7 +37,7 @@ async fn acyclic_maze() {
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;
-    ctxt.see_frame("challenges/acyclic-maze/3.txt").await;
+    ctxt.see_frame("challenges/acyclic-maze/3.txt");
 
     // ---
 
@@ -55,7 +55,7 @@ async fn diamond_heist() {
 
     ctxt.press(KeyCode::Char('d')).await;
     ctxt.wait_for_window("diamond-heist").await;
-    ctxt.see_frame("challenges/diamond-heist/1.txt").await;
+    ctxt.see_frame("challenges/diamond-heist/1.txt");
 
     // ---
 
@@ -63,11 +63,11 @@ async fn diamond_heist() {
     ctxt.wait_while_modal("diamond-heist").await;
     ctxt.wait_for("building").await;
     ctxt.wait_while("building").await;
-    ctxt.see_frame("challenges/diamond-heist/2.txt").await;
+    ctxt.see_frame("challenges/diamond-heist/2.txt");
 
     // ---
 
-    let world = ctxt.store().first_private_world();
+    let world = ctxt.world().await;
 
     ctxt.upload_bot(CHL_DIAMOND_HEIST).await;
     ctxt.wait_for("id").await;
@@ -76,7 +76,7 @@ async fn diamond_heist() {
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;
-    ctxt.see_frame("challenges/diamond-heist/3.txt").await;
+    ctxt.see_frame("challenges/diamond-heist/3.txt");
 
     // ---
 
@@ -94,7 +94,7 @@ async fn personal_roomba() {
 
     ctxt.press(KeyCode::Char('p')).await;
     ctxt.wait_for_window("personal-roomba").await;
-    ctxt.see_frame("challenges/personal-roomba/1.txt").await;
+    ctxt.see_frame("challenges/personal-roomba/1.txt");
 
     // ---
 
@@ -102,9 +102,9 @@ async fn personal_roomba() {
     ctxt.wait_while_modal("personal-roomba").await;
     ctxt.wait_for("building").await;
     ctxt.wait_while("building").await;
-    ctxt.see_frame("challenges/personal-roomba/2.txt").await;
+    ctxt.see_frame("challenges/personal-roomba/2.txt");
 
-    let world = ctxt.store().first_private_world();
+    let world = ctxt.world().await;
 
     world.overclock(Clock::manual()).await.unwrap();
     ctxt.upload_bot(CHL_PERSONAL_ROOMBA).await;
@@ -114,7 +114,7 @@ async fn personal_roomba() {
 
     ctxt.sync(world.version()).await;
     ctxt.wait_for("congrats").await;
-    ctxt.see_frame("challenges/personal-roomba/3.txt").await;
+    ctxt.see_frame("challenges/personal-roomba/3.txt");
 
     // ---
 

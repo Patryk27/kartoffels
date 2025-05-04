@@ -1,0 +1,9 @@
+usage: kartoffels <command>
+
+commands:
+  session  
+  world    
+  help     print this message or the help of the given subcommand(s)
+
+options:
+  -h, --help  print help

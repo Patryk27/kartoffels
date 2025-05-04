@@ -4,7 +4,7 @@ use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, UVec2};
-use kartoffels_store::Store;
+use kartoffels_store::{Store, World};
 use kartoffels_ui::{theme, KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     Config, Event, Handle, Object, ObjectId, ObjectKind, Policy,
@@ -101,21 +101,23 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 async fn init(
     store: &Store,
     game: &GameCtrl,
-) -> Result<(Handle, Vec<ObjectId>)> {
+) -> Result<(World, Vec<ObjectId>)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
-    let world = store.create_private_world(Config {
-        policy: Policy {
-            auto_respawn: false,
-            max_alive_bots: 1,
-            max_queued_bots: 1,
-        },
-        ..store.world_config("challenge:personal-roomba")
-    })?;
+    let world = store
+        .create_private_world(Config {
+            policy: Policy {
+                auto_respawn: false,
+                max_alive_bots: 1,
+                max_queued_bots: 1,
+            },
+            ..store.world_config("challenge:personal-roomba")
+        })
+        .await?;
 
-    game.join(world.clone()).await?;
+    game.join(&world).await?;
 
     // ---
 

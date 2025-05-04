@@ -1,5 +1,4 @@
 mod challenges;
-mod console;
 mod play;
 mod sandbox;
 mod tutorial;
@@ -8,8 +7,8 @@ mod widgets;
 use self::widgets::*;
 use crate::Background;
 use anyhow::Result;
-use kartoffels_store::{Session, Store};
-use kartoffels_ui::{FadeCtrl, FadeCtrlEvent, Frame, KeyCode, Modifiers};
+use kartoffels_store::{Session, Store, WorldVis};
+use kartoffels_ui::{FadeCtrl, FadeCtrlEvent, Frame};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
@@ -23,11 +22,6 @@ pub async fn run(
 
     loop {
         match run_once(store, frame, bg, fade_in).await? {
-            Event::Admin => {
-                console::run(store, sess, frame, bg).await?;
-                fade_in = false;
-            }
-
             Event::Play => {
                 play::run(store, sess, frame, bg).await?;
                 fade_in = false;
@@ -63,6 +57,9 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
+    let has_public_worlds =
+        !store.find_worlds(WorldVis::Public).await?.is_empty();
+
     let mut fade = FadeCtrl::default()
         .animate(!store.testing())
         .fade_in(fade_in);
@@ -82,7 +79,7 @@ async fn run_once(
                         Constraint::Fill(1),
                         Constraint::Length(Header::height()),
                         Constraint::Fill(1),
-                        Constraint::Length(Menu::height(store, ui)),
+                        Constraint::Length(Menu::height(ui, has_public_worlds)),
                         Constraint::Fill(1),
                     ])
                     .areas(area);
@@ -101,14 +98,10 @@ async fn run_once(
                     });
 
                     ui.clamp(menu_area, |ui| {
-                        Menu::render(store, ui);
+                        Menu::render(ui, has_public_worlds);
                     });
 
                     Footer::render(store, ui);
-
-                    if ui.key(KeyCode::Char('x'), Modifiers::ALT) {
-                        ui.throw(Event::Admin);
-                    }
                 });
             })
             .await?;
@@ -121,7 +114,6 @@ async fn run_once(
 
 #[derive(Clone, Copy, Debug)]
 enum Event {
-    Admin,
     Play,
     Sandbox,
     Tutorial,

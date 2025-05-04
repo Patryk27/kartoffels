@@ -31,10 +31,9 @@ chrono = { version = "0.4.38", features = ["serde"] }
 ciborium = "0.2.2"
 clap = { version = "4.5.4", features = ["derive"] }
 derivative = "2.2.0"
-ed25519-dalek = "*"
 flate2 = "1.0.35"
 futures = "0.3.30"
-futures-util = { version = "0.3.30", features = ["sink"] }
+futures-util = "0.3.30"
 glam = { version = "0.29.2", default-features = false }
 indoc = "2.0.5"
 itertools = "0.13.0"
@@ -42,6 +41,7 @@ maybe-owned = { version = "0.3.4", features = ["serde"] }
 num-traits = { version = "0.2.19", default-features = false }
 object = { version = "0.36.7", default-features = false, features = ["build", "compression", "elf", "read", "std", "write"] }
 ordinal = "0.3.2"
+parking_lot = "0.12.3"
 pretty_assertions = "1.4.0"
 prettytable-rs = "0.10.0"
 rand = { version = "0.8.5", default-features = false }
@@ -89,8 +89,10 @@ flate2.workspace = true
 futures-util.workspace = true
 kartoffels-prefabs = { path = "./crates/kartoffels-prefabs" }
 kartoffels-store = { path = "./crates/kartoffels-store" }
+kartoffels-utils = { path = "./crates/kartoffels-utils" }
 kartoffels-world = { path = "./crates/kartoffels-world" }
 reqwest.workspace = true
+russh.workspace = true
 termwiz.workspace = true
 tokio-tungstenite.workspace = true
 tokio-util.workspace = true

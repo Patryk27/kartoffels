@@ -34,31 +34,6 @@ impl ArenaTheme {
     }
 }
 
-impl FromStr for ArenaTheme {
-    type Err = Error;
-
-    fn from_str(spec: &str) -> Result<Self> {
-        let mut radius = None;
-
-        for entry in spec::entries(spec) {
-            let entry = entry?;
-
-            match entry.key {
-                "radius" => {
-                    radius = Some(entry.value()?);
-                }
-                key => {
-                    return Err(anyhow!("unknown key: {key}"));
-                }
-            }
-        }
-
-        let radius = radius.context("missing key: radius")?;
-
-        Ok(Self::new(radius))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -71,8 +46,7 @@ mod tests {
     fn build() {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-        let map = ArenaTheme::from_str("radius=16")
-            .unwrap()
+        let map = ArenaTheme::new(16)
             .build(&mut rng, MapBuilder::detached())
             .now_or_never()
             .unwrap()

@@ -1,6 +1,6 @@
           ┌────────────────────────── bots ──────────────────────────┐
-          │ nth  id                  age    score                    │5b7f
-          │ #1   a1a5-091f-e8b8-5b7f 0s     0     [enter] inspect    │
+          │ nth  id                  age    score                    │003e
+          │ #1   d640-5f89-2fef-003e 0s     0     [enter] inspect    │
           │                                                          │
           │                                                          │
           │                                                          │

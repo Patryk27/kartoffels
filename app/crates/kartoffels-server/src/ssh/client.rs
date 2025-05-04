@@ -1,11 +1,12 @@
 use super::AppChannel;
-use ahash::AHashMap;
 use anyhow::{anyhow, Context, Error, Result};
 use glam::uvec2;
 use kartoffels_store::Store;
 use russh::keys::PublicKey;
 use russh::server::{Auth, Handler, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, info_span, Span};
@@ -14,7 +15,8 @@ use tracing::{info, info_span, Span};
 pub struct AppClient {
     store: Arc<Store>,
     shutdown: CancellationToken,
-    channels: AHashMap<ChannelId, AppChannel>,
+    clients: Arc<AtomicUsize>,
+    channels: HashMap<ChannelId, AppChannel>,
     span: Span,
 }
 
@@ -22,15 +24,19 @@ impl AppClient {
     pub fn new(
         store: Arc<Store>,
         shutdown: CancellationToken,
+        clients: Arc<AtomicUsize>,
         addr: String,
     ) -> Self {
         let span = info_span!("ssh", %addr);
 
         info!(parent: &span, "connection opened");
 
+        clients.fetch_add(1, Ordering::SeqCst);
+
         Self {
             span,
             store,
+            clients,
             shutdown,
             channels: Default::default(),
         }
@@ -144,5 +150,7 @@ impl Handler for AppClient {
 impl Drop for AppClient {
     fn drop(&mut self) {
         info!(parent: &self.span, "connection closed");
+
+        self.clients.fetch_sub(1, Ordering::SeqCst);
     }
 }

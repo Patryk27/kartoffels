@@ -1,8 +1,8 @@
 use super::{Modal, State};
 use crate::views::game::{Config, HelpMsgRef};
 use anyhow::{anyhow, Result};
+use kartoffels_store::World;
 use kartoffels_ui::{theme, Frame, Msg, Ui};
-use kartoffels_world::prelude::Handle as WorldHandle;
 use std::time::Instant;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time;
@@ -22,26 +22,26 @@ impl GameCtrl {
         (this, rx)
     }
 
-    pub async fn join(&self, world: WorldHandle) -> Result<()> {
-        self.send(GameCtrlEvent::Join(world)).await?;
+    pub async fn join(&self, world: &World) -> Result<()> {
+        self.send(GameCtrlRequest::Join(world.clone())).await?;
 
         Ok(())
     }
 
     pub async fn pause(&self) -> Result<()> {
-        self.send(GameCtrlEvent::Pause).await?;
+        self.send(GameCtrlRequest::Pause).await?;
 
         Ok(())
     }
 
     pub async fn resume(&self) -> Result<()> {
-        self.send(GameCtrlEvent::Resume).await?;
+        self.send(GameCtrlRequest::Resume).await?;
 
         Ok(())
     }
 
     pub async fn set_config(&self, config: Config) -> Result<()> {
-        self.send(GameCtrlEvent::SetConfig(config)).await?;
+        self.send(GameCtrlRequest::SetConfig(config)).await?;
 
         Ok(())
     }
@@ -50,14 +50,14 @@ impl GameCtrl {
         &self,
         modal: impl FnMut(&mut Ui<()>) + Send + 'static,
     ) -> Result<()> {
-        self.send(GameCtrlEvent::SetModal(Some(Box::new(modal))))
+        self.send(GameCtrlRequest::SetModal(Some(Box::new(modal))))
             .await?;
 
         Ok(())
     }
 
     async fn close_modal(&self) -> Result<()> {
-        self.send(GameCtrlEvent::SetModal(None)).await?;
+        self.send(GameCtrlRequest::SetModal(None)).await?;
 
         Ok(())
     }
@@ -92,19 +92,19 @@ impl GameCtrl {
     }
 
     pub async fn set_help(&self, help: Option<HelpMsgRef>) -> Result<()> {
-        self.send(GameCtrlEvent::SetHelp(help)).await?;
+        self.send(GameCtrlRequest::SetHelp(help)).await?;
 
         Ok(())
     }
 
     pub async fn set_label(&self, label: Option<String>) -> Result<()> {
-        self.send(GameCtrlEvent::SetLabel(label)).await?;
+        self.send(GameCtrlRequest::SetLabel(label)).await?;
 
         Ok(())
     }
 
     pub async fn copy(&self, payload: impl Into<String>) -> Result<()> {
-        self.send(GameCtrlEvent::Copy(payload.into())).await?;
+        self.send(GameCtrlRequest::Copy(payload.into())).await?;
 
         Ok(())
     }
@@ -112,7 +112,7 @@ impl GameCtrl {
     pub async fn get_world_version(&self) -> Result<u64> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(GameCtrlEvent::GetWorldVersion(tx)).await?;
+        self.send(GameCtrlRequest::GetWorldVersion(tx)).await?;
 
         rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
@@ -120,7 +120,7 @@ impl GameCtrl {
     pub async fn wait_for_restart(&self) -> Result<()> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(GameCtrlEvent::WaitForRestart(tx)).await?;
+        self.send(GameCtrlRequest::WaitForRestart(tx)).await?;
 
         rx.await.map_err(|_| anyhow!("{}", Self::ERR))
     }
@@ -137,7 +137,7 @@ impl GameCtrl {
         }
     }
 
-    async fn send(&self, event: GameCtrlEvent) -> Result<()> {
+    async fn send(&self, event: GameCtrlRequest) -> Result<()> {
         self.tx
             .send(event)
             .await
@@ -147,12 +147,12 @@ impl GameCtrl {
     }
 }
 
-pub(super) type GameCtrlTx = mpsc::Sender<GameCtrlEvent>;
-pub(super) type GameCtrlRx = mpsc::Receiver<GameCtrlEvent>;
+pub(super) type GameCtrlTx = mpsc::Sender<GameCtrlRequest>;
+pub(super) type GameCtrlRx = mpsc::Receiver<GameCtrlRequest>;
 
 #[allow(clippy::type_complexity)]
-pub(super) enum GameCtrlEvent {
-    Join(WorldHandle),
+pub(super) enum GameCtrlRequest {
+    Join(World),
     Pause,
     Resume,
     SetConfig(Config),
@@ -164,56 +164,56 @@ pub(super) enum GameCtrlEvent {
     WaitForRestart(oneshot::Sender<()>),
 }
 
-impl GameCtrlEvent {
+impl GameCtrlRequest {
     pub(super) async fn handle(
         self,
         state: &mut State,
         frame: &mut Frame,
     ) -> Result<()> {
         match self {
-            GameCtrlEvent::Join(handle) => {
+            GameCtrlRequest::Join(handle) => {
                 let mut snapshots = handle.snapshots();
 
                 state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
                 state.camera.set(state.snapshot.tiles.center());
-                state.handle = Some(handle);
+                state.world = Some(handle);
                 state.bot = None;
             }
 
-            GameCtrlEvent::Pause => {
+            GameCtrlRequest::Pause => {
                 state.pause().await?;
             }
 
-            GameCtrlEvent::Resume => {
+            GameCtrlRequest::Resume => {
                 state.resume().await?;
             }
 
-            GameCtrlEvent::SetConfig(config) => {
+            GameCtrlRequest::SetConfig(config) => {
                 state.config = config;
             }
 
-            GameCtrlEvent::SetModal(modal) => {
+            GameCtrlRequest::SetModal(modal) => {
                 state.modal = modal.map(Modal::Custom).map(Box::new);
             }
 
-            GameCtrlEvent::SetHelp(help) => {
+            GameCtrlRequest::SetHelp(help) => {
                 state.help = help;
             }
 
-            GameCtrlEvent::SetLabel(label) => {
+            GameCtrlRequest::SetLabel(label) => {
                 state.label = label.map(|status| (status, Instant::now()));
             }
 
-            GameCtrlEvent::Copy(payload) => {
+            GameCtrlRequest::Copy(payload) => {
                 frame.copy(payload).await?;
             }
 
-            GameCtrlEvent::GetWorldVersion(tx) => {
+            GameCtrlRequest::GetWorldVersion(tx) => {
                 _ = tx.send(state.snapshot.version);
             }
 
-            GameCtrlEvent::WaitForRestart(tx) => {
+            GameCtrlRequest::WaitForRestart(tx) => {
                 state.config.can_join_bots = false;
                 state.config.can_restart_bots = false;
                 state.config.can_restart_bots = false;

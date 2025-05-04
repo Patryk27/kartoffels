@@ -10,7 +10,7 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, state: &State) {
-        if state.handle.is_some() {
+        if state.world.is_some() {
             Self::render_label(ui, state);
         }
 
@@ -24,7 +24,7 @@ impl BottomPanel {
 
             match &state.mode {
                 Mode::Default => {
-                    if state.handle.is_some() {
+                    if state.world.is_some() {
                         ui.enable(state.config.enabled, |ui| {
                             Self::render_pause_btn(ui, state);
                             Self::render_help_btn(ui, state);

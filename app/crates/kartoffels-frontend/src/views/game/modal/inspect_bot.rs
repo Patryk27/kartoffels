@@ -1,8 +1,9 @@
 use super::Modal;
 use crate::views::game::Event as ParentEvent;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
-use kartoffels_world::cfg;
-use kartoffels_world::prelude::{BotId, BotSnapshot, Snapshot};
+use kartoffels_world::prelude::{
+    BotId, BotSnapshot, Snapshot, MAX_LIVES_PER_BOT,
+};
 use ordinal::Ordinal;
 use ratatui::layout::{Alignment, Constraint, Layout};
 use ratatui::style::{Style, Stylize};
@@ -125,12 +126,12 @@ impl InspectBotModal {
 
         ui.space(5);
 
-        if stats.lives >= (cfg::MAX_LIVES_PER_BOT as u32) {
+        if stats.lives >= (MAX_LIVES_PER_BOT as u32) {
             ui.line(format!(
                 "note: this machine has gone through {} lives, showing only \
                  the recent {} ones",
                 world.lives.len(self.id),
-                cfg::MAX_LIVES_PER_BOT,
+                MAX_LIVES_PER_BOT,
             ));
 
             ui.space(1);
