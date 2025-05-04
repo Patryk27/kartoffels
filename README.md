@@ -18,10 +18,10 @@
 
 kartoffel (🇩🇪)    
 = potato    
-= slang for "slow machine"    
-= exactly what kartoffels are, slow machines indeed!
+= slang for _slow machine_    
+= exactly what kartoffels are!
 
-## building
+## build
 
 so you want to launch kartoffels on your own machine? easy!
 
@@ -93,6 +93,39 @@ $ npm run dev
 ### on windows
 
 i'd suggest installing wsl and following the linux instructions
+
+## contribute
+
+so you want to contribute to kartoffels? easy! -- the code is divided into
+roughly three areas:
+
+- all things risc-v (`kartoffels-cpu`),
+- all things world-and-bot (`kartoffels-world`),
+- all things user-interface (`kartoffels-frontend`).
+
+so, say:
+
+- if you wanted to introduce support for risc-v compressed instructions, you'd
+  modify (mostly) `kartoffels-cpu`,
+- if you wanted to introduce a new bot peripheral, you'd modify (mostly)
+  `kartoffels-world`,
+- if you wanted to introduce a new challenge, you'd modify (mostly)
+  `kartoffels-frontend`.
+
+note that those are just rough examples, different features or fixes might
+require touching different places
+
+also:
+
+- use `cargo test --release` and `cargo fmt`,
+- some tests (notably those ui-based) utilize snapshots - they take a
+  "screenshot" (a textshot?) of the current frame and compare it against the
+  expected frame - you can run `just test-and-bless` to quickly fix such tests
+  after you e.g. modify a commonly-used ui widget,
+- pls don't introduce larger changes (e.g. a new peripheral) without some
+  discussion first - it might happen that something hasn't been implemented
+  deliberately and i wouldn't like for people to waste time just to tell them
+  "sorry, it doesn't fit my vision"
 
 ## license
 
