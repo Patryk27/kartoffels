@@ -1,8 +1,8 @@
 # kartoffels 🥔
 
 <p align="center">
-    <a href="https://kartoffels.pwy.io">kartoffels</a> is a game where you're
-    given a potato and your job is to implement
+    <a href="https://kartoffels.pwy.io">kartoffels</a> is an online game where
+    you're given a potato and your job is to implement
     <a href="https://github.com/patryk27/kartoffel">a firmware</a> for it:
 </p>
 
@@ -13,6 +13,16 @@
     <a href="https://kartoffels.pwy.io">play it in browser</a> or terminal:<br>
     <code>ssh kartoffels.pwy.io</code>
 </p>
+
+---
+
+<div align="center">
+
+[build](#build) • [contribute](#contribute) • [license](#license) 
+
+</div>
+
+---
 
 ## name
 
