@@ -192,36 +192,6 @@ impl CaveTheme {
     }
 }
 
-impl FromStr for CaveTheme {
-    type Err = Error;
-
-    fn from_str(spec: &str) -> Result<Self> {
-        let mut width = None;
-        let mut height = None;
-
-        for entry in spec::entries(spec) {
-            let entry = entry?;
-
-            match entry.key {
-                "width" => {
-                    width = Some(entry.value()?);
-                }
-                "height" => {
-                    height = Some(entry.value()?);
-                }
-                key => {
-                    return Err(anyhow!("unknown key: {key}"));
-                }
-            }
-        }
-
-        let width = width.context("missing key: width")?;
-        let height = height.context("missing key: height")?;
-
-        Ok(Self::new(uvec2(width, height)))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -232,8 +202,7 @@ mod tests {
     fn build() {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-        let map = CaveTheme::from_str("width=64,height=32")
-            .unwrap()
+        let map = CaveTheme::new(uvec2(64, 32))
             .build(&mut rng, MapBuilder::detached())
             .now_or_never()
             .unwrap()

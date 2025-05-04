@@ -200,7 +200,7 @@ async fn set_spawn() {
         .collect();
 
     let expected =
-        vec![ivec2(19, 13), ivec2(10, 9), ivec2(15, 19), ivec2(16, 1)];
+        vec![ivec2(13, 11), ivec2(10, 9), ivec2(15, 19), ivec2(16, 1)];
 
     assert_eq!(expected, actual);
 }
@@ -291,12 +291,7 @@ async fn without_auto_respawn() {
 
 #[tokio::test]
 async fn resume() {
-    let file = NamedTempFile::new().unwrap();
-
-    let world = kartoffels_world::create(Config {
-        path: Some(file.path().to_owned()),
-        ..config()
-    });
+    let world = kartoffels_world::create(config());
 
     let bot = world
         .create_bot(CreateBotRequest::new(DUMMY))
@@ -305,7 +300,7 @@ async fn resume() {
 
     // ---
 
-    world.shutdown().await.unwrap();
+    let src = world.shutdown().await.unwrap();
 
     assert_eq!(
         "world has crashed",
@@ -314,7 +309,7 @@ async fn resume() {
 
     // ---
 
-    let world = kartoffels_world::resume(world.id(), file.path()).unwrap();
+    let world = kartoffels_world::resume(src).unwrap();
 
     world.tick(1).await.unwrap();
 

@@ -1,10 +1,9 @@
-use std::time::Duration;
-
 use anyhow::{Context, Result};
 use clap::Parser;
 use glam::uvec2;
 use kartoffels_prefabs::ROBERTO;
 use kartoffels_world::prelude::*;
+use std::time::Duration;
 use tokio::time;
 use tracing::info;
 
@@ -26,9 +25,7 @@ impl BenchCmd {
                 let world = kartoffels_world::create(Config {
                     clock: Clock::Unlimited,
                     events: false,
-                    id: None,
                     name: "bench".into(),
-                    path: None,
                     policy: Policy {
                         auto_respawn: true,
                         max_alive_bots: 128,

@@ -1,5 +1,4 @@
 use super::super::Event;
-use kartoffels_store::Store;
 use kartoffels_ui::{theme, Button, KeyCode, Ui, UiWidget};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
@@ -12,23 +11,23 @@ impl Menu {
         20
     }
 
-    pub fn height<T>(store: &Store, ui: &Ui<T>) -> u16 {
-        let height = if ui.ty.is_ssh() { 7 } else { 5 };
+    pub fn height<T>(ui: &Ui<T>, has_public_worlds: bool) -> u16 {
+        let mut height = if ui.ty.is_ssh() { 7 } else { 5 };
 
-        if store.public_worlds().is_empty() {
-            height
-        } else {
-            height + 1
+        if has_public_worlds {
+            height += 1;
         }
+
+        height
     }
 
-    pub fn render(store: &Store, ui: &mut Ui<Event>) {
+    pub fn render(ui: &mut Ui<Event>, has_public_worlds: bool) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            if !store.public_worlds().is_empty() {
+            if has_public_worlds {
                 Button::new("play", KeyCode::Char('p'))
                     .throwing(Event::Play)
                     .centered()

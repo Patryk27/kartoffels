@@ -62,7 +62,7 @@ async fn main(
 
     let frame = create_frame(socket, hello).context("couldn't create frame")?;
 
-    common::start_session(store, frame, shutdown).await;
+    common::start_session(store, frame, shutdown).await?;
 
     Ok(())
 }

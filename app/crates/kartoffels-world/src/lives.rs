@@ -67,7 +67,7 @@ impl BotLives {
     }
 
     fn on_bot_died(&mut self, clock: &Clock, age: Ticks) {
-        if self.prev.len() >= cfg::MAX_LIVES_PER_BOT {
+        if self.prev.len() >= MAX_LIVES_PER_BOT {
             self.prev.pop_front();
         }
 

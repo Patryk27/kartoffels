@@ -8,9 +8,6 @@ use arc_swap::Guard;
 #[derivative(Debug)]
 pub struct Handle {
     shared: Arc<SharedHandle>,
-
-    #[derivative(Debug = "ignore")]
-    on_last_drop: Option<Arc<Box<dyn FnOnce() + Send + Sync>>>,
 }
 
 impl Handle {
@@ -19,16 +16,15 @@ impl Handle {
     pub(crate) fn new(shared: SharedHandle) -> Self {
         Self {
             shared: Arc::new(shared),
-            on_last_drop: None,
         }
-    }
-
-    pub fn id(&self) -> Id {
-        self.shared.id
     }
 
     pub fn name(&self) -> Guard<Arc<String>> {
         self.shared.name.load()
+    }
+
+    pub fn rename(&self, name: String) {
+        self.shared.name.store(Arc::new(name));
     }
 
     pub fn events(&self) -> Result<EventStream> {
@@ -49,62 +45,36 @@ impl Handle {
         self.shared.snapshots.borrow().version
     }
 
-    pub fn on_last_drop(
-        mut self,
-        f: impl FnOnce() + Send + Sync + 'static,
-    ) -> Self {
-        assert!(self.on_last_drop.is_none());
-
-        self.on_last_drop = Some(Arc::new(Box::new(f)));
-        self
-    }
-
     pub async fn tick(&self, fuel: u32) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::Tick { fuel, tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::Tick { fuel, tx }).await
     }
 
     pub async fn pause(&self) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::Pause { tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::Pause { tx }).await
     }
 
     pub async fn resume(&self) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::Resume { tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::Resume { tx }).await
     }
 
-    pub async fn shutdown(&self) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::Shutdown { tx }).await?;
-
-        rx.await.context(Self::ERR)
+    pub async fn shutdown(&self) -> Result<WorldBuffer> {
+        self.send(|tx| Request::Shutdown { tx }).await
     }
 
-    pub async fn rename(&self, name: String) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
+    pub async fn save(&self) -> Result<WorldBuffer> {
+        self.send(|tx| Request::Save { tx }).await
+    }
 
-        self.send(Request::Rename { name, tx }).await?;
+    pub async fn get_policy(&self) -> Result<Policy> {
+        self.send(|tx| Request::GetPolicy { tx }).await
+    }
 
-        rx.await.context(Self::ERR)
+    pub async fn set_policy(&self, policy: Policy) -> Result<()> {
+        self.send(|tx| Request::SetPolicy { policy, tx }).await
     }
 
     pub async fn create_bot(&self, req: CreateBotRequest) -> Result<BotId> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::CreateBot { req, tx }).await?;
-
-        rx.await.context(Self::ERR)?
+        self.send(|tx| Request::CreateBot { req, tx }).await?
     }
 
     pub async fn kill_bot(
@@ -112,32 +82,20 @@ impl Handle {
         id: BotId,
         reason: impl ToString,
     ) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::KillBot {
+        self.send(|tx| Request::KillBot {
             id,
             reason: reason.to_string(),
             tx,
         })
-        .await?;
-
-        rx.await.context(Self::ERR)
+        .await
     }
 
     pub async fn delete_bot(&self, id: BotId) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::DeleteBot { id, tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::DeleteBot { id, tx }).await
     }
 
     pub async fn set_map(&self, map: Map) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::SetMap { map, tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::SetMap { map, tx }).await
     }
 
     pub async fn set_spawn(
@@ -145,16 +103,12 @@ impl Handle {
         pos: impl Into<Option<IVec2>>,
         dir: impl Into<Option<Dir>>,
     ) -> Result<()> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::SetSpawn {
+        self.send(|tx| Request::SetSpawn {
             pos: pos.into(),
             dir: dir.into(),
             tx,
         })
-        .await?;
-
-        rx.await.context(Self::ERR)
+        .await
     }
 
     pub async fn create_object(
@@ -162,38 +116,37 @@ impl Handle {
         obj: Object,
         pos: impl Into<Option<IVec2>>,
     ) -> Result<ObjectId> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::CreateObject {
+        self.send(|tx| Request::CreateObject {
             obj,
             pos: pos.into(),
             tx,
         })
-        .await?;
-
-        rx.await.context(Self::ERR)
+        .await
     }
 
     pub async fn delete_object(&self, id: ObjectId) -> Result<Option<Object>> {
-        let (tx, rx) = oneshot::channel();
-
-        self.send(Request::DeleteObject { id, tx }).await?;
-
-        rx.await.context(Self::ERR)
+        self.send(|tx| Request::DeleteObject { id, tx }).await
     }
 
     pub async fn overclock(&self, clock: Clock) -> Result<()> {
+        self.send(|tx| Request::Overclock { clock, tx }).await
+    }
+
+    async fn send<T>(
+        &self,
+        req: impl FnOnce(oneshot::Sender<T>) -> Request,
+    ) -> Result<T> {
         let (tx, rx) = oneshot::channel();
 
-        self.send(Request::Overclock { clock, tx }).await?;
+        self.send_ex(req(tx)).await?;
 
         rx.await.context(Self::ERR)
     }
 
-    async fn send(&self, request: Request) -> Result<()> {
+    async fn send_ex(&self, req: Request) -> Result<()> {
         self.shared
             .tx
-            .send(request)
+            .send(req)
             .await
             .map_err(|_| anyhow!("{}", Self::ERR))?;
 
@@ -201,113 +154,90 @@ impl Handle {
     }
 }
 
-impl Drop for Handle {
-    fn drop(&mut self) {
-        if let Some(f) = self.on_last_drop.take()
-            && let Ok(f) = Arc::try_unwrap(f)
-        {
-            f();
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct SharedHandle {
     pub tx: mpsc::Sender<Request>,
-    pub id: Id,
     pub name: Arc<ArcSwap<String>>,
     pub events: Option<broadcast::Sender<EventEnvelope>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
-#[derive(Derivative)]
-#[derivative(Debug)]
+#[derive(Debug)]
 pub enum Request {
+    Ping {
+        tx: oneshot::Sender<()>,
+    },
+
     Tick {
         fuel: u32,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Pause {
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Resume {
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Shutdown {
-        #[derivative(Debug = "ignore")]
-        tx: oneshot::Sender<()>,
+        tx: oneshot::Sender<WorldBuffer>,
     },
 
-    Rename {
-        name: String,
+    Save {
+        tx: oneshot::Sender<WorldBuffer>,
+    },
 
-        #[derivative(Debug = "ignore")]
+    GetPolicy {
+        tx: oneshot::Sender<Policy>,
+    },
+
+    SetPolicy {
+        policy: Policy,
         tx: oneshot::Sender<()>,
     },
 
     CreateBot {
         req: CreateBotRequest,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
     KillBot {
         id: BotId,
         reason: String,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     DeleteBot {
         id: BotId,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetMap {
         map: Map,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetSpawn {
         pos: Option<IVec2>,
         dir: Option<Dir>,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateObject {
         obj: Object,
         pos: Option<IVec2>,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<ObjectId>,
     },
 
     DeleteObject {
         id: ObjectId,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Option<Object>>,
     },
 
     Overclock {
         clock: Clock,
-
-        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 }

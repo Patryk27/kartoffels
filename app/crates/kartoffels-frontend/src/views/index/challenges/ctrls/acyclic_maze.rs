@@ -5,7 +5,7 @@ use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_prefabs::DUMMY;
-use kartoffels_store::Store;
+use kartoffels_store::{Store, World};
 use kartoffels_ui::{KeyCode, Msg, MsgButton, MsgLine};
 use kartoffels_world::prelude::{
     BotId, Config, CreateBotRequest, Dir, Handle, Map, MapBuilder, Policy,
@@ -99,19 +99,21 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
-    let world = store.create_private_world(Config {
-        policy: Policy {
-            auto_respawn: false,
-            max_alive_bots: 2,
-            max_queued_bots: 1,
-        },
-        ..store.world_config("challenge:acyclic-maze")
-    })?;
+    let world = store
+        .create_private_world(Config {
+            policy: Policy {
+                auto_respawn: false,
+                max_alive_bots: 2,
+                max_queued_bots: 1,
+            },
+            ..store.world_config("challenge:acyclic-maze")
+        })
+        .await?;
 
     world
         .set_map({
@@ -128,7 +130,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(Handle, BotId)> {
         .create_bot(CreateBotRequest::new(DUMMY).at(TIMMY_POS).facing(Dir::S))
         .await?;
 
-    game.join(world.clone()).await?;
+    game.join(&world).await?;
 
     utils::map::build(store, game, &world, create_map).await?;
 

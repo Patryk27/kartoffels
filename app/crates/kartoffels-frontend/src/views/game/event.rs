@@ -187,7 +187,7 @@ impl Event {
                 let id = state.bot.as_ref().unwrap().id;
 
                 state
-                    .handle
+                    .world
                     .as_ref()
                     .unwrap()
                     .kill_bot(id, "forcefully restarted")
@@ -197,7 +197,7 @@ impl Event {
             Event::DeleteBot => {
                 let id = state.bot.take().unwrap().id;
 
-                state.handle.as_ref().unwrap().delete_bot(id).await?;
+                state.world.as_ref().unwrap().delete_bot(id).await?;
             }
 
             Event::FollowBot => {
@@ -213,7 +213,7 @@ impl Event {
             }
 
             Event::Overclock { clock } => {
-                state.handle.as_ref().unwrap().overclock(clock).await?;
+                state.world.as_ref().unwrap().overclock(clock).await?;
             }
         }
 
@@ -253,7 +253,7 @@ impl State {
         follow: bool,
     ) -> Result<()> {
         let id = self
-            .handle
+            .world
             .as_ref()
             .unwrap()
             .create_bot(CreateBotRequest::new(src).at(pos))

@@ -21,10 +21,10 @@ use self::side::*;
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
-use kartoffels_store::{Session, Store};
+use kartoffels_store::{Session, Store, World};
 use kartoffels_ui::{theme, Clear, Fade, FadeDir, Frame, Ui, UiWidget};
 use kartoffels_world::prelude::{
-    BotId, Handle as WorldHandle, Snapshot as WorldSnapshot, SnapshotStream,
+    BotId, Snapshot as WorldSnapshot, SnapshotStream,
 };
 use ratatui::layout::{Constraint, Layout};
 use std::future::Future;
@@ -104,8 +104,8 @@ struct State {
     bot: Option<JoinedBot>,
     camera: Camera,
     config: Config,
-    handle: Option<WorldHandle>,
     help: Option<HelpMsgRef>,
+    label: Option<(String, Instant)>,
     map: Map,
     modal: Option<Box<Modal>>,
     mode: Mode,
@@ -113,7 +113,7 @@ struct State {
     restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<WorldSnapshot>,
     snapshots: Option<SnapshotStream>,
-    label: Option<(String, Instant)>,
+    world: Option<World>,
 }
 
 impl State {
@@ -188,7 +188,7 @@ impl State {
                 BottomPanel::render(ui, self);
             });
 
-            if self.handle.is_some() {
+            if self.world.is_some() {
                 ui.enable(self.config.enabled, |ui| {
                     ui.clamp(side_area, |ui| {
                         SidePanel::render(ui, self);
@@ -252,7 +252,7 @@ impl State {
             self.snapshots = None;
 
             if self.config.sync_pause
-                && let Some(handle) = &self.handle
+                && let Some(handle) = &self.world
             {
                 handle.pause().await?;
             }
@@ -266,10 +266,10 @@ impl State {
             self.paused = false;
 
             self.snapshots =
-                self.handle.as_ref().map(|handle| handle.snapshots());
+                self.world.as_ref().map(|handle| handle.snapshots());
 
             if self.config.sync_pause
-                && let Some(handle) = &self.handle
+                && let Some(handle) = &self.world
             {
                 handle.resume().await?;
             }

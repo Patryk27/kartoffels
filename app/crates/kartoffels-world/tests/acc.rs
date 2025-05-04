@@ -14,7 +14,6 @@ use pretty_assertions as pa;
 use std::future::Future;
 use std::path::Path;
 use std::sync::Arc;
-use tempfile::NamedTempFile;
 
 #[tokio::test]
 async fn smoke() {
@@ -41,9 +40,7 @@ fn config() -> Config {
     Config {
         clock: Clock::manual(),
         events: false,
-        id: None,
         name: "world".into(),
-        path: None,
         policy: Policy {
             auto_respawn: true,
             max_alive_bots: 16,

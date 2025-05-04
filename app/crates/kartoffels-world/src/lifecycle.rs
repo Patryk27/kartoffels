@@ -5,5 +5,5 @@ use crate::*;
 
 #[derive(Debug)]
 pub struct Shutdown {
-    pub tx: Option<oneshot::Sender<()>>,
+    pub tx: Option<oneshot::Sender<WorldBuffer>>,
 }

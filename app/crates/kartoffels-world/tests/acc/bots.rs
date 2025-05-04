@@ -19,7 +19,7 @@ async fn fall() {
         .await
         .unwrap();
 
-    world.tick(20000).await.unwrap();
+    world.tick(25000).await.unwrap();
 
     let snap = world.snapshot().await;
 

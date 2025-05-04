@@ -11,12 +11,14 @@ pub async fn handle(
     Path(id): Path<SessionId>,
     body: Bytes,
 ) -> impl IntoResponse {
-    let result =
-        store.with_session(id, |sess| sess.complete_upload(body.to_vec()));
+    let result = store
+        .get_session(id)
+        .await
+        .map(|sess| sess.with(|sess| sess.complete_upload(body.to_vec())));
 
     match result {
-        Some(Ok(())) => StatusCode::CREATED,
-        Some(Err(())) => StatusCode::GONE,
-        None => StatusCode::NOT_FOUND,
+        Ok(Ok(())) => StatusCode::CREATED,
+        Ok(Err(())) => StatusCode::GONE,
+        Err(_) => StatusCode::NOT_FOUND,
     }
 }

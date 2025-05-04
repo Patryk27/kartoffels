@@ -4,11 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-ahash.workspace = true
 anyhow.workspace = true
 axum.workspace = true
 clap.workspace = true
-ed25519-dalek.workspace = true
 flate2.workspace = true
 futures-util.workspace = true
 glam.workspace = true
@@ -17,11 +15,14 @@ itertools.workspace = true
 kartoffels-frontend = { path = "../kartoffels-frontend" }
 kartoffels-store = { path = "../kartoffels-store" }
 kartoffels-ui = { path = "../kartoffels-ui" }
+kartoffels-utils = { path = "../kartoffels-utils" }
 kartoffels-world = { path = "../kartoffels-world" }
+prettytable-rs.workspace = true
 rand.workspace = true
 russh.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+shellwords.workspace = true
 tokio-stream.workspace = true
 tokio-util.workspace = true
 tokio.workspace = true

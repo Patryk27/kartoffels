@@ -20,22 +20,18 @@ mod object;
 mod objects;
 mod policy;
 mod snapshots;
-mod spec;
 mod stats;
-mod storage;
+mod store;
 mod theme;
 mod utils;
-
-pub mod cfg {
-    pub const EVENT_STREAM_CAPACITY: usize = 128;
-    pub const REQUEST_STREAM_CAPACITY: usize = 128;
-    pub const MAX_LIVES_PER_BOT: usize = 128;
-}
 
 pub mod prelude {
     pub use crate::bot::{BotEvent, BotId};
     pub use crate::clock::Clock;
-    pub use crate::config::Config;
+    pub use crate::config::{
+        Config, EVENT_STREAM_CAPACITY, MAX_LIVES_PER_BOT,
+        REQUEST_STREAM_CAPACITY,
+    };
     pub use crate::events::{Event, EventEnvelope, EventStream};
     pub use crate::handle::{CreateBotRequest, Handle, Request};
     pub use crate::map::{Map, MapBuilder, Tile, TileKind};
@@ -46,6 +42,7 @@ pub mod prelude {
         DeadBotSnapshot, DeadBotsSnapshot, ObjectsSnapshot, QueuedBotSnapshot,
         QueuedBotsSnapshot, Snapshot, SnapshotStream,
     };
+    pub use crate::store::WorldBuffer;
     pub use crate::theme::{ArenaTheme, CaveTheme, Theme};
     pub use crate::utils::Dir;
 }
@@ -64,7 +61,7 @@ pub(crate) use self::objects::*;
 pub(crate) use self::policy::*;
 pub(crate) use self::snapshots::*;
 pub(crate) use self::stats::*;
-pub(crate) use self::storage::*;
+pub(crate) use self::store::*;
 pub(crate) use self::theme::*;
 pub(crate) use self::utils::*;
 
@@ -90,26 +87,22 @@ use std::any::{Any, TypeId};
 use std::cmp::Reverse;
 use std::collections::{hash_map, VecDeque};
 use std::fmt::Write as _;
-use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::io::{BufReader, Cursor, Read, Write};
+use std::io::{Cursor, Read};
 use std::ops::{ControlFlow, RangeInclusive};
-use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use std::{cmp, fmt, fs, iter, mem, ops, thread};
+use std::{cmp, fmt, iter, mem, ops, thread};
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
 use tokio_stream::StreamExt;
-use tracing::{debug, info, info_span, trace, warn, Span};
+use tracing::{debug, info, trace, warn, Span};
 
 pub fn create(config: Config) -> Handle {
     let mut rng = config
         .seed
         .map(ChaCha8Rng::from_seed)
         .unwrap_or_else(ChaCha8Rng::from_entropy);
-
-    let id = config.id.unwrap_or_else(|| rng.gen());
 
     let map = config
         .theme
@@ -126,11 +119,9 @@ pub fn create(config: Config) -> Handle {
     let boot = Bootstrap {
         bots: Default::default(),
         clock: config.clock,
-        id,
         lives: Default::default(),
         map,
         name: Arc::new(ArcSwap::from_pointee(config.name)),
-        path: config.path,
         policy: config.policy,
         rng,
         theme: config.theme,
@@ -139,17 +130,15 @@ pub fn create(config: Config) -> Handle {
     spawn(boot, config.events)
 }
 
-pub fn resume(id: Id, path: &Path) -> Result<Handle> {
-    let world = storage::load(path)?;
+pub fn resume(buf: WorldBuffer) -> Result<Handle> {
+    let world = store::load(buf)?;
 
     let boot = Bootstrap {
         bots: world.bots.into_owned(),
         clock: Default::default(),
-        id,
         lives: world.lives.into_owned(),
         map: world.map.into_owned(),
-        name: Arc::new(ArcSwap::from_pointee(world.name.into_owned())),
-        path: Some(path.to_owned()),
+        name: Arc::new(ArcSwap::from_pointee(world.name)),
         policy: world.policy.into_owned(),
         rng: ChaCha8Rng::from_entropy(),
         theme: world.theme.map(MaybeOwned::into_owned),
@@ -159,10 +148,10 @@ pub fn resume(id: Id, path: &Path) -> Result<Handle> {
 }
 
 fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
-    let (tx, rx) = mpsc::channel(cfg::REQUEST_STREAM_CAPACITY);
+    let (tx, rx) = mpsc::channel(REQUEST_STREAM_CAPACITY);
 
     let events =
-        with_events.then(|| broadcast::Sender::new(cfg::EVENT_STREAM_CAPACITY));
+        with_events.then(|| broadcast::Sender::new(EVENT_STREAM_CAPACITY));
 
     let snapshots = watch::Sender::default();
 
@@ -181,18 +170,17 @@ fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
 
     let handle = Handle::new(SharedHandle {
         tx,
-        id: world.id,
         name: world.name.clone(),
         events,
         snapshots,
     });
 
-    let span = info_span!("world", id = %world.id);
+    let span = Span::current();
 
     thread::spawn(move || {
         let _span = span.entered();
 
-        info!(name=?world.name.load(), "ready");
+        info!("ready");
 
         loop {
             if world.tick().is_break() {
@@ -200,7 +188,7 @@ fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
             }
         }
 
-        info!(name=?world.name.load(), "shut down");
+        info!("shut down");
     });
 
     handle
@@ -209,11 +197,9 @@ fn spawn(boot: Bootstrap, with_events: bool) -> Handle {
 struct Bootstrap {
     bots: Bots,
     clock: Clock,
-    id: Id,
     lives: Lives,
     map: Map,
     name: Arc<ArcSwap<String>>,
-    path: Option<PathBuf>,
     policy: Policy,
     rng: ChaCha8Rng,
     theme: Option<Theme>,
@@ -233,13 +219,11 @@ impl Bootstrap {
             clock: self.clock,
             events,
             fuel: Default::default(),
-            id: self.id,
             lives: self.lives,
             map: self.map,
             metronome,
             name: self.name,
             objects: Default::default(), // TODO persist
-            path: self.path,
             paused: Default::default(),
             policy: self.policy,
             requests,
@@ -260,11 +244,9 @@ impl Default for Bootstrap {
         Self {
             bots: Default::default(),
             clock: Default::default(),
-            id: Id::new(1),
             lives: Default::default(),
             map: Default::default(),
             name: Default::default(),
-            path: Default::default(),
             policy: Default::default(),
             rng: ChaCha8Rng::from_seed(Default::default()),
             theme: Default::default(),
@@ -295,13 +277,11 @@ struct World {
     clock: Clock,
     events: Events,
     fuel: Fuel,
-    id: Id,
     lives: Lives,
     map: Map,
     metronome: Metronome,
     name: Arc<ArcSwap<String>>,
     objects: Objects, // TODO persist
-    path: Option<PathBuf>,
     paused: bool,
     policy: Policy,
     requests: mpsc::Receiver<Request>,
@@ -325,12 +305,11 @@ impl World {
 
         stats::update(self);
         snapshots::send(self);
-        storage::save(self);
         lifecycle::log(self);
 
         if let Some(shutdown) = self.shutdown.take() {
             if let Some(tx) = shutdown.tx {
-                _ = tx.send(());
+                _ = tx.send(store::save(self));
             }
 
             ControlFlow::Break(())

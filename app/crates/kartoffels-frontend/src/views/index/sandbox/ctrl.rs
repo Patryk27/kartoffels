@@ -68,17 +68,19 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
-    let world = store.create_private_world(WorldConfig {
-        name: "sandbox".into(),
-        policy: Policy {
-            auto_respawn: true,
-            max_alive_bots: MAX_BOTS,
-            max_queued_bots: MAX_BOTS as u16,
-        },
-        ..Default::default()
-    })?;
+    let world = store
+        .create_private_world(WorldConfig {
+            name: "sandbox".into(),
+            policy: Policy {
+                auto_respawn: true,
+                max_alive_bots: MAX_BOTS,
+                max_queued_bots: MAX_BOTS as u16,
+            },
+            ..Default::default()
+        })
+        .await?;
 
-    game.join(world.clone()).await?;
+    game.join(&world).await?;
 
     utils::map::build(store, game, &world, |mut rng, map| async move {
         theme.build(&mut rng, map).await
