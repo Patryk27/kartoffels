@@ -1,5 +1,4 @@
 use crate::*;
-use kartoffel::IRQ_COMPASS_READY;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotCompass {
@@ -16,7 +15,7 @@ impl BotCompass {
             bot.compass.cooldown = 128_000;
 
             bot.irq
-                .raise(IRQ_COMPASS_READY, [1 + bot.dir as u8, 0x00, 0x00]);
+                .raise(api::IRQ_COMPASS_READY, [1 + bot.dir as u8, 0x00, 0x00]);
         }
     }
 
@@ -46,7 +45,7 @@ mod tests {
         assert_eq!(Ok(0), bot.load(api::COMPASS_MEM));
 
         assert_eq!(
-            Some([IRQ_COMPASS_READY, 0x01, 0x00, 0x00]),
+            Some([api::IRQ_COMPASS_READY, 0x01, 0x00, 0x00]),
             bot.irq.take_le(),
         );
 
@@ -67,7 +66,7 @@ mod tests {
             assert_eq!(Ok(0), bot.load(api::COMPASS_MEM));
 
             assert_eq!(
-                Some([IRQ_COMPASS_READY, idx as u8, 0x00, 0x00]),
+                Some([api::IRQ_COMPASS_READY, idx as u8, 0x00, 0x00]),
                 bot.irq.take_le(),
             );
         }
