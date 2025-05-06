@@ -68,11 +68,11 @@ fn main() {
 
         // If the direction we're moving towards will cause us to fall outside
         // the map, change direction
-        if timer_ticks() < sample_dir_at && radar_read(0, -1) != '.' {
+        if clock_ticks() < sample_dir_at && radar_read(0, -1) != '.' {
             sample_dir_at = 0;
         }
 
-        if timer_ticks() < sample_dir_at {
+        if clock_ticks() < sample_dir_at {
             motor_wait();
             motor_step_fw();
         } else {
@@ -118,7 +118,7 @@ fn main() {
                 motor_wait();
                 motor_step_fw();
 
-                sample_dir_at = timer_ticks() + (rng.u32() % 20) * 8000;
+                sample_dir_at = clock_ticks() + (rng.u32() % 20) * 8000;
             }
         }
     }
@@ -144,7 +144,7 @@ struct Rng {
 impl Rng {
     fn new() -> Self {
         Self {
-            state: timer_seed(),
+            state: clock_seed(),
         }
     }
 

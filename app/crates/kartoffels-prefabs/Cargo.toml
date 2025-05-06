@@ -4,6 +4,7 @@ bin = [
 
     # Bots for acceptance tests
     { name = "acc-fall", path = "src/acc-fall.rs", test = false },
+    { name = "acc-irq", path = "src/acc-irq.rs", test = false },
     { name = "acc-panic", path = "src/acc-panic.rs", test = false },
     { name = "acc-radar", path = "src/acc-radar.rs", test = false },
     { name = "acc-serial", path = "src/acc-serial.rs", test = false },

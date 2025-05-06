@@ -8,7 +8,7 @@ pub fn run(world: &mut Value) {
         .unwrap()
         .as_map_mut()
         .unwrap()
-        .add_entry("auto_respawn", Value::Bool(true));
+        .add_entry("auto_respawn", true);
 }
 
 #[cfg(test)]

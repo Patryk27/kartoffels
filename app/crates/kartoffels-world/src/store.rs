@@ -48,14 +48,7 @@ pub fn load(buf: WorldBuffer) -> Result<SerializedWorld<'static>> {
     let this = migrations::run(header.version(), migrations::version(), this)
         .context("couldn't migrate state")?;
 
-    let this = ciborium::from_reader({
-        let mut buffer = Vec::new();
-
-        ciborium::into_writer(&this, &mut buffer)?;
-
-        Cursor::new(buffer)
-    })
-    .context("couldn't deserialize state")?;
+    let this = this.deserialized().context("couldn't deserialize state")?;
 
     Ok(this)
 }

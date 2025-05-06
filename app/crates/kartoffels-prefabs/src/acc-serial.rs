@@ -8,6 +8,6 @@ fn main() {
     println!("Hello, World!");
 
     loop {
-        println!("{}", timer_ticks());
+        println!("{}", clock_ticks());
     }
 }

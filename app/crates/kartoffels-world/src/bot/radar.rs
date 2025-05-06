@@ -18,17 +18,21 @@ impl BotRadar {
     const COOLDOWN_OPT_DIRS: u32 = 8_000;
 
     pub(super) fn tick(bot: &mut AliveBotBody) {
+        if bot.radar.cooldown == 1 {
+            bot.irq.raise(api::IRQ_RADAR_IDLE, [0x00, 0x00, 0x00]);
+        }
+
         bot.radar.cooldown = bot.radar.cooldown.saturating_sub(1);
     }
 
     pub(super) fn load(bot: &AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            api::MEM_RADAR => Ok((bot.radar.cooldown == 0) as u32),
+            api::RADAR_MEM => Ok((bot.radar.cooldown == 0) as u32),
 
-            addr if (api::MEM_RADAR + 4..api::MEM_COMPASS).contains(&addr) => {
+            addr if (api::RADAR_MEM + 4..api::COMPASS_MEM).contains(&addr) => {
                 bot.radar
                     .memory
-                    .get((addr - api::MEM_RADAR - 4) as usize / 4)
+                    .get((addr - api::RADAR_MEM - 4) as usize / 4)
                     .copied()
                     .ok_or(())
             }
@@ -44,7 +48,7 @@ impl BotRadar {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
-            (api::MEM_RADAR, [0x01, range, opts, addr])
+            (api::RADAR_MEM, [0x01, range, opts, addr])
                 if let (Some(range), Some(addr)) =
                     (BotRadarRange::new(range), BotRadarAddr::new(addr)) =>
             {
@@ -76,6 +80,7 @@ impl BotRadar {
             bot.radar.memory[addr.idx(range, off.extend(2))] = z2;
         }
 
+        bot.irq.raise(api::IRQ_RADAR_BUSY, [0x00, 0x00, 0x00]);
         bot.radar.cooldown = world.cooldown(Self::cooldown(range, opts));
     }
 
@@ -107,8 +112,7 @@ impl BotRadar {
         }
 
         if opts.objs
-            && let Some(id) = world.objects.lookup_at(pos)
-            && let Some(obj) = world.objects.get(id)
+            && let Some((id, obj)) = world.objects.get_at(pos)
         {
             let z0 = u32::from_le_bytes([obj.kind, 0, 0, 0]);
 
@@ -259,7 +263,7 @@ impl BotRadarAddr {
             }
 
             BotRadarAddr::Szudzik => {
-                api::radar_idx(off.x, off.y, off.z) as usize
+                api::radar_idx(off.x, off.y, off.z as u8) as usize
             }
         }
     }
@@ -639,7 +643,7 @@ mod tests {
             BotRadar::store(
                 &mut bot,
                 &mut world,
-                api::MEM_RADAR,
+                api::RADAR_MEM,
                 u32::from_le_bytes([0x01, case.range, case.opts, addr]),
             )
             .unwrap();
@@ -654,19 +658,31 @@ mod tests {
                 case.expected_map.trim(),
                 BotRadar::read_map(&bot, range, addr).trim()
             );
-
             assert_eq!(
                 case.expected_ids,
                 BotRadar::read_ids(&bot, range, addr).collect::<Vec<_>>()
             );
-
             assert_eq!(
                 case.expected_dirs,
                 BotRadar::read_dirs(&bot, range, addr).collect::<Vec<_>>()
             );
-
+            assert_eq!(
+                [api::IRQ_RADAR_BUSY, 0x00, 0x00, 0x00],
+                bot.irq.take().unwrap().to_le_bytes(),
+            );
             assert_eq!(case.expected_cooldown, bot.radar.cooldown);
         }
+
+        // ---
+
+        bot.radar.cooldown = 1;
+
+        BotRadar::tick(&mut bot);
+
+        assert_eq!(
+            [api::IRQ_RADAR_IDLE, 0x00, 0x00, 0x00],
+            bot.irq.take().unwrap().to_le_bytes(),
+        );
     }
 
     impl BotRadar {
@@ -729,7 +745,7 @@ mod tests {
 
     impl BotRadarAddr {
         fn get(&self, range: BotRadarRange, off: IVec3) -> u32 {
-            api::MEM_RADAR + 4 * (self.idx(range, off) + 1) as u32
+            api::RADAR_MEM + 4 * (self.idx(range, off) + 1) as u32
         }
     }
 }

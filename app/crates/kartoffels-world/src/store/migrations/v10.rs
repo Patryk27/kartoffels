@@ -3,9 +3,7 @@ use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     for bot in world.query_mut("/bots/{alive,queued}/*") {
-        bot.as_map_mut()
-            .unwrap()
-            .add_entry("oneshot", Value::Bool(false));
+        bot.as_map_mut().unwrap().add_entry("oneshot", false);
     }
 }
 

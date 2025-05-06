@@ -19,6 +19,7 @@ bots! {
 
     // Bots for acceptance tests
     static ACC_FALL = "acc-fall";
+    static ACC_IRQ = "acc-irq";
     static ACC_PANIC = "acc-panic";
     static ACC_RADAR = "acc-radar";
     static ACC_SERIAL = "acc-serial";

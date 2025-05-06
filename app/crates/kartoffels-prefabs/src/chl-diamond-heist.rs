@@ -29,9 +29,9 @@ fn main() {
 
     println!("blending in");
 
-    let ticks = timer_ticks();
+    let ticks = clock_ticks();
 
-    while timer_ticks() < ticks + 32000 {
+    while clock_ticks() < ticks + 32000 {
         //
     }
 

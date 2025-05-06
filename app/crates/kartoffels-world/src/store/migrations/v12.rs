@@ -21,7 +21,7 @@ pub fn run(world: &mut Value) {
             scan.push(Value::Integer(Integer::from(0)));
         }
 
-        radar.add_entry("scan", Value::Array(scan));
+        radar.add_entry("scan", scan);
         radar.remove_entry("pending_scan").unwrap();
     }
 }

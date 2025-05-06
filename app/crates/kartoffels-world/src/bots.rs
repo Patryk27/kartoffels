@@ -246,7 +246,7 @@ impl Bots {
                 self.queued.push_back(Box::new(QueuedBot {
                     dir: None,
                     events: killed.body.events,
-                    fw: killed.body.fw,
+                    fw: killed.fw,
                     id: killed.body.id,
                     oneshot: false,
                     pos: None,

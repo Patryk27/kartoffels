@@ -26,13 +26,13 @@ impl BotSerial {
         val: u32,
     ) -> Result<(), ()> {
         match (addr, val) {
-            (api::MEM_SERIAL, 0xffffff00) => {
+            (api::SERIAL_MEM, 0xffffff00) => {
                 bot.serial.buffering = true;
 
                 Ok(())
             }
 
-            (api::MEM_SERIAL, 0xffffff01) => {
+            (api::SERIAL_MEM, 0xffffff01) => {
                 if bot.serial.buffering {
                     bot.serial.snapshot = None;
                     bot.serial.buffering = false;
@@ -44,7 +44,7 @@ impl BotSerial {
                 Ok(())
             }
 
-            (api::MEM_SERIAL, 0xffffff02) => {
+            (api::SERIAL_MEM, 0xffffff02) => {
                 if bot.serial.buffering {
                     bot.serial.buffering = false;
                     bot.serial.next.clear();
@@ -53,7 +53,7 @@ impl BotSerial {
                 Ok(())
             }
 
-            (api::MEM_SERIAL, val) => {
+            (api::SERIAL_MEM, val) => {
                 let buf = if bot.serial.buffering {
                     &mut bot.serial.next
                 } else {
