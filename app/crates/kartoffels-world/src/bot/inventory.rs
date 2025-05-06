@@ -8,11 +8,11 @@ pub struct BotInventory {
 impl BotInventory {
     pub const SIZE: usize = 32;
 
-    pub fn add(&mut self, id: ObjectId, obj: Object) -> Result<(), ()> {
+    pub fn add(&mut self, id: ObjectId, obj: Object) -> Result<u8, ()> {
         if self.objects.len() < Self::SIZE {
             self.objects.push_front(BotInventoryObject { id, obj });
 
-            Ok(())
+            Ok(self.objects.len() as u8 - 1)
         } else {
             Err(())
         }
@@ -47,17 +47,15 @@ mod tests {
                 .unwrap();
         }
 
-        target
-            .add(ObjectId::new(255), Object::new(255))
-            .unwrap_err();
+        target.add(ObjectId::new(33), Object::new(33)).unwrap_err();
 
         assert_eq!(32, target.take(0).unwrap().1.kind);
         assert_eq!(31, target.take(0).unwrap().1.kind);
         assert_eq!(30, target.take(0).unwrap().1.kind);
 
-        target.add(ObjectId::new(255), Object::new(255)).unwrap();
+        target.add(ObjectId::new(33), Object::new(33)).unwrap();
 
-        assert_eq!(255, target.take(0).unwrap().1.kind);
+        assert_eq!(33, target.take(0).unwrap().1.kind);
         assert_eq!(1, target.take(28).unwrap().1.kind);
     }
 }

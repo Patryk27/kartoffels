@@ -1,5 +1,7 @@
 use crate::*;
-use core::fmt;
+
+#[doc(hidden)]
+pub const SERIAL_MEM: u32 = MEM + 2 * 1024;
 
 /// Writes a single character to the serial port.
 ///
@@ -32,7 +34,7 @@ use core::fmt;
 /// ```
 pub fn serial_write(ch: char) {
     unsafe {
-        wri(MEM_SERIAL, 0, ch as u32);
+        wri(SERIAL_MEM, 0, ch as u32);
     }
 }
 
@@ -53,14 +55,14 @@ pub fn serial_write(ch: char) {
 ///     serial_buffer();
 ///
 ///     println!("Hello, World!");
-///     println!("ticks = {}", timer_ticks());
+///     println!("ticks = {}", clock_ticks());
 ///
 ///     serial_flush();
 /// }
 /// ```
 pub fn serial_buffer() {
     unsafe {
-        wri(MEM_SERIAL, 0, 0xffffff00);
+        wri(SERIAL_MEM, 0, 0xffffff00);
     }
 }
 
@@ -70,7 +72,7 @@ pub fn serial_buffer() {
 /// nothing.
 pub fn serial_flush() {
     unsafe {
-        wri(MEM_SERIAL, 0, 0xffffff01);
+        wri(SERIAL_MEM, 0, 0xffffff01);
     }
 }
 
@@ -80,7 +82,7 @@ pub fn serial_flush() {
 /// nothing.
 pub fn serial_clear() {
     unsafe {
-        wri(MEM_SERIAL, 0, 0xffffff02);
+        wri(SERIAL_MEM, 0, 0xffffff02);
     }
 }
 
@@ -122,7 +124,7 @@ impl fmt::Write for Serial {
 
 /// Prints to the serial port.
 ///
-/// See also: [`serial_write()`].
+/// See also: [`println!()`], [`serial_write()`].
 ///
 /// # Example
 ///
@@ -132,6 +134,7 @@ impl fmt::Write for Serial {
 /// print!("Hello");
 /// print!("{}!", "World");
 /// print!("\n");
+/// print!("Answer is {}.", 42);
 /// ```
 #[macro_export]
 macro_rules! print {
@@ -144,7 +147,7 @@ macro_rules! print {
 
 /// Prints to the serial port, with a newline.
 ///
-/// See also: [`serial_write()`].
+/// See also: [`print!()`], [`serial_write()`].
 ///
 /// # Example
 ///
@@ -153,6 +156,7 @@ macro_rules! print {
 /// #
 /// println!("Hello!");
 /// println!("Hello, {}!", "World");
+/// println!("Answer is {}.", 42);
 /// ```
 #[macro_export]
 macro_rules! println {

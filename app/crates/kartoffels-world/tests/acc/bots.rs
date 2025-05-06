@@ -44,6 +44,37 @@ async fn fall() {
 }
 
 #[tokio::test]
+async fn irq() {
+    let world = kartoffels_world::create(config());
+
+    world
+        .set_map(Map::new(uvec2(5, 5)).filled_with(TileKind::FLOOR))
+        .await
+        .unwrap();
+
+    let bot = world
+        .create_bot(
+            CreateBotRequest::new(ACC_IRQ)
+                .at(ivec2(2, 2))
+                .facing(Dir::N),
+        )
+        .await
+        .unwrap();
+
+    world.tick(25000).await.unwrap();
+
+    let snap = world.snapshot().await;
+    let bot = snap.bots.alive.get(bot).unwrap();
+
+    assert_eq!(
+        "boot mtr mtr2 tmr0 tmr1 tmr2a tmr2b mtr mtr2 done",
+        bot.serial()
+    );
+
+    assert_eq!(ivec2(2, 0), bot.pos);
+}
+
+#[tokio::test]
 async fn panic() {
     let world = kartoffels_world::create(config());
 

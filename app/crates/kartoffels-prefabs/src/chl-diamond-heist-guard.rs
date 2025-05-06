@@ -8,7 +8,7 @@ use kartoffel::*;
 
 #[no_mangle]
 fn main() {
-    while timer_ticks() <= 16000 {
+    while clock_ticks() <= 16000 {
         //
     }
 
@@ -83,7 +83,7 @@ fn find_enemy(guards: &[u64]) -> Option<(i32, i32)> {
 fn attack_enemy(dx: i32, dy: i32) {
     if dy == -1 {
         if dx == 0 {
-            if is_arm_ready() {
+            if arm_ready() {
                 arm_stab();
             }
         } else {

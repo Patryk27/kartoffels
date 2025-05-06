@@ -3,16 +3,14 @@ use kartoffels_utils::{CborMapExt, CborValueExt};
 
 pub fn run(world: &mut Value) {
     for bot in world.query_mut("/bots/alive/*") {
-        bot.as_map_mut()
-            .unwrap()
-            .add_entry("ephemeral", Value::Bool(false));
+        bot.as_map_mut().unwrap().add_entry("ephemeral", false);
     }
 
     for bot in world.query_mut("/bots/queued/*") {
         bot.as_map_mut()
             .unwrap()
             .add_entry("pos", Value::Null)
-            .add_entry("ephemeral", Value::Bool(false));
+            .add_entry("ephemeral", false);
     }
 }
 

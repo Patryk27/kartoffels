@@ -26,6 +26,11 @@ impl BotEvents {
         self.snapshot = None;
     }
 
+    #[cfg(test)]
+    pub fn newest(&self) -> Option<&str> {
+        self.entries.front().map(|event| event.msg.as_str())
+    }
+
     pub fn snapshot(&mut self) -> Arc<VecDeque<Arc<BotEvent>>> {
         self.snapshot
             .get_or_insert_with(|| Arc::new(self.entries.clone()))

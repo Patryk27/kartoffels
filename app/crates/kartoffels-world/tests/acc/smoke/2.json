@@ -72,6 +72,10 @@
             },
             {
               "at": "2018-01-01T12:00:00Z",
+              "msg": "couldn't move at 10,18: tile occupied"
+            },
+            {
+              "at": "2018-01-01T12:00:00Z",
               "msg": "born"
             },
             {
@@ -529,6 +533,10 @@
             {
               "at": "2018-01-01T12:00:00Z",
               "msg": "killed d640-5f89-2fef-003e (knife)"
+            },
+            {
+              "at": "2018-01-01T12:00:00Z",
+              "msg": "couldn't move at 23,11: tile occupied"
             },
             {
               "at": "2018-01-01T12:00:00Z",

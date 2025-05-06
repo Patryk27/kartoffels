@@ -6,14 +6,32 @@ mod firmware;
 pub use self::error::*;
 pub use self::firmware::*;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::{fmt, mem};
 
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Cpu {
-    pc: u32,
     #[serde(with = "serde_bytes")]
     ram: Box<[u8]>,
+
+    /// Program counter, i.e. address of the currently executed instruction.
+    pc: u32,
+
+    /// Registers, #0 up to #31.
+    ///
+    /// By RISC-V's virtue, `regs[0]` is read-only, it should always say 0.
     regs: Box<[i32; 32]>,
+
+    /// Previous program counter.
+    ///
+    /// When an interrupt starts, we stash the current `pc` here and restore it
+    /// back over `mret`.
+    prev_pc: u32,
+
+    /// Previous registers.
+    ///
+    /// When an interrupt starts, we stash the current `regs` here and restore
+    /// them back over `mret`.
+    prev_regs: Box<[i32; 32]>,
 }
 
 impl Cpu {
@@ -22,10 +40,15 @@ impl Cpu {
     const MMIO_BASE: u32 = 0x08000000;
 
     pub fn new(fw: &Firmware) -> Self {
-        let (pc, ram) = fw.boot();
-        let regs = Box::new([0; 32]);
+        let (ram, pc) = fw.boot();
 
-        Self { pc, ram, regs }
+        Self {
+            ram,
+            pc,
+            regs: Box::new([0; 32]),
+            prev_pc: 0,
+            prev_regs: Box::new([0; 32]),
+        }
     }
 
     pub fn pc(&self) -> u32 {
@@ -38,6 +61,22 @@ impl Cpu {
 
     pub fn regs(&self) -> &[i32; 32] {
         &self.regs
+    }
+
+    pub fn is_executing_irq(&self) -> bool {
+        self.prev_pc > 0
+    }
+
+    pub fn irq(&mut self, pc: u32, arg: u32) {
+        assert!(!self.is_executing_irq(), "nested irqs are not supported");
+
+        mem::swap(&mut self.prev_pc, &mut self.pc);
+        mem::swap(&mut self.prev_regs, &mut self.regs);
+
+        self.pc = pc;
+        self.regs[1] = 0;
+        self.regs[2] = self.prev_regs[2];
+        self.regs[10] = arg as i32;
     }
 
     #[inline(always)]
@@ -72,15 +111,15 @@ impl Cpu {
             };
 
             (@arg i_imm) => {
-                (word as i32 as i32) >> 20
+                (word as i32) >> 20
             };
 
             (@arg u_imm) => {
-                (word as i32 as i32) >> 12
+                (word as i32) >> 12
             };
 
             (@arg s_imm) => {
-                ((word & 0xfe000000) as i32 as i32 >> 20)
+                ((word & 0xfe000000) as i32 >> 20)
                     | (((word >> 7) & 0x1f) as i32)
             };
 
@@ -461,13 +500,13 @@ impl Cpu {
                 match funct5 {
                     0b00000 => op! {
                         fn amoaddw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Add)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Add)?;
                         }
                     },
 
                     0b00001 => op! {
                         fn amoswapw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Swap)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Swap)?;
                         }
                     },
 
@@ -492,43 +531,43 @@ impl Cpu {
 
                     0b00100 => op! {
                         fn amoxorw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Xor)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Xor)?;
                         }
                     },
 
                     0b01100 => op! {
                         fn amoandw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::And)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::And)?;
                         }
                     },
 
                     0b01000 => op! {
                         fn amoorw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Or)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Or)?;
                         }
                     },
 
                     0b10000 => op! {
                         fn amominw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Min)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Min)?;
                         }
                     },
 
                     0b10100 => op! {
                         fn amomaxw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::Max)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::Max)?;
                         }
                     },
 
                     0b11000 => op! {
                         fn amominuw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::MinU)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::MinU)?;
                         }
                     },
 
                     0b11100 => op! {
                         fn amomaxuw(rd, rs1, rs2) {
-                            self.tick_atomic(rd, rs1, rs2, Atomic::MaxU)?;
+                            self.do_atomic(mmio, rd, rs1, rs2, Atomic::MaxU)?;
                         }
                     },
 
@@ -544,25 +583,25 @@ impl Cpu {
 
             (0b1100011, 0b000, _) => op! {
                 fn beq(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| lhs == rhs);
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| lhs == rhs);
                 }
             },
 
             (0b1100011, 0b001, _) => op! {
                 fn bne(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| lhs != rhs);
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| lhs != rhs);
                 }
             },
 
             (0b1100011, 0b100, _) => op! {
                 fn blt(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| lhs < rhs);
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| lhs < rhs);
                 }
             },
 
             (0b1100011, 0b110, _) => op! {
                 fn bltu(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| {
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| {
                         (lhs as u32) < (rhs as u32)
                     });
                 }
@@ -570,13 +609,13 @@ impl Cpu {
 
             (0b1100011, 0b101, _) => op! {
                 fn bge(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| lhs >= rhs);
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| lhs >= rhs);
                 }
             },
 
             (0b1100011, 0b111, _) => op! {
                 fn bgeu(rs1, rs2, b_imm) {
-                    self.tick_branch(rs1, rs2, b_imm, |lhs, rhs| {
+                    self.do_branch(rs1, rs2, b_imm, |lhs, rhs| {
                         (lhs as u32) >= (rhs as u32)
                     });
                 }
@@ -604,9 +643,18 @@ impl Cpu {
                 let i_imm = op!(@arg i_imm);
 
                 match i_imm {
-                    0x01 => {
+                    0x0001 => {
                         return Err(TickError::GotEbreak);
                     }
+
+                    // mret
+                    0x0302 => {
+                        mem::swap(&mut self.prev_pc, &mut self.pc);
+                        mem::swap(&mut self.prev_regs, &mut self.regs);
+
+                        self.prev_pc = 0;
+                    }
+
                     _ => {
                         return Err(TickError::UnknownInstruction { word });
                     }
@@ -622,7 +670,7 @@ impl Cpu {
     }
 
     #[inline(always)]
-    fn tick_branch(
+    fn do_branch(
         &mut self,
         rs1: usize,
         rs2: usize,
@@ -638,15 +686,20 @@ impl Cpu {
     }
 
     #[inline(always)]
-    fn tick_atomic(
+    fn do_atomic(
         &mut self,
+        mmio: impl Mmio,
         rd: usize,
         rs1: usize,
         rs2: usize,
         op: Atomic,
     ) -> TickResult<()> {
-        let prev =
-            self.mem_atomic(self.regs[rs1] as u32, self.regs[rs2] as u32, op)?;
+        let prev = self.mem_atomic(
+            mmio,
+            self.regs[rs1] as u32,
+            self.regs[rs2] as u32,
+            op,
+        )?;
 
         self.reg_store(rd, prev as i32);
 
@@ -663,7 +716,7 @@ impl Cpu {
     where
         M: Mmio,
     {
-        match Region::new(addr, size)? {
+        match Region::of(addr, size)? {
             Region::Mmio => mmio
                 .ok_or(TickError::InvalidAccess { addr, size })?
                 .load(addr),
@@ -685,7 +738,7 @@ impl Cpu {
     where
         M: Mmio,
     {
-        match Region::new(addr, size)? {
+        match Region::of(addr, size)? {
             Region::Mmio => mmio
                 .ok_or(TickError::InvalidAccess { addr, size })?
                 .store(addr, value),
@@ -698,34 +751,31 @@ impl Cpu {
     #[inline(always)]
     fn mem_atomic(
         &mut self,
+        mmio: impl Mmio,
         addr: u32,
         rhs: u32,
         op: Atomic,
     ) -> TickResult<u32> {
         let size = 4;
 
-        if let Region::Mmio = Region::new(addr, size)? {
-            return Err(TickError::InvalidAccess { addr, size });
-        }
+        let lhs = match Region::of(addr, size)? {
+            Region::Mmio => mmio
+                .atomic(addr, rhs, op)
+                .map_err(|_| TickError::InvalidAccess { addr, size })?,
 
-        let lhs = self
-            .ram_load(addr, size)
-            .map_err(|_| TickError::InvalidAccess { addr, size })?;
+            Region::Ram => {
+                let lhs = self
+                    .ram_load(addr, size)
+                    .map_err(|_| TickError::InvalidAccess { addr, size })?;
 
-        let value = match op {
-            Atomic::Add => lhs.wrapping_add(rhs),
-            Atomic::Swap => rhs,
-            Atomic::Xor => lhs ^ rhs,
-            Atomic::And => lhs & rhs,
-            Atomic::Or => lhs | rhs,
-            Atomic::Min => (lhs as i32).min(rhs as i32) as u32,
-            Atomic::Max => (lhs as i32).max(rhs as i32) as u32,
-            Atomic::MinU => lhs.min(rhs),
-            Atomic::MaxU => lhs.max(rhs),
+                let value = op.eval(lhs, rhs);
+
+                self.ram_store(addr, size, value)
+                    .map_err(|_| TickError::InvalidAccess { addr, size })?;
+
+                lhs
+            }
         };
-
-        self.ram_store(addr, size, value)
-            .map_err(|_| TickError::InvalidAccess { addr, size })?;
 
         Ok(lhs)
     }
@@ -792,7 +842,7 @@ enum Region {
 
 impl Region {
     #[inline(always)]
-    fn new(addr: u32, size: u8) -> TickResult<Self> {
+    fn of(addr: u32, size: u8) -> TickResult<Self> {
         if addr >= Cpu::MMIO_BASE {
             if size == 4 && addr % 4 == 0 {
                 Ok(Region::Mmio)
@@ -810,7 +860,7 @@ impl Region {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Atomic {
+pub enum Atomic {
     Add,
     Swap,
     Xor,
@@ -822,17 +872,38 @@ enum Atomic {
     MaxU,
 }
 
+impl Atomic {
+    pub fn eval(self, lhs: u32, rhs: u32) -> u32 {
+        match self {
+            Self::Add => lhs.wrapping_add(rhs),
+            Self::Swap => rhs,
+            Self::Xor => lhs ^ rhs,
+            Self::And => lhs & rhs,
+            Self::Or => lhs | rhs,
+            Self::Min => (lhs as i32).min(rhs as i32) as u32,
+            Self::Max => (lhs as i32).max(rhs as i32) as u32,
+            Self::MinU => lhs.min(rhs),
+            Self::MaxU => lhs.max(rhs),
+        }
+    }
+}
+
 pub trait Mmio {
-    fn load(&mut self, addr: u32) -> Result<u32, ()>;
-    fn store(&mut self, addr: u32, value: u32) -> Result<(), ()>;
+    fn load(self, addr: u32) -> Result<u32, ()>;
+    fn store(self, addr: u32, value: u32) -> Result<(), ()>;
+    fn atomic(self, addr: u32, rhs: u32, op: Atomic) -> Result<u32, ()>;
 }
 
 impl Mmio for () {
-    fn load(&mut self, _: u32) -> Result<u32, ()> {
+    fn load(self, _: u32) -> Result<u32, ()> {
         Err(())
     }
 
-    fn store(&mut self, _: u32, _: u32) -> Result<(), ()> {
+    fn store(self, _: u32, _: u32) -> Result<(), ()> {
+        Err(())
+    }
+
+    fn atomic(self, _: u32, _: u32, _: Atomic) -> Result<u32, ()> {
         Err(())
     }
 }

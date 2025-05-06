@@ -35,16 +35,33 @@ impl Objects {
     ) {
         let pos = pos.into();
 
-        self.objects.insert(id, obj);
+        assert!(
+            self.objects.insert(id, obj).is_none(),
+            "object {id} was already added"
+        );
 
         if let Some(pos) = pos {
-            self.pos_to_id.insert(pos, id);
-            self.id_to_pos.insert(id, pos);
+            assert!(
+                self.pos_to_id.insert(pos, id).is_none(),
+                "there's already an object at {pos}"
+            );
+
+            assert!(
+                self.id_to_pos.insert(id, pos).is_none(),
+                "object {id} was already located somewhere"
+            );
         }
     }
 
     pub fn get(&self, id: ObjectId) -> Option<Object> {
         self.objects.get(&id).copied()
+    }
+
+    pub fn get_at(&self, pos: IVec2) -> Option<(ObjectId, Object)> {
+        let id = self.lookup_at(pos)?;
+        let obj = self.get(id).unwrap();
+
+        Some((id, obj))
     }
 
     pub fn remove(&mut self, id: ObjectId) -> Option<Object> {

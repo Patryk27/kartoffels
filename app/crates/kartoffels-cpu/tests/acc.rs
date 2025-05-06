@@ -1,4 +1,4 @@
-use kartoffels_cpu::{Cpu, Firmware, Mmio, TickError};
+use kartoffels_cpu::{Atomic, Cpu, Firmware, Mmio, TickError};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -122,14 +122,18 @@ struct TestMmio {
 }
 
 impl Mmio for &mut TestMmio {
-    fn load(&mut self, addr: u32) -> Result<u32, ()> {
+    fn load(self, addr: u32) -> Result<u32, ()> {
         self.mem.get(&addr).copied().ok_or(())
     }
 
-    fn store(&mut self, addr: u32, val: u32) -> Result<(), ()> {
+    fn store(self, addr: u32, val: u32) -> Result<(), ()> {
         self.mem.insert(addr, val * val);
 
         Ok(())
+    }
+
+    fn atomic(self, _: u32, _: u32, _: Atomic) -> Result<u32, ()> {
+        Err(())
     }
 }
 

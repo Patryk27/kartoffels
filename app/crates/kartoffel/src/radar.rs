@@ -1,6 +1,9 @@
 use crate::*;
 
-/// Causes the radar to scan the surrounding tiles, such as floor (`.`) or walls
+#[doc(hidden)]
+pub const RADAR_MEM: u32 = MEM + 5 * 1024;
+
+/// Causes radar to look for surrounding tiles, such as floor (`.`) or walls
 /// (`#`).
 ///
 /// This option increases cooldown by 4k ticks.
@@ -8,49 +11,125 @@ use crate::*;
 /// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
 pub const RADAR_SCAN_TILES: u8 = 1 << 0;
 
-/// Causes the radar to scan the surrounding bots (`@`).
+/// Causes radar to look for surrounding bots (`@`).
 ///
 /// This option increases cooldown by 4k ticks.
 ///
 /// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
 pub const RADAR_SCAN_BOTS: u8 = 1 << 1;
 
-/// Causes the radar to scan the surrounding objects, such as diamonds (`*`).
+/// Causes radar to look for surrounding objects, such as diamonds (`*`).
 ///
 /// This option increases cooldown by 4k ticks.
 ///
 /// This option is enabled by default - use [`radar_scan_ex()`] to disable it.
 pub const RADAR_SCAN_OBJS: u8 = 1 << 2;
 
-/// Causes the radar to scan ids of the surrounding things, see
-/// [`radar_read_id()`].
+/// Causes radar to look for ids of surrounding things.
+///
+/// See: [`radar_read_id()`].
 ///
 /// This option increases cooldown by 8k ticks.
 ///
 /// This option is disabled by default - use [`radar_scan_ex()`] to activate it.
 pub const RADAR_SCAN_IDS: u8 = 1 << 3;
 
-/// When enabled, causes the radar to scan directions the surrounding things are
-/// facing, see [`radar_read_dir()`].
+/// Causes radar to look for directions the surrounding things are facing.
+///
+/// See: [`radar_read_dir()`].
 ///
 /// This option increases cooldown by 8k ticks.
 ///
 /// This option is disabled by default - use [`radar_scan_ex()`] to activate it.
 pub const RADAR_SCAN_DIRS: u8 = 1 << 4;
 
-/// Returns whether the radar is ready and [`radar_scan()`] or
-/// [`radar_scan_ex()`] can be invoked.
+/// Interrupt raised when radar becomes busy.
 ///
-/// See also: [`radar_wait()`].
-pub fn is_radar_ready() -> bool {
-    unsafe { rdi(MEM_RADAR, 0) == 1 }
+/// Note that this interrupt is raised only when radar _becomes_ busy - if radar
+/// was already busy when you ran a command, the interrupt will not be rasied.
+///
+/// See: [`irq_set()`], [`IRQ_RADAR_IDLE`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::{*, println};
+/// #
+/// fn on_radar_busy() {
+///     println!("radar busy");
+/// }
+///
+/// fn on_radar_idle() {
+///     println!("radar idle");
+/// }
+///
+/// irq_set(IRQ_RADAR_BUSY, irq!(on_radar_busy));
+/// irq_set(IRQ_RADAR_IDLE, irq!(on_radar_idle));
+///
+/// radar_scan(3);
+/// ```
+pub const IRQ_RADAR_BUSY: u8 = 7;
+
+/// Interrupt raised when radar becomes idle.
+///
+/// See: [`irq_set()`], [`IRQ_RADAR_BUSY`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::{*, println};
+/// #
+/// fn on_radar_busy() {
+///     println!("radar busy");
+/// }
+///
+/// fn on_radar_idle() {
+///     println!("radar idle");
+/// }
+///
+/// irq_set(IRQ_RADAR_BUSY, irq!(on_radar_busy));
+/// irq_set(IRQ_RADAR_IDLE, irq!(on_radar_idle));
+///
+/// radar_scan(3);
+/// ```
+pub const IRQ_RADAR_IDLE: u8 = 8;
+
+/// Returns whether radar is ready.
+///
+/// See: [`radar_wait()`], [`IRQ_RADAR_BUSY`], [`IRQ_RADAR_IDLE`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// if radar_ready() {
+///     radar_scan(3);
+/// }
+/// ```
+pub fn radar_ready() -> bool {
+    unsafe { rdi(RADAR_MEM, 0) == 1 }
 }
 
-/// Waits until the radar is ready.
+/// Waits until radar is ready.
 ///
-/// See also: [`is_radar_ready()`].
+/// See: [`radar_ready()`], [`IRQ_RADAR_BUSY`], [`IRQ_RADAR_IDLE`].
+///
+/// # Example
+///
+/// ```no_run
+/// # use kartoffel::*;
+/// #
+/// radar_wait();
+/// radar_scan(3);
+///
+/// // If there's someone in front of us, stab them
+/// if radar_read(0, -1) == '@' && arm_ready() {
+///     arm_stab();
+/// }
+/// ```
 pub fn radar_wait() {
-    while !is_radar_ready() {
+    while !radar_ready() {
         //
     }
 }
@@ -76,10 +155,11 @@ pub fn radar_wait() {
 /// ```no_run
 /// # use kartoffel::*;
 /// #
+/// radar_wait();
 /// radar_scan(3);
 ///
 /// // If there's someone in front of us, stab them
-/// if radar_read(0, -1) == '@' && is_arm_ready() {
+/// if radar_read(0, -1) == '@' && arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -105,8 +185,11 @@ pub fn radar_scan(range: u8) {
 /// # use kartoffel::*;
 /// # let range = todo!();
 /// #
+/// radar_wait();
 /// radar_scan_ex(range, 0);
+///
 /// // ^ is equivalent to:
+/// radar_wait();
 /// radar_scan_ex(range, RADAR_SCAN_TILES | RADAR_SCAN_BOTS | RADAR_SCAN_OBJS);
 /// ```
 ///
@@ -129,10 +212,11 @@ pub fn radar_scan(range: u8) {
 /// ```no_run
 /// # use kartoffel::*;
 /// #
+/// radar_wait();
 /// radar_scan_ex(3, RADAR_SCAN_BOTS);
 ///
 /// // If there's someone in front of us, stab them
-/// if radar_read(0, -1) == '@' && is_arm_ready() {
+/// if radar_read(0, -1) == '@' && arm_ready() {
 ///     arm_stab();
 /// }
 /// ```
@@ -144,6 +228,8 @@ pub fn radar_scan(range: u8) {
 /// ```no_run
 /// # use kartoffel::*;
 /// #
+/// radar_wait();
+///
 /// radar_scan_ex(
 ///     3,
 ///     RADAR_SCAN_TILES
@@ -156,7 +242,7 @@ pub fn radar_scan(range: u8) {
 /// // If there's someone in front of us and it's looking at us, stab them
 /// if radar_read(0, -1) == '@'
 ///     && radar_read_dir(0, -1) == 'v'
-///     && is_arm_ready()
+///     && arm_ready()
 /// {
 ///     arm_stab();
 /// }
@@ -179,12 +265,12 @@ pub fn radar_scan_ex(range: u8, opts: u8) {
     //     radar_read(3, /* ... */);
     //
     // Since v0.8 we use a new addressing mode, one that utilizes Szudzik's
-    // pairing function and thus has stable indices, ones that are irrespective
-    // of the scan's size.
+    // pairing function and thus has stable indices - indices that are
+    // irrespective of the scan's size, and this is what this argument enables.
     let addr = 0x01;
 
     unsafe {
-        wri(MEM_RADAR, 0, cmd(0x01, range, opts, addr));
+        wri(RADAR_MEM, 0, pack(0x01, range, opts, addr));
     }
 }
 
@@ -231,6 +317,7 @@ pub fn radar_read(x: i32, y: i32) -> char {
 /// ```no_run
 /// # use kartoffel::{*, print};
 /// #
+/// radar_wait();
 /// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_IDS);
 ///
 /// if radar_read(0, -1) == '@' {
@@ -253,8 +340,7 @@ pub fn radar_read_id(x: i32, y: i32) -> u64 {
     (hi << 32) | lo
 }
 
-/// Returns direction of the topmost thing visible at given coordinates; one
-/// of `'<'`, `'^'`, `'>'` or `'v'`.
+/// Returns direction of the topmost thing visible at given coordinates.
 ///
 /// Calling this function makes sense only for inspecting bots (`@`), for
 /// other kinds of things the returned value will be zero.
@@ -266,12 +352,17 @@ pub fn radar_read_id(x: i32, y: i32) -> u64 {
 /// ```no_run
 /// # use kartoffel::{*, print};
 /// #
+/// radar_wait();
 /// radar_scan_ex(3, RADAR_SCAN_BOTS | RADAR_SCAN_DIRS);
 ///
 /// if radar_read(0, -1) == '@' && radar_read_dir(0, -1) == 'v' {
 ///     print!("someone's watching me");
 /// }
 /// ```
+///
+/// # Return value
+///
+/// One of `'<'`, `'^'`, `'>'` or `'v'`.
 ///
 /// # Requirements
 ///
@@ -285,7 +376,7 @@ pub fn radar_read_dir(x: i32, y: i32) -> char {
     radar_read_ex(x, y, 0).to_le_bytes()[1] as char
 }
 
-/// Reads data from the radar.
+/// Reads data from radar.
 ///
 /// This is a low-level function - for convenience you'll most likely want to
 /// use [`radar_read()`], [`radar_read_id()`] etc.
@@ -296,19 +387,19 @@ pub fn radar_read_dir(x: i32, y: i32) -> char {
 /// # Coordinate system
 ///
 /// See [`radar_read()`].
-pub fn radar_read_ex(x: i32, y: i32, z: i32) -> u32 {
-    unsafe { rdi(MEM_RADAR, (1 + radar_idx(x, y, z)) as usize) }
+pub fn radar_read_ex(x: i32, y: i32, z: u8) -> u32 {
+    unsafe { rdi(RADAR_MEM, (1 + radar_idx(x, y, z)) as usize) }
 }
 
 /// Maps given coordinates into an index which you can use to access radar's
 /// memory.
 ///
-/// Note that while `x` and `y` are allowed to be arbitrary numbers, `z` must
-/// lie within `0..=2`.
-///
 /// This is a low-level function - for convenience you'll most likely want to
 /// use [`radar_read()`], [`radar_read_id()`] etc.
-pub fn radar_idx(x: i32, y: i32, z: i32) -> i32 {
+///
+/// Note that while `x` and `y` are allowed to be arbitrary numbers, `z` must
+/// lie within `0..=2`.
+pub fn radar_idx(x: i32, y: i32, z: u8) -> i32 {
     // We're using Szudzik's pairing function, see:
     //
     // - https://www.vertexfragment.com/ramblings/cantor-szudzik-pairing-functions/
@@ -318,5 +409,5 @@ pub fn radar_idx(x: i32, y: i32, z: i32) -> i32 {
     let y = if y >= 0 { 2 * y } else { -2 * y - 1 };
     let xy = if x >= y { x * x + x + y } else { y * y + x };
 
-    3 * xy + z
+    3 * xy + (z as i32)
 }

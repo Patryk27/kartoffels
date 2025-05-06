@@ -8,6 +8,9 @@ pub struct Object {
 
 impl Object {
     pub fn new(kind: u8) -> Self {
+        // `kind = 0xff` would conflict with [`ARM_STAT_ERR`]
+        assert!(kind != 0xff);
+
         Self {
             kind,
             meta: [0x00, 0x00, 0x00],

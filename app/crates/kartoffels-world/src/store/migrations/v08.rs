@@ -4,11 +4,11 @@ use kartoffels_utils::CborMapExt;
 pub fn run(world: &mut Value) {
     world.as_map_mut().unwrap().add_entry(
         "clock",
-        Value::Map(vec![
-            (Value::Text("type".into()), Value::Text("auto".into())),
-            (Value::Text("hz".into()), Value::Integer(64_000.into())),
-            (Value::Text("steps".into()), Value::Integer(1_000.into())),
-        ]),
+        Vec::new()
+            .with_entry("type", "auto")
+            .with_entry("hz", 64_000)
+            .with_entry("steps", 1_000)
+            .into_map(),
     );
 }
 

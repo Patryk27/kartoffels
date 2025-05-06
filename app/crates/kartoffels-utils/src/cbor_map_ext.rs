@@ -1,30 +1,35 @@
 use ciborium::Value;
+use serde::Serialize;
 
 pub trait CborMapExt
 where
     Self: Sized,
 {
-    fn add_entry(&mut self, key: &str, val: Value) -> &mut Self;
+    fn add_entry(&mut self, key: &str, value: impl Serialize) -> &mut Self;
     fn get_entry_mut(&mut self, key: &str) -> Option<&mut Value>;
     fn remove_entry(&mut self, key: &str) -> Option<Value>;
 
-    fn with_entry(mut self, key: &str, val: Value) -> Self {
-        self.add_entry(key, val);
+    fn with_entry(mut self, key: &str, value: impl Serialize) -> Self {
+        self.add_entry(key, value);
         self
     }
 
-    fn rename_entry(&mut self, from_key: &str, to_key: &str) -> &mut Self {
-        if let Some(val) = self.remove_entry(from_key) {
-            self.add_entry(to_key, val)
+    fn rename_entry(&mut self, old: &str, new: &str) -> &mut Self {
+        if let Some(value) = self.remove_entry(old) {
+            self.add_entry(new, value)
         } else {
             self
         }
     }
+
+    fn into_map(self) -> Value;
 }
 
 impl CborMapExt for Vec<(Value, Value)> {
-    fn add_entry(&mut self, key: &str, val: Value) -> &mut Self {
-        self.push((Value::Text(key.into()), val));
+    fn add_entry(&mut self, key: &str, value: impl Serialize) -> &mut Self {
+        let value = Value::serialized(&value).unwrap();
+
+        self.push((Value::Text(key.into()), value));
         self
     }
 
@@ -44,5 +49,9 @@ impl CborMapExt for Vec<(Value, Value)> {
         })
         .next()
         .map(|(_, val)| val)
+    }
+
+    fn into_map(self) -> Value {
+        Value::Map(self)
     }
 }

@@ -10,10 +10,7 @@ pub fn run(world: &mut Value) {
     #[cfg(not(test))]
     let rng = ChaCha8Rng::from_entropy();
 
-    world
-        .as_map_mut()
-        .unwrap()
-        .add_entry("rng", Value::serialized(&rng).unwrap());
+    world.as_map_mut().unwrap().add_entry("rng", rng);
 }
 
 #[cfg(test)]

@@ -1,29 +1,30 @@
 use crate::*;
+use kartoffel::IRQ_COMPASS_READY;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotCompass {
     dir: Option<Dir>,
-    next_measurement_in: u32,
+    cooldown: u32,
 }
 
 impl BotCompass {
     pub(super) fn tick(bot: &mut AliveBotBody) {
-        if let Some(time) = bot.compass.next_measurement_in.checked_sub(1) {
-            bot.compass.next_measurement_in = time;
+        if let Some(time) = bot.compass.cooldown.checked_sub(1) {
+            bot.compass.cooldown = time;
         } else {
             bot.compass.dir = Some(bot.dir);
-            bot.compass.next_measurement_in = 128_000;
+            bot.compass.cooldown = 128_000;
+
+            bot.irq
+                .raise(IRQ_COMPASS_READY, [1 + bot.dir as u8, 0x00, 0x00]);
         }
     }
 
     pub(super) fn load(bot: &mut AliveBotBody, addr: u32) -> Result<u32, ()> {
         match addr {
-            api::MEM_COMPASS => Ok(match bot.compass.dir.take() {
+            api::COMPASS_MEM => Ok(match bot.compass.dir.take() {
                 None => 0,
-                Some(Dir::N) => 1,
-                Some(Dir::E) => 2,
-                Some(Dir::S) => 3,
-                Some(Dir::W) => 4,
+                Some(dir) => 1 + dir as u32,
             }),
 
             _ => Err(()),
@@ -41,52 +42,34 @@ mod tests {
 
         BotCompass::tick(&mut bot);
 
-        assert_eq!(Ok(1), bot.load(api::MEM_COMPASS));
-        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
+        assert_eq!(Ok(1), bot.load(api::COMPASS_MEM));
+        assert_eq!(Ok(0), bot.load(api::COMPASS_MEM));
 
-        // ---
+        assert_eq!(
+            Some([IRQ_COMPASS_READY, 0x01, 0x00, 0x00]),
+            bot.irq.take_le(),
+        );
 
-        bot.dir = Dir::N;
+        for (dir, idx) in [(Dir::N, 1), (Dir::E, 2), (Dir::S, 3), (Dir::W, 4)] {
+            bot.dir = dir.turned_back();
 
-        for _ in 0..128_000 {
+            for _ in 0..128_000 {
+                BotCompass::tick(&mut bot);
+
+                assert_eq!(None, bot.irq.take());
+            }
+
+            bot.dir = dir;
+
             BotCompass::tick(&mut bot);
+
+            assert_eq!(Ok(idx), bot.load(api::COMPASS_MEM));
+            assert_eq!(Ok(0), bot.load(api::COMPASS_MEM));
+
+            assert_eq!(
+                Some([IRQ_COMPASS_READY, idx as u8, 0x00, 0x00]),
+                bot.irq.take_le(),
+            );
         }
-
-        bot.dir = Dir::E;
-
-        BotCompass::tick(&mut bot);
-
-        assert_eq!(Ok(2), bot.load(api::MEM_COMPASS));
-        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
-
-        // ---
-
-        bot.dir = Dir::N;
-
-        for _ in 0..128_000 {
-            BotCompass::tick(&mut bot);
-        }
-
-        bot.dir = Dir::S;
-
-        BotCompass::tick(&mut bot);
-
-        assert_eq!(Ok(3), bot.load(api::MEM_COMPASS));
-        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
-
-        // ---
-
-        bot.dir = Dir::N;
-
-        for _ in 0..128_000 {
-            BotCompass::tick(&mut bot);
-        }
-
-        bot.dir = Dir::W;
-
-        BotCompass::tick(&mut bot);
-
-        assert_eq!(Ok(4), bot.load(api::MEM_COMPASS));
-        assert_eq!(Ok(0), bot.load(api::MEM_COMPASS));
     }
 }

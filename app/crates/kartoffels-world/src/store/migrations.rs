@@ -13,6 +13,7 @@ mod v13;
 mod v14;
 mod v15;
 mod v16;
+mod v17;
 
 use anyhow::Result;
 use ciborium::Value;
@@ -34,6 +35,7 @@ static MIGRATIONS: &[fn(&mut Value)] = &[
     v14::run,
     v15::run,
     v16::run,
+    v17::run,
 ];
 
 pub fn run(old: u32, new: u32, mut world: Value) -> Result<Value> {

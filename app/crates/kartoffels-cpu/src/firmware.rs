@@ -58,7 +58,7 @@ impl Firmware {
         }
     }
 
-    pub(crate) fn boot(&self) -> (u32, Box<[u8]>) {
+    pub(crate) fn boot(&self) -> (Box<[u8]>, u32) {
         let mut ram = vec![0; Cpu::RAM_SIZE as usize].into_boxed_slice();
 
         for seg in &self.segments {
@@ -66,7 +66,7 @@ impl Firmware {
             ram[seg.addr..seg.addr + seg.data.len()].copy_from_slice(&seg.data);
         }
 
-        (self.entry_pc, ram)
+        (ram, self.entry_pc)
     }
 }
 
@@ -191,7 +191,7 @@ mod tests {
         seg.p_vaddr = Cpu::RAM_BASE as u64;
         seg.p_memsz = Cpu::RAM_SIZE as u64;
 
-        let (ip, _) = Firmware::from_elf(&src.build()).unwrap().boot();
+        let (_, ip) = Firmware::from_elf(&src.build()).unwrap().boot();
 
         assert_eq!(1234, ip);
     }

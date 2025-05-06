@@ -1,7 +1,10 @@
 use ciborium::Value;
 use std::iter;
 
-pub trait CborValueExt {
+pub trait CborValueExt
+where
+    Self: Sized,
+{
     fn query_mut<'a>(
         &'a mut self,
         query: &'a str,

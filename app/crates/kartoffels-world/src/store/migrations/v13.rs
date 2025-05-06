@@ -8,10 +8,9 @@ pub fn run(world: &mut Value) {
         bot.add_entry(
             "compass",
             Value::Map(
-                Vec::default().with_entry("dir", Value::Null).with_entry(
-                    "next_measurement_in",
-                    Value::Integer(0.into()),
-                ),
+                Vec::default()
+                    .with_entry("dir", Value::Null)
+                    .with_entry("next_measurement_in", 0),
             ),
         );
 
