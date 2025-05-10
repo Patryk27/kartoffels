@@ -1,7 +1,7 @@
 use super::{Event, Mode, State};
 use crate::{theme, BotIdExt, Ui};
 use glam::ivec2;
-use kartoffels_world::prelude::{Dir, ObjectKind, Tile, TileKind};
+use kartoffels_world::prelude::{AbsDir, ObjectKind, Tile, TileKind};
 use ratatui::layout::Rect;
 use std::time::Instant;
 use termwiz::input::{KeyCode, Modifiers};
@@ -96,11 +96,11 @@ impl Map {
             }
 
             TileKind::BOT_CHEVRON => {
-                ch = match Dir::from(tile.meta[1]) {
-                    Dir::N => '↑',
-                    Dir::E => '→',
-                    Dir::S => '↓',
-                    Dir::W => '←',
+                ch = match AbsDir::from(tile.meta[1]) {
+                    AbsDir::N => '↑',
+                    AbsDir::E => '→',
+                    AbsDir::S => '↓',
+                    AbsDir::W => '←',
                 };
 
                 fg = state

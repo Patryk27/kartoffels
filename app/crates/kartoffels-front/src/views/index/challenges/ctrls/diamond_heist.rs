@@ -8,7 +8,7 @@ use indoc::indoc;
 use kartoffels_prefabs::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::{Store, World};
 use kartoffels_world::prelude::{
-    Config, CreateBotRequest, Dir, Event, Handle, Map, Object, ObjectKind,
+    AbsDir, Config, CreateBotRequest, Event, Handle, Map, Object, ObjectKind,
     Policy, TileKind,
 };
 use ratatui::style::Stylize;
@@ -158,7 +158,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
 
     anchors.fill(&mut map, TileKind::FLOOR);
 
-    world.set_spawn(anchors.get('a'), Dir::E).await?;
+    world.set_spawn(anchors.get('a'), AbsDir::E).await?;
 
     world
         .create_object(Object::new(ObjectKind::GEM), anchors.get('b'))
@@ -174,10 +174,10 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
     // ---
 
     let guards = [
-        (anchors.get('c'), Dir::N),
-        (anchors.get('d'), Dir::E),
-        (anchors.get('e'), Dir::S),
-        (anchors.get('f'), Dir::W),
+        (anchors.get('c'), AbsDir::N),
+        (anchors.get('d'), AbsDir::E),
+        (anchors.get('e'), AbsDir::S),
+        (anchors.get('f'), AbsDir::W),
     ];
 
     for (pos, dir) in guards {

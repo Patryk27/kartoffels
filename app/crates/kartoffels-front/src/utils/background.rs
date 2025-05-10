@@ -3,7 +3,7 @@ use futures::FutureExt;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
 use kartoffels_world::prelude::{
-    CaveTheme, Dir, Map, MapBuilder, Tile, TileKind,
+    AbsDir, CaveTheme, Map, MapBuilder, Tile, TileKind,
 };
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -116,7 +116,7 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
-                    let dst = src + rng.gen::<Dir>();
+                    let dst = src + rng.gen::<AbsDir>();
 
                     if map.get(dst).kind == TileKind::FLOOR {
                         map.set(src, TileKind::FLOOR);

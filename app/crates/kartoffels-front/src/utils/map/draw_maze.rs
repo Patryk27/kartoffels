@@ -1,5 +1,5 @@
 use glam::{ivec2, IVec2, UVec2};
-use kartoffels_world::prelude::{Dir, MapBuilder, TileKind};
+use kartoffels_world::prelude::{AbsDir, MapBuilder, TileKind};
 use rand::{Rng, RngCore};
 
 /// Creates an acyclic maze using recursive backtracking algorithm, a'la
@@ -15,7 +15,7 @@ pub async fn draw_maze(
 
     let mut frontier = Vec::new();
 
-    for dir in Dir::shuffled(rng) {
+    for dir in AbsDir::shuffled(rng) {
         frontier.push((head, dir));
     }
 
@@ -53,18 +53,18 @@ pub async fn draw_maze(
             map.set(mid, TileKind::FLOOR).await;
 
             match dir {
-                Dir::N | Dir::S => {
+                AbsDir::N | AbsDir::S => {
                     map.set(mid - ivec2(1, 0), TileKind::WALL_V).await;
                     map.set(mid + ivec2(1, 0), TileKind::WALL_V).await;
                 }
 
-                Dir::E | Dir::W => {
+                AbsDir::E | AbsDir::W => {
                     map.set(mid - ivec2(0, 1), TileKind::WALL_H).await;
                     map.set(mid + ivec2(0, 1), TileKind::WALL_H).await;
                 }
             }
 
-            for dir in Dir::shuffled(rng) {
+            for dir in AbsDir::shuffled(rng) {
                 frontier.push((dst, dir));
             }
         }

@@ -7,7 +7,7 @@ use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_prefabs::DUMMY;
 use kartoffels_store::{Store, World};
 use kartoffels_world::prelude::{
-    BotId, Config, CreateBotRequest, Dir, Handle, Map, MapBuilder, Policy,
+    AbsDir, BotId, Config, CreateBotRequest, Handle, Map, MapBuilder, Policy,
     TileKind,
 };
 use rand::RngCore;
@@ -124,10 +124,12 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
         })
         .await?;
 
-    world.set_spawn(SPAWN_POS, Dir::W).await?;
+    world.set_spawn(SPAWN_POS, AbsDir::W).await?;
 
     let timmy = world
-        .create_bot(CreateBotRequest::new(DUMMY).at(TIMMY_POS).facing(Dir::S))
+        .create_bot(
+            CreateBotRequest::new(DUMMY).at(TIMMY_POS).facing(AbsDir::S),
+        )
         .await?;
 
     game.join(&world).await?;

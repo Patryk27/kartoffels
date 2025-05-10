@@ -1,5 +1,7 @@
-use crate::*;
+use super::{AliveBot, AliveBotBody};
+use kartoffel as api;
 use kartoffels_cpu::Atomic;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotIrq {

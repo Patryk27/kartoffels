@@ -1,4 +1,7 @@
-use crate::*;
+use crate::{Object, ObjectId};
+use ahash::AHashMap;
+use glam::IVec2;
+use rand::{Rng, RngCore};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Objects {

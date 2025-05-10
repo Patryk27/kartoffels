@@ -1,5 +1,6 @@
-use crate::*;
+use crate::{store, Clock, Request, Shutdown, World};
 use tokio::sync::mpsc::error::TryRecvError;
+use tracing::{debug, warn};
 
 pub fn communicate(world: &mut World) {
     world.fuel.tick(&world.clock);

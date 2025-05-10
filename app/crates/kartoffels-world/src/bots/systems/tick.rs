@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{AliveBotBody, World};
 
 pub fn tick(world: &mut World) {
     let mut idx = 0;

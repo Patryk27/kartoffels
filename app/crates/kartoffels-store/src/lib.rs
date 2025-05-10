@@ -313,7 +313,7 @@ impl Actor {
 
         for world in self.worlds.find(Some(WorldVis::Public)) {
             let result =
-                time::timeout(Duration::from_millis(100), world.tick(0))
+                time::timeout(Duration::from_millis(100), world.ping())
                     .await
                     .map_err(|_| anyhow!("timed out"))
                     .flatten();

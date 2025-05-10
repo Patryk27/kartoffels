@@ -1,8 +1,11 @@
-use crate::*;
+use super::AliveBotBody;
+use crate::AbsDir;
+use kartoffel as api;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotCompass {
-    dir: Option<Dir>,
+    dir: Option<AbsDir>,
     cooldown: u32,
 }
 
@@ -34,6 +37,7 @@ impl BotCompass {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::AliveBot;
 
     #[test]
     fn smoke() {
@@ -49,7 +53,12 @@ mod tests {
             bot.irq.take_le(),
         );
 
-        for (dir, idx) in [(Dir::N, 1), (Dir::E, 2), (Dir::S, 3), (Dir::W, 4)] {
+        for (dir, idx) in [
+            (AbsDir::N, 1),
+            (AbsDir::E, 2),
+            (AbsDir::S, 3),
+            (AbsDir::W, 4),
+        ] {
             bot.dir = dir.turned_back();
 
             for _ in 0..128_000 {

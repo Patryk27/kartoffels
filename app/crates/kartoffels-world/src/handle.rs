@@ -1,8 +1,16 @@
 mod systems;
 
 pub use self::systems::*;
-use crate::*;
-use arc_swap::Guard;
+use crate::{
+    AbsDir, BotId, Clock, EventEnvelope, EventStream, Map, Object, ObjectId,
+    Policy, Snapshot, SnapshotStream, WorldBuffer,
+};
+use anyhow::{anyhow, Context, Result};
+use arc_swap::{ArcSwap, Guard};
+use derivative::Derivative;
+use glam::IVec2;
+use std::sync::Arc;
+use tokio::sync::{broadcast, mpsc, oneshot, watch};
 
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
@@ -43,6 +51,10 @@ impl Handle {
 
     pub fn version(&self) -> u64 {
         self.shared.snapshots.borrow().version
+    }
+
+    pub async fn ping(&self) -> Result<()> {
+        self.send(|tx| Request::Ping { tx }).await
     }
 
     pub async fn tick(&self, fuel: u32) -> Result<()> {
@@ -101,7 +113,7 @@ impl Handle {
     pub async fn set_spawn(
         &self,
         pos: impl Into<Option<IVec2>>,
-        dir: impl Into<Option<Dir>>,
+        dir: impl Into<Option<AbsDir>>,
     ) -> Result<()> {
         self.send(|tx| Request::SetSpawn {
             pos: pos.into(),
@@ -221,7 +233,7 @@ pub enum Request {
 
     SetSpawn {
         pos: Option<IVec2>,
-        dir: Option<Dir>,
+        dir: Option<AbsDir>,
         tx: oneshot::Sender<()>,
     },
 
@@ -248,7 +260,7 @@ pub struct CreateBotRequest {
     #[derivative(Debug = "ignore")]
     pub src: Vec<u8>,
     pub pos: Option<IVec2>,
-    pub dir: Option<Dir>,
+    pub dir: Option<AbsDir>,
     pub instant: bool,
     pub oneshot: bool,
 }
@@ -269,7 +281,7 @@ impl CreateBotRequest {
         self
     }
 
-    pub fn facing(mut self, dir: impl Into<Option<Dir>>) -> Self {
+    pub fn facing(mut self, dir: impl Into<Option<AbsDir>>) -> Self {
         self.dir = dir.into();
         self
     }

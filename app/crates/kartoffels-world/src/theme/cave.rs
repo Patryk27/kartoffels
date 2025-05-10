@@ -1,4 +1,14 @@
-use crate::*;
+use crate::{AbsDir, Map, MapBuilder, TileKind};
+use ahash::AHashSet;
+use anyhow::Result;
+use glam::{ivec2, IVec2, UVec2};
+use rand::seq::SliceRandom;
+use rand::{Rng, RngCore, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+use serde::{Deserialize, Serialize};
+use std::cmp::Reverse;
+use std::collections::VecDeque;
+use std::iter;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CaveTheme {
@@ -134,7 +144,7 @@ impl CaveTheme {
             while let Some(pos) = stack.pop_front() {
                 cave.push(pos);
 
-                for dir in Dir::all() {
+                for dir in AbsDir::all() {
                     let pos = pos + dir;
 
                     if map.get(pos).is_floor() && points.remove(&pos) {
@@ -196,7 +206,9 @@ impl CaveTheme {
 mod tests {
     use super::*;
     use futures_util::FutureExt;
+    use glam::uvec2;
     use kartoffels_utils::Asserter;
+    use rand::SeedableRng;
 
     #[test]
     fn build() {

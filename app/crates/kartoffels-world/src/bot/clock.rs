@@ -1,4 +1,7 @@
-use crate::*;
+use super::{AliveBotBody, BotIrq};
+use kartoffel as api;
+use rand::{Rng, RngCore};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -45,7 +48,6 @@ impl BotClock {
         match addr {
             // Subregion: clock
             api::CLOCK_MEM => Ok(bot.clock.seed),
-
             addr if addr == api::CLOCK_MEM + 4 => Ok(bot.clock.ticks as u32),
 
             // Subregion: timer0
@@ -176,6 +178,7 @@ impl BotTimer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AliveBot, World};
     use pretty_assertions as pa;
 
     #[test]

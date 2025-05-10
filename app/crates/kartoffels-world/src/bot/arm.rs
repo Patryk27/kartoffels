@@ -1,4 +1,7 @@
-use crate::*;
+use super::AliveBotBody;
+use crate::{Event, TileKind, World};
+use kartoffel as api;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotArm {
@@ -222,6 +225,8 @@ impl BotArm {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AbsDir, AliveBot, BotId, Map, Object, ObjectId, ObjectKind};
+    use glam::{ivec2, uvec2};
 
     #[test]
     fn stab() {
@@ -230,7 +235,7 @@ mod tests {
 
         bot.id = BotId::new(1234);
         bot.pos = ivec2(0, 0);
-        bot.dir = Dir::E;
+        bot.dir = AbsDir::E;
 
         world.bots.alive.add(Box::new(AliveBot {
             body: AliveBotBody {
@@ -302,7 +307,7 @@ mod tests {
         let mut world = World::default();
 
         bot.pos = ivec2(0, 0);
-        bot.dir = Dir::E;
+        bot.dir = AbsDir::E;
 
         world.map = Map::new(uvec2(3, 3));
         world.map.fill(TileKind::FLOOR);

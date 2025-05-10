@@ -93,7 +93,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
         .set_map(Map::new(uvec2(20, 10)).filled_with(TileKind::FLOOR))
         .await?;
 
-    ctxt.world.set_spawn(ivec2(10, 9), Dir::N).await?;
+    ctxt.world.set_spawn(ivec2(10, 9), AbsDir::N).await?;
 
     // ---
 

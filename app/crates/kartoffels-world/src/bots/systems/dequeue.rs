@@ -1,4 +1,4 @@
-use crate::*;
+use crate::World;
 
 pub fn dequeue(world: &mut World) {
     if world.bots.alive.count() >= world.policy.max_alive_bots as usize {

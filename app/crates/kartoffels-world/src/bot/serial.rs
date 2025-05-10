@@ -1,4 +1,9 @@
-use crate::*;
+use super::AliveBotBody;
+use kartoffel as api;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+use std::mem;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotSerial {

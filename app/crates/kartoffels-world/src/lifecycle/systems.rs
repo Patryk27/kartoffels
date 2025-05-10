@@ -1,4 +1,6 @@
-use crate::*;
+use crate::{Clock, World};
+use std::time::{Duration, Instant};
+use tracing::debug;
 
 struct State {
     ticks: u32,

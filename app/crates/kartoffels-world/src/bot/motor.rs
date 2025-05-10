@@ -1,4 +1,7 @@
-use crate::*;
+use super::AliveBotBody;
+use crate::{Event, RelDir, TileKind, World};
+use kartoffel as api;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct BotMotor {
@@ -29,19 +32,19 @@ impl BotMotor {
     ) -> Result<(), ()> {
         match (addr, val.to_le_bytes()) {
             (api::MOTOR_MEM, [0x01, 0x01, 0x01, 0x00]) => {
-                Self::do_move(bot, world, RDir::Up);
+                Self::do_move(bot, world, RelDir::Up);
                 Ok(())
             }
             (api::MOTOR_MEM, [0x01, 0xff, 0xff, 0x00]) => {
-                Self::do_move(bot, world, RDir::Down);
+                Self::do_move(bot, world, RelDir::Down);
                 Ok(())
             }
             (api::MOTOR_MEM, [0x01, 0x01, 0xff, 0x00]) => {
-                Self::do_move(bot, world, RDir::Right);
+                Self::do_move(bot, world, RelDir::Right);
                 Ok(())
             }
             (api::MOTOR_MEM, [0x01, 0xff, 0x01, 0x00]) => {
-                Self::do_move(bot, world, RDir::Left);
+                Self::do_move(bot, world, RelDir::Left);
                 Ok(())
             }
 
@@ -49,7 +52,7 @@ impl BotMotor {
         }
     }
 
-    fn do_move(bot: &mut AliveBotBody, world: &mut World, dir: RDir) {
+    fn do_move(bot: &mut AliveBotBody, world: &mut World, dir: RelDir) {
         if bot.motor.cooldown > 0 {
             return;
         }
@@ -57,7 +60,7 @@ impl BotMotor {
         let ok;
 
         match dir {
-            RDir::Up | RDir::Down => {
+            RelDir::Up | RelDir::Down => {
                 let at = bot.pos + dir * bot.dir;
 
                 match world.map.get(at).kind {
@@ -103,7 +106,7 @@ impl BotMotor {
                 }
             }
 
-            RDir::Left | RDir::Right => {
+            RelDir::Left | RelDir::Right => {
                 ok = true;
                 bot.dir = dir * bot.dir;
             }
@@ -136,8 +139,8 @@ impl BotMotor {
         });
 
         bot.motor.cooldown = world.cooldown(match dir {
-            RDir::Up => 20_000,
-            RDir::Down => 30_000,
+            RelDir::Up => 20_000,
+            RelDir::Down => 30_000,
             _ => 25_000,
         });
     }
@@ -146,6 +149,8 @@ impl BotMotor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AbsDir, AliveBot, Map, Object, ObjectId, ObjectKind};
+    use glam::{ivec2, uvec2, IVec2};
     use test_case::test_case;
 
     #[derive(Clone, Debug)]
@@ -153,7 +158,7 @@ mod tests {
         cmd: u32,
         pos: IVec2,
         expected_pos: IVec2,
-        expected_dir: Dir,
+        expected_dir: AbsDir,
         expected_irq: [u8; 4],
         expected_cooldown: u32,
     }
@@ -162,7 +167,7 @@ mod tests {
         cmd: api::pack(0x01, 0x01, 0x01, 0x00),
         pos: ivec2(1, 1),
         expected_pos: ivec2(1, 0),
-        expected_dir: Dir::N,
+        expected_dir: AbsDir::N,
         expected_irq: [api::IRQ_MOTOR_BUSY, b'^', api::MOTOR_STAT_OK, b' '],
         expected_cooldown: 20_000,
     };
@@ -171,7 +176,7 @@ mod tests {
         cmd: api::pack(0x01, 0xff, 0xff, 0x00),
         pos: ivec2(1, 1),
         expected_pos: ivec2(1, 2),
-        expected_dir: Dir::N,
+        expected_dir: AbsDir::N,
         expected_irq: [api::IRQ_MOTOR_BUSY, b'v', api::MOTOR_STAT_OK, b'.'],
         expected_cooldown: 30_000,
     };
@@ -180,7 +185,7 @@ mod tests {
         cmd: api::pack(0x01, 0xff, 0x01, 0x00),
         pos: ivec2(1, 1),
         expected_pos: ivec2(1, 1),
-        expected_dir: Dir::W,
+        expected_dir: AbsDir::W,
         expected_irq: [api::IRQ_MOTOR_BUSY, b'<', api::MOTOR_STAT_OK, b'.'],
         expected_cooldown: 25_000,
     };
@@ -189,7 +194,7 @@ mod tests {
         cmd: api::pack(0x01, 0x01, 0xff, 0x00),
         pos: ivec2(1, 1),
         expected_pos: ivec2(1, 1),
-        expected_dir: Dir::E,
+        expected_dir: AbsDir::E,
         expected_irq: [api::IRQ_MOTOR_BUSY, b'>', api::MOTOR_STAT_OK, b'*'],
         expected_cooldown: 25_000,
     };
@@ -198,7 +203,7 @@ mod tests {
         cmd: api::pack(0x01, 0x01, 0x01, 0x00),
         pos: ivec2(2, 1),
         expected_pos: ivec2(2, 1),
-        expected_dir: Dir::N,
+        expected_dir: AbsDir::N,
         expected_irq: [
             api::IRQ_MOTOR_BUSY,
             b'^',
@@ -218,7 +223,7 @@ mod tests {
         let mut world = World::default();
 
         bot.pos = case.pos;
-        bot.dir = Dir::N;
+        bot.dir = AbsDir::N;
 
         world.map = Map::new(uvec2(3, 3));
         world.map.fill(TileKind::FLOOR);

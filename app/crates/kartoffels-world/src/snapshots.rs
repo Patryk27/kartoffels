@@ -3,8 +3,20 @@ mod systems;
 
 pub use self::stream::*;
 pub use self::systems::*;
-use crate::*;
+use crate::{
+    AbsDir, BotEvent, BotId, BotLife, BotLives, BotStats, Clock, Map, Object,
+    ObjectId, Ticks,
+};
+use ahash::AHashMap;
+use glam::IVec2;
+use itertools::Itertools;
 use prettytable::{row, Table};
+use serde::Serialize;
+use std::cmp::Reverse;
+use std::collections::VecDeque;
+use std::fmt;
+use std::sync::Arc;
+use tokio::sync::watch;
 
 #[derive(Debug, Default, Serialize)]
 pub struct Snapshot {
@@ -166,7 +178,7 @@ impl fmt::Display for AliveBotsSnapshot {
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct AliveBotSnapshot {
     pub age: Ticks,
-    pub dir: Dir,
+    pub dir: AbsDir,
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub id: BotId,
     pub pos: IVec2,
@@ -275,10 +287,7 @@ impl LivesSnapshot {
         Some(self.entries.get(&id)?)
     }
 
-    pub fn iter(
-        &self,
-        id: BotId,
-    ) -> impl Iterator<Item = BotLifeSnapshot> + '_ {
+    pub fn iter(&self, id: BotId) -> impl Iterator<Item = BotLife> + '_ {
         self.get(id).into_iter().flat_map(|lives| lives.iter())
     }
 
@@ -290,8 +299,6 @@ impl LivesSnapshot {
     }
 }
 
-pub type BotLifeSnapshot = BotLife;
-
 #[derive(Debug, Default, Serialize)]
 pub struct StatsSnapshot {
     #[serde(with = "kartoffels_utils::serde::sorted_map")]
@@ -299,12 +306,10 @@ pub struct StatsSnapshot {
 }
 
 impl StatsSnapshot {
-    pub fn get(&self, id: BotId) -> Option<&BotStatsSnapshot> {
+    pub fn get(&self, id: BotId) -> Option<&BotStats> {
         self.entries.get(&id)
     }
 }
-
-pub type BotStatsSnapshot = BotStats;
 
 #[derive(Debug)]
 pub struct Snapshots {

@@ -7,7 +7,17 @@ pub use self::alive::*;
 pub use self::dead::*;
 pub use self::queued::*;
 pub use self::systems::*;
-use crate::*;
+use crate::{
+    AbsDir, AliveBot, BotEvents, BotId, Clock, CreateBotRequest, DeadBot,
+    Event, Events, Lives, Map, Objects, Policy, QueuedBot,
+};
+use anyhow::{anyhow, Context, Error, Result};
+use glam::{IVec2, UVec2};
+use kartoffels_cpu::Firmware;
+use rand::{Rng, RngCore};
+use rand_chacha::ChaCha8Rng;
+use serde::{Deserialize, Serialize};
+use tracing::{debug, trace};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Bots {
@@ -128,7 +138,7 @@ impl Bots {
         rng: &mut impl RngCore,
         spawn: &Spawn,
         bot: &QueuedBot,
-    ) -> Option<(IVec2, Dir)> {
+    ) -> Option<(IVec2, AbsDir)> {
         if let Some(pos) = bot.pos {
             let dir = bot.dir.unwrap_or_else(|| rng.gen());
 
@@ -158,7 +168,7 @@ impl Bots {
         objects: &Objects,
         rng: &mut impl RngCore,
         bot: &QueuedBot,
-    ) -> Option<(IVec2, Dir)> {
+    ) -> Option<(IVec2, AbsDir)> {
         if map.size() == UVec2::ZERO {
             return None;
         }
@@ -286,7 +296,7 @@ impl Bots {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Spawn {
     pub pos: Option<IVec2>,
-    pub dir: Option<Dir>,
+    pub dir: Option<AbsDir>,
 }
 
 #[derive(Clone, Copy, Debug)]

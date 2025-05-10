@@ -166,7 +166,7 @@ async fn set_spawn() {
         .unwrap();
 
     // Third bot gets born at (15,19)
-    world.set_spawn(ivec2(15, 19), Dir::W).await.unwrap();
+    world.set_spawn(ivec2(15, 19), AbsDir::W).await.unwrap();
 
     world
         .create_bot(CreateBotRequest::new(DUMMY))

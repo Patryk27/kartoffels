@@ -1,4 +1,9 @@
-use crate::*;
+use super::AliveBotBody;
+use crate::{TileKind, World};
+use glam::{ivec2, IVec2, IVec3};
+use kartoffel as api;
+use serde::{Deserialize, Serialize};
+use std::ops::RangeInclusive;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BotRadar {
@@ -272,14 +277,16 @@ impl BotRadarAddr {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use glam::ivec3;
+    use crate::{AbsDir, AliveBot, BotId, Map, Object, ObjectId, ObjectKind};
+    use glam::{ivec3, uvec2};
     use indoc::indoc;
+    use itertools::Itertools;
     use kartoffels_utils::Id;
     use test_case::test_case;
 
     struct TestCase {
         pos: IVec2,
-        dir: Dir,
+        dir: AbsDir,
         range: u8,
         opts: u8,
         expected_map: &'static str,
@@ -290,7 +297,7 @@ mod tests {
 
     const TEST_3X3_1: TestCase = TestCase {
         pos: ivec2(3, 3),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: 0,
         expected_map: indoc! {"
@@ -308,7 +315,7 @@ mod tests {
 
     const TEST_3X3_2: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: 0,
         expected_map: indoc! {"
@@ -326,7 +333,7 @@ mod tests {
 
     const TEST_3X3_3: TestCase = TestCase {
         pos: ivec2(3, 1),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: 0,
         expected_map: indoc! {"
@@ -344,7 +351,7 @@ mod tests {
 
     const TEST_3X3_4: TestCase = TestCase {
         pos: ivec2(3, 0),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: 0,
         expected_map: indoc! {"
@@ -362,7 +369,7 @@ mod tests {
 
     const TEST_5X5_N: TestCase = TestCase {
         pos: ivec2(3, 3),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 5,
         opts: 0,
         expected_map: indoc! {"
@@ -382,7 +389,7 @@ mod tests {
 
     const TEST_5X5_E: TestCase = TestCase {
         pos: ivec2(3, 3),
-        dir: Dir::E,
+        dir: AbsDir::E,
         range: 5,
         opts: 0,
         expected_map: indoc! {"
@@ -402,7 +409,7 @@ mod tests {
 
     const TEST_5X5_W: TestCase = TestCase {
         pos: ivec2(3, 3),
-        dir: Dir::W,
+        dir: AbsDir::W,
         range: 5,
         opts: 0,
         expected_map: indoc! {"
@@ -422,7 +429,7 @@ mod tests {
 
     const TEST_5X5_S: TestCase = TestCase {
         pos: ivec2(3, 3),
-        dir: Dir::S,
+        dir: AbsDir::S,
         range: 5,
         opts: 0,
         expected_map: indoc! {"
@@ -442,7 +449,7 @@ mod tests {
 
     const TEST_OPTS_TILES: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_TILES,
         expected_map: indoc! {"
@@ -458,7 +465,7 @@ mod tests {
 
     const TEST_OPTS_BOTS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_BOTS,
         expected_map: indoc! {"
@@ -473,7 +480,7 @@ mod tests {
 
     const TEST_OPTS_BOTS_AND_IDS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
@@ -490,7 +497,7 @@ mod tests {
 
     const TEST_OPTS_BOTS_AND_DIRS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_DIRS,
         expected_map: indoc! {"
@@ -507,7 +514,7 @@ mod tests {
 
     const TEST_OPTS_OBJS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_OBJS,
         expected_map: indoc! {"
@@ -522,7 +529,7 @@ mod tests {
 
     const TEST_OPTS_OBJS_AND_IDS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_OBJS | api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
@@ -539,7 +546,7 @@ mod tests {
 
     const TEST_OPTS_BOTS_AND_OBJS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_BOTS | api::RADAR_SCAN_OBJS,
         expected_map: indoc! {"
@@ -559,7 +566,7 @@ mod tests {
     /// well), but it's legal.
     const TEST_OPTS_IDS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_IDS,
         expected_map: indoc! {"
@@ -577,7 +584,7 @@ mod tests {
     /// legal.
     const TEST_OPTS_DIRS: TestCase = TestCase {
         pos: ivec2(3, 2),
-        dir: Dir::N,
+        dir: AbsDir::N,
         range: 3,
         opts: api::RADAR_SCAN_DIRS,
         expected_map: indoc! {"
@@ -614,7 +621,7 @@ mod tests {
             body: AliveBotBody {
                 id: BotId::new(0xcafed00d),
                 pos: ivec2(3, 2),
-                dir: Dir::E,
+                dir: AbsDir::E,
                 ..Default::default()
             },
             ..Default::default()

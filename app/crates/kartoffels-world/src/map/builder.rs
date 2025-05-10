@@ -1,4 +1,10 @@
-use crate::*;
+use super::{Map, Tile};
+use crate::{AbsDir, TileKind};
+use glam::{ivec2, IVec2, UVec2};
+use rand::seq::SliceRandom;
+use rand::{Rng, RngCore};
+use std::{cmp, ops};
+use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub struct MapBuilder {
@@ -138,7 +144,7 @@ impl MapBuilder {
 
             self.map.get_mut(pos).meta[0] = VISITED;
 
-            for dir in Dir::all() {
+            for dir in AbsDir::all() {
                 if self.map.contains(pos + dir) {
                     frontier.push(pos + dir);
                 }

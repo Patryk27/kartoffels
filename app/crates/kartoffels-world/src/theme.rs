@@ -3,7 +3,10 @@ mod cave;
 
 pub use self::arena::*;
 pub use self::cave::*;
-use crate::*;
+use crate::{Map, MapBuilder};
+use anyhow::Result;
+use rand::RngCore;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type")]

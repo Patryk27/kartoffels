@@ -1,4 +1,7 @@
-use crate::*;
+use crate::{AliveBot, BotId};
+use ahash::AHashMap;
+use glam::IVec2;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Manages alive bots.
 ///
@@ -158,6 +161,7 @@ impl<'de> Deserialize<'de> for AliveBots {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::AliveBotBody;
     use glam::ivec2;
 
     fn bot(id: u64, pos: IVec2) -> Box<AliveBot> {

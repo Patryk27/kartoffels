@@ -1,7 +1,7 @@
-mod dir;
-mod rdir;
+mod absdir;
+mod reldir;
 mod ticks;
 
-pub use self::dir::*;
-pub use self::rdir::*;
+pub use self::absdir::*;
+pub use self::reldir::*;
 pub use self::ticks::*;

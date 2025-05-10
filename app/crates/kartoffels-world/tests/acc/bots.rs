@@ -13,7 +13,7 @@ async fn fall() {
         .create_bot(
             CreateBotRequest::new(ACC_FALL)
                 .at(ivec2(1, 1))
-                .facing(Dir::N)
+                .facing(AbsDir::N)
                 .oneshot(),
         )
         .await
@@ -56,7 +56,7 @@ async fn irq() {
         .create_bot(
             CreateBotRequest::new(ACC_IRQ)
                 .at(ivec2(2, 2))
-                .facing(Dir::N),
+                .facing(AbsDir::N),
         )
         .await
         .unwrap();
@@ -109,7 +109,7 @@ async fn radar() {
         .create_bot(
             CreateBotRequest::new(ACC_RADAR)
                 .at(ivec2(0, 0))
-                .facing(Dir::S),
+                .facing(AbsDir::S),
         )
         .await
         .unwrap();

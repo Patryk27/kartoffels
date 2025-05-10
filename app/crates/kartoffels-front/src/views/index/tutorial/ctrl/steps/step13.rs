@@ -92,7 +92,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 }
 
 async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.world.set_spawn(ivec2(10, 10), Dir::E).await?;
+    ctxt.world.set_spawn(ivec2(10, 10), AbsDir::E).await?;
 
     ctxt.world
         .set_map({

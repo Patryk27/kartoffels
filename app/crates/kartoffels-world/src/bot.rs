@@ -19,8 +19,14 @@ pub use self::irq::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
-use crate::*;
-use kartoffels_cpu::{Atomic, TickError};
+use crate::{AbsDir, Clock, Ticks, World};
+use glam::{ivec2, IVec2};
+use kartoffels_cpu::{Atomic, Cpu, Firmware, Mmio, TickError};
+use rand::RngCore;
+use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
+use std::ops;
+use std::sync::Arc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Default))]
@@ -36,7 +42,7 @@ impl AliveBot {
         rng: &mut impl RngCore,
         clock: &Clock,
         pos: IVec2,
-        dir: Dir,
+        dir: AbsDir,
         mut bot: QueuedBot,
     ) -> Self {
         bot.events
@@ -105,7 +111,7 @@ pub struct AliveBotBody {
     pub arm: BotArm,
     pub clock: BotClock,
     pub compass: BotCompass,
-    pub dir: Dir,
+    pub dir: AbsDir,
     pub events: BotEvents,
     pub id: BotId,
     pub inventory: BotInventory,
@@ -157,7 +163,7 @@ pub struct DeadBot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct QueuedBot {
-    pub dir: Option<Dir>,
+    pub dir: Option<AbsDir>,
     pub events: BotEvents,
     pub fw: Firmware,
     pub id: BotId,
