@@ -34,7 +34,7 @@ pub async fn start(
         Router::new()
             .route("/", get(endpoints::connect::handle))
             .route(
-                "/sessions/:id/bots",
+                "/sessions/{id}/bots",
                 post(endpoints::create_session_bot::handle),
             )
             .with_state((store, shutdown.clone()))

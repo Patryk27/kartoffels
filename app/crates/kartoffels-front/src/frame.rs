@@ -1,5 +1,6 @@
 use crate::{theme, Abort, Clear, Ui, UiLayout};
 use anyhow::{Context, Error, Result};
+use bytes::Bytes;
 use glam::{uvec2, UVec2};
 use ratatui::crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
@@ -209,7 +210,7 @@ impl Frame {
     fn handle(&mut self, event: StdinEvent) -> Result<()> {
         match event {
             StdinEvent::Input(input) => {
-                self.handle_input(input)?;
+                self.handle_input(&input)?;
             }
             StdinEvent::Resized(size) => {
                 self.handle_resized(size)?;
@@ -219,8 +220,8 @@ impl Frame {
         Ok(())
     }
 
-    fn handle_input(&mut self, input: Vec<u8>) -> Result<()> {
-        let events = self.parser.parse_as_vec(&input, false);
+    fn handle_input(&mut self, input: &[u8]) -> Result<()> {
+        let events = self.parser.parse_as_vec(input, false);
 
         for event in events {
             if let InputEvent::Key(event) = &event {
@@ -362,7 +363,7 @@ enum FrameMouseClick {
 
 #[derive(Clone, Debug)]
 pub enum StdinEvent {
-    Input(Vec<u8>),
+    Input(Bytes),
     Resized(UVec2),
 }
 

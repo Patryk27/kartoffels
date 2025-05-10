@@ -50,7 +50,7 @@ impl AppChannel {
         };
 
         stdin_tx
-            .send(StdinEvent::Input(data.to_vec()))
+            .send(StdinEvent::Input(data.to_vec().into()))
             .await
             .map_err(|_| anyhow!("lost the frame"))?;
 

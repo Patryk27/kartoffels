@@ -133,8 +133,9 @@ fn create_stdout(mut stdout: SplitSink<WebSocket, Message>) -> Stdout {
         async move {
             while let Some(frame) = rx.recv().await {
                 let frame = compress(&frame);
+                let frame = Message::Binary(frame.into());
 
-                if stdout.send(Message::Binary(frame)).await.is_err() {
+                if stdout.send(frame).await.is_err() {
                     info!("couldn't push data into socket, killing stdout");
                     return;
                 }

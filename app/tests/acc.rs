@@ -151,9 +151,9 @@ impl TestContext {
         let (mut stdin, mut stdout) = client.split();
 
         stdin
-            .send(WsMessage::Text(format!(
-                "{{ \"cols\": {cols}, \"rows\": {rows} }}",
-            )))
+            .send(WsMessage::Text(
+                format!("{{ \"cols\": {cols}, \"rows\": {rows} }}").into(),
+            ))
             .await
             .unwrap();
 
@@ -197,7 +197,10 @@ impl TestContext {
             key.encode(mods, modes, is_down).unwrap().into()
         };
 
-        self.stdin.send(WsMessage::Binary(payload)).await.unwrap();
+        self.stdin
+            .send(WsMessage::Binary(payload.into()))
+            .await
+            .unwrap();
     }
 
     #[track_caller]
