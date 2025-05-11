@@ -1,6 +1,7 @@
 use crate::{Ui, UiWidget};
 use ratatui::style::Color;
-use std::time::Instant;
+use std::task::Poll;
+use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
 pub struct Fade {
@@ -9,7 +10,7 @@ pub struct Fade {
 }
 
 impl Fade {
-    const DURATION_MS: f32 = 200.0;
+    const DURATION: Duration = Duration::from_millis(250);
 
     pub fn new(dir: FadeDir) -> Self {
         Self {
@@ -22,25 +23,27 @@ impl Fade {
         self.dir
     }
 
-    pub fn is_completed(&self) -> bool {
-        self.started_at.elapsed().as_millis() as f32 >= Fade::DURATION_MS
+    pub fn is_ready(&self) -> bool {
+        self.started_at.elapsed() >= Fade::DURATION
     }
 }
 
 impl<T> UiWidget<T> for &Fade {
-    type Response = FadeStatus;
+    type Response = Poll<()>;
 
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let alpha = {
-            let alpha = self.started_at.elapsed().as_millis() as f32
-                / Fade::DURATION_MS;
-
-            let alpha = alpha.clamp(0.0, 1.0);
+            let t = self
+                .started_at
+                .elapsed()
+                .div_duration_f32(Fade::DURATION)
+                .clamp(0.0, 1.0);
 
             match self.dir {
-                FadeDir::In => alpha,
-                FadeDir::Out => 1.0 - alpha,
+                FadeDir::In => t,
+                FadeDir::Out => 1.0 - t,
             }
+            .powi(2)
         };
 
         for y in 0..ui.area.height {
@@ -60,10 +63,10 @@ impl<T> UiWidget<T> for &Fade {
             }
         }
 
-        if self.is_completed() {
-            FadeStatus::Completed
+        if self.is_ready() {
+            Poll::Ready(())
         } else {
-            FadeStatus::Pending
+            Poll::Pending
         }
     }
 }
@@ -72,18 +75,6 @@ impl<T> UiWidget<T> for &Fade {
 pub enum FadeDir {
     In,
     Out,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FadeStatus {
-    Pending,
-    Completed,
-}
-
-impl FadeStatus {
-    pub fn is_completed(&self) -> bool {
-        matches!(self, FadeStatus::Completed)
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -116,7 +107,7 @@ where
             Some(FadeCtrlStage::FadeIn { fade }) => {
                 let event = ui.catch(f);
 
-                if ui.add(&*fade).is_completed() {
+                if ui.add(&*fade).is_ready() {
                     self.stage = None;
                 }
 
@@ -126,13 +117,11 @@ where
             Some(FadeCtrlStage::FadeOut { fade, event }) => {
                 _ = ui.catch(f);
 
-                if fade.is_completed()
+                if ui.add(&*fade).is_ready()
                     && let Some(event) = event.take()
                 {
                     ui.throw(event);
                 }
-
-                ui.add(&*fade);
 
                 None
             }

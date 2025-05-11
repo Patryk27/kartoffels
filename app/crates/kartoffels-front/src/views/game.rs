@@ -74,7 +74,7 @@ async fn run_once(
                 state.render(ui, sess, store);
 
                 if let Some(fade) = &fade {
-                    fade.render(ui);
+                    _ = fade.render(ui);
                 }
 
                 tick = Instant::now();
@@ -92,7 +92,7 @@ async fn run_once(
 
         if let Some(fade) = &fade
             && fade.dir() == FadeDir::Out
-            && fade.is_completed()
+            && fade.is_ready()
         {
             return Ok(());
         }
