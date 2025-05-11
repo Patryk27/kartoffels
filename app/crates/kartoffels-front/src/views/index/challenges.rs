@@ -2,7 +2,7 @@ mod ctrls;
 
 use self::ctrls::*;
 use crate::views::game;
-use crate::{Background, Button, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
+use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
 use ratatui::widgets::{Paragraph, Wrap};
@@ -13,7 +13,7 @@ pub async fn run(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
 ) -> Result<()> {
     let mut fade_in = false;
 
@@ -38,7 +38,7 @@ pub async fn run(
 async fn run_once(
     store: &Store,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
     fade_in: bool,
 ) -> Result<Event> {
     debug!("run()");

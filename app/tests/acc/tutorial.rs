@@ -2,7 +2,7 @@ use crate::TestContext;
 use kartoffels_prefabs::{TUT_01, TUT_02, TUT_03, TUT_04};
 use kartoffels_world::prelude::Clock;
 use std::time::Duration;
-use termwiz::input::{KeyCode, Modifiers};
+use termwiz::input::KeyCode;
 use tokio::time;
 
 async fn ctxt() -> TestContext {
@@ -45,15 +45,6 @@ async fn leave_and_start() {
     ctxt.wait_for("hey there").await;
     ctxt.see("[esc] go-back");
     ctxt.see("[enter] start");
-}
-
-#[tokio::test]
-async fn leave_using_ctrl_c() {
-    let mut ctxt = ctxt().await;
-
-    ctxt.dont_see(TestContext::INDEX);
-    ctxt.press_ex(KeyCode::Char('a'), Modifiers::CTRL).await;
-    ctxt.wait_for(TestContext::INDEX).await;
 }
 
 #[tokio::test]

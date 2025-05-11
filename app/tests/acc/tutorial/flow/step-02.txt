@@ -8,7 +8,6 @@
         │ - you can navigate the interface using keyboard and/or mouse │
         │                                                              │
         │ lesson #2, at any time:                                      │
-        │ - press [Ctrl-a] to go back to the main menu                 │
         │                                                              │
         │ lesson #3, during the game:                                  │
         │ - press [h] to get help (ambulance paid separately)          │
@@ -19,6 +18,7 @@
         │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
+                 .....................
                   ...................
                    .................
                     ...............

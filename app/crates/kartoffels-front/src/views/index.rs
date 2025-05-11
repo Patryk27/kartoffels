@@ -5,7 +5,7 @@ mod tutorial;
 mod widgets;
 
 use self::widgets::*;
-use crate::{Background, FadeCtrl, FadeCtrlEvent, Frame};
+use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame};
 use anyhow::Result;
 use kartoffels_store::{Session, Store, WorldVis};
 use ratatui::layout::{Constraint, Layout};
@@ -15,7 +15,7 @@ pub async fn run(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
 ) -> Result<()> {
     let mut fade_in = true;
 
@@ -51,7 +51,7 @@ pub async fn run(
 async fn run_once(
     store: &Store,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
     fade_in: bool,
 ) -> Result<Event> {
     debug!("run()");

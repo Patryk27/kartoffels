@@ -13,7 +13,6 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new("lesson #2, at any time:").bold(),
-        MsgLine::new("- press [`Ctrl-a`] to go back to the main menu"),
         MsgLine::ssh("- press [`Ctrl-c`] to disconnect and quit the game"),
         MsgLine::new(""),
         MsgLine::new("lesson #3, during the game:").bold(),

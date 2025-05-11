@@ -226,11 +226,8 @@ impl Frame {
         for event in events {
             if let InputEvent::Key(event) = &event {
                 match (event.key, event.modifiers) {
-                    Abort::SOFT_BINDING => {
-                        return Err(Error::new(Abort { soft: true }));
-                    }
-                    Abort::HARD_BINDING if self.ty.is_ssh() => {
-                        return Err(Error::new(Abort { soft: false }));
+                    Abort::BINDING if self.ty.is_ssh() => {
+                        return Err(Error::new(Abort));
                     }
 
                     _ => (),

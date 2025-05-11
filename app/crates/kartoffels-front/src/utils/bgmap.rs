@@ -13,12 +13,12 @@ use std::time::Duration;
 use tokio::sync::watch;
 
 #[derive(Debug)]
-pub struct Background {
+pub struct BgMap {
     stream: watch::Receiver<Arc<Map>>,
     camera: IVec2,
 }
 
-impl Background {
+impl BgMap {
     const MAP_SIZE: UVec2 = uvec2(256, 256);
 
     pub fn new(store: &Store, frame: &Frame) -> Self {
@@ -54,7 +54,7 @@ impl Background {
     }
 }
 
-impl<T> UiWidget<T> for &Background {
+impl<T> UiWidget<T> for &BgMap {
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         let map = self.stream.borrow().clone();
 
@@ -90,7 +90,7 @@ static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
 fn refresh(tx: watch::Sender<Arc<Map>>) {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let mut map = CaveTheme::new(Background::MAP_SIZE)
+    let mut map = CaveTheme::new(BgMap::MAP_SIZE)
         .build(&mut rng, MapBuilder::detached())
         .now_or_never()
         .unwrap()

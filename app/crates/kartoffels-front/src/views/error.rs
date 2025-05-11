@@ -1,4 +1,4 @@
-use crate::{Background, Button, Frame};
+use crate::{BgMap, Button, Frame};
 use anyhow::{Error, Result};
 use kartoffels_utils::ErrorExt;
 use ratatui::layout::{Constraint, Layout};
@@ -6,7 +6,7 @@ use ratatui::widgets::Paragraph;
 use termwiz::input::KeyCode;
 use tracing::debug;
 
-pub async fn run(frame: &mut Frame, bg: &Background, err: Error) -> Result<()> {
+pub async fn run(frame: &mut Frame, bg: &BgMap, err: Error) -> Result<()> {
     debug!(?err, "run()");
 
     let err = Paragraph::new(err.to_fmt_string()).wrap(Default::default());

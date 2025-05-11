@@ -5,7 +5,7 @@ mod sandbox_theme;
 use self::sandbox_size::*;
 use self::sandbox_theme::*;
 use crate::views::game;
-use crate::{Background, Button, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
@@ -17,7 +17,7 @@ pub async fn run(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
 ) -> Result<()> {
     let mut fade_in = false;
 
@@ -43,7 +43,7 @@ pub async fn run(
 async fn run_once(
     store: &Store,
     frame: &mut Frame,
-    bg: &Background,
+    bg: &BgMap,
     fade_in: bool,
     size: &mut SandboxSize,
     theme: &mut SandboxTheme,

@@ -22,7 +22,7 @@ pub async fn main(
     sess: &Session,
     frame: &mut Frame,
 ) -> Result<()> {
-    let mut bg = Background::new(store, frame);
+    let bg = BgMap::new(store, frame);
 
     loop {
         match views::index::run(store, sess, frame, &bg).await {
@@ -30,28 +30,19 @@ pub async fn main(
                 return Ok(());
             }
 
-            Err(err) => {
-                match err.downcast::<Abort>() {
-                    Ok(abort) => {
-                        if abort.soft {
-                            // Let soft-aborts generate a new background, just
-                            // for fun
-                            bg = Background::new(store, frame);
-                            continue;
-                        } else {
-                            return Err(abort.into());
-                        }
-                    }
-
-                    Err(err) => {
-                        views::error::run(frame, &bg, err).await?;
-                    }
+            Err(err) => match err.downcast::<Abort>() {
+                Ok(abort) => {
+                    return Err(abort.into());
                 }
-            }
+
+                Err(err) => {
+                    views::error::run(frame, &bg, err).await?;
+                }
+            },
         }
     }
 }
 
 pub fn init() {
-    Background::init();
+    BgMap::init();
 }
