@@ -13,10 +13,14 @@ impl Menu {
     }
 
     pub fn height<T>(ui: &Ui<T>, has_public_worlds: bool) -> u16 {
-        let mut height = if ui.ty.is_ssh() { 7 } else { 5 };
+        let mut height = 5;
 
         if has_public_worlds {
             height += 1;
+        }
+
+        if ui.ty.is_ssh() {
+            height += 2;
         }
 
         height
