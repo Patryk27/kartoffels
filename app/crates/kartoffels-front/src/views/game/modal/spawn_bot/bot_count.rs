@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use std::fmt;
 use termwiz::input::KeyCode;
 
@@ -8,9 +8,9 @@ pub struct BotCount(u8);
 
 impl BotCount {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(format!("count: {val}"), KeyCode::Char('c'))
-            .throwing(Event::FocusOn(Some(Focus::BotCount)))
-            .render(ui);
+        ui.btn(format!("count: {val}"), KeyCode::Char('c'), |btn| {
+            btn.throwing(Event::FocusOn(Some(Focus::BotCount)))
+        });
     }
 
     pub(super) fn render_choice(ui: &mut Ui<Event>) {
@@ -18,9 +18,9 @@ impl BotCount {
             let val = Self(n);
             let key = KeyCode::Char((b'0' + (n % 10)) as char);
 
-            Button::new(val.to_string(), key)
-                .throwing(Event::SetBotCount(val))
-                .render(ui);
+            ui.btn(val.to_string(), key, |btn| {
+                btn.throwing(Event::SetBotCount(val))
+            });
         }
     }
 

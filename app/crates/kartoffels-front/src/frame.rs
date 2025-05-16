@@ -169,18 +169,21 @@ impl Frame {
             })?;
         } else {
             self.term.draw(|frame| {
-                let area = frame.area();
-
-                render(&mut Ui {
+                let mut ui = Ui {
                     ty: self.ty,
+                    area: frame.area(),
                     buf: frame.buffer_mut(),
-                    area,
                     mouse: mouse.as_ref(),
                     event: event.as_ref(),
                     layout: UiLayout::Col,
                     enabled: true,
-                    thrown: &mut thrown,
-                });
+                    focused: true,
+                    thrown: None,
+                };
+
+                render(&mut ui);
+
+                thrown = ui.thrown;
             })?;
         }
 

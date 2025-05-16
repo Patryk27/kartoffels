@@ -178,18 +178,18 @@ impl State {
             }
         }
 
-        ui.enable(self.modal.is_none(), |ui| {
-            ui.clamp(bottom_area, |ui| {
+        ui.enabled(self.modal.is_none(), |ui| {
+            ui.at(bottom_area, |ui| {
                 BottomPanel::render(ui, self);
             });
 
             if self.world.is_some() {
-                ui.enable(self.config.enabled, |ui| {
-                    ui.clamp(side_area, |ui| {
+                ui.enabled(self.config.enabled, |ui| {
+                    ui.at(side_area, |ui| {
                         SidePanel::render(ui, self);
                     });
 
-                    ui.clamp(map_area, |ui| {
+                    ui.at(map_area, |ui| {
                         self.map.render(ui, self);
                     });
                 });

@@ -195,7 +195,7 @@ async fn set_spawn() {
         .unwrap()
         .bots
         .alive
-        .iter_sorted_by_birth()
+        .iter_by_birth()
         .map(|bot| bot.pos)
         .collect();
 

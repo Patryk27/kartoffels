@@ -1,10 +1,11 @@
-use crate::{theme, Clear, FrameType};
+use crate::{theme, Button, Clear, FrameType};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Span, Text};
 use ratatui::widgets::{Block, Padding, Paragraph, Widget, Wrap};
+use std::borrow::Cow;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -16,12 +17,13 @@ pub struct Ui<'a, T> {
     pub event: Option<&'a InputEvent>,
     pub layout: UiLayout,
     pub enabled: bool,
-    pub thrown: &'a mut Option<T>,
+    pub focused: bool,
+    pub thrown: Option<T>,
 }
 
 impl<T> Ui<'_, T> {
     pub fn with<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
-        f(&mut Ui {
+        let mut this = Ui {
             ty: self.ty,
             buf: self.buf,
             area: self.area,
@@ -29,58 +31,61 @@ impl<T> Ui<'_, T> {
             event: self.event,
             layout: self.layout,
             enabled: self.enabled,
-            thrown: self.thrown,
-        })
-    }
+            focused: self.focused,
+            thrown: None,
+        };
 
-    pub fn clamp<U>(
-        &mut self,
-        area: Rect,
-        f: impl FnOnce(&mut Ui<T>) -> U,
-    ) -> U {
-        self.with(|ui| {
-            ui.area = ui.area.clamp(area);
+        let result = f(&mut this);
 
-            f(ui)
-        })
-    }
+        self.area = this.area;
 
-    pub fn row<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
-        let result = self.with(|ui| {
-            ui.layout = UiLayout::Row;
-
-            f(ui)
-        });
-
-        self.space(1);
+        if let Some(thrown) = this.thrown {
+            self.thrown = Some(thrown);
+        }
 
         result
     }
 
-    pub fn enable<U>(
+    pub fn at<U>(&mut self, area: Rect, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+        let old_area = self.area;
+
+        let result = self.with(|this| {
+            this.area = this.area.clamp(area);
+
+            f(this)
+        });
+
+        self.area = old_area;
+
+        result
+    }
+
+    pub fn zoned<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+        self.at(self.area, f)
+    }
+
+    pub fn enabled<U>(
         &mut self,
         enabled: bool,
         f: impl FnOnce(&mut Ui<T>) -> U,
     ) -> U {
-        self.with(|ui| {
-            ui.enabled = ui.enabled && enabled;
+        self.with(|this| {
+            this.enabled &= enabled;
 
-            f(ui)
+            f(this)
         })
     }
 
-    pub fn space(&mut self, len: u16) {
-        match self.layout {
-            UiLayout::Row => {
-                self.area.x += len;
-                self.area.width -= len;
-            }
+    pub fn focused<U>(
+        &mut self,
+        focused: bool,
+        f: impl FnOnce(&mut Ui<T>) -> U,
+    ) -> U {
+        self.with(|this| {
+            this.focused &= focused;
 
-            UiLayout::Col => {
-                self.area.y += len;
-                self.area.height -= len;
-            }
-        }
+            f(this)
+        })
     }
 
     pub fn add<W>(&mut self, widget: W) -> W::Response
@@ -94,7 +99,16 @@ impl<T> Ui<'_, T> {
     where
         W: UiWidget<T>,
     {
-        self.clamp(area, |ui| ui.add(widget))
+        self.at(area, |this| this.add(widget))
+    }
+
+    pub fn btn<'x>(
+        &mut self,
+        label: impl Into<Cow<'x, str>>,
+        key: impl Into<Option<KeyCode>>,
+        f: impl FnOnce(Button<'x, T>) -> Button<'x, T>,
+    ) -> <Button<'x, T> as UiWidget<T>>::Response {
+        self.add(f(Button::new(label, key)))
     }
 
     pub fn line<'x>(&mut self, line: impl Into<Text<'x>>) -> u16 {
@@ -118,15 +132,15 @@ impl<T> Ui<'_, T> {
     pub fn block(&mut self, block: Block, f: impl FnOnce(&mut Ui<T>)) {
         self.add(Clear);
         self.add(&block);
-        self.clamp(block.inner(self.area), f);
+        self.at(block.inner(self.area), f);
     }
 
-    pub fn window(
+    fn modal(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
-        border_fg: Color,
+        border: Color,
         f: impl FnOnce(&mut Ui<T>),
     ) {
         let area = {
@@ -147,37 +161,96 @@ impl<T> Ui<'_, T> {
             area
         };
 
-        self.clamp(area, |ui| {
+        self.at(area, |this| {
             let mut block = Block::bordered()
-                .border_style(Style::new().fg(border_fg).bg(theme::BG))
+                .border_style(Style::new().fg(border).bg(theme::BG))
                 .padding(Padding::horizontal(1));
 
             if let Some(title) = title {
                 block = block.title(title).title_alignment(Alignment::Center);
             }
 
-            ui.block(block, f);
+            this.block(block, f);
         });
     }
 
-    pub fn info_window(
+    pub fn emodal(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
         f: impl FnOnce(&mut Ui<T>),
     ) {
-        self.window(width, height, title, theme::GREEN, f);
+        self.modal(width, height, title, theme::RED, f);
     }
 
-    pub fn error_window(
+    pub fn wmodal(
         &mut self,
         width: u16,
         height: u16,
         title: Option<&str>,
         f: impl FnOnce(&mut Ui<T>),
     ) {
-        self.window(width, height, title, theme::RED, f);
+        self.modal(width, height, title, theme::YELLOW, f);
+    }
+
+    pub fn imodal(
+        &mut self,
+        width: u16,
+        height: u16,
+        title: Option<&str>,
+        f: impl FnOnce(&mut Ui<T>),
+    ) {
+        self.modal(width, height, title, theme::GREEN, f);
+    }
+
+    pub fn row<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+        let result = self.zoned(|this| {
+            this.with(|this| {
+                this.layout = UiLayout::Row;
+
+                f(this)
+            })
+        });
+
+        self.space(1);
+
+        result
+    }
+
+    pub fn space(&mut self, len: u16) {
+        match self.layout {
+            UiLayout::Row => {
+                self.area.x += len;
+                self.area.width -= len;
+            }
+            UiLayout::Col => {
+                self.area.y += len;
+                self.area.height -= len;
+            }
+        }
+    }
+
+    pub fn throw(&mut self, event: T) {
+        self.thrown = Some(event);
+    }
+
+    pub fn catching<U>(&mut self, f: impl FnOnce(&mut Ui<U>)) -> Option<U> {
+        let mut this = Ui {
+            ty: self.ty,
+            buf: self.buf,
+            area: self.area,
+            mouse: self.mouse,
+            event: self.event,
+            layout: self.layout,
+            enabled: self.enabled,
+            focused: self.focused,
+            thrown: None,
+        };
+
+        f(&mut this);
+
+        this.thrown
     }
 
     pub fn key(&self, key: KeyCode, mods: Modifiers) -> bool {
@@ -212,27 +285,6 @@ impl<T> Ui<'_, T> {
         } else {
             false
         }
-    }
-
-    pub fn throw(&mut self, event: T) {
-        *self.thrown = Some(event);
-    }
-
-    pub fn catch<U>(&mut self, f: impl FnOnce(&mut Ui<U>)) -> Option<U> {
-        let mut thrown = None;
-
-        f(&mut Ui {
-            ty: self.ty,
-            buf: self.buf,
-            area: self.area,
-            mouse: self.mouse,
-            event: self.event,
-            layout: self.layout,
-            enabled: self.enabled,
-            thrown: &mut thrown,
-        });
-
-        thrown
     }
 }
 

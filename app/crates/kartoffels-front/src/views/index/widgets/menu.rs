@@ -1,5 +1,5 @@
 use super::super::Event;
-use crate::{theme, Button, Ui, UiWidget};
+use crate::{theme, Ui};
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
 use termwiz::input::KeyCode;
@@ -33,34 +33,29 @@ impl Menu {
 
         ui.block(block, |ui| {
             if has_public_worlds {
-                Button::new("play", KeyCode::Char('p'))
-                    .throwing(Event::Play)
-                    .centered()
-                    .render(ui);
+                ui.btn("play", KeyCode::Char('p'), |btn| {
+                    btn.throwing(Event::Play).centered()
+                });
             }
 
-            Button::new("sandbox", KeyCode::Char('s'))
-                .throwing(Event::Sandbox)
-                .centered()
-                .render(ui);
+            ui.btn("sandbox", KeyCode::Char('s'), |btn| {
+                btn.throwing(Event::Sandbox).centered()
+            });
 
-            Button::new("tutorial", KeyCode::Char('t'))
-                .throwing(Event::Tutorial)
-                .centered()
-                .render(ui);
+            ui.btn("tutorial", KeyCode::Char('t'), |btn| {
+                btn.throwing(Event::Tutorial).centered()
+            });
 
-            Button::new("challenges", KeyCode::Char('c'))
-                .throwing(Event::Challenges)
-                .centered()
-                .render(ui);
+            ui.btn("challenges", KeyCode::Char('c'), |btn| {
+                btn.throwing(Event::Challenges).centered()
+            });
 
             if ui.ty.is_ssh() {
                 ui.space(1);
 
-                Button::new("quit", KeyCode::Escape)
-                    .throwing(Event::Quit)
-                    .centered()
-                    .render(ui);
+                ui.btn("quit", KeyCode::Escape, |btn| {
+                    btn.throwing(Event::Quit).centered()
+                });
             }
         });
     }

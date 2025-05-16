@@ -1,6 +1,6 @@
 use super::{BotCount, BotPosition};
 use crate::views::game::Event;
-use crate::{theme, Button, FrameType, FromMarkdown, Spinner, Ui, UiWidget};
+use crate::{theme, FrameType, FromMarkdown, Spinner, Ui, UiWidget};
 use anyhow::anyhow;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
@@ -90,7 +90,7 @@ impl UploadBotModal {
 
         // ---
 
-        ui.info_window(width, height, Some(" upload-bot "), |ui| {
+        ui.imodal(width, height, Some(" upload-bot "), |ui| {
             ui.add(&body);
             ui.space(body_height + 1);
 
@@ -122,13 +122,14 @@ impl UploadBotModal {
             }
 
             ui.row(|ui| {
-                Button::new("cancel", KeyCode::Escape)
-                    .throwing(Event::CloseModal)
-                    .render(ui);
+                ui.btn("cancel", KeyCode::Escape, |btn| {
+                    btn.throwing(Event::CloseModal)
+                });
 
-                if Button::new("copy-session-id", KeyCode::Char('c'))
-                    .right_aligned()
-                    .render(ui)
+                if ui
+                    .btn("copy-session-id", KeyCode::Char('c'), |btn| {
+                        btn.right_aligned()
+                    })
                     .pressed
                 {
                     ui.throw(Event::Copy {

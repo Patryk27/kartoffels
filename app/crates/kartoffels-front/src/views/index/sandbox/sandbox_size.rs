@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use std::fmt;
 use termwiz::input::KeyCode;
 
@@ -13,16 +13,16 @@ pub enum SandboxSize {
 
 impl SandboxSize {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(format!("size: {val}"), KeyCode::Char('s'))
-            .throwing(Event::FocusOn(Some(Focus::SandboxSize)))
-            .render(ui);
+        ui.btn(format!("size: {val}"), KeyCode::Char('s'), |btn| {
+            btn.throwing(Event::FocusOn(Some(Focus::SandboxSize)))
+        });
     }
 
     pub fn render_choice(ui: &mut Ui<Event>) {
         for val in Self::all() {
-            Button::new(val.to_string(), val.key())
-                .throwing(Event::SetSize(val))
-                .render(ui);
+            ui.btn(val.to_string(), val.key(), |btn| {
+                btn.throwing(Event::SetSize(val))
+            });
         }
     }
 

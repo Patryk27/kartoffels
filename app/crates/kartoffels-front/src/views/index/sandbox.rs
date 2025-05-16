@@ -5,7 +5,7 @@ mod sandbox_theme;
 use self::sandbox_size::*;
 use self::sandbox_theme::*;
 use crate::views::game;
-use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
@@ -115,7 +115,7 @@ impl Form<'_> {
         let height = self.height();
         let title = self.title();
 
-        ui.info_window(width, height, Some(title), |ui| {
+        ui.imodal(width, height, Some(title), |ui| {
             self.render_body(ui);
             self.render_footer(ui);
         });
@@ -156,15 +156,14 @@ impl Form<'_> {
         ui.space(1);
 
         ui.row(|ui| {
-            Button::new("go-back", KeyCode::Escape)
-                .throwing(Event::GoBack)
-                .render(ui);
+            ui.btn("go-back", KeyCode::Escape, |btn| {
+                btn.throwing(Event::GoBack)
+            });
 
             if self.focus.is_none() {
-                Button::new("create", KeyCode::Enter)
-                    .right_aligned()
-                    .throwing(Event::Confirm)
-                    .render(ui);
+                ui.btn("create", KeyCode::Enter, |btn| {
+                    btn.right_aligned().throwing(Event::Confirm)
+                });
             }
         });
     }

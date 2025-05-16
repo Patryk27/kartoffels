@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use kartoffels_prefabs::{DUMMY, ROBERTO};
 use std::fmt;
 use termwiz::input::KeyCode;
@@ -12,9 +12,9 @@ pub enum BotSource {
 
 impl BotSource {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(format!("source: {val}"), KeyCode::Char('s'))
-            .throwing(Event::FocusOn(Some(Focus::BotSource)))
-            .render(ui);
+        ui.btn(format!("source: {val}"), KeyCode::Char('s'), |btn| {
+            btn.throwing(Event::FocusOn(Some(Focus::BotSource)))
+        });
     }
 
     pub(super) fn render_choice(ui: &mut Ui<Event>) {
@@ -23,10 +23,9 @@ impl BotSource {
                 ui.space(1);
             }
 
-            Button::new(val.to_string(), val.key())
-                .help(val.desc())
-                .throwing(Event::SetBotSource(val))
-                .render(ui);
+            ui.btn(val.to_string(), val.key(), |btn| {
+                btn.help(val.desc()).throwing(Event::SetBotSource(val))
+            });
         }
     }
 

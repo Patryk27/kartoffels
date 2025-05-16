@@ -130,15 +130,13 @@ impl AliveBotsSnapshot {
         self.entries.iter()
     }
 
-    pub fn iter_sorted_by_birth(
-        &self,
-    ) -> impl Iterator<Item = &AliveBotSnapshot> {
+    pub fn iter_by_birth(&self) -> impl Iterator<Item = &AliveBotSnapshot> {
         self.entries
             .iter()
             .sorted_unstable_by_key(|bot| (Reverse(bot.age), bot.id))
     }
 
-    pub fn iter_sorted_by_scores(
+    pub fn iter_by_scores(
         &self,
     ) -> impl Iterator<Item = &AliveBotSnapshot> + '_ {
         self.idx_by_scores
@@ -161,7 +159,7 @@ impl fmt::Display for AliveBotsSnapshot {
 
         table.set_titles(row!["id", "pos", "dir", "age", "score"]);
 
-        for bot in self.iter_sorted_by_scores() {
+        for bot in self.iter_by_scores() {
             table.add_row(row![
                 bot.id,
                 bot.pos,

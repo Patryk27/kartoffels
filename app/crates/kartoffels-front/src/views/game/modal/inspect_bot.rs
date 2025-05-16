@@ -28,12 +28,12 @@ impl InspectBotModal {
     }
 
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &Snapshot) {
-        let event = ui.catch(|ui| {
+        let event = ui.catching(|ui| {
             let width = ui.area.width - 8;
             let height = ui.area.height - 4;
             let title = format!(" bots › {} ", self.id);
 
-            ui.info_window(width, height, Some(&title), |ui| {
+            ui.imodal(width, height, Some(&title), |ui| {
                 let [body_area, _, footer_area] = Layout::vertical([
                     Constraint::Fill(1),
                     Constraint::Length(1),
@@ -41,20 +41,18 @@ impl InspectBotModal {
                 ])
                 .areas(ui.area);
 
-                ui.clamp(body_area, |ui| {
+                ui.at(body_area, |ui| {
                     self.render_body(ui, world);
                 });
 
-                ui.clamp(footer_area, |ui| {
+                ui.at(footer_area, |ui| {
                     self.render_footer(ui);
                 });
             });
         });
 
-        if let Some(event) = event
-            && let Some(event) = self.handle(event)
-        {
-            ui.throw(event);
+        if let Some(event) = event {
+            self.handle(ui, event);
         }
     }
 
@@ -86,7 +84,7 @@ impl InspectBotModal {
         let [col1, col2, col3] =
             Layout::horizontal([Constraint::Fill(1); 3]).areas(ui.area);
 
-        ui.clamp(col1, |ui| {
+        ui.at(col1, |ui| {
             ui.line(format!("curr-life = #{}", world.lives.len(self.id)));
             ui.space(1);
 
@@ -111,14 +109,14 @@ impl InspectBotModal {
             }
         });
 
-        ui.clamp(col2, |ui| {
+        ui.at(col2, |ui| {
             ui.line(format!("avg(ages) = {:.2}s", stats.ages.avg));
             ui.line(format!("sum(ages) = {}s", stats.ages.sum));
             ui.line(format!("min(ages) = {}s", stats.ages.min));
             ui.line(format!("max(ages) = {}s", stats.ages.max));
         });
 
-        ui.clamp(col3, |ui| {
+        ui.at(col3, |ui| {
             ui.line(format!("avg(scores) = {:.2}", stats.scores.avg));
             ui.line(format!("sum(scores) = {}", stats.scores.sum));
             ui.line(format!("min(scores) = {}", stats.scores.min));
@@ -296,20 +294,21 @@ impl InspectBotModal {
         });
     }
 
-    fn handle(&mut self, event: Event) -> Option<ParentEvent> {
+    fn handle(&mut self, ui: &mut Ui<ParentEvent>, event: Event) {
         match event {
             Event::ChangeTab(tab) => {
                 self.tab = tab;
-                None
             }
 
-            Event::JoinBot => Some(ParentEvent::JoinBot { id: self.id }),
+            Event::JoinBot => {
+                ui.throw(ParentEvent::JoinBot { id: self.id });
+            }
 
             Event::GoBack => {
                 if let Some(modal) = self.parent.take() {
-                    Some(ParentEvent::OpenModal { modal })
+                    ui.throw(ParentEvent::OpenModal { modal });
                 } else {
-                    Some(ParentEvent::CloseModal)
+                    ui.throw(ParentEvent::CloseModal);
                 }
             }
         }
@@ -337,13 +336,12 @@ impl Tab {
     }
 
     fn btn(&self) -> Button<Event> {
-        let btn = match self {
+        match self {
             Tab::Stats => Button::new("stats", KeyCode::Char('s')),
             Tab::Events => Button::new("events", KeyCode::Char('e')),
             Tab::Lives => Button::new("lives", KeyCode::Char('l')),
-        };
-
-        btn.throwing(Event::ChangeTab(*self))
+        }
+        .throwing(Event::ChangeTab(*self))
     }
 }
 

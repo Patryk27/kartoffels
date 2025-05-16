@@ -2,7 +2,7 @@ mod ctrls;
 
 use self::ctrls::*;
 use crate::views::game;
-use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
+use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
 use ratatui::widgets::{Paragraph, Wrap};
@@ -72,19 +72,18 @@ async fn run_once(
                 fade.render(ui, |ui| {
                     bg.render(ui);
 
-                    ui.info_window(width, height, Some(" challenges "), |ui| {
+                    ui.imodal(width, height, Some(" challenges "), |ui| {
                         for chl in CHALLENGES {
-                            Button::new(chl.name, chl.key)
-                                .help(chl.desc)
-                                .throwing(Event::Play(chl))
-                                .render(ui);
+                            ui.btn(chl.name, chl.key, |btn| {
+                                btn.help(chl.desc).throwing(Event::Play(chl))
+                            });
 
                             ui.space(1);
                         }
 
-                        Button::new("go-back", KeyCode::Escape)
-                            .throwing(Event::GoBack)
-                            .render(ui);
+                        ui.btn("go-back", KeyCode::Escape, |btn| {
+                            btn.throwing(Event::GoBack)
+                        });
                     });
                 });
             })

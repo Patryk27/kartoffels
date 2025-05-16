@@ -31,7 +31,7 @@ impl Map {
                     height: 1,
                 };
 
-                ui.clamp(area, |ui| {
+                ui.at(area, |ui| {
                     let tile = state
                         .snapshot
                         .map

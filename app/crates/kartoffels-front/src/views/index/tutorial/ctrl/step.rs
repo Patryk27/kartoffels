@@ -76,11 +76,9 @@ impl TutorialCtxt {
         loop {
             let snapshot = self.snapshots.next().await?;
 
-            if !snapshot.bots.alive.has_any_of(&alive_ids) {
-                return Ok(());
-            }
-
-            if !snapshot.bots.dead.has_any_of(&dead_ids) {
+            if !snapshot.bots.alive.has_any_of(&alive_ids)
+                && !snapshot.bots.dead.has_any_of(&dead_ids)
+            {
                 return Ok(());
             }
         }

@@ -11,7 +11,6 @@ pub struct Button<'a, T> {
     options: Vec<ButtonOption<T>>,
     help: Option<Cow<'a, str>>,
     alignment: Alignment,
-    enabled: bool,
     style: Style,
 }
 
@@ -28,7 +27,6 @@ impl<'a, T> Button<'a, T> {
             }],
             help: None,
             alignment: Alignment::Left,
-            enabled: true,
             style: Default::default(),
         }
     }
@@ -39,7 +37,6 @@ impl<'a, T> Button<'a, T> {
             options: Default::default(),
             help: None,
             alignment: Alignment::Left,
-            enabled: true,
             style: Default::default(),
         }
     }
@@ -75,29 +72,16 @@ impl<'a, T> Button<'a, T> {
         self
     }
 
-    pub fn enabled(mut self, enabled: bool) -> Self {
-        self.enabled = enabled;
-        self
-    }
-
     pub fn width(&self) -> u16 {
-        if self.supports_kbd() {
-            let keys = self
-                .options
-                .iter()
-                .map(|opt| key_name_len(opt.key.unwrap()))
-                .sum::<u16>();
+        let keys = self
+            .options
+            .iter()
+            .map(|opt| key_name_len(opt.key.unwrap()))
+            .sum::<u16>();
 
-            let slashes = (self.options.len() - 1) as u16;
+        let slashes = (self.options.len() - 1) as u16;
 
-            keys + slashes + self.label.len() as u16 + 3
-        } else {
-            self.label.len() as u16 + 2
-        }
-    }
-
-    fn supports_kbd(&self) -> bool {
-        self.options.iter().any(|opt| opt.key.is_some())
+        keys + slashes + self.label.len() as u16 + 3
     }
 
     fn supports_mouse(&self) -> bool {
@@ -123,7 +107,7 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn response(&self, ui: &Ui<T>, area: Rect) -> ButtonResponse {
-        if !ui.enabled || !self.enabled {
+        if !ui.enabled {
             return Default::default();
         }
 
@@ -138,20 +122,23 @@ impl<'a, T> Button<'a, T> {
             None
         };
 
-        let kbd_option = self
-            .options
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, opt)| {
-                let key = opt.key?;
+        let kbd_option = if ui.focused {
+            self.options
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, opt)| {
+                    let key = opt.key?;
 
-                if ui.key(key, Modifiers::NONE) {
-                    Some(idx)
-                } else {
-                    None
-                }
-            })
-            .next();
+                    if ui.key(key, Modifiers::NONE) {
+                        Some(idx)
+                    } else {
+                        None
+                    }
+                })
+                .next()
+        } else {
+            None
+        };
 
         ButtonResponse {
             hovered,
@@ -161,7 +148,7 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn style(&self, ui: &Ui<T>, response: &ButtonResponse) -> (Style, Style) {
-        let key = if ui.enabled && self.enabled {
+        let key = if ui.enabled && (ui.focused || response.hovered) {
             if response.pressed || response.hovered {
                 Style::new().bold().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -171,7 +158,7 @@ impl<'a, T> Button<'a, T> {
             Style::new().fg(theme::DARK_GRAY)
         };
 
-        let label = if ui.enabled && self.enabled {
+        let label = if ui.enabled {
             if response.pressed || response.hovered {
                 Style::new().bg(theme::GREEN).fg(theme::BG)
             } else {
@@ -216,35 +203,28 @@ impl<T> UiWidget<T> for &mut Button<'_, T> {
         let area = self.layout(ui);
         let resp = self.response(ui, area);
         let (key_style, label_style) = self.style(ui, &resp);
-        let has_keys = self.supports_kbd();
 
-        ui.clamp(area, |ui| {
+        ui.at(area, |ui| {
             ui.row(|ui| {
-                if has_keys {
-                    ui.span(Span::styled("[", label_style));
+                ui.span(Span::styled("[", label_style));
 
-                    for (idx, opt) in self.options.iter().enumerate() {
-                        if idx > 0 {
-                            ui.span(Span::styled("/", label_style));
-                        }
-
-                        ui.span(Span::styled(
-                            key_name(opt.key.unwrap()),
-                            key_style,
-                        ));
+                for (idx, opt) in self.options.iter().enumerate() {
+                    if idx > 0 {
+                        ui.span(Span::styled("/", label_style));
                     }
 
-                    ui.span(Span::styled("] ", label_style));
-
                     ui.span(Span::styled(
-                        self.label.as_str(),
-                        label_style.patch(self.style),
+                        key_name(opt.key.unwrap()),
+                        key_style,
                     ));
-                } else {
-                    ui.span(Span::styled("[", label_style));
-                    ui.span(Span::styled(self.label.as_str(), key_style));
-                    ui.span(Span::styled("]", label_style));
                 }
+
+                ui.span(Span::styled("] ", label_style));
+
+                ui.span(Span::styled(
+                    self.label.as_str(),
+                    label_style.patch(self.style),
+                ));
             });
         });
 
@@ -296,7 +276,6 @@ fn key_name(key: KeyCode) -> Cow<'static, str> {
         KeyCode::Escape => Cow::Borrowed("esc"),
         KeyCode::UpArrow => Cow::Borrowed("↑"),
         KeyCode::DownArrow => Cow::Borrowed("↓"),
-
         key => unimplemented!("{:?}", key),
     }
 }
@@ -310,7 +289,6 @@ fn key_name_len(key: KeyCode) -> u16 {
         KeyCode::Escape => 3,
         KeyCode::UpArrow => 1,
         KeyCode::DownArrow => 1,
-
         key => unimplemented!("{:?}", key),
     }
 }
