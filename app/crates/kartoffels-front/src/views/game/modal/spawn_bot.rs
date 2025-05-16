@@ -6,7 +6,7 @@ pub use self::bot_count::*;
 pub use self::bot_position::*;
 pub use self::bot_source::*;
 use super::{Event as ParentEvent, UploadBotRequest};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
@@ -28,21 +28,19 @@ impl SpawnBotModal {
     }
 
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
-        let event = ui.catch(|ui| {
+        let event = ui.catching(|ui| {
             let width = 50;
             let height = self.height();
             let title = self.title();
 
-            ui.info_window(width, height, Some(title), |ui| {
+            ui.imodal(width, height, Some(title), |ui| {
                 self.render_body(ui);
                 self.render_footer(ui);
             });
         });
 
-        if let Some(event) = event
-            && let Some(event) = self.handle(event)
-        {
-            ui.throw(event);
+        if let Some(event) = event {
+            self.handle(ui, event);
         }
     }
 
@@ -100,31 +98,30 @@ impl SpawnBotModal {
         ui.space(1);
 
         ui.row(|ui| {
-            Button::new("go-back", KeyCode::Escape)
-                .throwing(Event::GoBack)
-                .render(ui);
+            ui.btn("go-back", KeyCode::Escape, |btn| {
+                btn.throwing(Event::GoBack)
+            });
 
             if self.focus.is_none() {
-                Button::new("confirm", KeyCode::Enter)
-                    .right_aligned()
-                    .throwing(Event::Confirm)
-                    .render(ui);
+                ui.btn("confirm", KeyCode::Enter, |btn| {
+                    btn.right_aligned().throwing(Event::Confirm)
+                });
             }
         });
     }
 
-    fn handle(&mut self, event: Event) -> Option<ParentEvent> {
+    fn handle(&mut self, ui: &mut Ui<ParentEvent>, event: Event) {
         match event {
             Event::GoBack => {
                 if self.focus.is_some() {
                     self.focus = None;
                 } else {
-                    return Some(ParentEvent::CloseModal);
+                    ui.throw(ParentEvent::CloseModal);
                 }
             }
 
             Event::Confirm => {
-                return Some(ParentEvent::OpenUploadBotModal {
+                ui.throw(ParentEvent::OpenUploadBotModal {
                     request: UploadBotRequest {
                         source: self.bot_source,
                         position: self.bot_position,
@@ -152,8 +149,6 @@ impl SpawnBotModal {
                 self.focus = None;
             }
         }
-
-        None
     }
 }
 

@@ -92,11 +92,11 @@ async fn run_once(
 
                     ui.add(bg);
 
-                    ui.clamp(header_area, |ui| {
+                    ui.at(header_area, |ui| {
                         Header::render(ui);
                     });
 
-                    ui.clamp(menu_area, |ui| {
+                    ui.at(menu_area, |ui| {
                         Menu::render(ui, has_public_worlds);
                     });
 

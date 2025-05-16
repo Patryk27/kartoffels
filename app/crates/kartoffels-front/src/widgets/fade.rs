@@ -105,7 +105,7 @@ where
     pub fn render(&mut self, ui: &mut Ui<'_, T>, f: impl FnOnce(&mut Ui<T>)) {
         let event = match &mut self.stage {
             Some(FadeCtrlStage::FadeIn { fade }) => {
-                let event = ui.catch(f);
+                let event = ui.catching(f);
 
                 if ui.add(&*fade).is_ready() {
                     self.stage = None;
@@ -115,7 +115,7 @@ where
             }
 
             Some(FadeCtrlStage::FadeOut { fade, event }) => {
-                _ = ui.catch(f);
+                _ = ui.catching(f);
 
                 if ui.add(&*fade).is_ready()
                     && let Some(event) = event.take()
@@ -126,7 +126,7 @@ where
                 None
             }
 
-            None => ui.catch(f),
+            None => ui.catching(f),
         };
 
         if let Some(event) = event {

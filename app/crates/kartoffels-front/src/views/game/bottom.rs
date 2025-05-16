@@ -26,7 +26,7 @@ impl BottomPanel {
             match &state.mode {
                 Mode::Default => {
                     if state.world.is_some() {
-                        ui.enable(state.config.enabled, |ui| {
+                        ui.enabled(state.config.enabled, |ui| {
                             Self::render_pause_btn(ui, state);
                             Self::render_help_btn(ui, state);
                             Self::render_bots_btn(ui, state);
@@ -43,47 +43,48 @@ impl BottomPanel {
     }
 
     fn render_go_back_btn(ui: &mut Ui<Event>) {
-        Button::new("go-back", KeyCode::Escape)
-            .throwing(Event::GoBack { confirm: true })
-            .render(ui);
+        ui.btn("go-back", KeyCode::Escape, |btn| {
+            btn.throwing(Event::GoBack { confirm: true })
+        });
     }
 
     fn render_pause_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
         let label = if state.paused { "resume" } else { "pause" };
-        let enabled = state.config.can_pause;
 
-        Button::new(label, KeyCode::Char(' '))
-            .throwing(Event::TogglePause)
-            .enabled(enabled)
-            .render(ui);
+        ui.enabled(state.config.can_pause, |ui| {
+            ui.btn(label, KeyCode::Char(' '), |btn| {
+                btn.throwing(Event::TogglePause)
+            });
+        });
     }
 
     fn render_restart_btn(ui: &mut Ui<Event>) {
         ui.space(2);
 
-        Button::new("restart", KeyCode::Char('r'))
-            .throwing(Event::Restart)
-            .render(ui);
+        ui.btn("restart", KeyCode::Char('r'), |btn| {
+            btn.throwing(Event::Restart)
+        });
     }
 
     fn render_help_btn(ui: &mut Ui<Event>, state: &State) {
         ui.space(2);
 
-        Button::new("help", KeyCode::Char('h'))
-            .throwing(Event::OpenHelpModal)
-            .enabled(state.help.is_some())
-            .render(ui);
+        ui.enabled(state.help.is_some(), |ui| {
+            ui.btn("help", KeyCode::Char('h'), |btn| {
+                btn.throwing(Event::OpenHelpModal)
+            });
+        });
     }
 
     fn render_bots_btn(ui: &mut Ui<Event>, state: &State) {
         if !state.config.hero_mode {
             ui.space(2);
 
-            Button::new("bots", KeyCode::Char('b'))
-                .throwing(Event::OpenBotsModal)
-                .render(ui);
+            ui.btn("bots", KeyCode::Char('b'), |btn| {
+                btn.throwing(Event::OpenBotsModal)
+            });
         }
     }
 

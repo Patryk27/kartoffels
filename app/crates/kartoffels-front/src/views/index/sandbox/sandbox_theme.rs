@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use std::fmt;
 use termwiz::input::KeyCode;
 
@@ -11,16 +11,16 @@ pub enum SandboxTheme {
 
 impl SandboxTheme {
     pub fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(format!("theme: {val}"), KeyCode::Char('t'))
-            .throwing(Event::FocusOn(Some(Focus::SandboxTheme)))
-            .render(ui);
+        ui.btn(format!("theme: {val}"), KeyCode::Char('t'), |btn| {
+            btn.throwing(Event::FocusOn(Some(Focus::SandboxTheme)))
+        });
     }
 
     pub fn render_choice(ui: &mut Ui<Event>) {
         for val in SandboxTheme::all() {
-            Button::new(val.to_string(), val.key())
-                .throwing(Event::SetTheme(val))
-                .render(ui);
+            ui.btn(val.to_string(), val.key(), |btn| {
+                btn.throwing(Event::SetTheme(val))
+            });
         }
     }
 

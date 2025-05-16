@@ -5,13 +5,12 @@ use std::time::Instant;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
 
 #[derive(Clone, Debug)]
-pub struct Input {
+pub struct LineEdit {
     value: String,
     caret: Instant,
-    secret: bool,
 }
 
-impl Input {
+impl LineEdit {
     pub const MAX_LENGTH: usize = 128;
 
     pub fn value(&self) -> &str {
@@ -24,11 +23,9 @@ impl Input {
                 (KeyCode::Char(ch), Modifiers::NONE) => {
                     self.add(ch);
                 }
-
                 (KeyCode::Backspace, Modifiers::NONE) => {
                     self.value.pop();
                 }
-
                 _ => {}
             },
 
@@ -49,35 +46,27 @@ impl Input {
     }
 }
 
-impl Default for Input {
+impl Default for LineEdit {
     fn default() -> Self {
         Self {
             value: Default::default(),
             caret: Instant::now(),
-            secret: Default::default(),
         }
     }
 }
 
-impl<T> UiWidget<T> for &mut Input {
+impl<T> UiWidget<T> for &mut LineEdit {
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
         ui.row(|ui| {
             ui.span("> ");
 
             let value_width = (ui.area.width - 1) as usize;
 
-            if self.secret {
-                for _ in 0..self.value.len().min(value_width) {
-                    ui.buf[(ui.area.x, ui.area.y)].set_char('*');
-                    ui.area.x += 1;
-                }
-            } else {
-                let offset = self.value.len().saturating_sub(value_width);
+            let offset = self.value.len().saturating_sub(value_width);
 
-                for ch in self.value.chars().skip(offset) {
-                    ui.buf[(ui.area.x, ui.area.y)].set_char(ch);
-                    ui.area.x += 1;
-                }
+            for ch in self.value.chars().skip(offset) {
+                ui.buf[(ui.area.x, ui.area.y)].set_char(ch);
+                ui.area.x += 1;
             }
 
             if self.caret.elapsed().as_millis() % 1000 <= 500 {
@@ -85,7 +74,9 @@ impl<T> UiWidget<T> for &mut Input {
             }
         });
 
-        if let Some(event) = ui.event {
+        if ui.enabled
+            && let Some(event) = ui.event
+        {
             self.handle(event);
         }
     }

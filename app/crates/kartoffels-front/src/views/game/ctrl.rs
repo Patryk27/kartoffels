@@ -70,7 +70,7 @@ impl GameCtrl {
         let mut tx = Some(tx);
 
         self.open_modal(move |ui| {
-            let event = ui.catch(|ui| {
+            let event = ui.catching(|ui| {
                 ui.add(msg);
             });
 

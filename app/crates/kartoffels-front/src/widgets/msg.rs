@@ -33,7 +33,7 @@ where
         let width = cmp::min(60, ui.area.width - 4);
         let height = body.line_count(width) as u16 + 2;
 
-        ui.info_window(width, height, self.title, |ui| {
+        ui.imodal(width, height, self.title, |ui| {
             ui.add(&body);
             ui.space(height - 1);
 

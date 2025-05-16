@@ -1,5 +1,5 @@
 use crate::views::game::Event;
-use crate::{theme, Button, Ui, UiWidget};
+use crate::Ui;
 use ratatui::text::Line;
 use termwiz::input::KeyCode;
 
@@ -8,19 +8,19 @@ pub struct GoBackModal;
 
 impl GoBackModal {
     pub fn render(&mut self, ui: &mut Ui<Event>) {
-        ui.window(23, 3, Some(" go-back "), theme::YELLOW, |ui| {
+        ui.wmodal(23, 3, Some(" go-back "), |ui| {
             ui.line(Line::raw("do you want to go back?").centered());
             ui.line("");
 
             ui.row(|ui| {
-                Button::new("no", KeyCode::Char('n'))
-                    .throwing(Event::CloseModal)
-                    .render(ui);
+                ui.btn("no", KeyCode::Char('n'), |btn| {
+                    btn.throwing(Event::CloseModal)
+                });
 
-                Button::new("yes", KeyCode::Char('y'))
-                    .throwing(Event::GoBack { confirm: false })
-                    .right_aligned()
-                    .render(ui);
+                ui.btn("yes", KeyCode::Char('y'), |btn| {
+                    btn.throwing(Event::GoBack { confirm: false })
+                        .right_aligned()
+                });
             });
         });
     }

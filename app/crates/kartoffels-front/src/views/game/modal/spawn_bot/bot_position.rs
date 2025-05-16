@@ -1,5 +1,5 @@
 use super::{Event, Focus};
-use crate::{Button, Ui, UiWidget};
+use crate::Ui;
 use std::fmt;
 use termwiz::input::KeyCode;
 
@@ -12,9 +12,9 @@ pub enum BotPosition {
 
 impl BotPosition {
     pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        Button::new(format!("position: {val}"), KeyCode::Char('p'))
-            .throwing(Event::FocusOn(Some(Focus::BotPosition)))
-            .render(ui);
+        ui.btn(format!("position: {val}"), KeyCode::Char('p'), |btn| {
+            btn.throwing(Event::FocusOn(Some(Focus::BotPosition)))
+        });
     }
 
     pub(super) fn render_choice(ui: &mut Ui<Event>) {
@@ -23,10 +23,9 @@ impl BotPosition {
                 ui.space(1);
             }
 
-            Button::new(val.to_string(), val.key())
-                .help(val.desc())
-                .throwing(Event::SetBotPosition(val))
-                .render(ui);
+            ui.btn(val.to_string(), val.key(), |btn| {
+                btn.help(val.desc()).throwing(Event::SetBotPosition(val))
+            });
         }
     }
 

@@ -1,29 +1,28 @@
 use crate::views::game::Event;
-use crate::{Button, Input, Ui, UiWidget};
+use crate::{LineEdit, Ui};
 use anyhow::anyhow;
 use kartoffels_world::prelude::{BotId, Snapshot};
 use termwiz::input::{InputEvent, KeyCode};
 
 #[derive(Debug, Default)]
 pub struct JoinBotModal {
-    id: Input,
+    id: LineEdit,
 }
 
 impl JoinBotModal {
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
-        ui.info_window(26, 4, Some(" join-bot "), |ui| {
+        ui.imodal(26, 4, Some(" join-bot "), |ui| {
             ui.line("enter bot id:");
             ui.add(&mut self.id);
             ui.space(1);
 
             ui.row(|ui| {
-                Button::new("cancel", KeyCode::Escape)
-                    .throwing(Event::CloseModal)
-                    .render(ui);
+                ui.btn("cancel", KeyCode::Escape, |btn| {
+                    btn.throwing(Event::CloseModal)
+                });
 
-                if Button::new("join", KeyCode::Enter)
-                    .right_aligned()
-                    .render(ui)
+                if ui
+                    .btn("join", KeyCode::Enter, |btn| btn.right_aligned())
                     .pressed
                 {
                     self.handle_confirm(ui, world);

@@ -16,43 +16,44 @@ impl IdleSidePanel {
         ])
         .areas(ui.area);
 
-        ui.clamp(area, |ui| {
-            for btn in btns {
-                btn.render(ui);
+        ui.at(area, |ui| {
+            for PanelButton { btn, enabled } in btns {
+                ui.enabled(enabled, |ui| {
+                    btn.render(ui);
+                });
             }
         });
     }
 
-    fn btns(state: &State) -> Vec<Button<Event>> {
+    fn btns(state: &State) -> Vec<PanelButton> {
         let mut btns = Vec::new();
 
         match state.mode {
             Mode::Default => {
                 if !state.config.hero_mode {
-                    btns.push(
-                        Button::new("join-bot", KeyCode::Char('j'))
-                            .throwing(Event::OpenJoinBotModal)
-                            .enabled(!state.snapshot.bots.is_empty()),
-                    );
+                    let btn = Button::new("join-bot", KeyCode::Char('j'))
+                        .throwing(Event::OpenJoinBotModal);
+
+                    btns.push(PanelButton {
+                        btn,
+                        enabled: !state.snapshot.bots.is_empty(),
+                    });
                 }
 
                 if state.config.can_upload_bots {
-                    btns.push(
-                        Button::new("upload-bot", KeyCode::Char('u')).throwing(
-                            Event::OpenUploadBotModal {
-                                request: UploadBotRequest::new(
-                                    BotSource::Upload,
-                                ),
-                            },
-                        ),
-                    );
+                    let btn = Button::new("upload-bot", KeyCode::Char('u'))
+                        .throwing(Event::OpenUploadBotModal {
+                            request: UploadBotRequest::new(BotSource::Upload),
+                        });
+
+                    btns.push(PanelButton { btn, enabled: true });
                 }
 
                 if state.config.can_spawn_bots {
-                    btns.push(
-                        Button::new("spawn-bot", KeyCode::Char('S'))
-                            .throwing(Event::OpenSpawnBotModal),
-                    );
+                    let btn = Button::new("spawn-bot", KeyCode::Char('S'))
+                        .throwing(Event::OpenSpawnBotModal);
+
+                    btns.push(PanelButton { btn, enabled: true });
                 }
             }
 
@@ -63,4 +64,9 @@ impl IdleSidePanel {
 
         btns
     }
+}
+
+struct PanelButton {
+    btn: Button<'static, Event>,
+    enabled: bool,
 }
