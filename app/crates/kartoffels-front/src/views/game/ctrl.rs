@@ -176,9 +176,10 @@ impl GameCtrlRequest {
 
                 state.snapshot = snapshots.next().await?;
                 state.snapshots = Some(snapshots);
-                state.camera.set(state.snapshot.tiles.center());
                 state.world = Some(handle);
                 state.bot = None;
+
+                state.camera.look_at(state.snapshot.tiles.center());
             }
 
             GameCtrlRequest::Pause => {

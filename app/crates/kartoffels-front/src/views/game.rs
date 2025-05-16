@@ -64,20 +64,17 @@ async fn run_once(
     debug!("run()");
 
     let mut fade = Some(Fade::new(FadeDir::In));
-    let mut tick = Instant::now();
     let mut state = State::default();
 
     loop {
         let event = frame
             .tick(|ui| {
-                state.tick(tick.elapsed().as_secs_f32(), store);
+                state.tick(store);
                 state.render(ui, sess, store);
 
                 if let Some(fade) = &fade {
                     _ = fade.render(ui);
                 }
-
-                tick = Instant::now();
             })
             .await?;
 
@@ -117,7 +114,7 @@ struct State {
 }
 
 impl State {
-    fn tick(&mut self, dt: f32, store: &Store) {
+    fn tick(&mut self, store: &Store) {
         // If we're following a bot, adjust the camera to the bot's current
         // position - unless we're under test, in which case we don't want to
         // move the camera since that makes tests less reproducible.
@@ -128,8 +125,6 @@ impl State {
         {
             self.camera.look_at(bot.pos);
         }
-
-        self.camera.tick(dt, store);
     }
 
     fn render(&mut self, ui: &mut Ui<Event>, sess: &Session, store: &Store) {
@@ -230,7 +225,7 @@ impl State {
         // If map size's changed, recenter the camera - this comes handy for
         // controllers which call `world.set_map()`, e.g. the tutorial
         if snapshot.tiles.size() != self.snapshot.tiles.size() {
-            self.camera.set(snapshot.tiles.center());
+            self.camera.look_at(snapshot.tiles.center());
         }
 
         self.snapshot = snapshot;
