@@ -105,8 +105,6 @@ pub const ARM_ERR_NO_SUCH_OBJECT: u8 = 0x05;
 ///
 /// irq_set(IRQ_ARM_BUSY, irq!(on_arm_busy));
 /// arm_stab();
-///
-/// loop {}
 /// ```
 pub const IRQ_ARM_BUSY: u8 = 5;
 

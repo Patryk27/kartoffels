@@ -195,11 +195,9 @@ pub const TIMER_PS_256: u8 = 7;
 /// irq_set(IRQ_TIMER0, irq!(on_timer0));
 /// irq_set(IRQ_TIMER1, irq!(on_timer1));
 ///
+/// // Prints "a b a a a a a ..."
 /// timer_set(TIMER0, TIMER_PS_256, 250);
 /// timer_set(TIMER1, TIMER_PS_256 | TIMER_ONESHOT, 125);
-///
-/// // Prints "a b a a a a a ..."
-/// loop {}
 /// ```
 pub const TIMER_ONESHOT: u8 = 8;
 
@@ -310,8 +308,6 @@ pub fn clock_wait(ticks: u32) {
 ///
 /// timer_set(TIMER0, TIMER_PS_256, 250);
 /// timer_set(TIMER1, TIMER_PS_256, 125);
-///
-/// loop {}
 /// ```
 ///
 /// # One-shot timers
@@ -333,11 +329,9 @@ pub fn clock_wait(ticks: u32) {
 /// irq_set(IRQ_TIMER0, irq!(on_timer0));
 /// irq_set(IRQ_TIMER1, irq!(on_timer1));
 ///
+/// // Prints "a b a a a a a ..."
 /// timer_set(TIMER0, TIMER_PS_256, 250);
 /// timer_set(TIMER1, TIMER_PS_256 | TIMER_ONESHOT, 125);
-///
-/// // Prints "a b a a a a a ..."
-/// loop {}
 /// ```
 ///
 /// # Using timers without interrupts

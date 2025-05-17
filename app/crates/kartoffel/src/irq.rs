@@ -211,8 +211,6 @@ pub fn irq_take(irq: u8) -> Option<IrqFn> {
 ///
 ///     // Prints `one two`:
 ///     move_forward();
-///
-///     loop {}
 /// }
 /// ```
 pub fn irq_replace(irq: u8, fun: impl Into<Option<IrqFn>>) -> Option<IrqFn> {

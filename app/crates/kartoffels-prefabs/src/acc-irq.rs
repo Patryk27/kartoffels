@@ -15,14 +15,12 @@ fn on_timer1() {
 fn on_timer2a() {
     print!("tmr2a ");
 
-    // Make sure it's fine to overwrite an irq handler within an irq handler
     irq_set(IRQ_TIMER2, irq!(on_timer2b));
 }
 
 fn on_timer2b() {
     print!("tmr2b ");
 
-    // Make sure it's fine to clear an irq handler within an irq handler
     irq_clear(IRQ_TIMER2);
 }
 
@@ -86,8 +84,4 @@ fn main() {
     motor_step_fw_checked().unwrap_err();
 
     print!("done");
-
-    loop {
-        //
-    }
 }

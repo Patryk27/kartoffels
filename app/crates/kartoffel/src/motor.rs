@@ -64,8 +64,6 @@ pub const MOTOR_ERR_BLOCKED: u8 = 0x01;
 /// motor_turn_right();
 /// motor_wait();
 /// motor_step_fw();
-///
-/// loop {}
 /// ```
 pub const IRQ_MOTOR_BUSY: u8 = 3;
 
@@ -90,8 +88,6 @@ pub const IRQ_MOTOR_BUSY: u8 = 3;
 /// irq_set(IRQ_MOTOR_IDLE, irq!(on_motor_idle));
 ///
 /// motor_turn_left();
-///
-/// loop {}
 /// ```
 pub const IRQ_MOTOR_IDLE: u8 = 4;
 

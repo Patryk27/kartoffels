@@ -15,8 +15,4 @@ fn main() {
 
         println!();
     }
-
-    loop {
-        //
-    }
 }

@@ -79,6 +79,9 @@ core::arch::global_asm!(
     _start:
         la sp, _stack_end
         jal main
-        ebreak
+        j _end
+
+    _end:
+        j _end
     "#,
 );

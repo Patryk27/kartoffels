@@ -109,8 +109,7 @@ fn main() {
 
         // 2a. If there's nothing left to find, call it a day.
         let Some(next) = nav_path.pop() else {
-            #[allow(clippy::empty_loop)]
-            loop {}
+            break;
         };
 
         // 3. Drive towards the next point on our path; if there's a flag there,
