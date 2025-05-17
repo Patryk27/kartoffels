@@ -162,8 +162,16 @@ impl TestContext {
         (addr, server, Box::new(stdin), Box::new(stdout))
     }
 
-    pub fn asserter(&self, dir: impl AsRef<Path>) -> Asserter {
-        Asserter::new(Path::new("tests").join("acc").join(dir))
+    fn assert(&self, expected: impl AsRef<Path>, actual: impl AsRef<str>) {
+        let expected = expected.as_ref();
+
+        let expected_dir = Path::new("tests")
+            .join("acc")
+            .join(expected.parent().unwrap());
+
+        let expected_file = expected.file_name().unwrap();
+
+        Asserter::new(expected_dir).assert(expected_file, actual);
     }
 
     pub async fn recv(&mut self) {
@@ -263,12 +271,7 @@ impl TestContext {
 
     #[track_caller]
     pub fn see_frame(&mut self, expected: impl AsRef<Path>) {
-        let expected = expected.as_ref();
-        let expected_dir = expected.parent().unwrap();
-        let expected_file = expected.file_name().unwrap();
-
-        self.asserter(expected_dir)
-            .assert(expected_file, self.stdout());
+        self.assert(expected, self.stdout());
     }
 
     #[track_caller]
@@ -333,7 +336,7 @@ impl TestContext {
         self.term.text().join("\n")
     }
 
-    pub async fn cmd(&self, cmd: impl Into<String>) -> String {
+    pub async fn run(&self, cmd: impl Into<String>) -> String {
         #[derive(Debug)]
         struct Client {
             tx: Option<oneshot::Sender<Vec<u8>>>,
@@ -397,6 +400,14 @@ impl TestContext {
             .unwrap();
 
         String::from_utf8(rx.await.unwrap()).unwrap()
+    }
+
+    pub async fn run_and_see(
+        &self,
+        cmd: impl Into<String>,
+        expected: impl AsRef<Path>,
+    ) {
+        self.assert(expected, self.run(cmd).await);
     }
 }
 

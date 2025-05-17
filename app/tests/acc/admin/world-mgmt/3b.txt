@@ -1,0 +1,8 @@
+id:
+0000-0000-0000-0002
+
+name:
+balerrina-capuccina
+
+policy:
+{"allow_breakpoints":false,"auto_respawn":true,"max_alive_bots":64,"max_queued_bots":64}

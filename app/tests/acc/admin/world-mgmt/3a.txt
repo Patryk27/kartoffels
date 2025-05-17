@@ -1,0 +1,8 @@
+id:
+0000-0000-0000-0001
+
+name:
+tung-tung-tung-sahur
+
+policy:
+{"allow_breakpoints":false,"auto_respawn":false,"max_alive_bots":32,"max_queued_bots":64}
