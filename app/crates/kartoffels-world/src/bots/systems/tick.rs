@@ -1,4 +1,5 @@
-use crate::{AliveBotBody, World};
+use crate::{AliveBotBody, Event, World};
+use kartoffels_cpu::TickError;
 
 pub fn tick(world: &mut World) {
     let mut idx = 0;
@@ -30,12 +31,21 @@ pub fn tick(world: &mut World) {
                     }
                 }
 
+                Err(TickError::GotEbreak) => {
+                    if world.policy.allow_breakpoints {
+                        bot.events.add(&world.clock, "reached a breakpoint");
+                        world.events.add(Event::BotReachedBreakpoint { id });
+                        world.paused = true;
+                    }
+                }
+
                 Err(err) => {
                     world.kill_bot(
                         bot,
                         format!("firmware crashed: {err}"),
                         None,
                     );
+
                     break None;
                 }
             };

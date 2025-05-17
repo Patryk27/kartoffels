@@ -71,6 +71,7 @@ async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
         .create_private_world(WorldConfig {
             name: "sandbox".into(),
             policy: Policy {
+                allow_breakpoints: true,
                 auto_respawn: true,
                 max_alive_bots: MAX_BOTS,
                 max_queued_bots: MAX_BOTS as u16,

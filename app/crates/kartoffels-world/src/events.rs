@@ -31,15 +31,16 @@ impl Events {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Event {
     BotBorn { id: BotId },
     BotDied { id: BotId },
-    BotMoved { id: BotId, at: IVec2 },
-    BotScored { id: BotId },
     BotDiscarded { id: BotId },
-    ObjectPicked { id: ObjectId },
+    BotMoved { id: BotId, at: IVec2 },
+    BotReachedBreakpoint { id: BotId },
+    BotScored { id: BotId },
     ObjectDropped { id: ObjectId },
+    ObjectPicked { id: ObjectId },
 }
 
 #[derive(Clone, Copy, Debug)]

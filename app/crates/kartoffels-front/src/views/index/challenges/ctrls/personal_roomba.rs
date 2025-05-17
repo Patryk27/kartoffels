@@ -109,6 +109,7 @@ async fn init(
     let world = store
         .create_private_world(Config {
             policy: Policy {
+                allow_breakpoints: true,
                 auto_respawn: false,
                 max_alive_bots: 1,
                 max_queued_bots: 1,

@@ -331,6 +331,7 @@ async fn resume() {
 async fn err_too_many_bots_queued() {
     let world = kartoffels_world::create(Config {
         policy: Policy {
+            allow_breakpoints: false,
             auto_respawn: true,
             max_alive_bots: 10,
             max_queued_bots: 20,

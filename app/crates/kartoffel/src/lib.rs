@@ -47,6 +47,7 @@ pub use self::irq::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
+use core::arch::asm;
 use core::sync::atomic::{AtomicU32, Ordering};
 use core::{fmt, mem, ptr};
 
@@ -68,6 +69,19 @@ unsafe fn swi(ptr: u32, off: usize, val: u32) -> u32 {
 #[doc(hidden)]
 pub const fn pack(a: u8, b: u8, c: u8, d: u8) -> u32 {
     u32::from_le_bytes([a, b, c, d])
+}
+
+/// Interrupts the firmware.
+///
+/// Calling this function pauses the world and causes the interface to focus on
+/// this specific bot, which can be helpful for debugging.
+///
+/// You can use this function only in sandbox or challenges, it doesn't do
+/// anything during the online mode.
+pub fn breakpoint() {
+    unsafe {
+        asm!("ebreak");
+    }
 }
 
 #[cfg(target_arch = "riscv32")]
