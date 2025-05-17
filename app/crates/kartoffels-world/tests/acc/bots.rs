@@ -1,6 +1,97 @@
 use super::*;
 
 #[tokio::test]
+async fn breakpoint() {
+    let world = kartoffels_world::create(config());
+    let mut events = world.events().unwrap();
+
+    world
+        .set_map(Map::new(uvec2(1, 1)).filled_with(TileKind::FLOOR))
+        .await
+        .unwrap();
+
+    let bot = world
+        .create_bot(CreateBotRequest::new(ACC_BREAKPOINT))
+        .await
+        .unwrap();
+
+    world.tick(1000).await.unwrap();
+
+    // ---
+
+    assert_eq!(
+        Event::BotBorn { id: bot },
+        events.next().await.unwrap().event,
+    );
+    assert_eq!(
+        Event::BotReachedBreakpoint { id: bot },
+        events.next().await.unwrap().event,
+    );
+
+    pa::assert_eq!(
+        vec![
+            BotEvent::test("reached a breakpoint"),
+            BotEvent::test("born"),
+            BotEvent::test("uploaded"),
+        ],
+        world.snapshot().await.bots.alive.get(bot).unwrap().events(),
+    );
+
+    world.resume().await.unwrap();
+    world.tick(1000).await.unwrap();
+
+    // ---
+
+    assert_eq!(
+        Event::BotReachedBreakpoint { id: bot },
+        events.next().await.unwrap().event,
+    );
+
+    let snap = world.snapshot().await;
+    let bot = snap.bots.alive.get(bot).unwrap();
+
+    pa::assert_eq!(
+        vec![
+            BotEvent::test("reached a breakpoint"),
+            BotEvent::test("reached a breakpoint"),
+            BotEvent::test("born"),
+            BotEvent::test("uploaded"),
+        ],
+        bot.events(),
+    );
+
+    assert_eq!("one two ", bot.serial());
+}
+
+#[tokio::test]
+async fn breakpoint_off() {
+    let world = kartoffels_world::create(Config {
+        policy: Policy {
+            allow_breakpoints: false,
+            ..config().policy
+        },
+        ..config()
+    });
+
+    world
+        .set_map(Map::new(uvec2(1, 1)).filled_with(TileKind::FLOOR))
+        .await
+        .unwrap();
+
+    let bot = world
+        .create_bot(CreateBotRequest::new(ACC_BREAKPOINT))
+        .await
+        .unwrap();
+
+    world.tick(1000).await.unwrap();
+
+    pa::assert_eq!(
+        vec![BotEvent::test("born"), BotEvent::test("uploaded")],
+        world.snapshot().await.bots.alive.get(bot).unwrap().events()
+    );
+}
+
+#[tokio::test]
 async fn fall() {
     let world = kartoffels_world::create(config());
 
@@ -35,11 +126,7 @@ async fn fall() {
             BotEvent::test("born"),
             BotEvent::test("uploaded"),
         ],
-        bot.events
-            .iter()
-            .cloned()
-            .map(Arc::unwrap_or_clone)
-            .collect::<Vec<_>>()
+        bot.events(),
     );
 }
 

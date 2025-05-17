@@ -107,6 +107,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
     let world = store
         .create_private_world(Config {
             policy: Policy {
+                allow_breakpoints: true,
                 auto_respawn: false,
                 max_alive_bots: 2,
                 max_queued_bots: 1,

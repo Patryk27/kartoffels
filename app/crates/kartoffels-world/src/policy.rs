@@ -2,12 +2,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Policy {
+    #[serde(default = "default_allow_breakpoints")]
+    pub allow_breakpoints: bool,
     #[serde(default = "default_auto_respawn")]
     pub auto_respawn: bool,
     #[serde(default = "default_max_alive_bots")]
     pub max_alive_bots: u8,
     #[serde(default = "default_max_queued_bots")]
     pub max_queued_bots: u16,
+}
+
+fn default_allow_breakpoints() -> bool {
+    false
 }
 
 fn default_auto_respawn() -> bool {

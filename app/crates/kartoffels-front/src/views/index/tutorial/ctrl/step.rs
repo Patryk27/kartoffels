@@ -35,6 +35,7 @@ impl TutorialCtxt {
             .create_private_world(WorldConfig {
                 clock: Clock::Normal,
                 policy: Policy {
+                    allow_breakpoints: false,
                     auto_respawn: false,
                     max_alive_bots: 16,
                     max_queued_bots: 16,

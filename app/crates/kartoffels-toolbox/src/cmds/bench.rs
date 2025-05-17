@@ -27,6 +27,7 @@ impl BenchCmd {
                     events: false,
                     name: "bench".into(),
                     policy: Policy {
+                        allow_breakpoints: false,
                         auto_respawn: true,
                         max_alive_bots: 128,
                         max_queued_bots: 256,
