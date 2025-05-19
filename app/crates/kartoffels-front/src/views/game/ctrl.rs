@@ -1,4 +1,4 @@
-use super::{Modal, State};
+use super::{Modal, View};
 use crate::views::game::{Config, HelpMsgRef};
 use crate::{theme, Frame, Msg, Ui};
 use anyhow::{anyhow, Result};
@@ -22,8 +22,8 @@ impl GameCtrl {
         (this, rx)
     }
 
-    pub async fn join(&self, world: &World) -> Result<()> {
-        self.send(GameCtrlRequest::Join(world.clone())).await?;
+    pub async fn visit(&self, world: &World) -> Result<()> {
+        self.send(GameCtrlRequest::Visit(world.clone())).await?;
 
         Ok(())
     }
@@ -152,7 +152,7 @@ pub(super) type GameCtrlRx = mpsc::Receiver<GameCtrlRequest>;
 
 #[allow(clippy::type_complexity)]
 pub(super) enum GameCtrlRequest {
-    Join(World),
+    Visit(World),
     Pause,
     Resume,
     SetConfig(Config),
@@ -167,43 +167,43 @@ pub(super) enum GameCtrlRequest {
 impl GameCtrlRequest {
     pub(super) async fn handle(
         self,
-        state: &mut State,
+        view: &mut View,
         frame: &mut Frame,
     ) -> Result<()> {
         match self {
-            GameCtrlRequest::Join(handle) => {
+            GameCtrlRequest::Visit(handle) => {
                 let mut snapshots = handle.snapshots();
 
-                state.snapshot = snapshots.next().await?;
-                state.snapshots = Some(snapshots);
-                state.world = Some(handle);
-                state.bot = None;
+                view.snapshot = snapshots.next().await?;
+                view.snapshots = Some(snapshots);
+                view.world = Some(handle);
+                view.bot = None;
 
-                state.camera.look_at(state.snapshot.tiles.center());
+                view.camera.look_at(view.snapshot.tiles.center());
             }
 
             GameCtrlRequest::Pause => {
-                state.pause().await?;
+                view.pause().await?;
             }
 
             GameCtrlRequest::Resume => {
-                state.resume().await?;
+                view.resume().await?;
             }
 
             GameCtrlRequest::SetConfig(config) => {
-                state.config = config;
+                view.config = config;
             }
 
             GameCtrlRequest::SetModal(modal) => {
-                state.modal = modal.map(Modal::Custom).map(Box::new);
+                view.modal = modal.map(Modal::Custom).map(Box::new);
             }
 
             GameCtrlRequest::SetHelp(help) => {
-                state.help = help;
+                view.help = help;
             }
 
             GameCtrlRequest::SetLabel(label) => {
-                state.label = label.map(|status| (status, Instant::now()));
+                view.label = label.map(|status| (status, Instant::now()));
             }
 
             GameCtrlRequest::Copy(payload) => {
@@ -211,16 +211,16 @@ impl GameCtrlRequest {
             }
 
             GameCtrlRequest::GetWorldVersion(tx) => {
-                _ = tx.send(state.snapshot.version);
+                _ = tx.send(view.snapshot.version);
             }
 
             GameCtrlRequest::WaitForRestart(tx) => {
-                state.config.can_join_bots = false;
-                state.config.can_restart_bots = false;
-                state.config.can_restart_bots = false;
-                state.config.can_spawn_bots = false;
-                state.config.can_upload_bots = false;
-                state.restart = Some(tx);
+                view.config.can_join_bots = false;
+                view.config.can_restart_bots = false;
+                view.config.can_restart_bots = false;
+                view.config.can_spawn_bots = false;
+                view.config.can_upload_bots = false;
+                view.restart = Some(tx);
             }
         }
 

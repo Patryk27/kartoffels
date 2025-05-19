@@ -2,9 +2,7 @@ use crate::{theme, Frame, Ui, UiWidget};
 use futures::FutureExt;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_store::Store;
-use kartoffels_world::prelude::{
-    AbsDir, CaveTheme, Map, MapBuilder, Tile, TileKind,
-};
+use kartoffels_world::prelude as w;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::sync::{Arc, LazyLock};
@@ -14,7 +12,7 @@ use tokio::sync::watch;
 
 #[derive(Debug)]
 pub struct BgMap {
-    stream: watch::Receiver<Arc<Map>>,
+    stream: watch::Receiver<Arc<w::Map>>,
     camera: IVec2,
 }
 
@@ -73,7 +71,7 @@ impl<T> UiWidget<T> for &BgMap {
     }
 }
 
-static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
+static STREAM: LazyLock<watch::Sender<Arc<w::Map>>> = LazyLock::new(|| {
     let tx = watch::Sender::new(Default::default());
 
     thread::spawn({
@@ -87,18 +85,18 @@ static STREAM: LazyLock<watch::Sender<Arc<Map>>> = LazyLock::new(|| {
     tx
 });
 
-fn refresh(tx: watch::Sender<Arc<Map>>) {
+fn refresh(tx: watch::Sender<Arc<w::Map>>) {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
-    let mut map = CaveTheme::new(BgMap::MAP_SIZE)
-        .build(&mut rng, MapBuilder::detached())
+    let mut map = w::CaveTheme::new(BgMap::MAP_SIZE)
+        .build(&mut rng, w::MapBuilder::detached())
         .now_or_never()
         .unwrap()
         .unwrap();
 
     map.for_each_mut(|_, tile| {
         if tile.is_floor() && rng.gen_bool(0.05) {
-            *tile = TileKind::BOT.into();
+            *tile = w::TileKind::BOT.into();
         }
     });
 
@@ -112,19 +110,19 @@ fn refresh(tx: watch::Sender<Arc<Map>>) {
                 let src = ivec2(x as i32, y as i32);
                 let src_tile = map.get(src);
 
-                if src_tile.kind == TileKind::BOT
+                if src_tile.kind == w::TileKind::BOT
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
-                    let dst = src + rng.gen::<AbsDir>();
+                    let dst = src + rng.gen::<w::AbsDir>();
 
-                    if map.get(dst).kind == TileKind::FLOOR {
-                        map.set(src, TileKind::FLOOR);
+                    if map.get(dst).kind == w::TileKind::FLOOR {
+                        map.set(src, w::TileKind::FLOOR);
 
                         map.set(
                             dst,
-                            Tile {
-                                kind: TileKind::BOT,
+                            w::Tile {
+                                kind: w::TileKind::BOT,
                                 meta: [frame, 0, 0],
                             },
                         );

@@ -1,6 +1,6 @@
 use crate::views::game::Event as ParentEvent;
 use crate::{theme, BotIdExt, Button, LineEdit, Ui, VRow};
-use kartoffels_world::prelude::{AliveBotSnapshot, BotId, Snapshot};
+use kartoffels_world::prelude as w;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::Span;
@@ -19,7 +19,7 @@ pub struct BotsModal {
 }
 
 impl BotsModal {
-    pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &w::Snapshot) {
         let width = Table::COLS.iter().copied().sum::<u16>() + 1;
         let height = ui.area.height - 2;
 
@@ -47,7 +47,7 @@ impl BotsModal {
         }
     }
 
-    fn render_body(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn render_body(&mut self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         let [table_area, scroll_area] =
             Layout::horizontal([Constraint::Fill(1), Constraint::Length(2)])
                 .areas(ui.area);
@@ -194,21 +194,21 @@ enum Focus {
 
 #[derive(Clone, Debug, Default)]
 struct Table {
-    rows: Vec<(usize, BotId)>,
+    rows: Vec<(usize, w::BotId)>,
     filter: String,
     version: u64,
 }
 
 impl Table {
     const COLS: &[u16] = &[
-        5,                        // nth
-        BotId::LENGTH as u16 + 1, // id
-        7,                        // age
-        6,                        // score
-        16,                       // actions
+        5,                           // nth
+        w::BotId::LENGTH as u16 + 1, // id
+        7,                           // age
+        6,                           // score
+        16,                          // actions
     ];
 
-    fn update(&mut self, world: &Snapshot, filter: &str) {
+    fn update(&mut self, world: &w::Snapshot, filter: &str) {
         if world.version == self.version && filter == self.filter {
             return;
         }
@@ -238,7 +238,7 @@ impl Table {
     fn render(
         &self,
         ui: &mut Ui<Event>,
-        world: &Snapshot,
+        world: &w::Snapshot,
         offset: usize,
         selected: usize,
     ) {
@@ -278,7 +278,7 @@ impl Table {
         &self,
         ui: &mut Ui<Event>,
         nth: usize,
-        bot: &AliveBotSnapshot,
+        bot: &w::AliveBotSnapshot,
     ) {
         if ui.focused {
             ui.buf.set_style(ui.area, Style::new().bg(theme::DARK_GRAY));

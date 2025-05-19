@@ -92,11 +92,11 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
 }
 
 async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.world.set_spawn(ivec2(10, 10), AbsDir::E).await?;
+    ctxt.world.set_spawn(ivec2(10, 10), w::AbsDir::E).await?;
 
     ctxt.world
         .set_map({
-            let mut map = Map::new(uvec2(32, 32));
+            let mut map = w::Map::new(uvec2(32, 32));
 
             map.poly(
                 [
@@ -114,7 +114,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
                     ivec2(10, 13),
                     ivec2(10, 12),
                 ],
-                TileKind::FLOOR,
+                w::TileKind::FLOOR,
             );
 
             map

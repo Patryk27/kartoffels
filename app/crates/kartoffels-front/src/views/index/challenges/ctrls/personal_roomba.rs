@@ -5,9 +5,7 @@ use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, UVec2};
 use kartoffels_store::{Store, World};
-use kartoffels_world::prelude::{
-    Config, Event, Handle, Object, ObjectId, ObjectKind, Policy,
-};
+use kartoffels_world::prelude as w;
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
@@ -101,14 +99,14 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 async fn init(
     store: &Store,
     game: &GameCtrl,
-) -> Result<(World, Vec<ObjectId>)> {
+) -> Result<(World, Vec<w::ObjectId>)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
     let world = store
-        .create_private_world(Config {
-            policy: Policy {
+        .create_private_world(w::Config {
+            policy: w::Policy {
                 auto_respawn: false,
                 max_alive_bots: 1,
                 max_queued_bots: 1,
@@ -117,7 +115,7 @@ async fn init(
         })
         .await?;
 
-    game.join(&world).await?;
+    game.visit(&world).await?;
 
     // ---
 
@@ -147,9 +145,9 @@ async fn init(
 async fn reset(
     store: &Store,
     game: &GameCtrl,
-    world: &Handle,
-    flags: Option<Vec<ObjectId>>,
-) -> Result<Vec<ObjectId>> {
+    world: &w::Handle,
+    flags: Option<Vec<w::ObjectId>>,
+) -> Result<Vec<w::ObjectId>> {
     if let Some(flags) = flags {
         game.set_label(Some("building".into())).await?;
 
@@ -167,7 +165,7 @@ async fn reset(
             }
 
             let id = world
-                .create_object(Object::new(ObjectKind::FLAG), ivec2(x, y))
+                .create_object(w::Object::new(w::ObjectKind::FLAG), ivec2(x, y))
                 .await?;
 
             flags.push(id);
@@ -177,7 +175,10 @@ async fn reset(
     Ok(flags)
 }
 
-async fn watch(game: &GameCtrl, world: &Handle) -> Result<ControlFlow<(), ()>> {
+async fn watch(
+    game: &GameCtrl,
+    world: &w::Handle,
+) -> Result<ControlFlow<(), ()>> {
     let mut events = world.events()?;
     let mut flags = 4;
 
@@ -186,11 +187,11 @@ async fn watch(game: &GameCtrl, world: &Handle) -> Result<ControlFlow<(), ()>> {
 
     loop {
         match events.next().await?.event {
-            Event::BotDied { .. } => {
+            w::Event::BotDied { .. } => {
                 return Ok(ControlFlow::Continue(()));
             }
 
-            Event::ObjectPicked { .. } => {
+            w::Event::ObjectPicked { .. } => {
                 flags -= 1;
 
                 if flags == 0 {

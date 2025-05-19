@@ -18,7 +18,7 @@ pub use self::upload_bot::*;
 use super::Event;
 use crate::{Backdrop, Ui};
 use kartoffels_store::Session;
-use kartoffels_world::prelude::Snapshot;
+use kartoffels_world::prelude as w;
 use termwiz::input::{KeyCode, Modifiers};
 
 #[allow(clippy::type_complexity)]
@@ -40,7 +40,7 @@ impl Modal {
         &mut self,
         ui: &mut Ui<Event>,
         sess: &Session,
-        world: &Snapshot,
+        world: &w::Snapshot,
     ) {
         Backdrop::render(ui);
 

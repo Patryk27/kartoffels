@@ -1,7 +1,7 @@
-use super::{Event, Mode, State};
+use super::{Event, Mode, View};
 use crate::{theme, BotIdExt, Ui};
 use glam::ivec2;
-use kartoffels_world::prelude::{AbsDir, ObjectKind, Tile, TileKind};
+use kartoffels_world::prelude as w;
 use ratatui::layout::Rect;
 use std::time::Instant;
 use termwiz::input::{KeyCode, Modifiers};
@@ -12,14 +12,14 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn render(&self, ui: &mut Ui<Event>, state: &State) {
-        self.render_tiles(ui, state);
-        self.render_cursor(ui, state);
+    pub fn render(&self, ui: &mut Ui<Event>, view: &View) {
+        self.render_tiles(ui, view);
+        self.render_cursor(ui, view);
         self.process_keys(ui);
     }
 
-    fn render_tiles(&self, ui: &mut Ui<Event>, state: &State) {
-        let offset = state.camera.pos()
+    fn render_tiles(&self, ui: &mut Ui<Event>, view: &View) {
+        let offset = view.camera.pos()
             - ivec2(ui.area.width as i32, ui.area.height as i32) / 2;
 
         for dy in 0..ui.area.height {
@@ -32,23 +32,23 @@ impl Map {
                 };
 
                 ui.at(area, |ui| {
-                    let tile = state
+                    let tile = view
                         .snapshot
                         .map
                         .get(offset + ivec2(dx as i32, dy as i32));
 
-                    self.render_tile(ui, state, tile);
+                    self.render_tile(ui, view, tile);
                 });
             }
         }
     }
 
-    fn render_cursor(&self, ui: &mut Ui<Event>, state: &State) {
+    fn render_cursor(&self, ui: &mut Ui<Event>, view: &View) {
         if let Mode::SpawningBot {
             cursor_screen: Some(cursor_screen),
             cursor_valid,
             ..
-        } = &state.mode
+        } = &view.mode
         {
             let cursor_screen = cursor_screen.as_ivec2()
                 - ivec2(ui.area.x as i32, ui.area.y as i32);
@@ -75,16 +75,16 @@ impl Map {
         }
     }
 
-    fn render_tile(&self, ui: &mut Ui<Event>, state: &State, tile: Tile) {
+    fn render_tile(&self, ui: &mut Ui<Event>, view: &View, tile: w::Tile) {
         let ch;
         let mut fg;
         let mut bg;
 
         match tile.kind {
-            TileKind::BOT => {
+            w::TileKind::BOT => {
                 ch = '@';
 
-                fg = state
+                fg = view
                     .snapshot
                     .bots
                     .alive
@@ -95,15 +95,15 @@ impl Map {
                 bg = theme::BG;
             }
 
-            TileKind::BOT_CHEVRON => {
-                ch = match AbsDir::from(tile.meta[1]) {
-                    AbsDir::N => '↑',
-                    AbsDir::E => '→',
-                    AbsDir::S => '↓',
-                    AbsDir::W => '←',
+            w::TileKind::BOT_CHEVRON => {
+                ch = match w::AbsDir::from(tile.meta[1]) {
+                    w::AbsDir::N => '↑',
+                    w::AbsDir::E => '→',
+                    w::AbsDir::S => '↓',
+                    w::AbsDir::W => '←',
                 };
 
-                fg = state
+                fg = view
                     .snapshot
                     .bots
                     .alive
@@ -114,43 +114,43 @@ impl Map {
                 bg = theme::BG;
             }
 
-            TileKind::DOOR => {
+            w::TileKind::DOOR => {
                 ch = '+';
                 fg = theme::GRAY;
                 bg = theme::BG;
             }
 
-            TileKind::FLOOR => {
+            w::TileKind::FLOOR => {
                 ch = '.';
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
 
-            TileKind::WALL => {
+            w::TileKind::WALL => {
                 ch = '#';
                 fg = theme::GRAY;
                 bg = theme::BG;
             }
 
-            TileKind::WALL_H => {
+            w::TileKind::WALL_H => {
                 ch = '-';
                 fg = theme::GRAY;
                 bg = theme::BG;
             }
 
-            TileKind::WALL_V => {
+            w::TileKind::WALL_V => {
                 ch = '|';
                 fg = theme::GRAY;
                 bg = theme::BG;
             }
 
-            ObjectKind::FLAG => {
+            w::ObjectKind::FLAG => {
                 ch = '=';
                 fg = theme::YELLOW;
                 bg = theme::BG;
             }
 
-            ObjectKind::GEM => {
+            w::ObjectKind::GEM => {
                 ch = '*';
                 fg = theme::BLUE;
                 bg = theme::BG;
@@ -164,13 +164,13 @@ impl Map {
         };
 
         if ui.enabled {
-            if state.paused && tile.kind != TileKind::BOT {
+            if view.paused && tile.kind != w::TileKind::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }
 
-            if tile.kind == TileKind::BOT {
-                let id = state
+            if tile.kind == w::TileKind::BOT {
+                let id = view
                     .snapshot
                     .bots
                     .alive
@@ -178,7 +178,7 @@ impl Map {
                     .map(|bot| bot.id)
                     .unwrap();
 
-                if ui.mouse_over(ui.area) && state.config.can_join_bots {
+                if ui.mouse_over(ui.area) && view.config.can_join_bots {
                     fg = theme::BG;
                     bg = theme::GREEN;
 
@@ -187,7 +187,7 @@ impl Map {
                     }
                 } else {
                     #[allow(clippy::collapsible_else_if)]
-                    if let Some(bot) = &state.bot
+                    if let Some(bot) = &view.bot
                         && bot.id == id
                         && self.blink.elapsed().as_millis() % 1000 <= 500
                     {

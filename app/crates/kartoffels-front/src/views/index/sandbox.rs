@@ -9,7 +9,7 @@ use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
-use kartoffels_world::prelude::{ArenaTheme, CaveTheme, Theme};
+use kartoffels_world::prelude as w;
 use termwiz::input::KeyCode;
 use tracing::debug;
 
@@ -47,7 +47,7 @@ async fn run_once(
     fade_in: bool,
     size: &mut SandboxSize,
     theme: &mut SandboxTheme,
-) -> Result<Option<Theme>> {
+) -> Result<Option<w::Theme>> {
     debug!("run()");
 
     let mut fade = FadeCtrl::default()
@@ -168,7 +168,7 @@ impl Form<'_> {
         });
     }
 
-    fn confirm(self) -> Theme {
+    fn confirm(self) -> w::Theme {
         match self.theme {
             SandboxTheme::Arena => {
                 let radius = match self.size {
@@ -178,7 +178,7 @@ impl Form<'_> {
                     SandboxSize::Large => 24,
                 };
 
-                Theme::Arena(ArenaTheme::new(radius))
+                w::Theme::Arena(w::ArenaTheme::new(radius))
             }
 
             SandboxTheme::Cave => {
@@ -189,7 +189,7 @@ impl Form<'_> {
                     SandboxSize::Large => uvec2(128, 64),
                 };
 
-                Theme::Cave(CaveTheme::new(size))
+                w::Theme::Cave(w::CaveTheme::new(size))
             }
         }
     }

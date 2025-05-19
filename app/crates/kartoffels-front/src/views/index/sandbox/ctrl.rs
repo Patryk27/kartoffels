@@ -2,7 +2,7 @@ use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
 use crate::{utils, Msg, MsgLine};
 use anyhow::Result;
 use kartoffels_store::Store;
-use kartoffels_world::prelude::{Config as WorldConfig, Policy, Theme};
+use kartoffels_world::prelude as w;
 use std::future;
 use std::sync::LazyLock;
 
@@ -53,7 +53,7 @@ const CONFIG: Config = Config {
     can_upload_bots: true,
 };
 
-pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
+pub async fn run(store: &Store, theme: w::Theme, game: GameCtrl) -> Result<()> {
     init(store, theme, &game).await?;
 
     game.set_config(CONFIG).await?;
@@ -62,24 +62,23 @@ pub async fn run(store: &Store, theme: Theme, game: GameCtrl) -> Result<()> {
     future::pending().await
 }
 
-async fn init(store: &Store, theme: Theme, game: &GameCtrl) -> Result<()> {
+async fn init(store: &Store, theme: w::Theme, game: &GameCtrl) -> Result<()> {
     game.set_help(Some(&*HELP)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
     let world = store
-        .create_private_world(WorldConfig {
-            name: "sandbox".into(),
-            policy: Policy {
+        .create_private_world(w::Config {
+            policy: w::Policy {
                 auto_respawn: true,
                 max_alive_bots: MAX_BOTS,
                 max_queued_bots: MAX_BOTS as u16,
             },
-            ..Default::default()
+            ..store.world_config("sandbox")
         })
         .await?;
 
-    game.join(&world).await?;
+    game.visit(&world).await?;
 
     utils::map::build(store, game, &world, |mut rng, map| async move {
         theme.build(&mut rng, map).await

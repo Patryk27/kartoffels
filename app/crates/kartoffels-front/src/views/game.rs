@@ -23,9 +23,7 @@ use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
 use kartoffels_store::{Session, Store, World};
-use kartoffels_world::prelude::{
-    BotId, Snapshot as WorldSnapshot, SnapshotStream,
-};
+use kartoffels_world::prelude as w;
 use ratatui::layout::{Constraint, Layout};
 use std::future::Future;
 use std::ops::ControlFlow;
@@ -64,13 +62,13 @@ async fn run_once(
     debug!("run()");
 
     let mut fade = Some(Fade::new(FadeDir::In));
-    let mut state = State::default();
+    let mut view = View::default();
 
     loop {
         let event = frame
             .tick(|ui| {
-                state.tick(store);
-                state.render(ui, sess, store);
+                view.tick(store);
+                view.render(ui, sess, store);
 
                 if let Some(fade) = &fade {
                     _ = fade.render(ui);
@@ -80,12 +78,12 @@ async fn run_once(
 
         if let Some(event) = event
             && let ControlFlow::Break(_) =
-                event.handle(frame, &mut state).await?
+                event.handle(frame, &mut view).await?
         {
             fade = Some(Fade::new(FadeDir::Out));
         }
 
-        state.poll(frame, &mut ctrl).await?;
+        view.poll(frame, &mut ctrl).await?;
 
         if let Some(fade) = &fade
             && fade.dir() == FadeDir::Out
@@ -97,7 +95,7 @@ async fn run_once(
 }
 
 #[derive(Default)]
-struct State {
+struct View {
     bot: Option<JoinedBot>,
     camera: Camera,
     config: Config,
@@ -108,12 +106,12 @@ struct State {
     mode: Mode,
     paused: bool,
     restart: Option<oneshot::Sender<()>>,
-    snapshot: Arc<WorldSnapshot>,
-    snapshots: Option<SnapshotStream>,
+    snapshot: Arc<w::Snapshot>,
+    snapshots: Option<w::SnapshotStream>,
     world: Option<World>,
 }
 
-impl State {
+impl View {
     fn tick(&mut self, store: &Store) {
         // If we're following a bot, adjust the camera to the bot's current
         // position - unless we're under test, in which case we don't want to
@@ -221,7 +219,7 @@ impl State {
         Ok(())
     }
 
-    fn update_snapshot(&mut self, snapshot: Arc<WorldSnapshot>) {
+    fn update_snapshot(&mut self, snapshot: Arc<w::Snapshot>) {
         // If map size's changed, recenter the camera - this comes handy for
         // controllers which call `world.set_map()`, e.g. the tutorial
         if snapshot.tiles.size() != self.snapshot.tiles.size() {
@@ -273,7 +271,7 @@ impl State {
         Ok(())
     }
 
-    fn join_bot(&mut self, id: BotId, follow: bool) {
+    fn join(&mut self, id: w::BotId, follow: bool) {
         self.bot = Some(JoinedBot {
             id,
             follow,
@@ -299,7 +297,7 @@ enum Mode {
 
 #[derive(Debug)]
 struct JoinedBot {
-    id: BotId,
+    id: w::BotId,
     follow: bool,
     exists: bool,
 }

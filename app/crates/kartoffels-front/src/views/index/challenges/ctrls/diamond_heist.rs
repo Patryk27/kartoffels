@@ -7,10 +7,7 @@ use glam::IVec2;
 use indoc::indoc;
 use kartoffels_prefabs::CHL_DIAMOND_HEIST_GUARD;
 use kartoffels_store::{Store, World};
-use kartoffels_world::prelude::{
-    AbsDir, Config, CreateBotRequest, Event, Handle, Map, Object, ObjectKind,
-    Policy, TileKind,
-};
+use kartoffels_world::prelude as w;
 use ratatui::style::Stylize;
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
@@ -128,8 +125,8 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
     game.set_label(Some("building".into())).await?;
 
     let world = store
-        .create_private_world(Config {
-            policy: Policy {
+        .create_private_world(w::Config {
+            policy: w::Policy {
                 auto_respawn: false,
                 max_alive_bots: 16,
                 max_queued_bots: 16,
@@ -138,11 +135,11 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
         })
         .await?;
 
-    game.join(&world).await?;
+    game.visit(&world).await?;
 
     // ---
 
-    let (mut map, anchors) = Map::parse(indoc! {r#"
+    let (mut map, anchors) = w::Map::parse(indoc! {r#"
                   -----------
                   |.........|-----------
                   |...................g+
@@ -156,12 +153,12 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
                   -----------
     "#});
 
-    anchors.fill(&mut map, TileKind::FLOOR);
+    anchors.fill(&mut map, w::TileKind::FLOOR);
 
-    world.set_spawn(anchors.get('a'), AbsDir::E).await?;
+    world.set_spawn(anchors.get('a'), w::AbsDir::E).await?;
 
     world
-        .create_object(Object::new(ObjectKind::GEM), anchors.get('b'))
+        .create_object(w::Object::new(w::ObjectKind::GEM), anchors.get('b'))
         .await?;
 
     utils::map::build(store, game, &world, |mut rng, mut mapb| async move {
@@ -174,16 +171,16 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
     // ---
 
     let guards = [
-        (anchors.get('c'), AbsDir::N),
-        (anchors.get('d'), AbsDir::E),
-        (anchors.get('e'), AbsDir::S),
-        (anchors.get('f'), AbsDir::W),
+        (anchors.get('c'), w::AbsDir::N),
+        (anchors.get('d'), w::AbsDir::E),
+        (anchors.get('e'), w::AbsDir::S),
+        (anchors.get('f'), w::AbsDir::W),
     ];
 
     for (pos, dir) in guards {
         world
             .create_bot(
-                CreateBotRequest::new(CHL_DIAMOND_HEIST_GUARD)
+                w::CreateBotRequest::new(CHL_DIAMOND_HEIST_GUARD)
                     .at(pos)
                     .facing(dir)
                     .instant(),
@@ -200,7 +197,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
 
 async fn watch(
     game: &GameCtrl,
-    world: &Handle,
+    world: &w::Handle,
     finish: IVec2,
 ) -> Result<ControlFlow<()>> {
     let mut events = world.events()?;
@@ -213,7 +210,7 @@ async fn watch(
 
     loop {
         match events.next().await?.event {
-            Event::BotDied { id } => {
+            w::Event::BotDied { id } => {
                 if id == player {
                     game.msg(&PLAYER_DIED_MSG).await?;
                 } else {
@@ -223,7 +220,7 @@ async fn watch(
                 return Ok(ControlFlow::Continue(()));
             }
 
-            Event::BotMoved { id, at } => {
+            w::Event::BotMoved { id, at } => {
                 if id == player && at == finish {
                     return Ok(ControlFlow::Break(()));
                 }

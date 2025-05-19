@@ -1,12 +1,12 @@
 use super::{
     BotPosition, BotPrefabType, BotSource, BotsModal, ErrorModal, GoBackModal,
-    InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, State,
-    UploadBotModal, UploadBotRequest,
+    InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, UploadBotModal,
+    UploadBotRequest, View,
 };
 use crate::Frame;
 use anyhow::{anyhow, Error, Result};
 use glam::IVec2;
-use kartoffels_world::prelude::{BotId, Clock, CreateBotRequest};
+use kartoffels_world::prelude as w;
 use std::ops::ControlFlow;
 
 pub enum Event {
@@ -18,7 +18,7 @@ pub enum Event {
     },
     Restart,
     JoinBot {
-        id: BotId,
+        id: w::BotId,
     },
     MoveCamera {
         delta: IVec2,
@@ -51,10 +51,10 @@ pub enum Event {
     DeleteBot,
     FollowBot,
     InspectBot {
-        id: BotId,
+        id: w::BotId,
     },
     Overclock {
-        clock: Clock,
+        clock: w::Clock,
     },
 }
 
@@ -62,87 +62,86 @@ impl Event {
     pub async fn handle(
         self,
         frame: &mut Frame,
-        state: &mut State,
+        view: &mut View,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
             Event::Copy { payload } => {
                 frame.copy(payload).await?;
             }
 
-            Event::GoBack { confirm } => match &state.mode {
+            Event::GoBack { confirm } => match &view.mode {
                 Mode::Default => {
                     if confirm {
-                        state.modal =
-                            Some(Box::new(Modal::GoBack(GoBackModal)));
+                        view.modal = Some(Box::new(Modal::GoBack(GoBackModal)));
                     } else {
                         return Ok(ControlFlow::Break(()));
                     }
                 }
 
                 Mode::SpawningBot { .. } => {
-                    state.mode = Mode::Default;
+                    view.mode = Mode::Default;
                 }
             },
 
             Event::Restart => {
-                state.bot = None;
-                state.mode = Mode::Default;
-                state.modal = None;
+                view.bot = None;
+                view.mode = Mode::Default;
+                view.modal = None;
 
-                if state.restart.take().unwrap().send(()).is_err() {
+                if view.restart.take().unwrap().send(()).is_err() {
                     return Err(anyhow!("couldn't restart the game"));
                 }
             }
 
             Event::JoinBot { id } => {
-                state.join_bot(id, true);
-                state.modal = None;
+                view.join(id, true);
+                view.modal = None;
             }
 
             Event::MoveCamera { delta } => {
-                state.camera.look_at(state.camera.pos() + delta);
+                view.camera.look_at(view.camera.pos() + delta);
 
-                if let Some(bot) = &mut state.bot {
+                if let Some(bot) = &mut view.bot {
                     bot.follow = false;
                 }
             }
 
             Event::TogglePause => {
-                if state.paused {
-                    state.resume().await?;
+                if view.paused {
+                    view.resume().await?;
                 } else {
-                    state.pause().await?;
+                    view.pause().await?;
                 }
             }
 
             Event::CloseModal => {
-                state.modal = None;
+                view.modal = None;
             }
 
             Event::OpenModal { modal } => {
-                state.modal = Some(modal);
+                view.modal = Some(modal);
             }
 
             Event::OpenBotsModal => {
-                state.modal = Some(Box::new(Modal::Bots(BotsModal::default())));
+                view.modal = Some(Box::new(Modal::Bots(BotsModal::default())));
             }
 
             Event::OpenHelpModal => {
-                state.modal = Some(Box::new(Modal::Help(state.help.unwrap())));
+                view.modal = Some(Box::new(Modal::Help(view.help.unwrap())));
             }
 
             Event::OpenErrorModal { error } => {
-                state.modal =
+                view.modal =
                     Some(Box::new(Modal::Error(ErrorModal::new(error))));
             }
 
             Event::OpenJoinBotModal => {
-                state.modal =
+                view.modal =
                     Some(Box::new(Modal::JoinBot(JoinBotModal::default())));
             }
 
             Event::OpenSpawnBotModal => {
-                state.modal =
+                view.modal =
                     Some(Box::new(Modal::SpawnBot(SpawnBotModal::new(
                         BotSource::Prefab(BotPrefabType::Roberto),
                     ))));
@@ -156,7 +155,7 @@ impl Event {
                         frame.send(vec![0x04]).await?;
                     }
 
-                    state.modal = Some(Box::new(Modal::UploadBot(
+                    view.modal = Some(Box::new(Modal::UploadBot(
                         UploadBotModal::new(request),
                     )));
                 }
@@ -164,30 +163,29 @@ impl Event {
                 BotSource::Prefab(source) => {
                     let request = request.with_source(source.source());
 
-                    state.modal = None;
-                    state.upload_bot(request).await?;
+                    view.modal = None;
+                    view.upload_bot(request).await?;
                 }
             },
 
             Event::UploadBot { request } => {
-                state.modal = None;
-                state.upload_bot(request).await?;
+                view.modal = None;
+                view.upload_bot(request).await?;
             }
 
             Event::CreateBot { src, pos, follow } => {
-                state.modal = None;
-                state.create_bot(src, pos, follow).await?;
+                view.modal = None;
+                view.create_bot(src, pos, follow).await?;
             }
 
             Event::LeaveBot => {
-                state.bot = None;
+                view.bot = None;
             }
 
             Event::RestartBot => {
-                let id = state.bot.as_ref().unwrap().id;
+                let id = view.bot.as_ref().unwrap().id;
 
-                state
-                    .world
+                view.world
                     .as_ref()
                     .unwrap()
                     .kill_bot(id, "forcefully restarted")
@@ -195,25 +193,25 @@ impl Event {
             }
 
             Event::DeleteBot => {
-                let id = state.bot.take().unwrap().id;
+                let id = view.bot.take().unwrap().id;
 
-                state.world.as_ref().unwrap().delete_bot(id).await?;
+                view.world.as_ref().unwrap().delete_bot(id).await?;
             }
 
             Event::FollowBot => {
-                if let Some(bot) = &mut state.bot {
+                if let Some(bot) = &mut view.bot {
                     bot.follow = !bot.follow;
                 }
             }
 
             Event::InspectBot { id } => {
-                state.modal = Some(Box::new(Modal::InspectBot(
-                    InspectBotModal::new(id, state.modal.take()),
+                view.modal = Some(Box::new(Modal::InspectBot(
+                    InspectBotModal::new(id, view.modal.take()),
                 )));
             }
 
             Event::Overclock { clock } => {
-                state.world.as_ref().unwrap().overclock(clock).await?;
+                view.world.as_ref().unwrap().overclock(clock).await?;
             }
         }
 
@@ -221,7 +219,7 @@ impl Event {
     }
 }
 
-impl State {
+impl View {
     async fn upload_bot(
         &mut self,
         request: UploadBotRequest<Vec<u8>>,
@@ -256,7 +254,7 @@ impl State {
             .world
             .as_ref()
             .unwrap()
-            .create_bot(CreateBotRequest::new(src).at(pos))
+            .create_bot(w::CreateBotRequest::new(src).at(pos))
             .await;
 
         let id = match id {
@@ -271,7 +269,7 @@ impl State {
             }
         };
 
-        self.join_bot(id, follow);
+        self.join(id, follow);
 
         Ok(())
     }
