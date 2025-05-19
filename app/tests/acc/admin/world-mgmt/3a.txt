@@ -5,4 +5,4 @@ name:
 tung-tung-tung-sahur
 
 policy:
-{"allow_breakpoints":false,"auto_respawn":false,"max_alive_bots":32,"max_queued_bots":64}
+{"auto_respawn":false,"max_alive_bots":32,"max_queued_bots":64}

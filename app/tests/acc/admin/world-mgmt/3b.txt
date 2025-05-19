@@ -5,4 +5,4 @@ name:
 balerrina-capuccina
 
 policy:
-{"allow_breakpoints":false,"auto_respawn":true,"max_alive_bots":64,"max_queued_bots":64}
+{"auto_respawn":true,"max_alive_bots":64,"max_queued_bots":64}
