@@ -39,9 +39,10 @@ async fn smoke() {
 fn config() -> Config {
     Config {
         clock: Clock::manual(),
-        events: false,
+        events: true,
         name: "world".into(),
         policy: Policy {
+            allow_breakpoints: true,
             auto_respawn: true,
             max_alive_bots: 16,
             max_queued_bots: 16,

@@ -33,6 +33,7 @@ use tokio::task::{self, JoinHandle};
 use tokio::time;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tokio_util::sync::CancellationToken;
+use tracing_subscriber::filter::LevelFilter;
 use tungstenite::Error as WsError;
 
 type Stdin = Box<dyn Sink<WsMessage, Error = WsError> + Unpin>;
@@ -68,7 +69,10 @@ impl TestContext {
         rows: usize,
         worlds: impl IntoIterator<Item = WorldHandle>,
     ) -> Self {
-        _ = tracing_subscriber::fmt().with_test_writer().try_init();
+        _ = tracing_subscriber::fmt()
+            .with_max_level(LevelFilter::DEBUG)
+            .with_test_writer()
+            .try_init();
 
         let store = Self::open_store(worlds).await;
         let shutdown = CancellationToken::new();

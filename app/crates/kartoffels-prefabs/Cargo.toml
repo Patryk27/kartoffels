@@ -3,6 +3,7 @@ bin = [
     { name = "roberto", path = "src/roberto.rs", test = false },
 
     # Bots for acceptance tests
+    { name = "acc-breakpoint", path = "src/acc-breakpoint.rs", test = false },
     { name = "acc-fall", path = "src/acc-fall.rs", test = false },
     { name = "acc-irq", path = "src/acc-irq.rs", test = false },
     { name = "acc-panic", path = "src/acc-panic.rs", test = false },

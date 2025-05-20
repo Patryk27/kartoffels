@@ -1,4 +1,4 @@
-use super::{Event, Mode, View};
+use super::{Event, Mode, Status, View};
 use crate::{theme, Button, Ui, UiWidget};
 use kartoffels_world::prelude as w;
 use ratatui::prelude::Rect;
@@ -11,9 +11,7 @@ pub struct BottomPanel;
 
 impl BottomPanel {
     pub fn render(ui: &mut Ui<Event>, view: &View) {
-        if view.world.is_some() {
-            Self::render_label(ui, view);
-        }
+        Self::render_status(ui, view);
 
         ui.row(|ui| {
             Self::render_go_back_btn(ui);
@@ -27,7 +25,7 @@ impl BottomPanel {
                 Mode::Default => {
                     if view.world.is_some() {
                         ui.enabled(view.config.enabled, |ui| {
-                            Self::render_pause_btn(ui, view);
+                            Self::render_status_btn(ui, view);
                             Self::render_help_btn(ui, view);
                             Self::render_bots_btn(ui, view);
                             Self::render_overclock_btn(ui, view);
@@ -48,14 +46,31 @@ impl BottomPanel {
         });
     }
 
-    fn render_pause_btn(ui: &mut Ui<Event>, view: &View) {
+    fn render_status_btn(ui: &mut Ui<Event>, view: &View) {
         ui.space(2);
 
-        let label = if view.paused { "resume" } else { "pause" };
+        let label = if view.status.is_paused() {
+            "resume"
+        } else {
+            "pause"
+        };
 
         ui.enabled(view.config.can_pause, |ui| {
             ui.btn(label, KeyCode::Char(' '), |btn| {
-                btn.throwing(Event::TogglePause)
+                let btn = btn.throwing(Event::ToggleStatus);
+
+                if let Status::Paused {
+                    on_breakpoint: Some(tt),
+                } = view.status
+                {
+                    if tt.elapsed().as_millis() % 1000 <= 500 {
+                        btn.bold()
+                    } else {
+                        btn
+                    }
+                } else {
+                    btn
+                }
             });
         });
     }
@@ -115,29 +130,8 @@ impl BottomPanel {
         }
     }
 
-    fn render_label(ui: &mut Ui<Event>, view: &View) {
-        let span = if view.paused {
-            Some(Span::raw("paused").fg(theme::FG).bg(theme::RED))
-        } else if let Some((label, label_tt)) = &view.label {
-            let span = Span::raw(label);
-
-            if label_tt.elapsed().as_millis() % 1000 <= 500 {
-                Some(span.fg(theme::BG).bg(theme::YELLOW))
-            } else {
-                Some(span.fg(theme::YELLOW))
-            }
-        } else {
-            let speed = match view.snapshot.clock {
-                w::Clock::Normal | w::Clock::Manual { .. } => None,
-                w::Clock::Fast => Some("spd:fast"),
-                w::Clock::Faster => Some("spd:faster"),
-                w::Clock::Unlimited => Some("spd:∞"),
-            };
-
-            speed.map(|speed| Span::raw(speed).fg(theme::WASHED_PINK))
-        };
-
-        let Some(span) = span else {
+    fn render_status(ui: &mut Ui<Event>, view: &View) {
+        let Some(span) = Self::status(view) else {
             return;
         };
 
@@ -151,5 +145,53 @@ impl BottomPanel {
         };
 
         ui.add_at(area, span);
+    }
+
+    fn status(view: &View) -> Option<Span> {
+        if let Some((label, tt)) = &view.label {
+            let span = Span::raw(label);
+            let blink = tt.elapsed().as_millis() % 1000 <= 500;
+
+            return Some(if blink {
+                span.fg(theme::BG).bg(theme::YELLOW)
+            } else {
+                span.fg(theme::YELLOW)
+            });
+        }
+
+        #[allow(clippy::question_mark)]
+        if view.world.is_none() {
+            return None;
+        }
+
+        if let Status::Paused {
+            on_breakpoint: None,
+        } = view.status
+        {
+            return Some(Span::raw("paused").fg(theme::FG).bg(theme::RED));
+        }
+
+        if let Status::Paused {
+            on_breakpoint: Some(tt),
+        } = view.status
+        {
+            let span = Span::raw("breakpoint");
+            let blink = tt.elapsed().as_millis() % 1000 <= 500;
+
+            return Some(if blink {
+                span.fg(theme::FG).bg(theme::RED)
+            } else {
+                span.fg(theme::RED).bg(theme::FG)
+            });
+        }
+
+        let speed = match view.snapshot.clock {
+            w::Clock::Normal | w::Clock::Manual { .. } => return None,
+            w::Clock::Fast => "spd:fast",
+            w::Clock::Faster => "spd:faster",
+            w::Clock::Unlimited => "spd:∞",
+        };
+
+        Some(Span::raw(speed).fg(theme::WASHED_PINK))
     }
 }

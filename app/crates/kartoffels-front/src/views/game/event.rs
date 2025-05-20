@@ -23,7 +23,7 @@ pub enum Event {
     MoveCamera {
         delta: IVec2,
     },
-    TogglePause,
+    ToggleStatus,
     CloseModal,
     OpenModal {
         modal: Box<Modal>,
@@ -47,7 +47,7 @@ pub enum Event {
         follow: bool,
     },
     LeaveBot,
-    RestartBot,
+    KillBot,
     DeleteBot,
     FollowBot,
     InspectBot {
@@ -106,8 +106,8 @@ impl Event {
                 }
             }
 
-            Event::TogglePause => {
-                if view.paused {
+            Event::ToggleStatus => {
+                if view.status.is_paused() {
                     view.resume().await?;
                 } else {
                     view.pause().await?;
@@ -182,20 +182,23 @@ impl Event {
                 view.bot = None;
             }
 
-            Event::RestartBot => {
+            Event::KillBot => {
                 let id = view.bot.as_ref().unwrap().id;
 
                 view.world
                     .as_ref()
                     .unwrap()
-                    .kill_bot(id, "forcefully restarted")
+                    .kill_bot(id, "god's will")
                     .await?;
+
+                view.resume().await?;
             }
 
             Event::DeleteBot => {
                 let id = view.bot.take().unwrap().id;
 
                 view.world.as_ref().unwrap().delete_bot(id).await?;
+                view.resume().await?;
             }
 
             Event::FollowBot => {

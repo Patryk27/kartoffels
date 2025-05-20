@@ -99,15 +99,16 @@ struct View {
     bot: Option<JoinedBot>,
     camera: Camera,
     config: Config,
+    events: Option<w::EventStream>,
     help: Option<HelpMsgRef>,
     label: Option<(String, Instant)>,
     map: Map,
     modal: Option<Box<Modal>>,
     mode: Mode,
-    paused: bool,
     restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<w::Snapshot>,
     snapshots: Option<w::SnapshotStream>,
+    status: Status,
     world: Option<World>,
 }
 
@@ -210,44 +211,88 @@ impl View {
             event.handle(self, frame).await?;
         }
 
+        if let Some(events) = &mut self.events
+            && let Some(Ok(event)) = events.next().now_or_never()
+            && let w::Event::BotReachedBreakpoint { id } = event.event
+        {
+            self.handle_breakpoint(id).await?;
+        }
+
         if let Some(snapshots) = &mut self.snapshots
             && let Some(snapshot) = snapshots.next().now_or_never()
         {
-            self.update_snapshot(snapshot?);
+            self.refresh(snapshot?);
         }
 
         Ok(())
     }
 
-    fn update_snapshot(&mut self, snapshot: Arc<w::Snapshot>) {
-        // If map size's changed, recenter the camera - this comes handy for
-        // controllers which call `world.set_map()`, e.g. the tutorial
+    async fn handle_breakpoint(&mut self, id: w::BotId) -> Result<()> {
+        debug!("got a breakpoint");
+
+        self.status = Status::Paused {
+            on_breakpoint: Some(Instant::now()),
+        };
+
+        if let Some(snapshots) = &mut self.snapshots
+            && let Some(bot) = snapshots.next().await?.bots.alive.get(id)
+        {
+            self.join(id, true);
+            self.camera.look_at(bot.pos);
+        }
+
+        Ok(())
+    }
+
+    fn refresh(&mut self, snapshot: Arc<w::Snapshot>) {
+        debug!(version=?snapshot.version, "refreshing");
+
+        // If the map's size has changed, recenter the camera.
+        //
+        // This comes handy for controllers which call `world.set_map()`, e.g.
+        // the tutorial.
         if snapshot.tiles.size() != self.snapshot.tiles.size() {
             self.camera.look_at(snapshot.tiles.center());
         }
 
-        self.snapshot = snapshot;
-
+        // If the bot we're tracking has disappeared, disconnect from it.
+        //
+        // This comes handy for controllers which manually modify the bots, e.g.
+        // the tutorial.
         if let Some(bot) = &mut self.bot {
-            let exists_now = self.snapshot.bots.has(bot.id);
+            let exists = snapshot.bots.has(bot.id);
 
-            bot.exists |= exists_now;
-
-            if bot.exists && !exists_now {
-                self.bot = None;
+            match bot.exists {
+                Some(true) => {
+                    if !exists {
+                        self.bot = None;
+                    }
+                }
+                _ => {
+                    bot.exists = Some(exists);
+                }
             }
         }
+
+        self.snapshot = snapshot;
     }
 
     async fn pause(&mut self) -> Result<()> {
-        if !self.paused {
-            self.paused = true;
+        if self.status.is_active() {
+            debug!("pausing");
+
+            self.status = Status::Paused {
+                on_breakpoint: None,
+            };
+
             self.snapshots = None;
 
-            if self.config.sync_pause
-                && let Some(handle) = &self.world
-            {
-                handle.pause().await?;
+            if self.config.sync_pause {
+                if let Some(world) = &self.world {
+                    world.pause().await?;
+                } else {
+                    debug!("suspicious: got no world handle");
+                }
             }
         }
 
@@ -255,16 +300,20 @@ impl View {
     }
 
     async fn resume(&mut self) -> Result<()> {
-        if self.paused {
-            self.paused = false;
+        if self.status.is_paused() {
+            debug!("resuming");
+
+            self.status = Status::Active;
 
             self.snapshots =
                 self.world.as_ref().map(|handle| handle.snapshots());
 
-            if self.config.sync_pause
-                && let Some(handle) = &self.world
-            {
-                handle.resume().await?;
+            if self.config.sync_pause {
+                if let Some(world) = &self.world {
+                    world.resume().await?;
+                } else {
+                    debug!("suspicious: got no world handle");
+                }
             }
         }
 
@@ -272,17 +321,19 @@ impl View {
     }
 
     fn join(&mut self, id: w::BotId, follow: bool) {
+        debug!(?id, "joining");
+
         self.bot = Some(JoinedBot {
             id,
             follow,
-            exists: false,
+            exists: None,
         });
 
         self.map.blink = Instant::now();
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 enum Mode {
     #[default]
     Default,
@@ -295,9 +346,31 @@ enum Mode {
     },
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+enum Status {
+    #[default]
+    Active,
+
+    Paused {
+        // None -> game has been paused normally
+        // Some(...) -> game has been paused because of a bot's breakpoint
+        on_breakpoint: Option<Instant>,
+    },
+}
+
+impl Status {
+    fn is_active(&self) -> bool {
+        matches!(self, Self::Active)
+    }
+
+    fn is_paused(&self) -> bool {
+        matches!(self, Self::Paused { .. })
+    }
+}
+
+#[derive(Clone, Debug)]
 struct JoinedBot {
     id: w::BotId,
     follow: bool,
-    exists: bool,
+    exists: Option<bool>,
 }

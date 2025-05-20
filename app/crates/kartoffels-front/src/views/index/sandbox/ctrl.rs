@@ -46,9 +46,9 @@ const CONFIG: Config = Config {
 
     can_delete_bots: true,
     can_join_bots: true,
+    can_kill_bots: true,
     can_overclock: false,
     can_pause: true,
-    can_restart_bots: true,
     can_spawn_bots: true,
     can_upload_bots: true,
 };
@@ -70,6 +70,7 @@ async fn init(store: &Store, theme: w::Theme, game: &GameCtrl) -> Result<()> {
     let world = store
         .create_private_world(w::Config {
             policy: w::Policy {
+                allow_breakpoints: true,
                 auto_respawn: true,
                 max_alive_bots: MAX_BOTS,
                 max_queued_bots: MAX_BOTS as u16,

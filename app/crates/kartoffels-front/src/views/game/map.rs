@@ -164,7 +164,7 @@ impl Map {
         };
 
         if ui.enabled {
-            if view.paused && tile.kind != w::TileKind::BOT {
+            if view.status.is_paused() && tile.kind != w::TileKind::BOT {
                 fg = theme::DARK_GRAY;
                 bg = theme::BG;
             }

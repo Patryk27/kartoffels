@@ -174,6 +174,7 @@ impl GameCtrlRequest {
             GameCtrlRequest::Visit(handle) => {
                 let mut snapshots = handle.snapshots();
 
+                view.events = handle.events().ok();
                 view.snapshot = snapshots.next().await?;
                 view.snapshots = Some(snapshots);
                 view.world = Some(handle);
@@ -216,8 +217,7 @@ impl GameCtrlRequest {
 
             GameCtrlRequest::WaitForRestart(tx) => {
                 view.config.can_join_bots = false;
-                view.config.can_restart_bots = false;
-                view.config.can_restart_bots = false;
+                view.config.can_kill_bots = false;
                 view.config.can_spawn_bots = false;
                 view.config.can_upload_bots = false;
                 view.restart = Some(tx);

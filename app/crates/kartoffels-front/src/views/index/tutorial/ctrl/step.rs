@@ -20,9 +20,9 @@ impl TutorialCtxt {
 
             can_delete_bots: true,
             can_join_bots: false,
+            can_kill_bots: false,
             can_overclock: false,
             can_pause: false,
-            can_restart_bots: false,
             can_spawn_bots: false,
             can_upload_bots: true,
         })
@@ -32,6 +32,7 @@ impl TutorialCtxt {
             .create_private_world(w::Config {
                 clock: w::Clock::Normal,
                 policy: w::Policy {
+                    allow_breakpoints: false,
                     auto_respawn: false,
                     max_alive_bots: 16,
                     max_queued_bots: 16,

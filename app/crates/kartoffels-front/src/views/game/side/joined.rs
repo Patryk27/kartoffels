@@ -27,10 +27,8 @@ impl JoinedSidePanel {
         });
 
         ui.at(btns_area, |ui| {
-            for PanelButton { btn, enabled } in btns {
-                ui.enabled(enabled, |ui| {
-                    btn.render(ui);
-                });
+            for btn in btns {
+                btn.render(ui);
             }
         });
     }
@@ -104,14 +102,13 @@ impl JoinedSidePanel {
         }
     }
 
-    fn btns(view: &View, bot: &JoinedBot) -> Vec<PanelButton> {
+    fn btns(view: &View, bot: &JoinedBot) -> Vec<Button<'static, Event>> {
         let mut btns = Vec::new();
 
-        btns.push(PanelButton {
-            btn: Button::new("inspect-bot", KeyCode::Char('i'))
+        btns.push(
+            Button::new("inspect-bot", KeyCode::Char('i'))
                 .throwing(Event::InspectBot { id: bot.id }),
-            enabled: true,
-        });
+        );
 
         btns.push({
             let label = if bot.follow {
@@ -120,37 +117,28 @@ impl JoinedSidePanel {
                 "follow-bot"
             };
 
-            let btn = Button::new(label, KeyCode::Char('f'))
-                .throwing(Event::FollowBot);
-
-            PanelButton { btn, enabled: true }
+            Button::new(label, KeyCode::Char('f')).throwing(Event::FollowBot)
         });
 
-        if view.config.can_restart_bots {
-            let btn = Button::new("restart-bot", KeyCode::Char('R'))
-                .throwing(Event::RestartBot);
-
-            btns.push(PanelButton {
-                btn,
-                enabled: !view.paused,
-            });
+        if view.config.can_kill_bots {
+            btns.push(
+                Button::new("kill-bot", KeyCode::Char('K'))
+                    .throwing(Event::KillBot),
+            );
         }
 
         if view.config.can_delete_bots {
-            let btn = Button::new("delete-bot", KeyCode::Char('D'))
-                .throwing(Event::DeleteBot);
-
-            btns.push(PanelButton {
-                btn,
-                enabled: !view.paused,
-            });
+            btns.push(
+                Button::new("delete-bot", KeyCode::Char('D'))
+                    .throwing(Event::DeleteBot),
+            );
         }
 
         if !view.config.hero_mode {
-            let btn = Button::new("leave-bot", KeyCode::Char('l'))
-                .throwing(Event::LeaveBot);
-
-            btns.push(PanelButton { btn, enabled: true });
+            btns.push(
+                Button::new("leave-bot", KeyCode::Char('l'))
+                    .throwing(Event::LeaveBot),
+            );
         }
 
         btns
@@ -199,9 +187,4 @@ fn reflow_serial(serial: &str, area: Rect) -> VecDeque<&str> {
     }
 
     lines
-}
-
-struct PanelButton {
-    btn: Button<'static, Event>,
-    enabled: bool,
 }

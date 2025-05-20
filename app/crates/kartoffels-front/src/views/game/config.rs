@@ -17,9 +17,9 @@ pub struct Config {
 
     pub can_delete_bots: bool,
     pub can_join_bots: bool,
+    pub can_kill_bots: bool,
     pub can_overclock: bool,
     pub can_pause: bool,
-    pub can_restart_bots: bool,
     pub can_spawn_bots: bool,
     pub can_upload_bots: bool,
 }
@@ -40,9 +40,9 @@ impl Default for Config {
 
             can_delete_bots: false,
             can_join_bots: true,
+            can_kill_bots: false,
             can_overclock: false,
             can_pause: true,
-            can_restart_bots: false,
             can_spawn_bots: false,
             can_upload_bots: true,
         }
