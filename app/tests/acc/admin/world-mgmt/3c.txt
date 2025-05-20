@@ -5,4 +5,4 @@ name:
 tralalero-tralala
 
 policy:
-{"auto_respawn":false,"max_alive_bots":32,"max_queued_bots":64}
+{"allow_breakpoints":false,"auto_respawn":false,"max_alive_bots":32,"max_queued_bots":64}

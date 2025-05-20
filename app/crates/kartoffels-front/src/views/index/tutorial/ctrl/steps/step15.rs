@@ -86,14 +86,14 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
+async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<w::BotId>> {
     ctxt.delete_bots().await?;
 
     ctxt.world
-        .set_map(Map::new(uvec2(20, 10)).filled_with(TileKind::FLOOR))
+        .set_map(w::Map::new(uvec2(20, 10)).filled_with(w::TileKind::FLOOR))
         .await?;
 
-    ctxt.world.set_spawn(ivec2(10, 9), AbsDir::N).await?;
+    ctxt.world.set_spawn(ivec2(10, 9), w::AbsDir::N).await?;
 
     // ---
 
@@ -115,7 +115,7 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
     for &pos in DUMMIES {
         dummies.insert(
             ctxt.world
-                .create_bot(CreateBotRequest::new(DUMMY).at(pos).instant())
+                .create_bot(w::CreateBotRequest::new(DUMMY).at(pos).instant())
                 .await?,
         );
     }
@@ -128,8 +128,8 @@ async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<HashSet<BotId>> {
 
 async fn wait(
     ctxt: &mut TutorialCtxt,
-    mut dummies: HashSet<BotId>,
-    player: BotId,
+    mut dummies: HashSet<w::BotId>,
+    player: w::BotId,
 ) -> Result<ControlFlow<(), ()>> {
     loop {
         let id = ctxt.events.next_died_bot().await?;

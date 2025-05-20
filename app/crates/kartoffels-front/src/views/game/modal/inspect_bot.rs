@@ -1,9 +1,7 @@
 use super::Modal;
 use crate::views::game::Event as ParentEvent;
 use crate::{theme, Button, Ui, UiWidget};
-use kartoffels_world::prelude::{
-    BotId, BotSnapshot, Snapshot, MAX_LIVES_PER_BOT,
-};
+use kartoffels_world::prelude as w;
 use ordinal::Ordinal;
 use ratatui::layout::{Alignment, Constraint, Layout};
 use ratatui::style::{Style, Stylize};
@@ -13,13 +11,13 @@ use std::fmt;
 use termwiz::input::KeyCode;
 
 pub struct InspectBotModal {
-    id: BotId,
+    id: w::BotId,
     tab: Tab,
     parent: Option<Box<Modal>>,
 }
 
 impl InspectBotModal {
-    pub fn new(id: BotId, parent: Option<Box<Modal>>) -> Self {
+    pub fn new(id: w::BotId, parent: Option<Box<Modal>>) -> Self {
         Self {
             id,
             tab: Default::default(),
@@ -27,7 +25,7 @@ impl InspectBotModal {
         }
     }
 
-    pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<ParentEvent>, world: &w::Snapshot) {
         let event = ui.catching(|ui| {
             let width = ui.area.width - 8;
             let height = ui.area.height - 4;
@@ -56,7 +54,7 @@ impl InspectBotModal {
         }
     }
 
-    fn render_body(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn render_body(&self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         match self.tab {
             Tab::Stats => {
                 self.render_body_stats(ui, world);
@@ -70,7 +68,7 @@ impl InspectBotModal {
         }
     }
 
-    fn render_body_stats(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn render_body_stats(&self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         let Some(stats) = world.stats.get(self.id) else {
             return;
         };
@@ -89,19 +87,19 @@ impl InspectBotModal {
             ui.space(1);
 
             match world.bots.get(self.id) {
-                Some(BotSnapshot::Alive(bot)) => {
+                Some(w::BotSnapshot::Alive(bot)) => {
                     ui.line(format!("age = {} ticks", bot.age.as_ticks()));
                     ui.line(format!("    = {}", bot.age.as_time(None)));
                 }
 
-                Some(BotSnapshot::Queued(bot)) => {
+                Some(w::BotSnapshot::Queued(bot)) => {
                     ui.line(format!(
                         "status = queued ({})",
                         Ordinal(bot.place)
                     ));
                 }
 
-                Some(BotSnapshot::Dead(_)) => {
+                Some(w::BotSnapshot::Dead(_)) => {
                     ui.line("status = dead");
                 }
 
@@ -125,12 +123,12 @@ impl InspectBotModal {
 
         ui.space(5);
 
-        if stats.lives >= (MAX_LIVES_PER_BOT as u32) {
+        if stats.lives >= (w::MAX_LIVES_PER_BOT as u32) {
             ui.line(format!(
                 "note: this machine has gone through {} lives, showing only \
                  the recent {} ones",
                 world.lives.len(self.id),
-                MAX_LIVES_PER_BOT,
+                w::MAX_LIVES_PER_BOT,
             ));
 
             ui.space(1);
@@ -176,11 +174,11 @@ impl InspectBotModal {
             .render(ui);
     }
 
-    fn render_body_events(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn render_body_events(&self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         let events = world.bots.get(self.id).map(|bot| match bot {
-            BotSnapshot::Alive(bot) => &bot.events,
-            BotSnapshot::Dead(bot) => &bot.events,
-            BotSnapshot::Queued(bot) => &bot.events,
+            w::BotSnapshot::Alive(bot) => &bot.events,
+            w::BotSnapshot::Dead(bot) => &bot.events,
+            w::BotSnapshot::Queued(bot) => &bot.events,
         });
 
         let rows =
@@ -212,7 +210,7 @@ impl InspectBotModal {
     }
 
     // TODO support custom sorting
-    fn render_body_lives(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn render_body_lives(&self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         let age = world
             .bots
             .alive

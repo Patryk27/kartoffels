@@ -6,10 +6,7 @@ use futures::future::BoxFuture;
 use glam::{ivec2, uvec2, IVec2, UVec2};
 use kartoffels_prefabs::DUMMY;
 use kartoffels_store::{Store, World};
-use kartoffels_world::prelude::{
-    AbsDir, BotId, Config, CreateBotRequest, Handle, Map, MapBuilder, Policy,
-    TileKind,
-};
+use kartoffels_world::prelude as w;
 use rand::RngCore;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
@@ -99,14 +96,15 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
     })
 }
 
-async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
+async fn init(store: &Store, game: &GameCtrl) -> Result<(World, w::BotId)> {
     game.set_help(Some(&*HELP_MSG)).await?;
     game.set_config(CONFIG.disabled()).await?;
     game.set_label(Some("building".into())).await?;
 
     let world = store
-        .create_private_world(Config {
-            policy: Policy {
+        .create_private_world(w::Config {
+            policy: w::Policy {
+                allow_breakpoints: true,
                 auto_respawn: false,
                 max_alive_bots: 2,
                 max_queued_bots: 1,
@@ -117,22 +115,24 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
 
     world
         .set_map({
-            let mut map = Map::new(SIZE);
+            let mut map = w::Map::new(SIZE);
 
-            map.set(TIMMY_POS, TileKind::FLOOR);
+            map.set(TIMMY_POS, w::TileKind::FLOOR);
             map
         })
         .await?;
 
-    world.set_spawn(SPAWN_POS, AbsDir::W).await?;
+    world.set_spawn(SPAWN_POS, w::AbsDir::W).await?;
 
     let timmy = world
         .create_bot(
-            CreateBotRequest::new(DUMMY).at(TIMMY_POS).facing(AbsDir::S),
+            w::CreateBotRequest::new(DUMMY)
+                .at(TIMMY_POS)
+                .facing(w::AbsDir::S),
         )
         .await?;
 
-    game.join(&world).await?;
+    game.visit(&world).await?;
 
     utils::map::build(store, game, &world, create_map).await?;
 
@@ -143,7 +143,10 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, BotId)> {
     Ok((world, timmy))
 }
 
-async fn create_map(mut rng: impl RngCore, mut map: MapBuilder) -> Result<Map> {
+async fn create_map(
+    mut rng: impl RngCore,
+    mut map: w::MapBuilder,
+) -> Result<w::Map> {
     map.begin(SIZE);
 
     utils::map::draw_borders(&mut map, AREA).await;
@@ -153,37 +156,37 @@ async fn create_map(mut rng: impl RngCore, mut map: MapBuilder) -> Result<Map> {
     Ok(map.commit())
 }
 
-async fn draw_entrance(map: &mut MapBuilder) {
+async fn draw_entrance(map: &mut w::MapBuilder) {
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 2),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 2),
-        TileKind::FLOOR,
+        w::TileKind::FLOOR,
     )
     .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
-        TileKind::WALL_H,
+        w::TileKind::WALL_H,
     )
     .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1, AREA.y as i32 - 1),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
-        TileKind::WALL_H,
+        w::TileKind::WALL_H,
     )
     .await;
 
     map.line(
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 3),
         ivec2(AREA.x as i32 - 1 + ENTRANCE_LEN as i32, AREA.y as i32 - 1),
-        TileKind::WALL_V,
+        w::TileKind::WALL_V,
     )
     .await;
 }
 
-async fn watch(world: &Handle, timmy: BotId) -> Result<()> {
+async fn watch(world: &w::Handle, timmy: w::BotId) -> Result<()> {
     let mut events = world.events()?;
 
     loop {
@@ -212,7 +215,7 @@ mod tests {
             .join("tests")
             .join("map");
 
-        let (map, _) = MapBuilder::new();
+        let (map, _) = w::MapBuilder::new();
         let rng = ChaCha8Rng::from_seed(Default::default());
         let map = create_map(rng, map).await.unwrap();
 

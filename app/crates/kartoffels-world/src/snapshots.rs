@@ -192,6 +192,10 @@ impl AliveBotSnapshot {
             .flat_map(char::from_u32)
             .collect()
     }
+
+    pub fn events(&self) -> Vec<BotEvent> {
+        self.events.iter().map(|event| (**event).clone()).collect()
+    }
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize)]
@@ -226,6 +230,12 @@ impl DeadBotsSnapshot {
 pub struct DeadBotSnapshot {
     pub events: Arc<VecDeque<Arc<BotEvent>>>,
     pub serial: Arc<VecDeque<u32>>,
+}
+
+impl DeadBotSnapshot {
+    pub fn events(&self) -> Vec<BotEvent> {
+        self.events.iter().map(|event| (**event).clone()).collect()
+    }
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Serialize)]

@@ -1,6 +1,6 @@
 use crate::TestContext;
-use kartoffels_prefabs::DUMMY;
-use kartoffels_world::prelude::{ArenaTheme, Config, Policy, Theme};
+use kartoffels_prefabs::{ACC_BREAKPOINT, DUMMY};
+use kartoffels_world::prelude::{ArenaTheme, Clock, Config, Policy, Theme};
 use std::time::Duration;
 use termwiz::input::KeyCode;
 use tokio::time;
@@ -111,6 +111,46 @@ async fn smoke() {
     ctxt.press(KeyCode::Char('y')).await;
     ctxt.wait_while_modal("go-back").await;
     ctxt.see_frame("game/smoke/go-back-3.txt");
+}
+
+#[tokio::test]
+async fn breakpoint() {
+    let mut ctxt = TestContext::new([]).await;
+
+    ctxt.see("[s] sandbox");
+    ctxt.press(KeyCode::Char('s')).await;
+
+    ctxt.wait_for("[t] theme").await;
+    ctxt.press(KeyCode::Char('t')).await;
+
+    ctxt.wait_for("[a] arena").await;
+    ctxt.press(KeyCode::Char('a')).await;
+
+    ctxt.wait_for("[enter] create").await;
+    ctxt.press(KeyCode::Enter).await;
+
+    ctxt.wait_for("[u] upload-bot").await;
+    ctxt.upload_bot(ACC_BREAKPOINT).await;
+
+    ctxt.wait_for("[l] leave-bot").await;
+    ctxt.see_frame("game/breakpoint/1.txt");
+
+    ctxt.world()
+        .await
+        .overclock(Clock::Unlimited)
+        .await
+        .unwrap();
+
+    ctxt.wait_for("one").await;
+    ctxt.wait_for("breakpoint").await;
+    ctxt.see_frame("game/breakpoint/2.txt");
+
+    ctxt.see("[spc] resume");
+    ctxt.press(KeyCode::Char(' ')).await;
+
+    ctxt.wait_for("one two").await;
+    ctxt.wait_for("breakpoint").await;
+    ctxt.see_frame("game/breakpoint/3.txt");
 }
 
 #[tokio::test]

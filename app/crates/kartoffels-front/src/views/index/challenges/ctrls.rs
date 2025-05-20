@@ -15,9 +15,9 @@ const CONFIG: Config = Config {
 
     can_delete_bots: true,
     can_join_bots: false,
+    can_kill_bots: false,
     can_overclock: true,
     can_pause: true,
-    can_restart_bots: false,
     can_spawn_bots: false,
     can_upload_bots: true,
 };

@@ -1,7 +1,7 @@
-use super::{Event, Mode, State};
+use super::{Event, Mode, View};
 use crate::{theme, FromMarkdown, Ui, UiWidget};
 use kartoffels_store::Store;
-use kartoffels_world::prelude::Clock;
+use kartoffels_world::prelude as w;
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};
 
@@ -9,14 +9,17 @@ use ratatui::text::{Line, Span};
 pub struct Overlay;
 
 impl Overlay {
-    pub fn render(ui: &mut Ui<Event>, store: &Store, state: &State) {
-        if let Clock::Manual { .. } = state.snapshot.clock
-            && store.testing()
+    pub fn render(ui: &mut Ui<Event>, store: &Store, view: &View) {
+        // When testing, print the snapshot version - this makes assertions
+        // more reliable because the test can simply say "wait until we see
+        // v123" on the screen
+        if store.testing()
+            && let w::Clock::Manual { .. } = view.snapshot.clock
         {
-            Span::raw(format!("v{}", state.snapshot.version)).render(ui);
+            Span::raw(format!("v{}", view.snapshot.version)).render(ui);
         }
 
-        match &state.mode {
+        match &view.mode {
             Mode::Default => {
                 //
             }

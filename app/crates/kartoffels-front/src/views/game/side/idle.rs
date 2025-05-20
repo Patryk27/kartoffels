@@ -1,4 +1,4 @@
-use crate::views::game::{BotSource, Event, Mode, State, UploadBotRequest};
+use crate::views::game::{BotSource, Event, Mode, UploadBotRequest, View};
 use crate::{Button, Ui, UiWidget};
 use ratatui::layout::{Constraint, Layout};
 use termwiz::input::KeyCode;
@@ -7,8 +7,8 @@ use termwiz::input::KeyCode;
 pub struct IdleSidePanel;
 
 impl IdleSidePanel {
-    pub fn render(ui: &mut Ui<Event>, state: &State) {
-        let btns = Self::btns(state);
+    pub fn render(ui: &mut Ui<Event>, view: &View) {
+        let btns = Self::btns(view);
 
         let [_, area] = Layout::vertical([
             Constraint::Fill(1),
@@ -25,22 +25,22 @@ impl IdleSidePanel {
         });
     }
 
-    fn btns(state: &State) -> Vec<PanelButton> {
+    fn btns(view: &View) -> Vec<PanelButton> {
         let mut btns = Vec::new();
 
-        match state.mode {
+        match view.mode {
             Mode::Default => {
-                if !state.config.hero_mode {
+                if !view.config.hero_mode {
                     let btn = Button::new("join-bot", KeyCode::Char('j'))
                         .throwing(Event::OpenJoinBotModal);
 
                     btns.push(PanelButton {
                         btn,
-                        enabled: !state.snapshot.bots.is_empty(),
+                        enabled: !view.snapshot.bots.is_empty(),
                     });
                 }
 
-                if state.config.can_upload_bots {
+                if view.config.can_upload_bots {
                     let btn = Button::new("upload-bot", KeyCode::Char('u'))
                         .throwing(Event::OpenUploadBotModal {
                             request: UploadBotRequest::new(BotSource::Upload),
@@ -49,7 +49,7 @@ impl IdleSidePanel {
                     btns.push(PanelButton { btn, enabled: true });
                 }
 
-                if state.config.can_spawn_bots {
+                if view.config.can_spawn_bots {
                     let btn = Button::new("spawn-bot", KeyCode::Char('S'))
                         .throwing(Event::OpenSpawnBotModal);
 

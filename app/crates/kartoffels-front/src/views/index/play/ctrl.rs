@@ -61,7 +61,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 
 pub async fn run(sess: &Session, world: World, game: GameCtrl) -> Result<()> {
     game.set_help(Some(&HELP)).await?;
-    game.join(&world).await?;
+    game.visit(&world).await?;
 
     if sess.with(|sess| sess.role().is_admin()) {
         game.set_config(Config {
@@ -71,9 +71,9 @@ pub async fn run(sess: &Session, world: World, game: GameCtrl) -> Result<()> {
 
             can_delete_bots: true,
             can_join_bots: true,
+            can_kill_bots: true,
             can_overclock: false,
             can_pause: true,
-            can_restart_bots: true,
             can_spawn_bots: true,
             can_upload_bots: true,
         })

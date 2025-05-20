@@ -1,8 +1,6 @@
-use crate::views::game::{Event, JoinedBot, State};
+use crate::views::game::{Event, JoinedBot, View};
 use crate::{theme, BotIdExt, Button, Ui, UiWidget};
-use kartoffels_world::prelude::{
-    AliveBotSnapshot, BotSnapshot, DeadBotSnapshot, QueuedBotSnapshot,
-};
+use kartoffels_world::prelude as w;
 use ordinal::Ordinal;
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::Stylize;
@@ -13,9 +11,9 @@ use termwiz::input::KeyCode;
 pub struct JoinedSidePanel;
 
 impl JoinedSidePanel {
-    pub fn render(ui: &mut Ui<Event>, state: &State, jbot: &JoinedBot) {
-        let bot = state.snapshot.bots.get(jbot.id);
-        let btns = Self::btns(state, jbot);
+    pub fn render(ui: &mut Ui<Event>, view: &View, jbot: &JoinedBot) {
+        let bot = view.snapshot.bots.get(jbot.id);
+        let btns = Self::btns(view, jbot);
 
         let [bot_area, _, btns_area] = Layout::vertical([
             Constraint::Fill(1),
@@ -29,10 +27,8 @@ impl JoinedSidePanel {
         });
 
         ui.at(btns_area, |ui| {
-            for PanelButton { btn, enabled } in btns {
-                ui.enabled(enabled, |ui| {
-                    btn.render(ui);
-                });
+            for btn in btns {
+                btn.render(ui);
             }
         });
     }
@@ -40,27 +36,27 @@ impl JoinedSidePanel {
     fn render_bot(
         ui: &mut Ui<Event>,
         jbot: &JoinedBot,
-        bot: Option<BotSnapshot>,
+        bot: Option<w::BotSnapshot>,
     ) {
         ui.line("id".underlined());
         ui.line(jbot.id.to_string().fg(jbot.id.color()));
         ui.space(1);
 
         match bot {
-            Some(BotSnapshot::Alive(bot)) => {
+            Some(w::BotSnapshot::Alive(bot)) => {
                 Self::render_alive_bot(ui, bot);
             }
-            Some(BotSnapshot::Dead(bot)) => {
+            Some(w::BotSnapshot::Dead(bot)) => {
                 Self::render_dead_bot(ui, bot);
             }
-            Some(BotSnapshot::Queued(bot)) => {
+            Some(w::BotSnapshot::Queued(bot)) => {
                 Self::render_queued_bot(ui, bot);
             }
             _ => (),
         }
     }
 
-    fn render_alive_bot(ui: &mut Ui<Event>, bot: &AliveBotSnapshot) {
+    fn render_alive_bot(ui: &mut Ui<Event>, bot: &w::AliveBotSnapshot) {
         ui.line("status".underlined());
         ui.line("alive".fg(theme::GREEN));
         ui.line(format!("> age: {}", bot.age.as_time(None)).fg(theme::GRAY));
@@ -72,7 +68,7 @@ impl JoinedSidePanel {
         Self::render_bot_serial(ui, &bot.serial);
     }
 
-    fn render_dead_bot(ui: &mut Ui<Event>, bot: &DeadBotSnapshot) {
+    fn render_dead_bot(ui: &mut Ui<Event>, bot: &w::DeadBotSnapshot) {
         ui.line("status".underlined());
         ui.line("dead".fg(theme::RED));
         ui.space(1);
@@ -80,7 +76,7 @@ impl JoinedSidePanel {
         Self::render_bot_serial(ui, &bot.serial);
     }
 
-    fn render_queued_bot(ui: &mut Ui<Event>, bot: &QueuedBotSnapshot) {
+    fn render_queued_bot(ui: &mut Ui<Event>, bot: &w::QueuedBotSnapshot) {
         ui.line("status".underlined());
 
         ui.line(if bot.reincarnated {
@@ -106,14 +102,13 @@ impl JoinedSidePanel {
         }
     }
 
-    fn btns(state: &State, bot: &JoinedBot) -> Vec<PanelButton> {
+    fn btns(view: &View, bot: &JoinedBot) -> Vec<Button<'static, Event>> {
         let mut btns = Vec::new();
 
-        btns.push(PanelButton {
-            btn: Button::new("inspect-bot", KeyCode::Char('i'))
+        btns.push(
+            Button::new("inspect-bot", KeyCode::Char('i'))
                 .throwing(Event::InspectBot { id: bot.id }),
-            enabled: true,
-        });
+        );
 
         btns.push({
             let label = if bot.follow {
@@ -122,37 +117,28 @@ impl JoinedSidePanel {
                 "follow-bot"
             };
 
-            let btn = Button::new(label, KeyCode::Char('f'))
-                .throwing(Event::FollowBot);
-
-            PanelButton { btn, enabled: true }
+            Button::new(label, KeyCode::Char('f')).throwing(Event::FollowBot)
         });
 
-        if state.config.can_restart_bots {
-            let btn = Button::new("restart-bot", KeyCode::Char('R'))
-                .throwing(Event::RestartBot);
-
-            btns.push(PanelButton {
-                btn,
-                enabled: !state.paused,
-            });
+        if view.config.can_kill_bots {
+            btns.push(
+                Button::new("kill-bot", KeyCode::Char('K'))
+                    .throwing(Event::KillBot),
+            );
         }
 
-        if state.config.can_delete_bots {
-            let btn = Button::new("delete-bot", KeyCode::Char('D'))
-                .throwing(Event::DeleteBot);
-
-            btns.push(PanelButton {
-                btn,
-                enabled: !state.paused,
-            });
+        if view.config.can_delete_bots {
+            btns.push(
+                Button::new("delete-bot", KeyCode::Char('D'))
+                    .throwing(Event::DeleteBot),
+            );
         }
 
-        if !state.config.hero_mode {
-            let btn = Button::new("leave-bot", KeyCode::Char('l'))
-                .throwing(Event::LeaveBot);
-
-            btns.push(PanelButton { btn, enabled: true });
+        if !view.config.hero_mode {
+            btns.push(
+                Button::new("leave-bot", KeyCode::Char('l'))
+                    .throwing(Event::LeaveBot),
+            );
         }
 
         btns
@@ -201,9 +187,4 @@ fn reflow_serial(serial: &str, area: Rect) -> VecDeque<&str> {
     }
 
     lines
-}
-
-struct PanelButton {
-    btn: Button<'static, Event>,
-    enabled: bool,
 }

@@ -2,7 +2,7 @@ use crate::theme;
 use crate::views::game::GameCtrl;
 use anyhow::{Error, Result};
 use kartoffels_store::Store;
-use kartoffels_world::prelude::{Handle, Map, MapBuilder};
+use kartoffels_world::prelude as w;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use std::future::Future;
@@ -12,12 +12,12 @@ use tracing::debug;
 pub async fn build<BuildMapFn, BuildMapFut>(
     store: &Store,
     game: &GameCtrl,
-    world: &Handle,
+    world: &w::Handle,
     build: BuildMapFn,
 ) -> Result<()>
 where
-    BuildMapFn: FnOnce(ChaCha8Rng, MapBuilder) -> BuildMapFut,
-    BuildMapFut: Future<Output = Result<Map>>,
+    BuildMapFn: FnOnce(ChaCha8Rng, w::MapBuilder) -> BuildMapFut,
+    BuildMapFut: Future<Output = Result<w::Map>>,
 {
     let rng = {
         let seed = if store.testing() {
@@ -31,34 +31,35 @@ where
         ChaCha8Rng::from_seed(seed)
     };
 
-    let (map, mut rx) = MapBuilder::new();
+    let (map, mut rx) = w::MapBuilder::new();
     let map = (build)(rng, map);
 
     if store.testing() {
         drop(rx);
-
         world.set_map(map.await?).await?;
-    } else {
-        let progress = async {
-            while let Some(msg) = rx.recv().await {
-                if let Some(label) = msg.label {
-                    game.set_label(Some(format!("building:{label}"))).await?;
-                }
 
-                world.set_map(msg.map).await?;
+        return Ok(());
+    }
 
-                time::sleep(theme::FRAME_TIME).await;
+    let progress = async {
+        while let Some(msg) = rx.recv().await {
+            if let Some(label) = msg.label {
+                game.set_label(Some(format!("building:{label}"))).await?;
             }
 
-            Ok(())
-        };
+            world.set_map(msg.map).await?;
 
-        let (map, _) = try_join!(map, progress).map_err(|err: Error| err)?;
+            time::sleep(theme::FRAME_TIME).await;
+        }
 
-        world.set_map(map).await?;
+        Ok(())
+    };
 
-        time::sleep(2 * theme::FRAME_TIME).await;
-    }
+    let (map, _) = try_join!(map, progress).map_err(|err: Error| err)?;
+
+    world.set_map(map).await?;
+
+    time::sleep(2 * theme::FRAME_TIME).await;
 
     Ok(())
 }

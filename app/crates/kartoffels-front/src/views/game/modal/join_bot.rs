@@ -1,7 +1,7 @@
 use crate::views::game::Event;
 use crate::{LineEdit, Ui};
 use anyhow::anyhow;
-use kartoffels_world::prelude::{BotId, Snapshot};
+use kartoffels_world::prelude as w;
 use termwiz::input::{InputEvent, KeyCode};
 
 #[derive(Debug, Default)]
@@ -10,7 +10,7 @@ pub struct JoinBotModal {
 }
 
 impl JoinBotModal {
-    pub fn render(&mut self, ui: &mut Ui<Event>, world: &Snapshot) {
+    pub fn render(&mut self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         ui.imodal(26, 4, Some(" join-bot "), |ui| {
             ui.line("enter bot id:");
             ui.add(&mut self.id);
@@ -30,14 +30,14 @@ impl JoinBotModal {
             });
 
             if let Some(InputEvent::Paste(_)) = ui.event
-                && self.id.value().len() == BotId::LENGTH
+                && self.id.value().len() == w::BotId::LENGTH
             {
                 self.handle_confirm(ui, world);
             }
         });
     }
 
-    fn handle_confirm(&self, ui: &mut Ui<Event>, world: &Snapshot) {
+    fn handle_confirm(&self, ui: &mut Ui<Event>, world: &w::Snapshot) {
         let id = self.id.value().trim();
 
         if id.is_empty() {

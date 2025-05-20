@@ -18,6 +18,7 @@ bots! {
     static ROBERTO = "roberto";
 
     // Bots for acceptance tests
+    static ACC_BREAKPOINT = "acc-breakpoint";
     static ACC_FALL = "acc-fall";
     static ACC_IRQ = "acc-irq";
     static ACC_PANIC = "acc-panic";
