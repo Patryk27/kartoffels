@@ -33,23 +33,23 @@ use tokio::select;
 use tokio::sync::oneshot;
 use tracing::debug;
 
-pub async fn run<CtrlFn, CtrlFut>(
+pub async fn run<CtrlFn, CtrlFut, CtrlOut>(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
     ctrl: CtrlFn,
-) -> Result<()>
+) -> Result<Option<CtrlOut>>
 where
     CtrlFn: FnOnce(GameCtrl) -> CtrlFut,
-    CtrlFut: Future<Output = Result<()>>,
+    CtrlFut: Future<Output = Result<CtrlOut>>,
 {
     let (tx, rx) = GameCtrl::new();
     let view = run_once(store, sess, frame, rx);
     let ctrl = ctrl(tx);
 
     select! {
-        result = view => result,
-        result = ctrl => result,
+        result = view => result.map(|_| None),
+        result = ctrl => result.map(Some),
     }
 }
 

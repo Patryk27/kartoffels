@@ -9,7 +9,7 @@
         │ colors and open main.rs from the cloned repository           │
         │                                                              │
         │ for, you see, writing a bot is similar to writing a regular  │
-        │ rust program — but it's also different, mucho different      │
+        │ rust program - but it's also different, mucho different      │
         │                                                              │
         │ like, you-dont-have-access-to-standard-library different     │
         │                                                              │

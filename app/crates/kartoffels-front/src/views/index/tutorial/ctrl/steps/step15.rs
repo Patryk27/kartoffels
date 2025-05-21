@@ -25,7 +25,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "stabs the bot that's directly in front of you, killing it and \
-             giving you one point — note that you have to be _facing_ the \
+             giving you one point - note that you have to be _facing_ the \
              other machine in order to stab it",
         ),
         MsgLine::new(""),
@@ -40,7 +40,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "for simplicity, the enemies will not try to kill you and they \
-             will be located directly north / east / west / south — i.e. you \
+             will be located directly north / east / west / south - i.e. you \
              don't have to worry about diagonals",
         ),
     ]
@@ -49,7 +49,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
     body: vec![MsgLine::new(
-        "hmm, your bot seems to have died — delete it and upload something \
+        "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
     buttons: vec![MsgButton::confirm("try-again", ())],
@@ -74,7 +74,6 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
             ControlFlow::Continue(_) => {
                 ctxt.game.msg(&MSG_RETRY).await?;
             }
-
             ControlFlow::Break(_) => {
                 break;
             }

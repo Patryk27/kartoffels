@@ -17,7 +17,7 @@ impl JoinBotModal {
             ui.space(1);
 
             ui.row(|ui| {
-                ui.btn("cancel", KeyCode::Escape, |btn| {
+                ui.btn("close", KeyCode::Escape, |btn| {
                     btn.throwing(Event::CloseModal)
                 });
 

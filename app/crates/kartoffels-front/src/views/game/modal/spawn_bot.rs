@@ -98,7 +98,7 @@ impl SpawnBotModal {
         ui.space(1);
 
         ui.row(|ui| {
-            ui.btn("go-back", KeyCode::Escape, |btn| {
+            ui.btn("exit", KeyCode::Escape, |btn| {
                 btn.throwing(Event::GoBack)
             });
 

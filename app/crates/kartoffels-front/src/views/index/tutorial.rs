@@ -11,14 +11,10 @@ pub async fn run(
     sess: &Session,
     frame: &mut Frame,
 ) -> Result<()> {
-    let mut completed = false;
+    let completed =
+        game::run(store, sess, frame, |ctrl| ctrl::run(store, ctrl)).await?;
 
-    game::run(store, sess, frame, |ctrl| {
-        ctrl::run(store, ctrl, &mut completed)
-    })
-    .await?;
-
-    if completed {
+    if completed.unwrap_or(false) {
         completed::run(frame).await?;
     }
 

@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     title: Some(" tutorial (4/16) "),
 
     body: vec![
@@ -12,27 +12,24 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "for, you see, writing a bot is similar to writing a regular rust \
-             program — but it's also different, _mucho_ different",
-        ),
-        MsgLine::new(""),
-        MsgLine::new(
-            "like, you-dont-have-access-to-standard-library different",
+            "for, you see, writing a bot is similar to writing a normal \
+             program - but it's also different, _mucho_ different",
         ),
         MsgLine::new(""),
         MsgLine::new(
             "there's no `std::fs`, no `std::net` - everything your bot has \
-             access to is a bit of memory, motor, radar, and serial port",
+             is a bit of memory and a couple of peripherals",
         ),
         MsgLine::new(""),
         MsgLine::new("you know, like the people in ancient rome did"),
     ],
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![
+        MsgButton::abort("prev", false),
+        MsgButton::confirm("next", true),
+    ],
 });
 
-pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.msg(&MSG).await?;
-
-    Ok(())
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    ctxt.game.msg(&MSG).await
 }

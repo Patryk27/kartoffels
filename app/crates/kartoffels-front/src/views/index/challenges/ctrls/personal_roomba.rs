@@ -22,7 +22,7 @@ pub static CHALLENGE: Challenge = Challenge {
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        MsgLine::new("our flags — our precious, precious flags"),
+        MsgLine::new("our flags - our precious, precious flags"),
         MsgLine::new("misplaced"),
         MsgLine::new("misaligned").centered(),
         MsgLine::new("not where they").right_aligned(),
@@ -31,9 +31,9 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("*tidy up*").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "you'll be put inside a maze — a dirty maze, lots of alleys and \
+            "you'll be put inside a maze - a dirty maze, lots of alleys and \
              cycles in it; within the corners of that maze are four flags \
-             — find them and pick 'em using the `arm_pick()` function",
+             - find them and pick 'em using the `arm_pick()` function",
         ),
         MsgLine::new(""),
         MsgLine::new("difficulty: much"),
@@ -47,7 +47,7 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
+        MsgButton::abort("exit", false),
         MsgButton::confirm("start", true),
     ],
 });
@@ -65,7 +65,7 @@ static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("congrats!"),
         MsgLine::new(""),
         MsgLine::new(
-            "flags back at their place, peace in our brainmuscle — we are \
+            "flags back at their place, peace in our brainmuscle - we are \
              grateful",
         ),
     ],

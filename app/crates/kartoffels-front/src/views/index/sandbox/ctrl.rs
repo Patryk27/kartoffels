@@ -15,12 +15,12 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         MsgLine::new("welcome to the *sandbox*!"),
         MsgLine::new(""),
         MsgLine::new(
-            "in here you're playing on your own, private world — it's a safe \
+            "in here you're playing on your own, private world - it's a safe \
              place for you to play with, develop and debug bots",
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "i assume you already went through the tutorial — if not, feel \
+            "i assume you already went through the tutorial - if not, feel \
              free to go back to the main menu and press [`t`]",
         ),
         MsgLine::new(""),

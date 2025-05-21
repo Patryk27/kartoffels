@@ -30,7 +30,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("*show mercy*").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "traverse the maze, find timmy and kill it — you'll be starting in \
+            "traverse the maze, find timmy and kill it - you'll be starting in \
              the bottom-right corner",
         ),
         MsgLine::new(""),
@@ -45,7 +45,7 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
+        MsgButton::abort("exit", false),
         MsgButton::confirm("start", true),
     ],
 });

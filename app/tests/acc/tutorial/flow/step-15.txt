@@ -9,7 +9,7 @@
         │ # arm_stab()                                                 │
         │                                                              │
         │ stabs the bot that's directly in front of you, killing it    │
-        │ and giving you one point — note that you have to be facing   │
+        │ and giving you one point - note that you have to be facing   │
         │ the other machine in order to stab it                        │
         │                                                              │
         │ easy enough, isn't it?                                       │
@@ -20,7 +20,7 @@
         │ bot continue moving in its current direction                 │
         │                                                              │
         │ for simplicity, the enemies will not try to kill you and     │
-        │ they will be located directly north / east / west / south —  │
+        │ they will be located directly north / east / west / south -  │
         │ i.e. you don't have to worry about diagonals                 │
         │                                                              │
         │                                                 [enter] next │

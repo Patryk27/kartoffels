@@ -32,12 +32,12 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "go inside the room, take the diamond (using `arm_pick()`) and \
-             then drive away — you'll be starting in the bottom-left corner, \
+             then drive away - you'll be starting in the bottom-left corner, \
              the exit is on the right side",
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "do not kill any guards, we don't want no spilled oil — our intel \
+            "do not kill any guards, we don't want no spilled oil - our intel \
              says the guards scan only see the 3x3 area around them, use it to \
              your advantage",
         ),
@@ -53,7 +53,7 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
+        MsgButton::abort("exit", false),
         MsgButton::confirm("start", true),
     ],
 });
@@ -67,7 +67,7 @@ static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" diamond-heist "),
     body: vec![MsgLine::new(
-        "ayy, you killed a guard, alarming the entire facility — i told you: \
+        "ayy, you killed a guard, alarming the entire facility - i told you: \
          *spill no oil!*",
     )],
     buttons: vec![MsgButton::confirm("ok", ())],

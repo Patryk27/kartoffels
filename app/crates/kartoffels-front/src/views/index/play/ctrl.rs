@@ -20,7 +20,7 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "i assume you already went through the tutorial — if not, feel \
+            "i assume you already went through the tutorial - if not, feel \
              free to go back to the main menu and press [`t`]",
         ),
         MsgLine::new(""),

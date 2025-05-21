@@ -81,7 +81,7 @@ async fn run_once(
                             ui.space(1);
                         }
 
-                        ui.btn("go-back", KeyCode::Escape, |btn| {
+                        ui.btn("exit", KeyCode::Escape, |btn| {
                             btn.throwing(Event::GoBack)
                         });
                     });

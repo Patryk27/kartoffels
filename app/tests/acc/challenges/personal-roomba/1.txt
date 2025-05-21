@@ -3,7 +3,7 @@
 
 
         ┌────────────────────── personal-roomba ───────────────────────┐
-        │ our flags — our precious, precious flags                     │
+        │ our flags - our precious, precious flags                     │
         │ misplaced                                                    │
         │                          misaligned                          │
         │                                               not where they │
@@ -11,9 +11,9 @@
         │                                                              │
         │                            tidy up                           │
         │                                                              │
-        │ you'll be put inside a maze — a dirty maze, lots of alleys   │
+        │ you'll be put inside a maze - a dirty maze, lots of alleys   │
         │ and cycles in it; within the corners of that maze are four   │
-        │ flags — find them and pick 'em using the arm_pick() function │
+        │ flags - find them and pick 'em using the arm_pick() function │
         │                                                              │
         │ difficulty: much                                             │
         │                                                         xoxo │

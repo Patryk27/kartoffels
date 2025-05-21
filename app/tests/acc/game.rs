@@ -99,18 +99,18 @@ async fn smoke() {
     // ---
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_window("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-1.txt");
+    ctxt.wait_for_window("exit").await;
+    ctxt.see_frame("game/smoke/exit-1.txt");
 
     ctxt.press(KeyCode::Char('n')).await;
-    ctxt.wait_while_modal("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-2.txt");
+    ctxt.wait_while_modal("exit").await;
+    ctxt.see_frame("game/smoke/exit-2.txt");
 
     ctxt.press(KeyCode::Escape).await;
-    ctxt.wait_for_window("go-back").await;
+    ctxt.wait_for_window("exit").await;
     ctxt.press(KeyCode::Char('y')).await;
-    ctxt.wait_while_modal("go-back").await;
-    ctxt.see_frame("game/smoke/go-back-3.txt");
+    ctxt.wait_while_modal("exit").await;
+    ctxt.see_frame("game/smoke/exit-3.txt");
 }
 
 #[tokio::test]

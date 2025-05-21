@@ -9,7 +9,7 @@
         │                                                              │
         │                          show mercy                          │
         │                                                              │
-        │ traverse the maze, find timmy and kill it — you'll be        │
+        │ traverse the maze, find timmy and kill it - you'll be        │
         │ starting in the bottom-right corner                          │
         │                                                              │
         │ difficulty: easy                                             │

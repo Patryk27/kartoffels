@@ -4,7 +4,7 @@
         │ in here you're playing against bots programmed by other      │
         │ people, deathmatch-style                                     │
         │                                                              │
-        │ i assume you already went through the tutorial — if not,     │
+        │ i assume you already went through the tutorial - if not,     │
         │ feel free to go back to the main menu and press [t]          │
         │                                                              │
         │ # rules                                                      │

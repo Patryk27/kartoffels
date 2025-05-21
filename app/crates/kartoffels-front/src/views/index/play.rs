@@ -67,7 +67,7 @@ async fn run_once(
         .collect();
 
     let mut go_back_btn =
-        Button::new("go-back", KeyCode::Escape).throwing(Event::GoBack);
+        Button::new("exit", KeyCode::Escape).throwing(Event::GoBack);
 
     let width = world_btns
         .iter()

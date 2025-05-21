@@ -59,7 +59,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (13/16) "),
     body: vec![MsgLine::new(
-        "hmm, your bot seems to have died — delete it and upload something \
+        "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
     buttons: vec![MsgButton::confirm("try-again", ())],

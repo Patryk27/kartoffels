@@ -8,7 +8,7 @@ v11000007                                              id
        -┌────────────────────── personal-roomba ───────────────────────┐
        .│ congrats!                                                    │
        -│                                                              │
-       .│ flags back at their place, peace in our brainmuscle — we are │
+       .│ flags back at their place, peace in our brainmuscle - we are │
        -│ grateful                                                     │
        .│                                                              │
        -│                                                   [enter] ok │

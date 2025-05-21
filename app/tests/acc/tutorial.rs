@@ -12,7 +12,7 @@ async fn ctxt() -> TestContext {
     ctxt.press(KeyCode::Char('t')).await;
 
     ctxt.wait_for("hey there").await;
-    ctxt.see("[esc] go-back");
+    ctxt.see("[esc] exit");
     ctxt.see("[enter] start");
     ctxt
 }
@@ -43,7 +43,7 @@ async fn leave_and_start() {
 
     ctxt.press(KeyCode::Char('t')).await;
     ctxt.wait_for("hey there").await;
-    ctxt.see("[esc] go-back");
+    ctxt.see("[esc] exit");
     ctxt.see("[enter] start");
 }
 
