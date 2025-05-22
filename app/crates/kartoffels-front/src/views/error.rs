@@ -13,7 +13,7 @@ pub async fn run(frame: &mut Frame, bg: &BgMap, err: Error) -> Result<()> {
 
     loop {
         let go_back = frame
-            .tick(|ui| {
+            .render(|ui| {
                 let width = 60;
                 let height = text.line_count(width) as u16 + 2;
 

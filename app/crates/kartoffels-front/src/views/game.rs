@@ -66,7 +66,7 @@ async fn run_once(
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 view.tick(store);
                 view.render(ui, sess, store);
 

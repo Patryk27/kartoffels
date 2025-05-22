@@ -2,9 +2,12 @@ mod ctrls;
 
 use self::ctrls::*;
 use crate::views::game;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
+use crate::views::index::WINDOW_WIDTH;
+use crate::{theme, BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
+use ratatui::style::Stylize;
+use ratatui::text::Text;
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;
@@ -43,48 +46,15 @@ async fn run_once(
 ) -> Result<Event> {
     debug!("run()");
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = FadeCtrl::new(store, fade_in);
+    let mut view = View;
 
     loop {
         let event = frame
-            .tick(|ui| {
-                let width = (ui.area.width - 2).min(60);
-
-                // TODO doing manual layouting sucks sometimes
-                let height = {
-                    let mut height = 0;
-
-                    for challenge in CHALLENGES {
-                        height += 1;
-
-                        height += Paragraph::new(challenge.desc)
-                            .wrap(Wrap::default())
-                            .line_count(width - 4);
-
-                        height += 1;
-                    }
-
-                    (height + 1) as u16
-                };
-
+            .render(|ui| {
                 fade.render(ui, |ui| {
                     bg.render(ui);
-
-                    ui.imodal(width, height, Some(" challenges "), |ui| {
-                        for chl in CHALLENGES {
-                            ui.btn(chl.name, chl.key, |btn| {
-                                btn.help(chl.desc).throwing(Event::Play(chl))
-                            });
-
-                            ui.space(1);
-                        }
-
-                        ui.btn("exit", KeyCode::Escape, |btn| {
-                            btn.throwing(Event::GoBack)
-                        });
-                    });
+                    view.render(ui);
                 });
             })
             .await?;
@@ -92,6 +62,57 @@ async fn run_once(
         if let Some(event) = event {
             return Ok(event);
         }
+    }
+}
+
+#[derive(Debug)]
+struct View;
+
+impl View {
+    fn render(&mut self, ui: &mut Ui<Event>) {
+        let width = WINDOW_WIDTH;
+        let height = self.height();
+
+        ui.imodal(width, height, Some(" challenges "), |ui| {
+            ui.line(
+                Text::raw(
+                    "challenges are single-player exercises where you have to \
+                     implement a firmware that solves a specific problem",
+                )
+                .fg(theme::GRAY),
+            );
+
+            ui.space(1);
+
+            for chl in CHALLENGES {
+                ui.btn(chl.name, chl.key, |btn| {
+                    btn.help(chl.desc).throwing(Event::Play(chl))
+                });
+
+                ui.space(1);
+            }
+
+            ui.btn("exit", KeyCode::Escape, |btn| btn.throwing(Event::GoBack));
+        });
+    }
+
+    fn height(&self) -> u16 {
+        let width = WINDOW_WIDTH;
+        let mut height = 5;
+
+        for (idx, chl) in CHALLENGES.iter().enumerate() {
+            if idx > 0 {
+                height += 1;
+            }
+
+            height += Paragraph::new(chl.desc)
+                .wrap(Wrap::default())
+                .line_count(width - 4);
+
+            height += 1;
+        }
+
+        height as u16
     }
 }
 

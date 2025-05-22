@@ -132,7 +132,7 @@ impl Frame {
         Ok(())
     }
 
-    pub(crate) async fn tick<F, T>(&mut self, render: F) -> Result<Option<T>>
+    pub(crate) async fn render<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
         F: FnOnce(&mut Ui<T>),
     {

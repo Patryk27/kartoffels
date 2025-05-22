@@ -5,13 +5,17 @@ mod sandbox_theme;
 use self::sandbox_size::*;
 use self::sandbox_theme::*;
 use crate::views::game;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{theme, BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
 use kartoffels_world::prelude as w;
+use ratatui::style::Stylize;
+use ratatui::text::Text;
 use termwiz::input::KeyCode;
 use tracing::debug;
+
+use super::WINDOW_WIDTH;
 
 pub async fn run(
     store: &Store,
@@ -22,7 +26,7 @@ pub async fn run(
     let mut fade_in = false;
 
     // We keep those outside `run_once()`, because we want to preserve settings
-    // when user goes back to the form, for convenience
+    // when user goes back to the view, for convenience
     let mut size = SandboxSize::Medium;
     let mut theme = SandboxTheme::Cave;
 
@@ -50,22 +54,20 @@ async fn run_once(
 ) -> Result<Option<w::Theme>> {
     debug!("run()");
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = FadeCtrl::new(store, fade_in);
 
-    let mut form = Form {
-        focus: None,
+    let mut view = View {
         size,
         theme,
+        focus: None,
     };
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 fade.render(ui, |ui| {
                     bg.render(ui);
-                    form.render(ui);
+                    view.render(ui);
                 });
             })
             .await?;
@@ -73,29 +75,29 @@ async fn run_once(
         if let Some(event) = event {
             match event {
                 Event::GoBack => {
-                    if form.focus.is_some() {
-                        form.focus = None;
+                    if view.focus.is_some() {
+                        view.focus = None;
                     } else {
                         return Ok(None);
                     }
                 }
 
                 Event::Confirm => {
-                    return Ok(Some(form.confirm()));
+                    return Ok(Some(view.confirm()));
                 }
 
                 Event::FocusOn(val) => {
-                    form.focus = val;
+                    view.focus = val;
                 }
 
                 Event::SetSize(val) => {
-                    *form.size = val;
-                    form.focus = None;
+                    *view.size = val;
+                    view.focus = None;
                 }
 
                 Event::SetTheme(val) => {
-                    *form.theme = val;
-                    form.focus = None;
+                    *view.theme = val;
+                    view.focus = None;
                 }
             }
         }
@@ -103,15 +105,15 @@ async fn run_once(
 }
 
 #[derive(Debug)]
-struct Form<'a> {
-    focus: Option<Focus>,
+struct View<'a> {
     size: &'a mut SandboxSize,
     theme: &'a mut SandboxTheme,
+    focus: Option<Focus>,
 }
 
-impl Form<'_> {
+impl View<'_> {
     fn render(&mut self, ui: &mut Ui<Event>) {
-        let width = 40;
+        let width = WINDOW_WIDTH;
         let height = self.height();
         let title = self.title();
 
@@ -123,31 +125,42 @@ impl Form<'_> {
 
     fn title(&self) -> &'static str {
         match &self.focus {
+            None => " sandbox ",
             Some(Focus::SandboxSize) => " sandbox › choose-size ",
             Some(Focus::SandboxTheme) => " sandbox › choose-theme ",
-            None => " sandbox ",
         }
     }
 
     fn height(&self) -> u16 {
         match &self.focus {
+            None => 7,
             Some(Focus::SandboxSize) => SandboxSize::height() + 2,
             Some(Focus::SandboxTheme) => SandboxTheme::height() + 2,
-            None => 4,
         }
     }
 
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
+            None => {
+                ui.line(
+                    Text::raw(
+                        "sandbox allows you to create your own, private world \
+                         where you can experiment with bots",
+                    )
+                    .fg(theme::GRAY),
+                );
+
+                ui.space(1);
+
+                SandboxSize::render_btn(ui, self.size);
+                SandboxTheme::render_btn(ui, self.theme);
+            }
+
             Some(Focus::SandboxSize) => {
-                SandboxSize::render_choice(ui);
+                SandboxSize::render_form(ui);
             }
             Some(Focus::SandboxTheme) => {
-                SandboxTheme::render_choice(ui);
-            }
-            None => {
-                SandboxSize::render_focus(ui, self.size);
-                SandboxTheme::render_focus(ui, self.theme);
+                SandboxTheme::render_form(ui);
             }
         }
     }

@@ -11,6 +11,8 @@ use kartoffels_store::{Session, Store, WorldVis};
 use ratatui::layout::{Constraint, Layout};
 use tracing::debug;
 
+const WINDOW_WIDTH: u16 = 60;
+
 pub async fn run(
     store: &Store,
     sess: &Session,
@@ -59,13 +61,11 @@ async fn run_once(
     let has_public_worlds =
         !store.find_worlds(WorldVis::Public).await?.is_empty();
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = FadeCtrl::new(store, fade_in);
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 fade.render(ui, |ui| {
                     let [_, area, _] = Layout::horizontal([
                         Constraint::Fill(1),

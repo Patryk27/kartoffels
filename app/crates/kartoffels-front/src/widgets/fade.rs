@@ -1,4 +1,5 @@
 use crate::{Ui, UiWidget};
+use kartoffels_store::Store;
 use ratatui::style::Color;
 use std::task::Poll;
 use std::time::{Duration, Instant};
@@ -87,19 +88,13 @@ impl<T> FadeCtrl<T>
 where
     T: FadeCtrlEvent,
 {
-    pub fn animate(mut self, animate: bool) -> Self {
-        self.animate = animate;
-        self
-    }
-
-    pub fn fade_in(mut self, fade_in: bool) -> Self {
-        if fade_in {
-            self.stage = Some(FadeCtrlStage::FadeIn {
+    pub fn new(store: &Store, fade_in: bool) -> Self {
+        Self {
+            stage: fade_in.then(|| FadeCtrlStage::FadeIn {
                 fade: Fade::new(FadeDir::In),
-            });
+            }),
+            animate: !store.testing(),
         }
-
-        self
     }
 
     pub fn render(&mut self, ui: &mut Ui<'_, T>, f: impl FnOnce(&mut Ui<T>)) {
@@ -138,15 +133,6 @@ where
             } else {
                 ui.throw(event);
             }
-        }
-    }
-}
-
-impl<T> Default for FadeCtrl<T> {
-    fn default() -> Self {
-        Self {
-            stage: Default::default(),
-            animate: Default::default(),
         }
     }
 }

@@ -2,6 +2,7 @@ use crate::{
     theme, Clear, FadeCtrl, FadeCtrlEvent, Frame, Msg, MsgButton, MsgLine,
 };
 use anyhow::Result;
+use kartoffels_store::Store;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 
@@ -28,12 +29,12 @@ static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
     buttons: vec![MsgButton::enter("complete", Event::Complete)],
 });
 
-pub async fn run(frame: &mut Frame) -> Result<()> {
-    let mut fade = FadeCtrl::default().fade_in(true);
+pub async fn run(store: &Store, frame: &mut Frame) -> Result<()> {
+    let mut fade = FadeCtrl::new(store, true);
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 fade.render(ui, |ui| {
                     ui.add(Clear);
                     ui.add(&*MSG);

@@ -1,11 +1,11 @@
 mod ctrl;
 
 use crate::views::game;
+use crate::views::index::WINDOW_WIDTH;
 use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
 use anyhow::Result;
 use itertools::Itertools;
 use kartoffels_store::{Session, Store, World, WorldVis};
-use std::iter;
 use termwiz::input::KeyCode;
 use tracing::debug;
 
@@ -69,22 +69,14 @@ async fn run_once(
     let mut go_back_btn =
         Button::new("exit", KeyCode::Escape).throwing(Event::GoBack);
 
-    let width = world_btns
-        .iter()
-        .chain(iter::once(&go_back_btn))
-        .map(|btn| btn.width())
-        .max()
-        .unwrap();
-
+    let width = WINDOW_WIDTH;
     let height = world_btns.len() as u16 + 2;
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = FadeCtrl::new(store, fade_in);
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 fade.render(ui, |ui| {
                     bg.render(ui);
 

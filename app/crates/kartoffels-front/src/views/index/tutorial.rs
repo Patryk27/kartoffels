@@ -15,7 +15,7 @@ pub async fn run(
         game::run(store, sess, frame, |ctrl| ctrl::run(store, ctrl)).await?;
 
     if completed.unwrap_or(false) {
-        completed::run(frame).await?;
+        completed::run(store, frame).await?;
     }
 
     Ok(())

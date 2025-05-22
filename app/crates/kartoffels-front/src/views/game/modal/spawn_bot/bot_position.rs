@@ -11,13 +11,13 @@ pub enum BotPosition {
 }
 
 impl BotPosition {
-    pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
+    pub(super) fn render_btn(ui: &mut Ui<Event>, val: &Self) {
         ui.btn(format!("position: {val}"), KeyCode::Char('p'), |btn| {
             btn.throwing(Event::FocusOn(Some(Focus::BotPosition)))
         });
     }
 
-    pub(super) fn render_choice(ui: &mut Ui<Event>) {
+    pub(super) fn render_form(ui: &mut Ui<Event>) {
         for (idx, val) in Self::all().enumerate() {
             if idx > 0 {
                 ui.space(1);

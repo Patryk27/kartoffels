@@ -46,19 +46,15 @@ impl SpawnBotModal {
 
     fn title(&self) -> &'static str {
         match &self.focus {
+            None => " spawn-bot ",
             Some(Focus::BotSource) => " spawn-bot › choose-source ",
             Some(Focus::BotPosition) => " spawn-bot › choose-position ",
             Some(Focus::BotCount) => " spawn-bot › choose-count ",
-            None => " spawn-bot ",
         }
     }
 
     fn height(&self) -> u16 {
         let body = match &self.focus {
-            Some(Focus::BotSource) => BotSource::height(),
-            Some(Focus::BotPosition) => BotPosition::height(),
-            Some(Focus::BotCount) => BotCount::height(),
-
             None => {
                 if let BotPosition::Random = &self.bot_position {
                     3
@@ -66,6 +62,10 @@ impl SpawnBotModal {
                     2
                 }
             }
+
+            Some(Focus::BotSource) => BotSource::height(),
+            Some(Focus::BotPosition) => BotPosition::height(),
+            Some(Focus::BotCount) => BotCount::height(),
         };
 
         body + 2
@@ -73,23 +73,23 @@ impl SpawnBotModal {
 
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
-            Some(Focus::BotSource) => {
-                BotSource::render_choice(ui);
-            }
-            Some(Focus::BotPosition) => {
-                BotPosition::render_choice(ui);
-            }
-            Some(Focus::BotCount) => {
-                BotCount::render_choice(ui);
-            }
-
             None => {
-                BotSource::render_focus(ui, &self.bot_source);
-                BotPosition::render_focus(ui, &self.bot_position);
+                BotSource::render_btn(ui, &self.bot_source);
+                BotPosition::render_btn(ui, &self.bot_position);
 
                 if let BotPosition::Random = &self.bot_position {
-                    BotCount::render_focus(ui, &self.bot_count);
+                    BotCount::render_btn(ui, &self.bot_count);
                 }
+            }
+
+            Some(Focus::BotSource) => {
+                BotSource::render_form(ui);
+            }
+            Some(Focus::BotPosition) => {
+                BotPosition::render_form(ui);
+            }
+            Some(Focus::BotCount) => {
+                BotCount::render_form(ui);
             }
         }
     }
