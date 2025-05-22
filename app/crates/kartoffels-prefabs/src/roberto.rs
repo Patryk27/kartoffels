@@ -31,7 +31,7 @@ fn main() {
         if radar_read(0, -1) == '.' && got_enemy_in(-2..=2, -2..=1) {
             display.log('^');
             motor_wait();
-            motor_step_fw();
+            motor_step();
             continue;
         }
 
@@ -74,7 +74,7 @@ fn main() {
 
         if clock_ticks() < sample_dir_at {
             motor_wait();
-            motor_step_fw();
+            motor_step();
         } else {
             display.log('?');
 
@@ -116,7 +116,7 @@ fn main() {
 
             if can_step {
                 motor_wait();
-                motor_step_fw();
+                motor_step();
 
                 sample_dir_at = clock_ticks() + (rng.u32() % 20) * 8000;
             }

@@ -7,13 +7,13 @@ use kartoffel::*;
 fn main() {
     loop {
         motor_wait();
-        motor_step_fw();
+        motor_step();
 
         motor_wait();
-        motor_step_fw();
+        motor_step();
 
         motor_wait();
-        motor_step_fw();
+        motor_step();
 
         motor_wait();
         motor_turn_right();

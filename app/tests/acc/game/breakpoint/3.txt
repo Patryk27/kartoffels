@@ -27,4 +27,4 @@
    ...............................                     [K] kill-bot
    ...............................                     [D] delete-bot
     .............................                      [l] leave-bot
-[esc] go-back  [spc] resume  [h] help  [b] bots                       breakpoint
+[esc] exit  [spc] resume  [h] help  [b] bots                          breakpoint

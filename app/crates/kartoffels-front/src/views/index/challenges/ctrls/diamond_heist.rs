@@ -53,8 +53,8 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("exit", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 
@@ -70,13 +70,13 @@ static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         "ayy, you killed a guard, alarming the entire facility - i told you: \
          *spill no oil!*",
     )],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" diamond-heist "),
     body: vec![MsgLine::new("ayy, you've died!")],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
@@ -86,7 +86,7 @@ static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new("now give me *my* diamond back and go away"),
     ],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {

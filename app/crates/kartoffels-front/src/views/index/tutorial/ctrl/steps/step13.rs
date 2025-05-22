@@ -9,17 +9,12 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
              good-old *line follower*, eh?",
         ),
         MsgLine::new(""),
-        MsgLine::new(
-            "ekhm, i'm sorry for my sudden canadian accent, don't know what \
-             happened",
-        ),
-        MsgLine::new(""),
     ]
     .into_iter()
     .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -45,7 +40,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("overall, all of those functions should be used:"),
         MsgLine::new(""),
         MsgLine::new("\t- `motor_wait()`"),
-        MsgLine::new("\t- `motor_step_fw()`"),
+        MsgLine::new("\t- `motor_step()`"),
         MsgLine::new("\t- `motor_turn_left()`"),
         MsgLine::new("\t- `motor_turn_right()`"),
         MsgLine::new("\t- `radar_wait()`"),
@@ -62,7 +57,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
-    buttons: vec![MsgButton::confirm("try-again", ())],
+    buttons: vec![MsgButton::enter("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

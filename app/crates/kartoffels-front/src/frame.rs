@@ -1,4 +1,4 @@
-use crate::{theme, Abort, Clear, Ui, UiLayout};
+use crate::{theme, Abort, Clear, Ui, UiDir, UiLayout};
 use anyhow::{Context, Error, Result};
 use bytes::Bytes;
 use glam::{uvec2, UVec2};
@@ -175,6 +175,7 @@ impl Frame {
                     buf: frame.buffer_mut(),
                     mouse: mouse.as_ref(),
                     event: event.as_ref(),
+                    dir: UiDir::Ltr,
                     layout: UiLayout::Col,
                     enabled: true,
                     focused: true,

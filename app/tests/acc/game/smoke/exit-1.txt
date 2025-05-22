@@ -6,11 +6,11 @@
 
 
 
-                           ┌──────── go-back ────────┐
-                           │ do you want to go back? │
-                           │                         │
-                         ..│ [n] no          [y] yes │
-                        ...└─────────────────────────┘
+                    ┌──────────────── exit ─────────────────┐
+                    │ do you want to exit to the main menu? │
+                    │                                       │
+                    │ [n] no                        [y] yes │
+                    └───────────────────────────────────────┘
                         .......
                         @→.....
                         .......
@@ -27,4 +27,4 @@
 
                                                        [j] join-bot
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help  [b] bots
+[esc] exit  [spc] pause  [h] help  [b] bots

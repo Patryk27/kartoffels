@@ -9,7 +9,7 @@ fn main() {
 
     for _ in 0..9 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     // ---
@@ -37,7 +37,7 @@ fn main() {
 
     for _ in 0..2 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     motor_wait();
@@ -45,7 +45,7 @@ fn main() {
 
     for _ in 0..3 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     motor_wait();
@@ -53,7 +53,7 @@ fn main() {
 
     for _ in 0..3 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     // ---
@@ -70,7 +70,7 @@ fn main() {
 
     for _ in 0..2 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     loop {
@@ -83,14 +83,14 @@ fn main() {
     }
 
     motor_wait();
-    motor_step_fw();
+    motor_step();
 
     motor_wait();
     motor_turn_right();
 
     for _ in 0..3 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     loop {
@@ -108,6 +108,6 @@ fn main() {
 
     loop {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 }

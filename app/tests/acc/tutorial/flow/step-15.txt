@@ -3,14 +3,13 @@
         ┌────────────────────── tutorial (15/16) ──────────────────────┐
         │ # arm_wait()                                                 │
         │                                                              │
-        │ as you can guess, this boi waits until the arm is ready      │
-        │ (until it's armed you could say, heh)                        │
+        │ this boi waits until the arm is ready (armed, you could say) │
         │                                                              │
         │ # arm_stab()                                                 │
         │                                                              │
         │ stabs the bot that's directly in front of you, killing it    │
         │ and giving you one point - note that you have to be facing   │
-        │ the other machine in order to stab it                        │
+        │ the other bot in order to stab it                            │
         │                                                              │
         │ easy enough, isn't it?                                       │
         │                                                              │
@@ -26,5 +25,6 @@
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
 
+
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help                                     spd:∞
+[esc] exit  [spc] pause  [h] help                                        spd:∞

@@ -3,7 +3,7 @@ use super::prelude::*;
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (15/16) "),
     body: DOCS.clone(),
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -17,8 +17,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("# arm_wait()"),
         MsgLine::new(""),
         MsgLine::new(
-            "as you can guess, this boi waits until the arm is ready (until \
-             it's _armed_ you could say, heh)",
+            "this boi waits until the arm is ready (_armed_, you could say)",
         ),
         MsgLine::new(""),
         MsgLine::new("# arm_stab()"),
@@ -26,7 +25,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(
             "stabs the bot that's directly in front of you, killing it and \
              giving you one point - note that you have to be _facing_ the \
-             other machine in order to stab it",
+             other bot in order to stab it",
         ),
         MsgLine::new(""),
         MsgLine::new("easy enough, isn't it?"),
@@ -52,7 +51,7 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
         "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
-    buttons: vec![MsgButton::confirm("try-again", ())],
+    buttons: vec![MsgButton::enter("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

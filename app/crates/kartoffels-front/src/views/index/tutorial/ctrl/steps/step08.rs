@@ -6,9 +6,9 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     body: vec![
         MsgLine::new("cool!").fg(theme::GREEN),
         MsgLine::new(""),
-        MsgLine::new("now let's try to unwrap what the code does:"),
+        MsgLine::new("now let's try to unpack what the code does:"),
         MsgLine::new(""),
-        MsgLine::new("# motor_step_fw()"),
+        MsgLine::new("# motor_step()"),
         MsgLine::new(""),
         MsgLine::new(
             "this boi causes the bot to move one tile forward in the direction \
@@ -30,13 +30,13 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "waiting for readiness is important, because the cpu is much \
-             faster than motor, so calling `motor_step_fw()` two times in a \
-             row without `motor_wait()` in-between would actually move the \
-             machine just one tile forward",
+             faster than motor, so calling `motor_step()` two times in a \
+             row without `motor_wait()` in-between would actually move you \
+             just one tile forward",
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

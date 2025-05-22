@@ -20,7 +20,7 @@ fn main() {
             motor_turn_right();
         } else {
             motor_wait();
-            motor_step_fw();
+            motor_step();
         }
     }
 }

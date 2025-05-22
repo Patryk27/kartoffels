@@ -16,7 +16,7 @@
 //!         println!("small step for a bot!");
 //!
 //!         motor_wait();
-//!         motor_step_fw();
+//!         motor_step();
 //!     }
 //! }
 //! ```

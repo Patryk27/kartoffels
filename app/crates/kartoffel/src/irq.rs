@@ -193,7 +193,7 @@ pub fn irq_take(irq: u8) -> Option<IrqFn> {
 ///     }
 ///
 ///     // Call a function that raises the interrupt
-///     motor_step_fw();
+///     motor_step();
 ///
 ///     // Restore previous handler
 ///     unsafe {

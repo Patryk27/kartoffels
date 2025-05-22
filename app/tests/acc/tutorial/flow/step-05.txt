@@ -15,7 +15,7 @@
         │ when the file picker opens, choose a file called kartoffel - │
         │ it should be located next to README.md etc.                  │
         │                                                              │
-        │                                                 [enter] next │
+        │ [esc] prev                                      [enter] next │
         └──────────────────────────────────────────────────────────────┘
                  .....................
                  .....................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

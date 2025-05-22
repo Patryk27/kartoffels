@@ -16,10 +16,10 @@ static MSG: LazyLock<Msg<Action>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::abort("prev", Action::Prev),
+        MsgButton::escape("prev", Action::Prev),
         MsgButton::new("copy-command", KeyCode::Char('c'), Action::Copy)
             .right_aligned(),
-        MsgButton::confirm("next", Action::Next),
+        MsgButton::enter("next", Action::Next),
     ],
 });
 

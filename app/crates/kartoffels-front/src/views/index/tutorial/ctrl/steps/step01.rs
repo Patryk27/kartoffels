@@ -15,7 +15,7 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
         MsgLine::new(
             "this tutorial covers all of the basic stuff, from user interface \
              to how the bots are programmed - you'll need git, your favorite \
-             text editor, and a couple of spare minutes",
+             text editor, and a couple of minutes",
         ),
         MsgLine::new(""),
         MsgLine::from_iter([
@@ -31,8 +31,8 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::abort("exit", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 

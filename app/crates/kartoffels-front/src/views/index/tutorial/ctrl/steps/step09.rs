@@ -8,7 +8,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         .chain(DOCS.clone())
         .collect(),
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
@@ -20,9 +20,9 @@ static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
         MsgLine::new(
-            "remove the call to `motor_turn_right()`, so that everything the \
-             bot does is just `motor_wait()` and `motor_step_fw()`, then close \
-             this message and upload the new firmware",
+            "comment-out `motor_turn_right()`, so that everything the bot does \
+             is just `motor_wait()` and `motor_step()`, then close this \
+             message and upload the new firmware",
         ),
         MsgLine::web(""),
         MsgLine::web("!! don't forget to re-run `./build` !!"),

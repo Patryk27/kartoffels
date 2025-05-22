@@ -9,12 +9,12 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("i mean, not nice, because we're dead, but baby steps"),
         MsgLine::new(""),
         MsgLine::new(
-            "now it's time for you to learn about *the radar*, using which you \
-             can program the bot to avoid falling out the map",
+            "now it's time for you to learn about *the radar* using which the \
+             bot can recognize its environment",
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

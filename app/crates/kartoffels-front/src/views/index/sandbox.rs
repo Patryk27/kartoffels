@@ -156,9 +156,7 @@ impl Form<'_> {
         ui.space(1);
 
         ui.row(|ui| {
-            ui.btn("exit", KeyCode::Escape, |btn| {
-                btn.throwing(Event::GoBack)
-            });
+            ui.btn("exit", KeyCode::Escape, |btn| btn.throwing(Event::GoBack));
 
             if self.focus.is_none() {
                 ui.btn("create", KeyCode::Enter, |btn| {

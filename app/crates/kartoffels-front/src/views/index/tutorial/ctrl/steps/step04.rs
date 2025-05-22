@@ -18,15 +18,16 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
         MsgLine::new(""),
         MsgLine::new(
             "there's no `std::fs`, no `std::net` - everything your bot has \
-             is a bit of memory and a couple of peripherals",
+             is a bit of memory, serial port, and a couple of other \
+             peripherals",
         ),
         MsgLine::new(""),
-        MsgLine::new("you know, like the people in ancient rome did"),
+        MsgLine::new("you know, like people in ancient rome did"),
     ],
 
     buttons: vec![
-        MsgButton::abort("prev", false),
-        MsgButton::confirm("next", true),
+        MsgButton::escape("prev", false),
+        MsgButton::enter("next", true),
     ],
 });
 

@@ -1,4 +1,5 @@
 use crate::{Button, FromMarkdown, Ui, UiWidget};
+use ratatui::layout::Alignment;
 use ratatui::style::{Style, Styled};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::Paragraph;
@@ -38,9 +39,28 @@ where
             ui.space(height - 1);
 
             ui.row(|ui| {
-                for button in &self.buttons {
-                    ui.add(button.inner.clone());
+                let left_btns = self
+                    .buttons
+                    .iter()
+                    .filter(|btn| btn.align == Alignment::Left);
+
+                let right_btns = self
+                    .buttons
+                    .iter()
+                    .filter(|btn| btn.align == Alignment::Right)
+                    .rev();
+
+                for btn in left_btns {
+                    ui.add(btn.inner.clone());
+                    ui.space(1);
                 }
+
+                ui.rtl(|ui| {
+                    for button in right_btns {
+                        ui.add(button.inner.clone());
+                        ui.space(1);
+                    }
+                });
             });
         });
     }
@@ -138,25 +158,27 @@ enum MsgLineCondition {
 #[derive(Clone, Debug)]
 pub struct MsgButton<T> {
     inner: Button<'static, T>,
+    align: Alignment,
 }
 
 impl<T> MsgButton<T> {
     pub fn new(label: impl AsRef<str>, key: KeyCode, resp: T) -> Self {
         Self {
             inner: Button::new(label.as_ref().to_owned(), key).throwing(resp),
+            align: Alignment::Left,
         }
     }
 
-    pub fn abort(label: impl AsRef<str>, resp: T) -> Self {
+    pub fn escape(label: impl AsRef<str>, resp: T) -> Self {
         Self::new(label, KeyCode::Escape, resp)
     }
 
-    pub fn confirm(label: impl AsRef<str>, resp: T) -> Self {
+    pub fn enter(label: impl AsRef<str>, resp: T) -> Self {
         Self::new(label, KeyCode::Enter, resp).right_aligned()
     }
 
     pub fn right_aligned(mut self) -> Self {
-        self.inner = self.inner.right_aligned();
+        self.align = Alignment::Right;
         self
     }
 }

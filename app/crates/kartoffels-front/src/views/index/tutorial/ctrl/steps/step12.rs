@@ -4,10 +4,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some(" tutorial (12/16) "),
 
     body: vec![
-        MsgLine::new(
-            "radar returns a scan of the environment around the bot, it's as \
-             easy as:",
-        ),
+        MsgLine::new("radar provides a scan of the tiles around the bot:"),
         MsgLine::new(""),
         MsgLine::new("    radar_wait(); // wait until radar is ready"),
         MsgLine::new("    radar_scan(3); // do a 3x3 scan"),
@@ -24,9 +21,15 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("    if left == '@' || right == '@' {"),
         MsgLine::new("        // do something else"),
         MsgLine::new("    }"),
+        MsgLine::new(""),
+        MsgLine::new(
+            "it's quite configurable - it can scan the directions other bots \
+             are facing, their ids etc., look around the api functions if you \
+             want to know more",
+        ),
     ],
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

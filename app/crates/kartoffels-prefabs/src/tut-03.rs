@@ -11,7 +11,7 @@ fn main() {
 
         if radar_read(0, -1) == '.' {
             motor_wait();
-            motor_step_fw();
+            motor_step();
         } else if radar_read(-1, 0) == '.' {
             motor_wait();
             motor_turn_left();

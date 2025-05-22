@@ -133,6 +133,7 @@ async fn breakpoint() {
     ctxt.upload_bot(ACC_BREAKPOINT).await;
 
     ctxt.wait_for("[l] leave-bot").await;
+    ctxt.wait_for("alive").await;
     ctxt.see_frame("game/breakpoint/1.txt");
 
     ctxt.world()

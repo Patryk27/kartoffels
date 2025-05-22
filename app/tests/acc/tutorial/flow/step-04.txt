@@ -8,18 +8,18 @@
         │ now launch vscode, vim, emacs or whatever gives your life    │
         │ colors and open main.rs from the cloned repository           │
         │                                                              │
-        │ for, you see, writing a bot is similar to writing a regular  │
-        │ rust program - but it's also different, mucho different      │
+        │ for, you see, writing a bot is similar to writing a normal   │
+        │ program - but it's also different, mucho different           │
         │                                                              │
-        │ like, you-dont-have-access-to-standard-library different     │
+        │ there's no std::fs, no std::net - everything your bot has is │
+        │ a bit of memory, serial port, and a couple of other          │
+        │ peripherals                                                  │
         │                                                              │
-        │ there's no std::fs, no std::net - everything your bot has    │
-        │ access to is a bit of memory, motor, radar, and serial port  │
+        │ you know, like people in ancient rome did                    │
         │                                                              │
-        │ you know, like the people in ancient rome did                │
-        │                                                              │
-        │                                                 [enter] next │
+        │ [esc] prev                                      [enter] next │
         └──────────────────────────────────────────────────────────────┘
+                  ...................
                    .................
                     ...............
                      .............
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

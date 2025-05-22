@@ -9,7 +9,7 @@ static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
     title: Some(" tutorial "),
 
     body: vec![
-        MsgLine::new("🥔✨ *yay, you made it!* ✨🥔")
+        MsgLine::new("*yay, you made it!*")
             .fg(theme::GREEN)
             .bold()
             .centered(),
@@ -17,16 +17,15 @@ static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
         MsgLine::new("not sure if mom and dad are proud of you, but i am !!"),
         MsgLine::new(""),
         MsgLine::new(
-            "kartoffels is all about discovery, so we won't go through the \
-             remaining functions - from now on you're on your own",
+            "kartoffels is all about discovery, so i'll be leaving you to \
+             your own devices now - snoop around the user interface, snoop \
+             around the api, be gay, do crime, have fun, and:",
         ),
         MsgLine::new(""),
-        MsgLine::new(
-            "be gay, do crime, have fun, and remember the power of potato!",
-        ),
+        MsgLine::new("remember the power of potato!"),
     ],
 
-    buttons: vec![MsgButton::confirm("complete", Event::Complete)],
+    buttons: vec![MsgButton::enter("complete", Event::Complete)],
 });
 
 pub async fn run(frame: &mut Frame) -> Result<()> {

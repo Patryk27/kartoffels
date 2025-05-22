@@ -28,8 +28,8 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::abort("prev", false),
-        MsgButton::confirm("next", true),
+        MsgButton::escape("prev", false),
+        MsgButton::enter("next", true),
     ],
 });
 

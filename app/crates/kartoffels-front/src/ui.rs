@@ -15,6 +15,7 @@ pub struct Ui<'a, T> {
     pub area: Rect,
     pub mouse: Option<&'a (UVec2, bool)>,
     pub event: Option<&'a InputEvent>,
+    pub dir: UiDir,
     pub layout: UiLayout,
     pub enabled: bool,
     pub focused: bool,
@@ -29,6 +30,7 @@ impl<T> Ui<'_, T> {
             area: self.area,
             mouse: self.mouse,
             event: self.event,
+            dir: self.dir,
             layout: self.layout,
             enabled: self.enabled,
             focused: self.focused,
@@ -204,6 +206,26 @@ impl<T> Ui<'_, T> {
         self.modal(width, height, title, theme::GREEN, f);
     }
 
+    pub fn ltr<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+        self.zoned(|this| {
+            this.with(|this| {
+                this.dir = UiDir::Ltr;
+
+                f(this)
+            })
+        })
+    }
+
+    pub fn rtl<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
+        self.zoned(|this| {
+            this.with(|this| {
+                this.dir = UiDir::Rtl;
+
+                f(this)
+            })
+        })
+    }
+
     pub fn row<U>(&mut self, f: impl FnOnce(&mut Ui<T>) -> U) -> U {
         let result = self.zoned(|this| {
             this.with(|this| {
@@ -219,14 +241,18 @@ impl<T> Ui<'_, T> {
     }
 
     pub fn space(&mut self, len: u16) {
-        match self.layout {
-            UiLayout::Row => {
-                self.area.x += len;
-                self.area.width -= len;
+        let (off, rem) = match self.layout {
+            UiLayout::Row => (&mut self.area.x, &mut self.area.width),
+            UiLayout::Col => (&mut self.area.y, &mut self.area.height),
+        };
+
+        match self.dir {
+            UiDir::Ltr => {
+                *off += len;
+                *rem -= len;
             }
-            UiLayout::Col => {
-                self.area.y += len;
-                self.area.height -= len;
+            UiDir::Rtl => {
+                *rem -= len;
             }
         }
     }
@@ -242,6 +268,7 @@ impl<T> Ui<'_, T> {
             area: self.area,
             mouse: self.mouse,
             event: self.event,
+            dir: self.dir,
             layout: self.layout,
             enabled: self.enabled,
             focused: self.focused,
@@ -284,6 +311,28 @@ impl<T> Ui<'_, T> {
             *pressed
         } else {
             false
+        }
+    }
+}
+
+/// Directions of widgets within the interface.
+///
+/// This affects only the high-level layout - not, say, direction of characters
+/// within a paragraph.
+#[derive(Clone, Copy, Debug)]
+pub enum UiDir {
+    /// Left-to-right
+    Ltr,
+
+    /// Right-to-left
+    Rtl,
+}
+
+impl From<UiDir> for Alignment {
+    fn from(dir: UiDir) -> Self {
+        match dir {
+            UiDir::Ltr => Alignment::Left,
+            UiDir::Rtl => Alignment::Right,
         }
     }
 }

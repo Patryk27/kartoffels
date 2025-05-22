@@ -45,8 +45,8 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("exit", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 
@@ -67,7 +67,7 @@ static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 const AREA: UVec2 = uvec2(37, 19);

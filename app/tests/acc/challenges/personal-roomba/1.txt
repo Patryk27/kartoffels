@@ -19,7 +19,7 @@
         │                                                         xoxo │
         │                                               the architects │
         │                                                              │
-        │ [esc] go-back                                  [enter] start │
+        │ [esc] exit                                     [enter] start │
         └──────────────────────────────────────────────────────────────┘
 
 
@@ -27,4 +27,4 @@
 
 
 
-[esc] go-back
+[esc] exit

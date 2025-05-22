@@ -27,4 +27,4 @@
                                                        [i] inspect-bot
                                                        [f] stop-following-bot
                                                        [l] leave-bot
-[esc] go-back  [spc] resume  [h] help  [b] bots                           paused
+[esc] exit  [spc] resume  [h] help  [b] bots                              paused

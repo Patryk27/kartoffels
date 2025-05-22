@@ -20,7 +20,7 @@ fn main() {
 
     for _ in 0..2 {
         motor_wait();
-        motor_step_fw();
+        motor_step();
     }
 
     loop {
@@ -35,7 +35,7 @@ fn main() {
         match radar_read(0, -1) {
             '.' => {
                 motor_wait();
-                motor_step_fw();
+                motor_step();
             }
 
             '|' | '-' => {
@@ -88,7 +88,7 @@ fn attack_enemy(dx: i32, dy: i32) {
             }
         } else {
             motor_wait();
-            motor_step_fw();
+            motor_step();
         }
     } else {
         if dx < 0 {
