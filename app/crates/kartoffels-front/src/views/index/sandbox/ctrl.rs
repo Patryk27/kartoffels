@@ -9,7 +9,7 @@ use std::sync::LazyLock;
 const MAX_BOTS: u8 = 16;
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
 
     body: vec![
         MsgLine::new("welcome to the *sandbox*!"),

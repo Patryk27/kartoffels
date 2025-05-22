@@ -24,7 +24,7 @@ impl BotsModal {
         let height = ui.area.height - 2;
 
         let event = ui.catching(|ui| {
-            ui.imodal(width, height, Some(" bots "), |ui| {
+            ui.imodal(width, height, Some("bots"), |ui| {
                 let [body_area, _, footer_area] = Layout::vertical([
                     Constraint::Fill(1),
                     Constraint::Length(1),

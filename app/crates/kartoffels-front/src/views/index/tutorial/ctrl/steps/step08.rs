@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (8/16) "),
+    title: Some("tutorial (8/16)"),
 
     body: vec![
         MsgLine::new("cool!").fg(theme::GREEN),

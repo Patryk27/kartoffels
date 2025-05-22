@@ -3,7 +3,7 @@ use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Color, Style};
-use ratatui::text::{Span, Text};
+use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Padding, Paragraph, Widget, Wrap};
 use std::borrow::Cow;
 use termwiz::input::{InputEvent, KeyCode, Modifiers};
@@ -169,7 +169,9 @@ impl<T> Ui<'_, T> {
                 .padding(Padding::horizontal(1));
 
             if let Some(title) = title {
-                block = block.title(title).title_alignment(Alignment::Center);
+                block = block
+                    .title(Line::from_iter([" ", title, " "]))
+                    .title_alignment(Alignment::Center);
             }
 
             this.block(block, f);

@@ -73,7 +73,7 @@ impl View {
         let width = WINDOW_WIDTH;
         let height = self.height();
 
-        ui.imodal(width, height, Some(" challenges "), |ui| {
+        ui.imodal(width, height, Some("challenges"), |ui| {
             ui.line(
                 Text::raw(
                     "challenges are single-player exercises where you have to \

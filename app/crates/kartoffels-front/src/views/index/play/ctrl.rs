@@ -9,7 +9,7 @@ use termwiz::input::KeyCode;
 const CMD: &str = "git clone https://github.com/Patryk27/kartoffel";
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
 
     body: vec![
         MsgLine::new("welcome to the *online mode*!"),

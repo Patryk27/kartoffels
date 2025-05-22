@@ -41,7 +41,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" acyclic-maze "),
+    title: Some("acyclic-maze"),
     body: DOCS.clone(),
 
     buttons: vec![
@@ -51,13 +51,13 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
 });
 
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
 
 static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" acyclic-maze "),
+    title: Some("acyclic-maze"),
 
     body: vec![
         MsgLine::new("congrats!"),

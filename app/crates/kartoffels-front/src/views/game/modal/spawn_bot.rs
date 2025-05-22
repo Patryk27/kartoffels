@@ -46,10 +46,10 @@ impl SpawnBotModal {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            None => " spawn-bot ",
-            Some(Focus::BotSource) => " spawn-bot › choose-source ",
-            Some(Focus::BotPosition) => " spawn-bot › choose-position ",
-            Some(Focus::BotCount) => " spawn-bot › choose-count ",
+            None => "spawn-bot",
+            Some(Focus::BotSource) => "spawn-bot › choose-source",
+            Some(Focus::BotPosition) => "spawn-bot › choose-position",
+            Some(Focus::BotCount) => "spawn-bot › choose-count",
         }
     }
 

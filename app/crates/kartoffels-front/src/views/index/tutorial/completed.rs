@@ -7,7 +7,7 @@ use ratatui::style::Stylize;
 use std::sync::LazyLock;
 
 static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
-    title: Some(" tutorial "),
+    title: Some("tutorial"),
 
     body: vec![
         MsgLine::new("*yay, you made it!*")

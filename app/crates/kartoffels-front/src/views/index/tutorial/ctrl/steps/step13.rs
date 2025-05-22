@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (13/16) "),
+    title: Some("tutorial (13/16)"),
 
     body: vec![
         MsgLine::new(
@@ -18,7 +18,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
@@ -52,7 +52,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (13/16) "),
+    title: Some("tutorial (13/16)"),
     body: vec![MsgLine::new(
         "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",

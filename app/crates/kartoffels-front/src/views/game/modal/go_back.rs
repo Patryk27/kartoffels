@@ -8,7 +8,7 @@ pub struct GoBackModal;
 
 impl GoBackModal {
     pub fn render(&mut self, ui: &mut Ui<Event>) {
-        ui.wmodal(37, 3, Some(" exit "), |ui| {
+        ui.wmodal(37, 3, Some("exit"), |ui| {
             ui.line(
                 Line::raw("do you want to exit to the main menu?").centered(),
             );

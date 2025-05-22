@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (5/16) "),
+    title: Some("tutorial (5/16)"),
 
     body: vec![
         MsgLine::new(
@@ -21,7 +21,7 @@ static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });

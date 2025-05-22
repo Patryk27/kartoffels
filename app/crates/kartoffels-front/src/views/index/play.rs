@@ -80,7 +80,7 @@ async fn run_once(
                 fade.render(ui, |ui| {
                     bg.render(ui);
 
-                    ui.imodal(width, height, Some(" play "), |ui| {
+                    ui.imodal(width, height, Some("play"), |ui| {
                         for btn in &mut world_btns {
                             ui.add(btn);
                         }

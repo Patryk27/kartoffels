@@ -4,7 +4,7 @@ use termwiz::input::KeyCode;
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
 static MSG: LazyLock<Msg<Action>> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (3/16) "),
+    title: Some("tutorial (3/16)"),
 
     body: vec![
         MsgLine::new("look at you, learning so fast - *next lesson!*"),

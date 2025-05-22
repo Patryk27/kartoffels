@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (12/16) "),
+    title: Some("tutorial (12/16)"),
 
     body: vec![
         MsgLine::new("radar provides a scan of the tiles around the bot:"),

@@ -49,7 +49,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: DOCS.clone(),
 
     buttons: vec![
@@ -59,13 +59,13 @@ static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
 });
 
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
 
 static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: vec![MsgLine::new(
         "ayy, you killed a guard, alarming the entire facility - i told you: \
          *spill no oil!*",
@@ -74,13 +74,13 @@ static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: vec![MsgLine::new("ayy, you've died!")],
     buttons: vec![MsgButton::enter("ok", ())],
 });
 
 static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: vec![
         MsgLine::new("congrats!"),
         MsgLine::new(""),

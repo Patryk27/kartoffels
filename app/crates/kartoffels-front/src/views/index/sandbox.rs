@@ -125,9 +125,9 @@ impl View<'_> {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            None => " sandbox ",
-            Some(Focus::SandboxSize) => " sandbox › choose-size ",
-            Some(Focus::SandboxTheme) => " sandbox › choose-theme ",
+            None => "sandbox",
+            Some(Focus::SandboxSize) => "sandbox › choose-size",
+            Some(Focus::SandboxTheme) => "sandbox › choose-theme",
         }
     }
 
