@@ -57,11 +57,6 @@ impl<'a, T> Button<'a, T> {
         self
     }
 
-    pub fn centered(mut self) -> Self {
-        self.align = Some(Alignment::Center);
-        self
-    }
-
     pub fn right_aligned(mut self) -> Self {
         self.align = Some(Alignment::Right);
         self

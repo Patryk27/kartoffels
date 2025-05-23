@@ -67,6 +67,8 @@ async fn run_once(
         let event = frame
             .render(|ui| {
                 fade.render(ui, |ui| {
+                    let (menu, menu_size) = Menu::new(ui, has_public_worlds);
+
                     let [_, area, _] = Layout::horizontal([
                         Constraint::Fill(1),
                         Constraint::Length(Header::width()),
@@ -78,14 +80,14 @@ async fn run_once(
                         Constraint::Fill(1),
                         Constraint::Length(Header::height()),
                         Constraint::Fill(1),
-                        Constraint::Length(Menu::height(ui, has_public_worlds)),
+                        Constraint::Length(menu_size.height),
                         Constraint::Fill(1),
                     ])
                     .areas(area);
 
                     let [_, menu_area, _] = Layout::horizontal([
                         Constraint::Fill(1),
-                        Constraint::Length(Menu::width()),
+                        Constraint::Length(menu_size.width),
                         Constraint::Fill(1),
                     ])
                     .areas(menu_area);
@@ -97,7 +99,7 @@ async fn run_once(
                     });
 
                     ui.at(menu_area, |ui| {
-                        Menu::render(ui, has_public_worlds);
+                        menu.render(ui);
                     });
 
                     Footer::render(store, ui);

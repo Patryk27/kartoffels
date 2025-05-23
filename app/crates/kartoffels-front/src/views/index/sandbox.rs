@@ -4,18 +4,15 @@ mod sandbox_theme;
 
 use self::sandbox_size::*;
 use self::sandbox_theme::*;
+use super::WINDOW_WIDTH;
 use crate::views::game;
-use crate::{theme, BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
 use kartoffels_world::prelude as w;
-use ratatui::style::Stylize;
-use ratatui::text::Text;
 use termwiz::input::KeyCode;
 use tracing::debug;
-
-use super::WINDOW_WIDTH;
 
 pub async fn run(
     store: &Store,
@@ -133,7 +130,7 @@ impl View<'_> {
 
     fn height(&self) -> u16 {
         match &self.focus {
-            None => 7,
+            None => 4,
             Some(Focus::SandboxSize) => SandboxSize::height() + 2,
             Some(Focus::SandboxTheme) => SandboxTheme::height() + 2,
         }
@@ -142,16 +139,6 @@ impl View<'_> {
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
             None => {
-                ui.line(
-                    Text::raw(
-                        "sandbox allows you to create your own, private world \
-                         where you can experiment with bots",
-                    )
-                    .fg(theme::GRAY),
-                );
-
-                ui.space(1);
-
                 SandboxSize::render_btn(ui, self.size);
                 SandboxTheme::render_btn(ui, self.theme);
             }

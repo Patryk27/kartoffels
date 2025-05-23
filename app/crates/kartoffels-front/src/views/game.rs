@@ -31,7 +31,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::select;
 use tokio::sync::oneshot;
-use tracing::debug;
+use tracing::{debug, trace};
 
 pub async fn run<CtrlFn, CtrlFut, CtrlOut>(
     store: &Store,
@@ -245,7 +245,7 @@ impl View {
     }
 
     fn refresh(&mut self, snapshot: Arc<w::Snapshot>) {
-        debug!(version=?snapshot.version, "refreshing");
+        trace!(version=?snapshot.version, "refreshing");
 
         // If the map's size has changed, recenter the camera.
         //

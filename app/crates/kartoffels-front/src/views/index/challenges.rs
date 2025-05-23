@@ -3,11 +3,9 @@ mod ctrls;
 use self::ctrls::*;
 use crate::views::game;
 use crate::views::index::WINDOW_WIDTH;
-use crate::{theme, BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
-use ratatui::style::Stylize;
-use ratatui::text::Text;
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
 use tracing::debug;
@@ -74,16 +72,6 @@ impl View {
         let height = self.height();
 
         ui.imodal(width, height, Some("challenges"), |ui| {
-            ui.line(
-                Text::raw(
-                    "challenges are single-player exercises where you have to \
-                     implement a firmware that solves a specific problem",
-                )
-                .fg(theme::GRAY),
-            );
-
-            ui.space(1);
-
             for chl in CHALLENGES {
                 ui.btn(chl.name, chl.key, |btn| {
                     btn.help(chl.desc).throwing(Event::Play(chl))
@@ -98,7 +86,7 @@ impl View {
 
     fn height(&self) -> u16 {
         let width = WINDOW_WIDTH;
-        let mut height = 5;
+        let mut height = 2;
 
         for (idx, chl) in CHALLENGES.iter().enumerate() {
             if idx > 0 {

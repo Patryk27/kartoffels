@@ -1,6 +1,6 @@
 use crate::{Clock, World};
 use std::time::{Duration, Instant};
-use tracing::debug;
+use tracing::trace;
 
 struct State {
     ticks: u32,
@@ -44,7 +44,7 @@ pub fn log(world: &mut World) {
     let conns = world.snapshots.tx.receiver_count();
     let vcpu = format!("{} khz", state.ticks / 1_000);
 
-    debug!(?alive, ?queued, ?conns, ?vcpu);
+    trace!(?alive, ?queued, ?conns, ?vcpu);
 
     state.ticks = 0;
     state.next_run_at = next_run_at();

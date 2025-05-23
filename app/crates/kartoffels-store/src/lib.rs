@@ -13,6 +13,7 @@ use self::sessions::*;
 pub use self::world::*;
 use self::worlds::*;
 use anyhow::{anyhow, Context, Result};
+use derivative::Derivative;
 use futures_util::FutureExt;
 use kartoffels_world::prelude::{
     Clock, Config as WorldConfig, Handle as WorldHandle,
@@ -23,11 +24,11 @@ use std::time::Duration;
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
 use tokio::{fs, select, task, time};
-use tracing::{debug, error, info, warn, Span};
+use tracing::{debug, error, info, warn, Instrument, Span};
 
 #[derive(Debug)]
 pub struct Store {
-    tx: mpsc::Sender<Request>,
+    tx: mpsc::Sender<(Span, Request)>,
     dir: Option<PathBuf>,
     testing: bool,
 }
@@ -100,13 +101,8 @@ impl Store {
         vis: WorldVis,
         config: WorldConfig,
     ) -> Result<World> {
-        self.send(|tx| Request::CreateWorld {
-            vis,
-            config,
-            span: Span::current(),
-            tx,
-        })
-        .await?
+        self.send(|tx| Request::CreateWorld { vis, config, tx })
+            .await?
     }
 
     pub async fn get_world(&self, id: WorldId) -> Result<World> {
@@ -157,11 +153,7 @@ impl Store {
     }
 
     pub async fn create_session(&self) -> Result<Session> {
-        self.send(|tx| Request::CreateSession {
-            span: Span::current(),
-            tx,
-        })
-        .await
+        self.send(|tx| Request::CreateSession { tx }).await
     }
 
     pub async fn get_session(&self, id: SessionId) -> Result<Session> {
@@ -197,7 +189,7 @@ impl Store {
 
     async fn send_ex(&self, req: Request) -> Result<()> {
         self.tx
-            .send(req)
+            .send((Span::current(), req))
             .await
             .map_err(|_| anyhow!("{}", Self::ERR))?;
 
@@ -215,16 +207,19 @@ struct Actor {
 }
 
 impl Actor {
-    async fn start(mut self, mut rx: mpsc::Receiver<Request>) -> Result<()> {
+    async fn start(
+        mut self,
+        mut rx: mpsc::Receiver<(Span, Request)>,
+    ) -> Result<()> {
         let mut ping = time::interval(Duration::from_mins(1));
         let mut save = time::interval(Duration::from_mins(15));
 
         loop {
             select! {
                 request = rx.recv() => {
-                    let request = request.context("store abandoned")?;
+                    let (span, request) = request.context("store abandoned")?;
 
-                    match self.handle(request).await {
+                    match self.handle(request).instrument(span).await {
                         ControlFlow::Continue(()) => {
                             continue;
                         }
@@ -261,14 +256,7 @@ impl Actor {
                 _ = tx.send(());
             }
 
-            Request::CreateWorld {
-                vis,
-                config,
-                span,
-                tx,
-            } => {
-                let _span = span.enter();
-
+            Request::CreateWorld { vis, config, tx } => {
                 _ = tx.send(
                     self.worlds
                         .create(self.testing, self.dir.as_deref(), vis, config)
@@ -288,9 +276,7 @@ impl Actor {
                 _ = tx.send(self.worlds.delete(id).await);
             }
 
-            Request::CreateSession { span, tx } => {
-                let _span = span.enter();
-
+            Request::CreateSession { tx } => {
                 _ = tx.send(self.sessions.create(self.testing));
             }
 
@@ -425,51 +411,59 @@ impl Actor {
     }
 }
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 enum Request {
     Ping {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     AddWorld {
         handle: WorldHandle,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateWorld {
         vis: WorldVis,
         config: WorldConfig,
-        span: Span,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<World>>,
     },
 
     FindWorlds {
         vis: Option<WorldVis>,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Vec<World>>,
     },
 
     RenameWorld {
         id: WorldId,
         name: String,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<()>>,
     },
 
     DeleteWorld {
         id: WorldId,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<()>>,
     },
 
     CreateSession {
-        span: Span,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Session>,
     },
 
     FindSessions {
         id: Option<SessionId>,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Vec<Session>>,
     },
 
     Close {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<()>>,
     },
 }

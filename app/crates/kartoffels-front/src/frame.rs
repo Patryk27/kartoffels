@@ -22,7 +22,7 @@ use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
 use tokio::sync::mpsc;
 use tokio::time::Interval;
 use tokio::{select, time};
-use tracing::warn;
+use tracing::{debug, instrument, warn};
 
 pub type Stdin = mpsc::Receiver<StdinEvent>;
 pub type Stdout = mpsc::Sender<Vec<u8>>;
@@ -95,7 +95,10 @@ impl Frame {
         self.size
     }
 
+    #[instrument(skip_all)]
     pub async fn init(&mut self) -> Result<()> {
+        debug!("initializing frame");
+
         let mut cmds = String::new();
 
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
@@ -108,7 +111,10 @@ impl Frame {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn destroy(&mut self) -> Result<()> {
+        debug!("destroying frame");
+
         let mut cmds = String::new();
 
         match self.ty {
@@ -256,7 +262,10 @@ impl Frame {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn handle_resized(&mut self, size: UVec2) -> Result<()> {
+        debug!("resizing frame");
+
         self.size = size.min(Self::MAX_SIZE);
         self.term.resize(Self::viewport_rect(self.size))?;
 

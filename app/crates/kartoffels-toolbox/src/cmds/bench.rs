@@ -13,7 +13,9 @@ pub struct BenchCmd;
 impl BenchCmd {
     pub(crate) fn run(self) -> Result<()> {
         tracing_subscriber::fmt()
-            .with_env_filter("kartoffels=debug")
+            .with_env_filter(
+                "kartoffels=debug,kartoffels_world::lifecycle=trace",
+            )
             .init();
 
         tokio::runtime::Builder::new_multi_thread()
@@ -45,7 +47,8 @@ impl BenchCmd {
                         .context("couldn't create bot")?;
                 }
 
-                info!("ready; benchmarking for 10s");
+                info!("ready");
+                info!("benchmarking for 10s");
 
                 time::sleep(Duration::from_secs(10)).await;
 
