@@ -31,6 +31,8 @@ enum Action {
 }
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    debug!("run()");
+
     loop {
         match ctxt.game.msg(&MSG).await? {
             Action::Prev => {

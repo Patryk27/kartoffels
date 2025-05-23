@@ -19,9 +19,9 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    debug!("run()");
+
     ctxt.delete_bots().await?;
     ctxt.sync().await?;
-    ctxt.game.msg(&MSG).await?;
-
-    Ok(())
+    ctxt.game.msg(&MSG).await
 }

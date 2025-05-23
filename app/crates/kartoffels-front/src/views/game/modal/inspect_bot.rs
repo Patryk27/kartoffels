@@ -313,7 +313,7 @@ impl InspectBotModal {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 enum Event {
     ChangeTab(Tab),
     JoinBot,

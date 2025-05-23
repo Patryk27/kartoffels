@@ -5,31 +5,81 @@ use std::task::Poll;
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
-pub struct Fade {
+pub struct Fade<T> {
+    stage: Option<FadeStage<T>>,
+    testing: bool,
+}
+
+impl<T> Fade<T> {
+    pub fn new(store: &Store, fade_in: bool) -> Self {
+        Self {
+            stage: fade_in.then(|| FadeStage::FadingIn {
+                fade: FadeBackdrop::new(FadeDir::In),
+            }),
+            testing: store.testing(),
+        }
+    }
+
+    pub fn out(&mut self, event: T) {
+        if let None | Some(FadeStage::FadingIn { .. }) = &self.stage {
+            self.stage = Some(FadeStage::FadingOut {
+                fade: FadeBackdrop::new(FadeDir::Out),
+                event: Some(event),
+                ready: false,
+            });
+        }
+    }
+
+    pub fn poll(&mut self) -> Option<T> {
+        if let Some(FadeStage::FadingOut {
+            event, ready: true, ..
+        }) = &mut self.stage
+        {
+            event.take()
+        } else {
+            None
+        }
+    }
+
+    pub fn render<U>(&mut self, ui: &mut Ui<U>) {
+        match &mut self.stage {
+            None => {
+                //
+            }
+
+            Some(FadeStage::FadingIn { fade }) => {
+                if ui.add(&*fade).is_ready() {
+                    self.stage = None;
+                }
+            }
+
+            Some(FadeStage::FadingOut { fade, ready, .. }) => {
+                if ui.add(&*fade).is_ready() || self.testing {
+                    *ready = true;
+                }
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct FadeBackdrop {
     dir: FadeDir,
     started_at: Instant,
 }
 
-impl Fade {
+impl FadeBackdrop {
     const DURATION: Duration = Duration::from_millis(250);
 
-    pub fn new(dir: FadeDir) -> Self {
+    fn new(dir: FadeDir) -> Self {
         Self {
             dir,
             started_at: Instant::now(),
         }
     }
-
-    pub fn dir(&self) -> FadeDir {
-        self.dir
-    }
-
-    pub fn is_ready(&self) -> bool {
-        self.started_at.elapsed() >= Fade::DURATION
-    }
 }
 
-impl<T> UiWidget<T> for &Fade {
+impl<T> UiWidget<T> for &FadeBackdrop {
     type Response = Poll<()>;
 
     fn render(self, ui: &mut Ui<T>) -> Self::Response {
@@ -37,7 +87,7 @@ impl<T> UiWidget<T> for &Fade {
             let t = self
                 .started_at
                 .elapsed()
-                .div_duration_f32(Fade::DURATION)
+                .div_duration_f32(FadeBackdrop::DURATION)
                 .clamp(0.0, 1.0);
 
             match self.dir {
@@ -64,7 +114,7 @@ impl<T> UiWidget<T> for &Fade {
             }
         }
 
-        if self.is_ready() {
+        if self.started_at.elapsed() >= FadeBackdrop::DURATION {
             Poll::Ready(())
         } else {
             Poll::Pending
@@ -79,70 +129,13 @@ pub enum FadeDir {
 }
 
 #[derive(Clone, Debug)]
-pub struct FadeCtrl<T> {
-    stage: Option<FadeCtrlStage<T>>,
-    animate: bool,
-}
-
-impl<T> FadeCtrl<T>
-where
-    T: FadeCtrlEvent,
-{
-    pub fn new(store: &Store, fade_in: bool) -> Self {
-        Self {
-            stage: fade_in.then(|| FadeCtrlStage::FadeIn {
-                fade: Fade::new(FadeDir::In),
-            }),
-            animate: !store.testing(),
-        }
-    }
-
-    pub fn render(&mut self, ui: &mut Ui<'_, T>, f: impl FnOnce(&mut Ui<T>)) {
-        let event = match &mut self.stage {
-            Some(FadeCtrlStage::FadeIn { fade }) => {
-                let event = ui.catching(f);
-
-                if ui.add(&*fade).is_ready() {
-                    self.stage = None;
-                }
-
-                event
-            }
-
-            Some(FadeCtrlStage::FadeOut { fade, event }) => {
-                _ = ui.catching(f);
-
-                if ui.add(&*fade).is_ready()
-                    && let Some(event) = event.take()
-                {
-                    ui.throw(event);
-                }
-
-                None
-            }
-
-            None => ui.catching(f),
-        };
-
-        if let Some(event) = event {
-            if self.animate && event.needs_fade_out() {
-                self.stage = Some(FadeCtrlStage::FadeOut {
-                    fade: Fade::new(FadeDir::Out),
-                    event: Some(event),
-                });
-            } else {
-                ui.throw(event);
-            }
-        }
-    }
-}
-
-pub trait FadeCtrlEvent {
-    fn needs_fade_out(&self) -> bool;
-}
-
-#[derive(Clone, Debug)]
-enum FadeCtrlStage<T> {
-    FadeIn { fade: Fade },
-    FadeOut { fade: Fade, event: Option<T> },
+enum FadeStage<T> {
+    FadingIn {
+        fade: FadeBackdrop,
+    },
+    FadingOut {
+        fade: FadeBackdrop,
+        event: Option<T>,
+        ready: bool,
+    },
 }

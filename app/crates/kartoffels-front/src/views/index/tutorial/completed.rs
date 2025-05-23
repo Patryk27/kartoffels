@@ -1,12 +1,10 @@
-use crate::{
-    theme, Clear, FadeCtrl, FadeCtrlEvent, Frame, Msg, MsgButton, MsgLine,
-};
+use crate::{theme, Clear, Fade, Frame, Msg, MsgButton, MsgLine};
 use anyhow::Result;
 use kartoffels_store::Store;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 
-static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
+static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
     title: Some("tutorial"),
 
     body: vec![
@@ -26,35 +24,27 @@ static MSG: LazyLock<Msg<Event>> = LazyLock::new(|| Msg {
         MsgLine::new("remember the power of potato!"),
     ],
 
-    buttons: vec![MsgButton::enter("complete", Event::Complete)],
+    buttons: vec![MsgButton::enter("complete", ())],
 });
 
 pub async fn run(store: &Store, frame: &mut Frame) -> Result<()> {
-    let mut fade = FadeCtrl::new(store, true);
+    let mut fade = Fade::new(store, true);
 
     loop {
         let event = frame
             .render(|ui| {
-                fade.render(ui, |ui| {
-                    ui.add(Clear);
-                    ui.add(&*MSG);
-                });
+                ui.add(Clear);
+                ui.add(&*MSG);
+                fade.render(ui);
             })
             .await?;
 
         if event.is_some() {
+            fade.out(());
+        }
+
+        if fade.poll().is_some() {
             return Ok(());
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-enum Event {
-    Complete,
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        true
     }
 }

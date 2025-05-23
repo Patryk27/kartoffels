@@ -33,7 +33,7 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.msg(&MSG).await?;
+    debug!("run()");
 
-    Ok(())
+    ctxt.game.msg(&MSG).await
 }

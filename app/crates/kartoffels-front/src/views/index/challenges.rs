@@ -3,7 +3,7 @@ mod ctrls;
 use self::ctrls::*;
 use crate::views::game;
 use crate::views::index::WINDOW_WIDTH;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, Fade, Frame, Ui, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
 use ratatui::widgets::{Paragraph, Wrap};
@@ -19,7 +19,9 @@ pub async fn run(
     let mut fade_in = false;
 
     loop {
-        match run_once(store, frame, bg, fade_in).await? {
+        debug!("run()");
+
+        match main(store, frame, bg, fade_in).await? {
             Event::Play(challenge) => {
                 game::run(store, sess, frame, |game| {
                     (challenge.run)(store, game)
@@ -36,28 +38,30 @@ pub async fn run(
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     frame: &mut Frame,
     bg: &BgMap,
     fade_in: bool,
 ) -> Result<Event> {
-    debug!("run()");
-
-    let mut fade = FadeCtrl::new(store, fade_in);
+    let mut fade = Fade::new(store, fade_in);
     let mut view = View;
 
     loop {
         let event = frame
             .render(|ui| {
-                fade.render(ui, |ui| {
-                    bg.render(ui);
-                    view.render(ui);
-                });
+                bg.render(ui);
+                view.render(ui);
+                fade.render(ui);
             })
             .await?;
 
-        if let Some(event) = event {
+        if let Some(event @ Event::Play(_)) = event {
+            fade.out(event);
+            continue;
+        }
+
+        if let Some(event) = fade.poll().or(event) {
             return Ok(event);
         }
     }
@@ -104,14 +108,8 @@ impl View {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 enum Event {
     Play(&'static Challenge),
     GoBack,
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        matches!(self, Event::Play(_))
-    }
 }

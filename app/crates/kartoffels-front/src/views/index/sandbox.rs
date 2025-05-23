@@ -6,7 +6,7 @@ use self::sandbox_size::*;
 use self::sandbox_theme::*;
 use super::WINDOW_WIDTH;
 use crate::views::game;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, Fade, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
@@ -22,14 +22,16 @@ pub async fn run(
 ) -> Result<()> {
     let mut fade_in = false;
 
-    // We keep those outside `run_once()`, because we want to preserve settings
+    // We keep those outside `main()`, because we want to preserve settings
     // when user goes back to the view, for convenience
     let mut size = SandboxSize::Medium;
     let mut theme = SandboxTheme::Cave;
 
     loop {
+        debug!("run()");
+
         if let Some(theme) =
-            run_once(store, frame, bg, fade_in, &mut size, &mut theme).await?
+            main(store, frame, bg, fade_in, &mut size, &mut theme).await?
         {
             game::run(store, sess, frame, |game| ctrl::run(store, theme, game))
                 .await?;
@@ -41,7 +43,7 @@ pub async fn run(
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     frame: &mut Frame,
     bg: &BgMap,
@@ -49,9 +51,7 @@ async fn run_once(
     size: &mut SandboxSize,
     theme: &mut SandboxTheme,
 ) -> Result<Option<w::Theme>> {
-    debug!("run()");
-
-    let mut fade = FadeCtrl::new(store, fade_in);
+    let mut fade = Fade::new(store, fade_in);
 
     let mut view = View {
         size,
@@ -62,10 +62,9 @@ async fn run_once(
     loop {
         let event = frame
             .render(|ui| {
-                fade.render(ui, |ui| {
-                    bg.render(ui);
-                    view.render(ui);
-                });
+                bg.render(ui);
+                view.render(ui);
+                fade.render(ui);
             })
             .await?;
 
@@ -80,7 +79,7 @@ async fn run_once(
                 }
 
                 Event::Confirm => {
-                    return Ok(Some(view.confirm()));
+                    fade.out(view.confirm());
                 }
 
                 Event::FocusOn(val) => {
@@ -97,6 +96,10 @@ async fn run_once(
                     view.focus = None;
                 }
             }
+        }
+
+        if let Some(event) = fade.poll() {
+            return Ok(Some(event));
         }
     }
 }
@@ -166,7 +169,7 @@ impl View<'_> {
         });
     }
 
-    fn confirm(self) -> w::Theme {
+    fn confirm(&self) -> w::Theme {
         match self.theme {
             SandboxTheme::Arena => {
                 let radius = match self.size {
@@ -200,12 +203,6 @@ enum Event {
     FocusOn(Option<Focus>),
     SetSize(SandboxSize),
     SetTheme(SandboxTheme),
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        matches!(self, Event::Confirm)
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]

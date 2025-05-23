@@ -18,7 +18,7 @@ use self::modal::*;
 pub use self::modal::{HelpMsg, HelpMsgEvent, HelpMsgRef};
 use self::overlay::*;
 use self::side::*;
-use crate::{theme, Clear, Fade, FadeDir, Frame, Ui, UiWidget};
+use crate::{theme, Clear, Fade, Frame, Ui};
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
@@ -43,25 +43,36 @@ where
     CtrlFn: FnOnce(GameCtrl) -> CtrlFut,
     CtrlFut: Future<Output = Result<CtrlOut>>,
 {
+    debug!("run()");
+
     let (tx, rx) = GameCtrl::new();
-    let view = run_once(store, sess, frame, rx);
-    let ctrl = ctrl(tx);
+    let mut view = Box::pin(main(store, sess, frame, rx));
+    let ctrl = Box::pin(ctrl(tx));
 
     select! {
-        result = view => result.map(|_| None),
-        result = ctrl => result.map(Some),
+        result = &mut view => {
+            result?;
+
+            Ok(None)
+        },
+
+        result = ctrl => {
+            let result = result?;
+
+            view.await?;
+
+            Ok(Some(result))
+        },
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
     mut ctrl: GameCtrlRx,
 ) -> Result<()> {
-    debug!("run()");
-
-    let mut fade = Some(Fade::new(FadeDir::In));
+    let mut fade = Fade::new(store, true);
     let mut view = View::default();
 
     loop {
@@ -69,26 +80,24 @@ async fn run_once(
             .render(|ui| {
                 view.tick(store);
                 view.render(ui, sess, store);
-
-                if let Some(fade) = &fade {
-                    _ = fade.render(ui);
-                }
+                fade.render(ui);
             })
             .await?;
+
+        if ctrl.is_closed() {
+            fade.out(());
+        }
 
         if let Some(event) = event
             && let ControlFlow::Break(_) =
                 event.handle(frame, &mut view).await?
         {
-            fade = Some(Fade::new(FadeDir::Out));
+            fade.out(());
         }
 
         view.poll(frame, &mut ctrl).await?;
 
-        if let Some(fade) = &fade
-            && fade.dir() == FadeDir::Out
-            && fade.is_ready()
-        {
+        if fade.poll().is_some() {
             return Ok(());
         }
     }

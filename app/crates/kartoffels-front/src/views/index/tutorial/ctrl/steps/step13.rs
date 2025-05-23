@@ -61,10 +61,12 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    debug!("run()");
+
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
-    setup_map(ctxt).await?;
+    setup(ctxt).await?;
 
     loop {
         ctxt.events.next_born_bot().await?;
@@ -86,7 +88,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
+async fn setup(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.world.set_spawn(ivec2(10, 10), w::AbsDir::E).await?;
 
     ctxt.world

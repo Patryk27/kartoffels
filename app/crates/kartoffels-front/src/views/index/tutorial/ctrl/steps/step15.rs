@@ -55,6 +55,8 @@ static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    debug!("run()");
+
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 

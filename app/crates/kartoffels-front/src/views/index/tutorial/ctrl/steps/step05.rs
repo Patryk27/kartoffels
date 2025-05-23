@@ -44,6 +44,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    debug!("run()");
+
     if !ctxt.game.msg(&MSG).await? {
         return Ok(false);
     }

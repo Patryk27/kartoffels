@@ -30,6 +30,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    debug!("run()");
+
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
     ctxt.events.next_born_bot().await?;

@@ -29,4 +29,5 @@ mod prelude {
     pub(super) use std::sync::LazyLock;
     pub(super) use std::time::Duration;
     pub(super) use tokio::time;
+    pub(super) use tracing::debug;
 }
