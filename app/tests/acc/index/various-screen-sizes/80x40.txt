@@ -1,5 +1,7 @@
 
 
+
+
          ┌────────────────────────────────────────────────────────────┐
          │ welcome to kartoffels, a game where you're given a potato: │
          │                                                            │
@@ -18,13 +20,21 @@
          │        or simply make up your own goal - have fun!         │
          └────────────────────────────────────────────────────────────┘
 
+
+
+
+
                ┌────────────────────────────────────────────────┐
                │ [s] sandbox                                    │
                │     experiment on a private world              │
+               │                                                │
                │ [t] tutorial                                   │
                │     learn how to play the game, quick & cheap  │
+               │                                                │
                │ [c] challenges                                 │
                │     solve single-player exercises              │
                └────────────────────────────────────────────────┘
+
+
 
                                                                        localhost

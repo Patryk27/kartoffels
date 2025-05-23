@@ -21,9 +21,7 @@ static TEXT: LazyLock<Text<'static>> = LazyLock::new(|| {
         Line::md(""),
         Line::md("armed with *64 khz cpu* and *128 kib ram*, you can compete"),
         Line::md("against other players, solve single-player challenges"),
-        Line::md("or simply make up your own goal"),
-        Line::md(""),
-        Line::md("have fun!"),
+        Line::md("or simply make up your own goal - have fun!"),
     ])
     .centered()
 });

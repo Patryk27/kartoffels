@@ -13,12 +13,10 @@ pub struct Menu {
 
 impl Menu {
     pub fn new<T>(ui: &Ui<T>, has_public_worlds: bool) -> (Self, Size) {
-        let variant = if ui.area.height >= 40 {
+        let variant = if ui.area.height >= 35 {
             Variant::Tall
-        } else if ui.area.height > 30 {
-            Variant::Short
         } else {
-            Variant::Tiny
+            Variant::Short
         };
 
         let size = {
@@ -31,12 +29,16 @@ impl Menu {
 
             // `[q] quit`
             if ui.ty.is_ssh() {
-                height += if variant.is_tiny() { 1 } else { 2 };
+                height += 2;
             }
 
             // Extra spacers for buttons
             if variant.is_tall() {
-                height += 3;
+                height += 2;
+
+                if has_public_worlds {
+                    height += 1;
+                }
             }
 
             Size { width: 50, height }
@@ -96,7 +98,7 @@ impl Menu {
                 }
 
                 ui.btn("quit", KeyCode::Escape, |btn| {
-                    btn.throwing(Event::Quit)
+                    btn.throwing(Event::Quit).centered()
                 });
             }
         });
@@ -105,16 +107,11 @@ impl Menu {
 
 #[derive(Clone, Copy, Debug)]
 enum Variant {
-    Tiny,
     Short,
     Tall,
 }
 
 impl Variant {
-    fn is_tiny(&self) -> bool {
-        matches!(self, Self::Tiny)
-    }
-
     fn is_short(&self) -> bool {
         matches!(self, Self::Short)
     }
