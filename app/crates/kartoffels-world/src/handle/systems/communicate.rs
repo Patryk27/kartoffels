@@ -21,7 +21,7 @@ pub fn communicate(world: &mut World) {
             _ => world.requests.try_recv(),
         };
 
-        let request = match request {
+        let (span, request) = match request {
             Ok(request) => request,
 
             Err(TryRecvError::Empty) => {
@@ -34,6 +34,8 @@ pub fn communicate(world: &mut World) {
                 return;
             }
         };
+
+        let _span = span.entered();
 
         debug!(?request, "handling request");
 

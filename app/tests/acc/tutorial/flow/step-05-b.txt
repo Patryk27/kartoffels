@@ -10,7 +10,7 @@
         │                                                              │
         │ ... then close this message and press [u] to upload the bot  │
         │                                                              │
-        │ when the file picker opens, choose a file called kartoffel — │
+        │ when the file picker opens, choose a file called kartoffel - │
         │ it should be located next to README.md etc.                  │
         │                                                              │
         │                                                  [esc] close │
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

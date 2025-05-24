@@ -7,19 +7,19 @@ use termwiz::input::KeyCode;
 pub struct BotCount(u8);
 
 impl BotCount {
-    pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        ui.btn(format!("count: {val}"), KeyCode::Char('c'), |btn| {
+    pub(super) fn render_btn(ui: &mut Ui<Event>, this: &Self) {
+        ui.btn(format!("count: {this}"), KeyCode::Char('c'), |btn| {
             btn.throwing(Event::FocusOn(Some(Focus::BotCount)))
         });
     }
 
-    pub(super) fn render_choice(ui: &mut Ui<Event>) {
+    pub(super) fn render_form(ui: &mut Ui<Event>) {
         for n in 1..=10 {
-            let val = Self(n);
+            let this = Self(n);
             let key = KeyCode::Char((b'0' + (n % 10)) as char);
 
-            ui.btn(val.to_string(), key, |btn| {
-                btn.throwing(Event::SetBotCount(val))
+            ui.btn(this.to_string(), key, |btn| {
+                btn.throwing(Event::SetBotCount(this))
             });
         }
     }

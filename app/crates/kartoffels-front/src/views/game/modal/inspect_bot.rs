@@ -29,7 +29,7 @@ impl InspectBotModal {
         let event = ui.catching(|ui| {
             let width = ui.area.width - 8;
             let height = ui.area.height - 4;
-            let title = format!(" bots › {} ", self.id);
+            let title = format!("bots › {}", self.id);
 
             ui.imodal(width, height, Some(&title), |ui| {
                 let [body_area, _, footer_area] = Layout::vertical([
@@ -313,7 +313,7 @@ impl InspectBotModal {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 enum Event {
     ChangeTab(Tab),
     JoinBot,

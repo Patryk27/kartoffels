@@ -5,17 +5,17 @@
                      .............
         ┌────────────────────── tutorial (5/16) ───────────────────────┐
         │ as you can see, the code in main.rs just calls a couple of   │
-        │ functions in a loop — let's see them in action!              │
+        │ functions in a loop - let's see them in action!              │
         │                                                              │
         │ run this:                                                    │
         │     ./build                                                  │
         │                                                              │
         │ ... then close this message and press [u] to upload the bot  │
         │                                                              │
-        │ when the file picker opens, choose a file called kartoffel — │
+        │ when the file picker opens, choose a file called kartoffel - │
         │ it should be located next to README.md etc.                  │
         │                                                              │
-        │                                                 [enter] next │
+        │ [esc] prev                                      [enter] next │
         └──────────────────────────────────────────────────────────────┘
                  .....................
                  .....................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

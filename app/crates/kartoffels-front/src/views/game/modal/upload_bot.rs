@@ -90,7 +90,7 @@ impl UploadBotModal {
 
         // ---
 
-        ui.imodal(width, height, Some(" upload-bot "), |ui| {
+        ui.imodal(width, height, Some("upload-bot"), |ui| {
             ui.add(&body);
             ui.space(body_height + 1);
 
@@ -122,7 +122,7 @@ impl UploadBotModal {
             }
 
             ui.row(|ui| {
-                ui.btn("cancel", KeyCode::Escape, |btn| {
+                ui.btn("close", KeyCode::Escape, |btn| {
                     btn.throwing(Event::CloseModal)
                 });
 

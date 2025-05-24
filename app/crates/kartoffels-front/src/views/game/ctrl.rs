@@ -6,7 +6,9 @@ use kartoffels_store::World;
 use std::time::Instant;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time;
+use tracing::info;
 
+/// Controller for the game view, allows to display in-game messages etc.
 #[derive(Debug)]
 pub struct GameCtrl {
     tx: GameCtrlTx,
@@ -20,6 +22,12 @@ impl GameCtrl {
         let this = Self { tx };
 
         (this, rx)
+    }
+
+    fn clone(&self) -> Self {
+        Self {
+            tx: self.tx.clone(),
+        }
     }
 
     pub async fn visit(&self, world: &World) -> Result<()> {
@@ -62,7 +70,30 @@ impl GameCtrl {
         Ok(())
     }
 
+    /// Shows a message.
+    ///
+    /// See: [`Self::msg_ex()`].
     pub async fn msg<T>(&self, msg: &'static Msg<T>) -> Result<T>
+    where
+        T: Clone + Send + Sync + 'static,
+    {
+        self.msg_ex(msg).await?.close().await
+    }
+
+    /// Shows a message.
+    ///
+    /// As compared to [`Self::msg()`], this function doesn't close the message,
+    /// so it comes handy for all those messages like "do you want to go back?"
+    /// that mustn't auto-disappear when user answers them.
+    ///
+    /// (as in: if those messages disappeared, it wouldn't look nicely paired
+    /// with the fade-out transition.)
+    ///
+    /// See: [`Self::msg()`].
+    pub async fn msg_ex<T>(
+        &self,
+        msg: &'static Msg<T>,
+    ) -> Result<GameMsgHandle<T>>
     where
         T: Clone + Send + Sync + 'static,
     {
@@ -82,13 +113,14 @@ impl GameCtrl {
         })
         .await?;
 
-        let event = rx.await?;
+        let result = rx.await?;
 
         time::sleep(theme::FRAME_TIME).await;
 
-        self.close_modal().await?;
-
-        Ok(event)
+        Ok(GameMsgHandle {
+            ctrl: self.clone(),
+            answer: result,
+        })
     }
 
     pub async fn set_help(&self, help: Option<HelpMsgRef>) -> Result<()> {
@@ -172,6 +204,8 @@ impl GameCtrlRequest {
     ) -> Result<()> {
         match self {
             GameCtrlRequest::Visit(handle) => {
+                info!(id=?handle.id(), name=?handle.name(), "visiting");
+
                 let mut snapshots = handle.snapshots();
 
                 view.events = handle.events().ok();
@@ -225,5 +259,23 @@ impl GameCtrlRequest {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct GameMsgHandle<T> {
+    ctrl: GameCtrl,
+    answer: T,
+}
+
+impl<T> GameMsgHandle<T> {
+    pub fn answer(&self) -> &T {
+        &self.answer
+    }
+
+    pub async fn close(self) -> Result<T> {
+        self.ctrl.close_modal().await?;
+
+        Ok(self.answer)
     }
 }

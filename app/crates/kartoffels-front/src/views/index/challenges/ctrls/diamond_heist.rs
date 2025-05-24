@@ -12,7 +12,7 @@ use ratatui::style::Stylize;
 use std::ops::ControlFlow;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
-use tracing::debug;
+use tracing::info;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "diamond-heist",
@@ -32,12 +32,12 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "go inside the room, take the diamond (using `arm_pick()`) and \
-             then drive away — you'll be starting in the bottom-left corner, \
+             then drive away - you'll be starting in the bottom-left corner, \
              the exit is on the right side",
         ),
         MsgLine::new(""),
         MsgLine::new(
-            "do not kill any guards, we don't want no spilled oil — our intel \
+            "do not kill any guards, we don't want no spilled oil - our intel \
              says the guards scan only see the 3x3 area around them, use it to \
              your advantage",
         ),
@@ -49,51 +49,55 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
 
 static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: vec![MsgLine::new(
-        "ayy, you killed a guard, alarming the entire facility — i told you: \
+        "ayy, you killed a guard, alarming the entire facility - i told you: \
          *spill no oil!*",
     )],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+    title: Some("diamond-heist"),
     body: vec![MsgLine::new("ayy, you've died!")],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
-static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" diamond-heist "),
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+    title: Some("diamond-heist"),
     body: vec![
         MsgLine::new("congrats!"),
         MsgLine::new(""),
         MsgLine::new("now give me *my* diamond back and go away"),
     ],
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
-    debug!("run()");
+    info!("run()");
 
     Box::pin(async move {
-        if !game.msg(&START_MSG).await? {
+        let msg = game.msg_ex(&START_MSG).await?;
+
+        if *msg.answer() {
+            msg.close().await?;
+        } else {
             return Ok(());
         }
 
@@ -113,7 +117,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
         }
 
         game.sync(world.version()).await?;
-        game.msg(&COMPLETED_MSG).await?;
+        game.msg_ex(&CONGRATS_MSG).await?;
 
         Ok(())
     })

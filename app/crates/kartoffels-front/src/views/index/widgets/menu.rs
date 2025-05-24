@@ -1,62 +1,122 @@
 use super::super::Event;
 use crate::{theme, Ui};
+use ratatui::layout::Size;
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};
 use termwiz::input::KeyCode;
 
 #[derive(Debug)]
-pub struct Menu;
+pub struct Menu {
+    has_public_worlds: bool,
+    variant: Variant,
+}
 
 impl Menu {
-    pub fn width() -> u16 {
-        20
+    pub fn new<T>(ui: &Ui<T>, has_public_worlds: bool) -> (Self, Size) {
+        let variant = if ui.area.height >= 35 {
+            Variant::Tall
+        } else {
+            Variant::Short
+        };
+
+        let size = {
+            let mut height = 8;
+
+            // `[p] play`
+            if has_public_worlds {
+                height += 2;
+            }
+
+            // `[q] quit`
+            if ui.ty.is_ssh() {
+                height += 2;
+            }
+
+            // Extra spacers for buttons
+            if variant.is_tall() {
+                height += 2;
+
+                if has_public_worlds {
+                    height += 1;
+                }
+            }
+
+            Size { width: 50, height }
+        };
+
+        let this = Self {
+            has_public_worlds,
+            variant,
+        };
+
+        (this, size)
     }
 
-    pub fn height<T>(ui: &Ui<T>, has_public_worlds: bool) -> u16 {
-        let mut height = 5;
-
-        if has_public_worlds {
-            height += 1;
-        }
-
-        if ui.ty.is_ssh() {
-            height += 2;
-        }
-
-        height
-    }
-
-    pub fn render(ui: &mut Ui<Event>, has_public_worlds: bool) {
+    pub fn render(self, ui: &mut Ui<Event>) {
         let block = Block::bordered()
             .border_style(Style::new().fg(theme::GREEN).bg(theme::BG))
             .padding(Padding::horizontal(1));
 
         ui.block(block, |ui| {
-            if has_public_worlds {
+            if self.has_public_worlds {
                 ui.btn("play", KeyCode::Char('p'), |btn| {
-                    btn.throwing(Event::Play).centered()
+                    btn.help("fight bots uploaded by other players")
+                        .throwing(Event::Play)
                 });
+
+                if self.variant.is_tall() {
+                    ui.space(1);
+                }
             }
 
             ui.btn("sandbox", KeyCode::Char('s'), |btn| {
-                btn.throwing(Event::Sandbox).centered()
+                btn.help("experiment on a private world")
+                    .throwing(Event::Sandbox)
             });
+
+            if self.variant.is_tall() {
+                ui.space(1);
+            }
 
             ui.btn("tutorial", KeyCode::Char('t'), |btn| {
-                btn.throwing(Event::Tutorial).centered()
+                btn.help("learn how to play the game, quick & cheap")
+                    .throwing(Event::Tutorial)
             });
 
+            if self.variant.is_tall() {
+                ui.space(1);
+            }
+
             ui.btn("challenges", KeyCode::Char('c'), |btn| {
-                btn.throwing(Event::Challenges).centered()
+                btn.help("solve single-player exercises")
+                    .throwing(Event::Challenges)
             });
 
             if ui.ty.is_ssh() {
-                ui.space(1);
+                if self.variant.is_short() || self.variant.is_tall() {
+                    ui.space(1);
+                }
 
                 ui.btn("quit", KeyCode::Escape, |btn| {
                     btn.throwing(Event::Quit).centered()
                 });
             }
         });
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Variant {
+    Short,
+    Tall,
+}
+
+impl Variant {
+    fn is_short(&self) -> bool {
+        matches!(self, Self::Short)
+    }
+
+    fn is_tall(&self) -> bool {
+        matches!(self, Self::Tall)
     }
 }

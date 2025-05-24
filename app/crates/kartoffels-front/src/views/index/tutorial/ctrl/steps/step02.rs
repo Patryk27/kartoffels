@@ -1,7 +1,7 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (2/16) "),
+static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
+    title: Some("tutorial (2/16)"),
 
     body: vec![
         MsgLine::new("lesson #1:").bold(),
@@ -9,11 +9,13 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
             "- you can navigate the interface using keyboard and/or mouse",
         ),
         MsgLine::ssh(
-            "  (that includes when you're connected through the terminal)",
+            "  (including when you're connected through the terminal)",
         ),
         MsgLine::new(""),
         MsgLine::new("lesson #2, at any time:").bold(),
-        MsgLine::ssh("- press [`Ctrl-c`] to disconnect and quit the game"),
+        MsgLine::ssh(
+            "- press [`Ctrl-c`] to quit the game (no questions asked)",
+        ),
         MsgLine::new(""),
         MsgLine::new("lesson #3, during the game:").bold(),
         MsgLine::new("- press [`h`] to get help (ambulance paid separately)"),
@@ -25,11 +27,14 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("- don't lick yellow snow"),
     ],
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![
+        MsgButton::escape("prev", false),
+        MsgButton::enter("next", true),
+    ],
 });
 
-pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
-    ctxt.game.msg(&MSG).await?;
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    info!("run()");
 
-    Ok(())
+    ctxt.game.msg(&MSG).await
 }

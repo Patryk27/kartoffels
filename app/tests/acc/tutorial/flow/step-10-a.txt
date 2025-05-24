@@ -6,11 +6,11 @@
                     ...............                    > age: 0s
                    .................                   > pos: 13,12
         ┌────────────────────── tutorial (10/16) ──────────────────────┐
-        │ yes... ha ha ha... YES!                                      │
+        │ yes... ha ha ha... yes!                                      │
         │                                                              │
         │ by telling the bot to always move forward instead of driving │
-        │ in squares, we should see it moving forward and, well,       │
-        │ unknowingly falling out of the map                           │
+        │ in squares, we'll witness its inevitable demise by falling   │
+        │ into the void (that is, falling outside the map)             │
         │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
@@ -27,4 +27,4 @@
                                                        [i] inspect-bot
                                                        [f] stop-following-bot
                                                        [D] delete-bot
-[esc] go-back  [spc] resume  [h] help                                     paused
+[esc] exit  [spc] resume  [h] help                                        paused

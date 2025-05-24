@@ -1,0 +1,30 @@
+
+
+
+
+
+
+
+
+                    ┌──────────────── exit ─────────────────┐
+                    │ do you want to exit to the main menu? │
+                    │                                       │
+                    │ [n] no                        [y] yes │
+                    └───────────────────────────────────────┘
+                        .......
+                        @→.....
+                        .......
+                        .......
+                         .....
+
+
+
+
+
+
+
+
+
+                                                       [j] join-bot
+                                                       [u] upload-bot
+[esc] exit  [spc] pause  [h] help  [b] bots

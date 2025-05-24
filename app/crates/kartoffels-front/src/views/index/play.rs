@@ -1,13 +1,13 @@
 mod ctrl;
 
 use crate::views::game;
-use crate::{BgMap, Button, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
+use crate::{BgMap, Button, Fade, Frame, UiWidget};
 use anyhow::Result;
 use itertools::Itertools;
 use kartoffels_store::{Session, Store, World, WorldVis};
 use std::iter;
 use termwiz::input::KeyCode;
-use tracing::debug;
+use tracing::info;
 
 pub async fn run(
     store: &Store,
@@ -18,7 +18,9 @@ pub async fn run(
     let mut fade_in = false;
 
     loop {
-        match run_once(store, frame, bg, fade_in).await? {
+        info!("run()");
+
+        match main(store, frame, bg, fade_in).await? {
             Event::Play(world) => {
                 game::run(store, sess, frame, |game| {
                     ctrl::run(sess, world, game)
@@ -35,14 +37,12 @@ pub async fn run(
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     frame: &mut Frame,
     bg: &BgMap,
     fade_in: bool,
 ) -> Result<Event> {
-    debug!("run()");
-
     let worlds: Vec<_> = store
         .find_worlds(WorldVis::Public)
         .await?
@@ -67,7 +67,7 @@ async fn run_once(
         .collect();
 
     let mut go_back_btn =
-        Button::new("go-back", KeyCode::Escape).throwing(Event::GoBack);
+        Button::new("exit", KeyCode::Escape).throwing(Event::GoBack);
 
     let width = world_btns
         .iter()
@@ -78,42 +78,39 @@ async fn run_once(
 
     let height = world_btns.len() as u16 + 2;
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = Fade::new(store, fade_in);
 
     loop {
         let event = frame
-            .tick(|ui| {
-                fade.render(ui, |ui| {
-                    bg.render(ui);
+            .render(|ui| {
+                bg.render(ui);
 
-                    ui.imodal(width, height, Some(" play "), |ui| {
-                        for btn in &mut world_btns {
-                            ui.add(btn);
-                        }
+                ui.imodal(width, height, Some("play"), |ui| {
+                    for btn in &mut world_btns {
+                        ui.add(btn);
+                    }
 
-                        ui.space(1);
-                        ui.add(&mut go_back_btn);
-                    });
+                    ui.space(1);
+                    ui.add(&mut go_back_btn);
                 });
+
+                fade.render(ui);
             })
             .await?;
 
-        if let Some(event) = event {
+        if let Some(event @ Event::Play(_)) = event {
+            fade.out(event);
+            continue;
+        }
+
+        if let Some(event) = fade.poll().or(event) {
             return Ok(event);
         }
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 enum Event {
     Play(World),
     GoBack,
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        matches!(self, Event::Play(_))
-    }
 }

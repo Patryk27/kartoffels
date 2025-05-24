@@ -27,4 +27,4 @@ v1500008                                               id
                                                        [i] inspect-bot
                                                        [f] stop-following-bot
                                                        [D] delete-bot
-[esc] go-back  [spc] pause  [h] help  [1/2/3] overclock
+[esc] exit  [spc] pause  [h] help  [1/2/3] overclock

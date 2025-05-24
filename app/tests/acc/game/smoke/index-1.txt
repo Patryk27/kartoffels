@@ -1,5 +1,4 @@
 
-
          ┌────────────────────────────────────────────────────────────┐
          │ welcome to kartoffels, a game where you're given a potato: │
          │                                                            │
@@ -13,18 +12,19 @@
          │                                                            │
          │    ... and your job is to implement a firmware for it!     │
          │                                                            │
-         │  you've got a 64 kHz cpu & 128 kB ram at hand and you can  │
-         │  either compete against other players in the online play   │
-         │      or indulge yourself in single-player challenges       │
-         │                                                            │
-         │                         have fun!                          │
+         │   armed with 64 khz cpu and 128 kib ram, you can compete   │
+         │   against other players, solve single-player challenges    │
+         │        or simply make up your own goal - have fun!         │
          └────────────────────────────────────────────────────────────┘
 
-                              ┌──────────────────┐
-                              │     [p] play     │
-                              │   [s] sandbox    │
-                              │   [t] tutorial   │
-                              │  [c] challenges  │
-                              └──────────────────┘
-
+               ┌────────────────────────────────────────────────┐
+               │ [p] play                                       │
+               │     fight bots uploaded by other players       │
+               │ [s] sandbox                                    │
+               │     experiment on a private world              │
+               │ [t] tutorial                                   │
+               │     learn how to play the game, quick & cheap  │
+               │ [c] challenges                                 │
+               │     solve single-player exercises              │
+               └────────────────────────────────────────────────┘
                                                                        localhost

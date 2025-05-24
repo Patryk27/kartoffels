@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (14/16) "),
+    title: Some("tutorial (14/16)"),
 
     body: vec![
         MsgLine::new("congrats!"),
@@ -15,13 +15,13 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
         MsgLine::new("🔪 the knife 🔪").centered().fg(theme::YELLOW).bold(),
     ],
 
-    buttons: vec![MsgButton::confirm("lets-take-a-stab-at-it", ())],
+    buttons: vec![MsgButton::enter("lets-take-a-stab-at-it", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    info!("run()");
+
     ctxt.delete_bots().await?;
     ctxt.sync().await?;
-    ctxt.game.msg(&MSG).await?;
-
-    Ok(())
+    ctxt.game.msg(&MSG).await
 }

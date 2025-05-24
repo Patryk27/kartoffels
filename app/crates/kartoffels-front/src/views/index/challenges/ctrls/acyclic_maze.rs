@@ -11,7 +11,7 @@ use rand::RngCore;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
-use tracing::debug;
+use tracing::info;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "acyclic-maze",
@@ -30,8 +30,8 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("*show mercy*").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "traverse the maze, find timmy and kill it — you'll be starting in \
-             the bottom-right corner",
+            "traverse the maze, find timmy and kill it - you start in the \
+             bottom-right corner",
         ),
         MsgLine::new(""),
         MsgLine::new("difficulty: easy"),
@@ -41,33 +41,33 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" acyclic-maze "),
+    title: Some("acyclic-maze"),
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
 
-static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" acyclic-maze "),
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+    title: Some("acyclic-maze"),
 
     body: vec![
         MsgLine::new("congrats!"),
         MsgLine::new(""),
         MsgLine::new(
-            "poor timmy-bot is surely in a better place now, thanks to you!",
+            "poor timmy is surely in a better place now, all thanks to you!",
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 const AREA: UVec2 = uvec2(37, 19);
@@ -78,10 +78,14 @@ const TIMMY_POS: IVec2 = ivec2(1, 1);
 const SPAWN_POS: IVec2 = ivec2(35 + (ENTRANCE_LEN as i32), 17);
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
-    debug!("run()");
+    info!("run()");
 
     Box::pin(async move {
-        if !game.msg(&START_MSG).await? {
+        let msg = game.msg_ex(&START_MSG).await?;
+
+        if *msg.answer() {
+            msg.close().await?;
+        } else {
             return Ok(());
         }
 
@@ -90,7 +94,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
         watch(&world, timmy).await?;
 
         game.sync(world.version()).await?;
-        game.msg(&COMPLETED_MSG).await?;
+        game.msg_ex(&CONGRATS_MSG).await?;
 
         Ok(())
     })
@@ -193,32 +197,5 @@ async fn watch(world: &w::Handle, timmy: w::BotId) -> Result<()> {
         if events.next_died_bot().await? == timmy {
             return Ok(());
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use kartoffels_utils::Asserter;
-    use rand::SeedableRng;
-    use rand_chacha::ChaCha8Rng;
-    use std::path::Path;
-
-    #[tokio::test]
-    async fn map() {
-        let dir = Path::new("src")
-            .join("views")
-            .join("index")
-            .join("challenges")
-            .join("ctrls")
-            .join("acyclic_maze")
-            .join("tests")
-            .join("map");
-
-        let (map, _) = w::MapBuilder::new();
-        let rng = ChaCha8Rng::from_seed(Default::default());
-        let map = create_map(rng, map).await.unwrap();
-
-        Asserter::new(dir).assert("expected.txt", map.to_string());
     }
 }

@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::collections::{hash_map, HashMap};
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tracing::{debug, info};
+use tracing::info;
 
 #[derive(Debug)]
 pub(crate) struct Sessions {
@@ -70,7 +70,7 @@ impl Sessions {
         if let Some(id) = self.abandoned.1.recv().await
             && self.entries.remove(&id).is_some()
         {
-            debug!(?id, "session collected");
+            info!(?id, "session collected");
         }
     }
 }

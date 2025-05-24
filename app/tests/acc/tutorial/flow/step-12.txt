@@ -1,9 +1,7 @@
 
 
-
         ┌────────────────────── tutorial (12/16) ──────────────────────┐
-        │ radar returns a scan of the environment around the bot, it's │
-        │ as easy as:                                                  │
+        │ radar provides a scan of the tiles around the bot:           │
         │                                                              │
         │     radar_wait(); // wait until radar is ready               │
         │     radar_scan(3); // do a 3x3 scan                          │
@@ -21,10 +19,12 @@
         │         // do something else                                 │
         │     }                                                        │
         │                                                              │
+        │ it's quite configurable - it can scan the directions other   │
+        │ bots are facing, their ids etc., look around the api         │
+        │ functions if you want to know more                           │
+        │                                                              │
         │                                                 [enter] next │
         └──────────────────────────────────────────────────────────────┘
-                       .........
-
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help                                     spd:∞
+[esc] exit  [spc] pause  [h] help                                        spd:∞

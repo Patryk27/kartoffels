@@ -3,11 +3,11 @@ use termwiz::input::KeyCode;
 
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
-static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (3/16) "),
+static MSG: LazyLock<Msg<Action>> = LazyLock::new(|| Msg {
+    title: Some("tutorial (3/16)"),
 
     body: vec![
-        MsgLine::new("look at you, learning so fast - *NEXT LESSON!*"),
+        MsgLine::new("look at you, learning so fast - *next lesson!*"),
         MsgLine::new(""),
         MsgLine::new("run this:"),
         MsgLine::new(format!("    {CMD}")),
@@ -16,25 +16,34 @@ static MSG: LazyLock<Msg<&'static str>> = LazyLock::new(|| Msg {
     ],
 
     buttons: vec![
-        MsgButton::new("copy-command", KeyCode::Char('c'), "copy"),
-        MsgButton::confirm("next", "next"),
+        MsgButton::escape("prev", Action::Prev),
+        MsgButton::new("copy-command", KeyCode::Char('c'), Action::Copy)
+            .right_aligned(),
+        MsgButton::enter("next", Action::Next),
     ],
 });
 
-pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+#[derive(Clone, Copy, Debug)]
+enum Action {
+    Prev,
+    Copy,
+    Next,
+}
+
+pub async fn run(ctxt: &mut TutorialCtxt) -> Result<bool> {
+    info!("run()");
+
     loop {
         match ctxt.game.msg(&MSG).await? {
-            "copy" => {
+            Action::Prev => {
+                return Ok(false);
+            }
+            Action::Copy => {
                 ctxt.game.copy(CMD).await?;
             }
-
-            "next" => {
-                break;
+            Action::Next => {
+                return Ok(true);
             }
-
-            _ => unreachable!(),
         }
     }
-
-    Ok(())
 }

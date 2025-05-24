@@ -6,14 +6,14 @@
                     ...............
                    .................
         ┌────────────────────── tutorial (3/16) ───────────────────────┐
-        │ look at you, learning so fast - NEXT LESSON!                 │
+        │ look at you, learning so fast - next lesson!                 │
         │                                                              │
         │ run this:                                                    │
         │     git clone https://github.com/patryk27/kartoffel          │
         │                                                              │
         │ ... and press [enter] once you're ready                      │
         │                                                              │
-        │ [c] copy-command                                [enter] next │
+        │ [esc] prev                     [c] copy-command [enter] next │
         └──────────────────────────────────────────────────────────────┘
                 .......................
                 .......................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

@@ -228,7 +228,7 @@ impl Bots {
         reason: String,
         killer: Option<BotId>,
     ) {
-        trace!(id=?killed, ?reason, ?killer, "killing bot");
+        trace!(id=?killed.id, ?reason, ?killer, "killing bot");
 
         events.add(Event::BotDied { id: killed.id });
         lives.on_bot_died(clock, killed.id, killed.age());

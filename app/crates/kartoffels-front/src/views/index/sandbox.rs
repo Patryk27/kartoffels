@@ -1,17 +1,17 @@
 mod ctrl;
-mod sandbox_size;
-mod sandbox_theme;
+mod size;
+mod theme;
 
-use self::sandbox_size::*;
-use self::sandbox_theme::*;
+use self::size::*;
+use self::theme::*;
 use crate::views::game;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, Ui, UiWidget};
+use crate::{BgMap, Fade, Frame, Ui, UiWidget};
 use anyhow::Result;
 use glam::uvec2;
 use kartoffels_store::{Session, Store};
 use kartoffels_world::prelude as w;
 use termwiz::input::KeyCode;
-use tracing::debug;
+use tracing::info;
 
 pub async fn run(
     store: &Store,
@@ -21,14 +21,16 @@ pub async fn run(
 ) -> Result<()> {
     let mut fade_in = false;
 
-    // We keep those outside `run_once()`, because we want to preserve settings
-    // when user goes back to the form, for convenience
+    // We keep those outside `main()`, because we want to preserve settings
+    // when user goes back to the view, for convenience
     let mut size = SandboxSize::Medium;
     let mut theme = SandboxTheme::Cave;
 
     loop {
+        info!("run()");
+
         if let Some(theme) =
-            run_once(store, frame, bg, fade_in, &mut size, &mut theme).await?
+            main(store, frame, bg, fade_in, &mut size, &mut theme).await?
         {
             game::run(store, sess, frame, |game| ctrl::run(store, theme, game))
                 .await?;
@@ -40,7 +42,7 @@ pub async fn run(
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     frame: &mut Frame,
     bg: &BgMap,
@@ -48,70 +50,69 @@ async fn run_once(
     size: &mut SandboxSize,
     theme: &mut SandboxTheme,
 ) -> Result<Option<w::Theme>> {
-    debug!("run()");
+    let mut fade = Fade::new(store, fade_in);
 
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
-
-    let mut form = Form {
-        focus: None,
+    let mut view = View {
         size,
         theme,
+        focus: None,
     };
 
     loop {
         let event = frame
-            .tick(|ui| {
-                fade.render(ui, |ui| {
-                    bg.render(ui);
-                    form.render(ui);
-                });
+            .render(|ui| {
+                bg.render(ui);
+                view.render(ui);
+                fade.render(ui);
             })
             .await?;
 
         if let Some(event) = event {
             match event {
                 Event::GoBack => {
-                    if form.focus.is_some() {
-                        form.focus = None;
+                    if view.focus.is_some() {
+                        view.focus = None;
                     } else {
                         return Ok(None);
                     }
                 }
 
                 Event::Confirm => {
-                    return Ok(Some(form.confirm()));
+                    fade.out(view.confirm());
                 }
 
                 Event::FocusOn(val) => {
-                    form.focus = val;
+                    view.focus = val;
                 }
 
                 Event::SetSize(val) => {
-                    *form.size = val;
-                    form.focus = None;
+                    *view.size = val;
+                    view.focus = None;
                 }
 
                 Event::SetTheme(val) => {
-                    *form.theme = val;
-                    form.focus = None;
+                    *view.theme = val;
+                    view.focus = None;
                 }
             }
+        }
+
+        if let Some(event) = fade.poll() {
+            return Ok(Some(event));
         }
     }
 }
 
 #[derive(Debug)]
-struct Form<'a> {
-    focus: Option<Focus>,
+struct View<'a> {
     size: &'a mut SandboxSize,
     theme: &'a mut SandboxTheme,
+    focus: Option<Focus>,
 }
 
-impl Form<'_> {
+impl View<'_> {
     fn render(&mut self, ui: &mut Ui<Event>) {
-        let width = 40;
+        let width = 44;
         let height = self.height();
         let title = self.title();
 
@@ -123,31 +124,31 @@ impl Form<'_> {
 
     fn title(&self) -> &'static str {
         match &self.focus {
-            Some(Focus::SandboxSize) => " sandbox › choose-size ",
-            Some(Focus::SandboxTheme) => " sandbox › choose-theme ",
-            None => " sandbox ",
+            None => "sandbox",
+            Some(Focus::SandboxSize) => "sandbox › choose-size",
+            Some(Focus::SandboxTheme) => "sandbox › choose-theme",
         }
     }
 
     fn height(&self) -> u16 {
         match &self.focus {
+            None => 4,
             Some(Focus::SandboxSize) => SandboxSize::height() + 2,
             Some(Focus::SandboxTheme) => SandboxTheme::height() + 2,
-            None => 4,
         }
     }
 
     fn render_body(&self, ui: &mut Ui<Event>) {
         match &self.focus {
+            None => {
+                SandboxSize::render_btn(ui, self.size);
+                SandboxTheme::render_btn(ui, self.theme);
+            }
             Some(Focus::SandboxSize) => {
-                SandboxSize::render_choice(ui);
+                SandboxSize::render_form(ui);
             }
             Some(Focus::SandboxTheme) => {
-                SandboxTheme::render_choice(ui);
-            }
-            None => {
-                SandboxSize::render_focus(ui, self.size);
-                SandboxTheme::render_focus(ui, self.theme);
+                SandboxTheme::render_form(ui);
             }
         }
     }
@@ -156,9 +157,7 @@ impl Form<'_> {
         ui.space(1);
 
         ui.row(|ui| {
-            ui.btn("go-back", KeyCode::Escape, |btn| {
-                btn.throwing(Event::GoBack)
-            });
+            ui.btn("exit", KeyCode::Escape, |btn| btn.throwing(Event::GoBack));
 
             if self.focus.is_none() {
                 ui.btn("create", KeyCode::Enter, |btn| {
@@ -168,7 +167,7 @@ impl Form<'_> {
         });
     }
 
-    fn confirm(self) -> w::Theme {
+    fn confirm(&self) -> w::Theme {
         match self.theme {
             SandboxTheme::Arena => {
                 let radius = match self.size {
@@ -202,12 +201,6 @@ enum Event {
     FocusOn(Option<Focus>),
     SetSize(SandboxSize),
     SetTheme(SandboxTheme),
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        matches!(self, Event::Confirm)
-    }
 }
 
 #[derive(Debug, PartialEq, Eq)]

@@ -9,14 +9,14 @@
         │                                                              │
         │                          show mercy                          │
         │                                                              │
-        │ traverse the maze, find timmy and kill it — you'll be        │
-        │ starting in the bottom-right corner                          │
+        │ traverse the maze, find timmy and kill it - you start in the │
+        │ bottom-right corner                                          │
         │                                                              │
         │ difficulty: easy                                             │
         │                                                         xoxo │
         │                                               the architects │
         │                                                              │
-        │ [esc] go-back                                  [enter] start │
+        │ [esc] exit                                     [enter] start │
         └──────────────────────────────────────────────────────────────┘
 
 
@@ -27,4 +27,4 @@
 
 
 
-[esc] go-back
+[esc] exit

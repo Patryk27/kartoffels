@@ -11,6 +11,7 @@ use derivative::Derivative;
 use glam::IVec2;
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot, watch};
+use tracing::Span;
 
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
@@ -158,7 +159,7 @@ impl Handle {
     async fn send_ex(&self, req: Request) -> Result<()> {
         self.shared
             .tx
-            .send(req)
+            .send((Span::current(), req))
             .await
             .map_err(|_| anyhow!("{}", Self::ERR))?;
 
@@ -168,88 +169,105 @@ impl Handle {
 
 #[derive(Clone, Debug)]
 pub struct SharedHandle {
-    pub tx: mpsc::Sender<Request>,
+    pub tx: mpsc::Sender<(Span, Request)>,
     pub name: Arc<ArcSwap<String>>,
     pub events: Option<broadcast::Sender<EventEnvelope>>,
     pub snapshots: watch::Sender<Arc<Snapshot>>,
 }
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub enum Request {
     Ping {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Tick {
         fuel: u32,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Pause {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Resume {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     Shutdown {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<WorldBuffer>,
     },
 
     Save {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<WorldBuffer>,
     },
 
     GetPolicy {
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Policy>,
     },
 
     SetPolicy {
         policy: Policy,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateBot {
         req: CreateBotRequest,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Result<BotId>>,
     },
 
     KillBot {
         id: BotId,
         reason: String,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     DeleteBot {
         id: BotId,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetMap {
         map: Map,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     SetSpawn {
         pos: Option<IVec2>,
         dir: Option<AbsDir>,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 
     CreateObject {
         obj: Object,
         pos: Option<IVec2>,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<ObjectId>,
     },
 
     DeleteObject {
         id: ObjectId,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<Option<Object>>,
     },
 
     Overclock {
         clock: Clock,
+        #[derivative(Debug = "ignore")]
         tx: oneshot::Sender<()>,
     },
 }

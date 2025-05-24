@@ -11,13 +11,13 @@ pub struct JoinBotModal {
 
 impl JoinBotModal {
     pub fn render(&mut self, ui: &mut Ui<Event>, world: &w::Snapshot) {
-        ui.imodal(26, 4, Some(" join-bot "), |ui| {
+        ui.imodal(26, 4, Some("join-bot"), |ui| {
             ui.line("enter bot id:");
             ui.add(&mut self.id);
             ui.space(1);
 
             ui.row(|ui| {
-                ui.btn("cancel", KeyCode::Escape, |btn| {
+                ui.btn("close", KeyCode::Escape, |btn| {
                     btn.throwing(Event::CloseModal)
                 });
 

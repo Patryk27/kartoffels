@@ -67,7 +67,7 @@ impl Worlds {
 
                 let handle = {
                     let span = info_span!("world", %id);
-                    let _span = span.enter();
+                    let _span = span.entered();
 
                     kartoffels_world::resume(src)?
                 };
@@ -146,7 +146,7 @@ impl Worlds {
 
             task::spawn_blocking(move || {
                 let span = info_span!(parent: &span, "world", %id);
-                let _span = span.enter();
+                let _span = span.entered();
 
                 kartoffels_world::create(config)
             })
@@ -219,7 +219,7 @@ impl Worlds {
             task::spawn(async move {
                 _ = entry.handle.shutdown().await;
 
-                debug!(?id, "world collected");
+                info!(?id, "world collected");
             });
         }
     }

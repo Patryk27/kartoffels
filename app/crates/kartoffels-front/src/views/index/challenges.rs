@@ -2,12 +2,12 @@ mod ctrls;
 
 use self::ctrls::*;
 use crate::views::game;
-use crate::{BgMap, FadeCtrl, FadeCtrlEvent, Frame, UiWidget};
+use crate::{BgMap, Fade, Frame, Ui, UiWidget};
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
 use ratatui::widgets::{Paragraph, Wrap};
 use termwiz::input::KeyCode;
-use tracing::debug;
+use tracing::info;
 
 pub async fn run(
     store: &Store,
@@ -18,7 +18,9 @@ pub async fn run(
     let mut fade_in = false;
 
     loop {
-        match run_once(store, frame, bg, fade_in).await? {
+        info!("run()");
+
+        match main(store, frame, bg, fade_in).await? {
             Event::Play(challenge) => {
                 game::run(store, sess, frame, |game| {
                     (challenge.run)(store, game)
@@ -35,74 +37,81 @@ pub async fn run(
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     frame: &mut Frame,
     bg: &BgMap,
     fade_in: bool,
 ) -> Result<Event> {
-    debug!("run()");
-
-    let mut fade = FadeCtrl::default()
-        .animate(!store.testing())
-        .fade_in(fade_in);
+    let mut fade = Fade::new(store, fade_in);
+    let mut view = View;
 
     loop {
         let event = frame
-            .tick(|ui| {
-                let width = (ui.area.width - 2).min(60);
-
-                // TODO doing manual layouting sucks sometimes
-                let height = {
-                    let mut height = 0;
-
-                    for challenge in CHALLENGES {
-                        height += 1;
-
-                        height += Paragraph::new(challenge.desc)
-                            .wrap(Wrap::default())
-                            .line_count(width - 4);
-
-                        height += 1;
-                    }
-
-                    (height + 1) as u16
-                };
-
-                fade.render(ui, |ui| {
-                    bg.render(ui);
-
-                    ui.imodal(width, height, Some(" challenges "), |ui| {
-                        for chl in CHALLENGES {
-                            ui.btn(chl.name, chl.key, |btn| {
-                                btn.help(chl.desc).throwing(Event::Play(chl))
-                            });
-
-                            ui.space(1);
-                        }
-
-                        ui.btn("go-back", KeyCode::Escape, |btn| {
-                            btn.throwing(Event::GoBack)
-                        });
-                    });
-                });
+            .render(|ui| {
+                bg.render(ui);
+                view.render(ui);
+                fade.render(ui);
             })
             .await?;
 
-        if let Some(event) = event {
+        if let Some(event @ Event::Play(_)) = event {
+            fade.out(event);
+            continue;
+        }
+
+        if let Some(event) = fade.poll().or(event) {
             return Ok(event);
         }
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
+struct View;
+
+impl View {
+    fn render(&mut self, ui: &mut Ui<Event>) {
+        let width = self.width();
+        let height = self.height(width);
+
+        ui.imodal(width, height, Some("challenges"), |ui| {
+            for chl in CHALLENGES {
+                ui.btn(chl.name, chl.key, |btn| {
+                    btn.help(chl.desc).throwing(Event::Play(chl))
+                });
+
+                ui.space(1);
+            }
+
+            ui.btn("exit", KeyCode::Escape, |btn| btn.throwing(Event::GoBack));
+        });
+    }
+
+    fn width(&self) -> u16 {
+        CHALLENGES.iter().map(|chl| chl.desc.len()).max().unwrap() as u16 + 4
+    }
+
+    fn height(&self, width: u16) -> u16 {
+        let mut height = 2;
+
+        for (idx, chl) in CHALLENGES.iter().enumerate() {
+            if idx > 0 {
+                height += 1;
+            }
+
+            height += Paragraph::new(chl.desc)
+                .wrap(Wrap::default())
+                .line_count(width - 4);
+
+            height += 1;
+        }
+
+        height as u16
+    }
+}
+
+#[derive(Debug)]
 enum Event {
     Play(&'static Challenge),
     GoBack,
-}
-
-impl FadeCtrlEvent for Event {
-    fn needs_fade_out(&self) -> bool {
-        matches!(self, Event::Play(_))
-    }
 }

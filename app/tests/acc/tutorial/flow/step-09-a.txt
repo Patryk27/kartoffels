@@ -7,9 +7,9 @@
         ┌────────────────────── tutorial (9/16) ───────────────────────┐
         │ time for some fun!                                           │
         │                                                              │
-        │ remove the call to motor_turn_right(), so that everything    │
-        │ the bot does is just motor_wait() and motor_step_fw(), then  │
-        │ close this message and upload the new firmware               │
+        │ comment-out motor_turn_right(), so that everything the bot   │
+        │ does is just motor_wait() and motor_step(), then close this  │
+        │ message and upload the new firmware                          │
         │                                                              │
         │ !! don't forget to re-run ./build !!                         │
         │                                                              │
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

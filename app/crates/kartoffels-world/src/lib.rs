@@ -189,7 +189,7 @@ impl Bootstrap {
     fn build(
         self,
         events: Events,
-        requests: mpsc::Receiver<Request>,
+        requests: mpsc::Receiver<(Span, Request)>,
         snapshots: Snapshots,
     ) -> World {
         let metronome = self.clock.metronome();
@@ -264,7 +264,7 @@ struct World {
     objects: Objects, // TODO persist
     paused: bool,
     policy: Policy,
-    requests: mpsc::Receiver<Request>,
+    requests: mpsc::Receiver<(Span, Request)>,
     rng: ChaCha8Rng,
     shutdown: Option<Shutdown>,
     snapshots: Snapshots,

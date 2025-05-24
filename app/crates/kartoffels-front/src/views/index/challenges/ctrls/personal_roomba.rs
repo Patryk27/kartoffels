@@ -11,7 +11,7 @@ use std::ops::ControlFlow;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
 use tokio::time;
-use tracing::debug;
+use tracing::info;
 
 pub static CHALLENGE: Challenge = Challenge {
     name: "personal-roomba",
@@ -22,7 +22,7 @@ pub static CHALLENGE: Challenge = Challenge {
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
-        MsgLine::new("our flags — our precious, precious flags"),
+        MsgLine::new("our flags - our precious, precious flags"),
         MsgLine::new("misplaced"),
         MsgLine::new("misaligned").centered(),
         MsgLine::new("not where they").right_aligned(),
@@ -31,9 +31,9 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("*tidy up*").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "you'll be put inside a maze — a dirty maze, lots of alleys and \
+            "you'll be put inside a maze - a dirty maze, lots of alleys and \
              cycles in it; within the corners of that maze are four flags \
-             — find them and pick 'em using the `arm_pick()` function",
+             - find them and pick 'em using the `arm_pick()` function",
         ),
         MsgLine::new(""),
         MsgLine::new("difficulty: much"),
@@ -43,43 +43,47 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some(" personal-roomba "),
+    title: Some("personal-roomba"),
     body: DOCS.clone(),
 
     buttons: vec![
-        MsgButton::abort("go-back", false),
-        MsgButton::confirm("start", true),
+        MsgButton::escape("exit", false),
+        MsgButton::enter("start", true),
     ],
 });
 
 static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
 
-static COMPLETED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" personal-roomba "),
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
+    title: Some("personal-roomba"),
 
     body: vec![
         MsgLine::new("congrats!"),
         MsgLine::new(""),
         MsgLine::new(
-            "flags back at their place, peace in our brainmuscle — we are \
+            "flags back at their place, peace in our brainmuscle - we are \
              grateful",
         ),
     ],
 
-    buttons: vec![MsgButton::confirm("ok", ())],
+    buttons: vec![MsgButton::enter("ok", ())],
 });
 
 const SIZE: UVec2 = uvec2(41, 21);
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
-    debug!("run()");
+    info!("run()");
 
     Box::pin(async move {
-        if !game.msg(&START_MSG).await? {
+        let msg = game.msg_ex(&START_MSG).await?;
+
+        if *msg.answer() {
+            msg.close().await?;
+        } else {
             return Ok(());
         }
 
@@ -90,7 +94,7 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
         }
 
         game.sync(world.version()).await?;
-        game.msg(&COMPLETED_MSG).await?;
+        game.msg_ex(&CONGRATS_MSG).await?;
 
         Ok(())
     })

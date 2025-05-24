@@ -1,7 +1,7 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (13/16) "),
+    title: Some("tutorial (13/16)"),
 
     body: vec![
         MsgLine::new(
@@ -9,21 +9,16 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
              good-old *line follower*, eh?",
         ),
         MsgLine::new(""),
-        MsgLine::new(
-            "ekhm, i'm sorry for my sudden canadian accent, don't know what \
-             happened",
-        ),
-        MsgLine::new(""),
     ]
     .into_iter()
     .chain(DOCS.clone())
     .collect(),
 
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
@@ -45,7 +40,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("overall, all of those functions should be used:"),
         MsgLine::new(""),
         MsgLine::new("\t- `motor_wait()`"),
-        MsgLine::new("\t- `motor_step_fw()`"),
+        MsgLine::new("\t- `motor_step()`"),
         MsgLine::new("\t- `motor_turn_left()`"),
         MsgLine::new("\t- `motor_turn_right()`"),
         MsgLine::new("\t- `radar_wait()`"),
@@ -57,19 +52,21 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
 });
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (13/16) "),
+    title: Some("tutorial (13/16)"),
     body: vec![MsgLine::new(
-        "hmm, your bot seems to have died — delete it and upload something \
+        "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
-    buttons: vec![MsgButton::confirm("try-again", ())],
+    buttons: vec![MsgButton::enter("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    info!("run()");
+
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
-    setup_map(ctxt).await?;
+    setup(ctxt).await?;
 
     loop {
         ctxt.events.next_born_bot().await?;
@@ -91,7 +88,7 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
     Ok(())
 }
 
-async fn setup_map(ctxt: &mut TutorialCtxt) -> Result<()> {
+async fn setup(ctxt: &mut TutorialCtxt) -> Result<()> {
     ctxt.world.set_spawn(ivec2(10, 10), w::AbsDir::E).await?;
 
     ctxt.world

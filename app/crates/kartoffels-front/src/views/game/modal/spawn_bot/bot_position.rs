@@ -1,6 +1,5 @@
 use super::{Event, Focus};
 use crate::Ui;
-use std::fmt;
 use termwiz::input::KeyCode;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -11,20 +10,22 @@ pub enum BotPosition {
 }
 
 impl BotPosition {
-    pub(super) fn render_focus(ui: &mut Ui<Event>, val: &Self) {
-        ui.btn(format!("position: {val}"), KeyCode::Char('p'), |btn| {
-            btn.throwing(Event::FocusOn(Some(Focus::BotPosition)))
-        });
+    pub(super) fn render_btn(ui: &mut Ui<Event>, this: &Self) {
+        ui.btn(
+            format!("position: {}", this.label()),
+            KeyCode::Char('p'),
+            |btn| btn.throwing(Event::FocusOn(Some(Focus::BotPosition))),
+        );
     }
 
-    pub(super) fn render_choice(ui: &mut Ui<Event>) {
-        for (idx, val) in Self::all().enumerate() {
+    pub(super) fn render_form(ui: &mut Ui<Event>) {
+        for (idx, this) in Self::all().enumerate() {
             if idx > 0 {
                 ui.space(1);
             }
 
-            ui.btn(val.to_string(), val.key(), |btn| {
-                btn.help(val.desc()).throwing(Event::SetBotPosition(val))
+            ui.btn(this.label(), this.key(), |btn| {
+                btn.help(this.help()).throwing(Event::SetBotPosition(this))
             });
         }
     }
@@ -37,6 +38,13 @@ impl BotPosition {
         [Self::Manual, Self::Random].into_iter()
     }
 
+    fn label(&self) -> &'static str {
+        match self {
+            Self::Manual => "manual",
+            Self::Random => "random",
+        }
+    }
+
     fn key(&self) -> KeyCode {
         KeyCode::Char(match self {
             Self::Manual => 'm',
@@ -44,23 +52,10 @@ impl BotPosition {
         })
     }
 
-    fn desc(&self) -> &'static str {
+    fn help(&self) -> &'static str {
         match self {
             Self::Manual => "use mouse to place your bot wherever you like",
             Self::Random => "it's, well, random",
         }
-    }
-}
-
-impl fmt::Display for BotPosition {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Manual => "manual",
-                Self::Random => "random",
-            }
-        )
     }
 }

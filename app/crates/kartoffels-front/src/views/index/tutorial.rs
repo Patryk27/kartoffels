@@ -1,5 +1,5 @@
-mod completed;
 mod ctrl;
+mod end;
 
 use crate::views::game;
 use crate::Frame;
@@ -11,15 +11,11 @@ pub async fn run(
     sess: &Session,
     frame: &mut Frame,
 ) -> Result<()> {
-    let mut completed = false;
+    let finished =
+        game::run(store, sess, frame, |ctrl| ctrl::run(store, ctrl)).await?;
 
-    game::run(store, sess, frame, |ctrl| {
-        ctrl::run(store, ctrl, &mut completed)
-    })
-    .await?;
-
-    if completed {
-        completed::run(frame).await?;
+    if finished.unwrap_or(false) {
+        end::run(store, frame).await?;
     }
 
     Ok(())

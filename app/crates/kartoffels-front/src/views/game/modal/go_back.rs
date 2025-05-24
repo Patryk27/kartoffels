@@ -8,8 +8,11 @@ pub struct GoBackModal;
 
 impl GoBackModal {
     pub fn render(&mut self, ui: &mut Ui<Event>) {
-        ui.wmodal(23, 3, Some(" go-back "), |ui| {
-            ui.line(Line::raw("do you want to go back?").centered());
+        ui.wmodal(37, 3, Some("exit"), |ui| {
+            ui.line(
+                Line::raw("do you want to exit to the main menu?").centered(),
+            );
+
             ui.line("");
 
             ui.row(|ui| {

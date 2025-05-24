@@ -18,7 +18,7 @@ use self::modal::*;
 pub use self::modal::{HelpMsg, HelpMsgEvent, HelpMsgRef};
 use self::overlay::*;
 use self::side::*;
-use crate::{theme, Clear, Fade, FadeDir, Frame, Ui, UiWidget};
+use crate::{theme, Clear, Fade, Frame, Ui};
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};
@@ -31,64 +31,75 @@ use std::sync::Arc;
 use std::time::Instant;
 use tokio::select;
 use tokio::sync::oneshot;
-use tracing::debug;
+use tracing::{debug, info, trace};
 
-pub async fn run<CtrlFn, CtrlFut>(
+pub async fn run<CtrlFn, CtrlFut, CtrlOut>(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
     ctrl: CtrlFn,
-) -> Result<()>
+) -> Result<Option<CtrlOut>>
 where
     CtrlFn: FnOnce(GameCtrl) -> CtrlFut,
-    CtrlFut: Future<Output = Result<()>>,
+    CtrlFut: Future<Output = Result<CtrlOut>>,
 {
+    info!("run()");
+
     let (tx, rx) = GameCtrl::new();
-    let view = run_once(store, sess, frame, rx);
-    let ctrl = ctrl(tx);
+    let mut view = Box::pin(main(store, sess, frame, rx));
+    let ctrl = Box::pin(ctrl(tx));
 
     select! {
-        result = view => result,
-        result = ctrl => result,
+        result = &mut view => {
+            result?;
+
+            Ok(None)
+        },
+
+        result = ctrl => {
+            let result = result?;
+
+            // Wait for view to fade-out before returning; by know `ctrl` got
+            // dropped, that's how the view knows it needs to finish asap
+            view.await?;
+
+            Ok(Some(result))
+        },
     }
 }
 
-async fn run_once(
+async fn main(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
     mut ctrl: GameCtrlRx,
 ) -> Result<()> {
-    debug!("run()");
-
-    let mut fade = Some(Fade::new(FadeDir::In));
+    let mut fade = Fade::new(store, true);
     let mut view = View::default();
 
     loop {
         let event = frame
-            .tick(|ui| {
+            .render(|ui| {
                 view.tick(store);
                 view.render(ui, sess, store);
-
-                if let Some(fade) = &fade {
-                    _ = fade.render(ui);
-                }
+                fade.render(ui);
             })
             .await?;
+
+        if ctrl.is_closed() {
+            fade.out(());
+        }
 
         if let Some(event) = event
             && let ControlFlow::Break(_) =
                 event.handle(frame, &mut view).await?
         {
-            fade = Some(Fade::new(FadeDir::Out));
+            fade.out(());
         }
 
         view.poll(frame, &mut ctrl).await?;
 
-        if let Some(fade) = &fade
-            && fade.dir() == FadeDir::Out
-            && fade.is_ready()
-        {
+        if fade.poll().is_some() {
             return Ok(());
         }
     }
@@ -245,7 +256,7 @@ impl View {
     }
 
     fn refresh(&mut self, snapshot: Arc<w::Snapshot>) {
-        debug!(version=?snapshot.version, "refreshing");
+        trace!(version=?snapshot.version, "refreshing");
 
         // If the map's size has changed, recenter the camera.
         //

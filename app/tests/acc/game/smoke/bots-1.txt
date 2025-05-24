@@ -27,4 +27,4 @@
            │                                                         │
            │ [w] scroll-up    [↑] select-up               [/] filter │ing-bot
            │ [s] scroll-down  [↓] select-down            [esc] close │
-[esc] go-ba└─────────────────────────────────────────────────────────┘
+[esc] exit └─────────────────────────────────────────────────────────┘

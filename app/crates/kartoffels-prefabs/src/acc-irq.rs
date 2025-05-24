@@ -28,7 +28,7 @@ fn on_motor_busy() {
     print!("mtr ");
 }
 
-fn motor_step_fw_checked() -> Result<(), ()> {
+fn motor_step_checked() -> Result<(), ()> {
     static mut OK: bool = false;
     static mut PREV: Option<IrqFn> = None;
 
@@ -51,7 +51,7 @@ fn motor_step_fw_checked() -> Result<(), ()> {
         PREV = irq_replace(IRQ_MOTOR_BUSY, irq!(on_motor_busy));
     }
 
-    motor_step_fw();
+    motor_step();
 
     unsafe {
         irq_replace(IRQ_MOTOR_BUSY, PREV.take());
@@ -77,11 +77,11 @@ fn main() {
     timer_set(TIMER1, TIMER_PS_256, 125);
     timer_set(TIMER2, TIMER_PS_256, 40);
 
-    motor_step_fw_checked().unwrap();
-    motor_step_fw_checked().unwrap_err();
+    motor_step_checked().unwrap();
+    motor_step_checked().unwrap_err();
     motor_wait();
-    motor_step_fw_checked().unwrap();
-    motor_step_fw_checked().unwrap_err();
+    motor_step_checked().unwrap();
+    motor_step_checked().unwrap_err();
 
     print!("done");
 }

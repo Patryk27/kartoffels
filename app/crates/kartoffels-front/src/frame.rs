@@ -1,4 +1,4 @@
-use crate::{theme, Abort, Clear, Ui, UiLayout};
+use crate::{theme, Abort, Clear, Ui, UiDir, UiLayout};
 use anyhow::{Context, Error, Result};
 use bytes::Bytes;
 use glam::{uvec2, UVec2};
@@ -22,7 +22,7 @@ use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
 use tokio::sync::mpsc;
 use tokio::time::Interval;
 use tokio::{select, time};
-use tracing::warn;
+use tracing::{debug, instrument, warn};
 
 pub type Stdin = mpsc::Receiver<StdinEvent>;
 pub type Stdout = mpsc::Sender<Vec<u8>>;
@@ -49,9 +49,9 @@ impl Frame {
 
     /// Maximum size of the frame.
     ///
-    /// Chosen out of practicaly as well - larger viewports take more resources
-    /// to handle, it just doesn't scale that well.
-    pub const MAX_SIZE: UVec2 = uvec2(160, 60);
+    /// Chosen out of practicality as well - larger viewports take much more
+    /// resources to handle.
+    pub const MAX_SIZE: UVec2 = uvec2(180, 60);
 
     pub fn new(
         ty: FrameType,
@@ -95,7 +95,10 @@ impl Frame {
         self.size
     }
 
+    #[instrument(skip_all)]
     pub async fn init(&mut self) -> Result<()> {
+        debug!("initializing frame");
+
         let mut cmds = String::new();
 
         _ = EnterAlternateScreen.write_ansi(&mut cmds);
@@ -108,7 +111,10 @@ impl Frame {
         Ok(())
     }
 
+    #[instrument(skip_all)]
     pub async fn destroy(&mut self) -> Result<()> {
+        debug!("destroying frame");
+
         let mut cmds = String::new();
 
         match self.ty {
@@ -132,7 +138,7 @@ impl Frame {
         Ok(())
     }
 
-    pub(crate) async fn tick<F, T>(&mut self, render: F) -> Result<Option<T>>
+    pub(crate) async fn render<F, T>(&mut self, render: F) -> Result<Option<T>>
     where
         F: FnOnce(&mut Ui<T>),
     {
@@ -175,6 +181,7 @@ impl Frame {
                     buf: frame.buffer_mut(),
                     mouse: mouse.as_ref(),
                     event: event.as_ref(),
+                    dir: UiDir::Ltr,
                     layout: UiLayout::Col,
                     enabled: true,
                     focused: true,
@@ -255,7 +262,10 @@ impl Frame {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn handle_resized(&mut self, size: UVec2) -> Result<()> {
+        debug!("resizing frame");
+
         self.size = size.min(Self::MAX_SIZE);
         self.term.resize(Self::viewport_rect(self.size))?;
 

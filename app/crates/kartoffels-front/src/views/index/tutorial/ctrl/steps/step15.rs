@@ -1,13 +1,13 @@
 use super::prelude::*;
 
 static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (15/16) "),
+    title: Some("tutorial (15/16)"),
     body: DOCS.clone(),
-    buttons: vec![MsgButton::confirm("next", ())],
+    buttons: vec![MsgButton::enter("next", ())],
 });
 
 static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some(" help "),
+    title: Some("help"),
     body: DOCS.clone(),
     buttons: vec![HelpMsgEvent::close()],
 });
@@ -17,16 +17,15 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("# arm_wait()"),
         MsgLine::new(""),
         MsgLine::new(
-            "as you can guess, this boi waits until the arm is ready (until \
-             it's _armed_ you could say, heh)",
+            "this boi waits until the arm is ready (_armed_, you could say)",
         ),
         MsgLine::new(""),
         MsgLine::new("# arm_stab()"),
         MsgLine::new(""),
         MsgLine::new(
             "stabs the bot that's directly in front of you, killing it and \
-             giving you one point — note that you have to be _facing_ the \
-             other machine in order to stab it",
+             giving you one point - note that you have to be _facing_ the \
+             other bot in order to stab it",
         ),
         MsgLine::new(""),
         MsgLine::new("easy enough, isn't it?"),
@@ -40,22 +39,24 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new(""),
         MsgLine::new(
             "for simplicity, the enemies will not try to kill you and they \
-             will be located directly north / east / west / south — i.e. you \
+             will be located directly north / east / west / south - i.e. you \
              don't have to worry about diagonals",
         ),
     ]
 });
 
 static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some(" tutorial (15/16) "),
+    title: Some("tutorial (15/16)"),
     body: vec![MsgLine::new(
-        "hmm, your bot seems to have died — delete it and upload something \
+        "hmm, your bot seems to have died - delete it and upload something \
          better, i know you have it in you",
     )],
-    buttons: vec![MsgButton::confirm("try-again", ())],
+    buttons: vec![MsgButton::enter("try-again", ())],
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
+    info!("run()");
+
     ctxt.game.msg(&MSG).await?;
     ctxt.game.set_help(Some(&HELP)).await?;
 
@@ -74,7 +75,6 @@ pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {
             ControlFlow::Continue(_) => {
                 ctxt.game.msg(&MSG_RETRY).await?;
             }
-
             ControlFlow::Break(_) => {
                 break;
             }

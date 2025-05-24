@@ -63,7 +63,7 @@ pub const MOTOR_ERR_BLOCKED: u8 = 0x01;
 /// motor_wait();
 /// motor_turn_right();
 /// motor_wait();
-/// motor_step_fw();
+/// motor_step();
 /// ```
 pub const IRQ_MOTOR_BUSY: u8 = 3;
 
@@ -101,7 +101,7 @@ pub const IRQ_MOTOR_IDLE: u8 = 4;
 /// # use kartoffel::*;
 /// #
 /// if motor_ready() {
-///     motor_step_fw();
+///     motor_step();
 /// }
 /// ```
 pub fn motor_ready() -> bool {
@@ -121,7 +121,7 @@ pub fn motor_ready() -> bool {
 ///     motor_wait();
 ///     motor_turn_left();
 ///     motor_wait();
-///     motor_step_fw();
+///     motor_step();
 /// }
 /// ```
 pub fn motor_wait() {
@@ -144,7 +144,7 @@ pub fn motor_wait() {
 /// This is a low-level function - for convenience you'll most likely want to
 /// use one of:
 ///
-/// - [`motor_step_fw()`],
+/// - [`motor_step()`],
 /// - [`motor_step_bw()`],
 /// - [`motor_turn_left()`],
 /// - [`motor_turn_right()`].
@@ -153,7 +153,7 @@ pub fn motor_wait() {
 ///
 /// Depends on the pulse, see:
 ///
-/// - [`motor_step_fw()`],
+/// - [`motor_step()`],
 /// - [`motor_step_bw()`],
 /// - [`motor_turn_left()`],
 /// - [`motor_turn_right()`],
@@ -187,15 +187,15 @@ pub fn motor_pulse(left: i8, right: i8) {
 /// # use kartoffel::*;
 /// #
 /// motor_wait();
-/// motor_step_fw();
+/// motor_step();
 /// ```
-pub fn motor_step_fw() {
+pub fn motor_step() {
     motor_pulse(1, 1);
 }
 
 /// Moves the bot one tile away (backward) from the direction it's facing.
 ///
-/// See: [`motor_step_fw()`], [`motor_pulse()`].
+/// See: [`motor_step()`], [`motor_pulse()`].
 ///
 /// # Cooldown
 ///

@@ -16,7 +16,7 @@
         │ lesson #4:                                                   │
         │ - don't lick yellow snow                                     │
         │                                                              │
-        │                                                 [enter] next │
+        │ [esc] prev                                      [enter] next │
         └──────────────────────────────────────────────────────────────┘
                  .....................
                   ...................
@@ -27,4 +27,4 @@
 
 
                                                        [u] upload-bot
-[esc] go-back  [spc] pause  [h] help
+[esc] exit  [spc] pause  [h] help

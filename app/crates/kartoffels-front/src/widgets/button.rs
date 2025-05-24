@@ -10,7 +10,7 @@ pub struct Button<'a, T> {
     label: Cow<'a, str>,
     options: Vec<ButtonOption<T>>,
     help: Option<Cow<'a, str>>,
-    alignment: Alignment,
+    align: Option<Alignment>,
     style: Style,
 }
 
@@ -26,7 +26,7 @@ impl<'a, T> Button<'a, T> {
                 event: None,
             }],
             help: None,
-            alignment: Alignment::Left,
+            align: None,
             style: Default::default(),
         }
     }
@@ -36,7 +36,7 @@ impl<'a, T> Button<'a, T> {
             label: label.into(),
             options: Default::default(),
             help: None,
-            alignment: Alignment::Left,
+            align: None,
             style: Default::default(),
         }
     }
@@ -58,12 +58,12 @@ impl<'a, T> Button<'a, T> {
     }
 
     pub fn centered(mut self) -> Self {
-        self.alignment = Alignment::Center;
+        self.align = Some(Alignment::Center);
         self
     }
 
     pub fn right_aligned(mut self) -> Self {
-        self.alignment = Alignment::Right;
+        self.align = Some(Alignment::Right);
         self
     }
 
@@ -85,14 +85,13 @@ impl<'a, T> Button<'a, T> {
     }
 
     fn supports_mouse(&self) -> bool {
-        // TODO support multi-buttons
         self.options.len() == 1
     }
 
     fn layout(&self, ui: &Ui<T>) -> Rect {
         let width = self.width();
 
-        let x = match self.alignment {
+        let x = match self.align.unwrap_or_else(|| ui.dir.into()) {
             Alignment::Left => ui.area.x,
             Alignment::Center => ui.area.x + (ui.area.width - width) / 2,
             Alignment::Right => ui.area.x + ui.area.width - width,
@@ -205,26 +204,28 @@ impl<T> UiWidget<T> for &mut Button<'_, T> {
         let (key_style, label_style) = self.style(ui, &resp);
 
         ui.at(area, |ui| {
-            ui.row(|ui| {
-                ui.span(Span::styled("[", label_style));
+            ui.ltr(|ui| {
+                ui.row(|ui| {
+                    ui.span(Span::styled("[", label_style));
 
-                for (idx, opt) in self.options.iter().enumerate() {
-                    if idx > 0 {
-                        ui.span(Span::styled("/", label_style));
+                    for (idx, opt) in self.options.iter().enumerate() {
+                        if idx > 0 {
+                            ui.span(Span::styled("/", label_style));
+                        }
+
+                        ui.span(Span::styled(
+                            key_name(opt.key.unwrap()),
+                            key_style,
+                        ));
                     }
 
+                    ui.span(Span::styled("] ", label_style));
+
                     ui.span(Span::styled(
-                        key_name(opt.key.unwrap()),
-                        key_style,
+                        self.label.as_str(),
+                        label_style.patch(self.style),
                     ));
-                }
-
-                ui.span(Span::styled("] ", label_style));
-
-                ui.span(Span::styled(
-                    self.label.as_str(),
-                    label_style.patch(self.style),
-                ));
+                });
             });
         });
 

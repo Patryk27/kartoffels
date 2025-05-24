@@ -1,5 +1,5 @@
 use super::{
-    BotPosition, BotPrefabType, BotSource, BotsModal, ErrorModal, GoBackModal,
+    BotPosition, BotPrefab, BotSource, BotsModal, ErrorModal, GoBackModal,
     InspectBotModal, JoinBotModal, Modal, Mode, SpawnBotModal, UploadBotModal,
     UploadBotRequest, View,
 };
@@ -141,10 +141,9 @@ impl Event {
             }
 
             Event::OpenSpawnBotModal => {
-                view.modal =
-                    Some(Box::new(Modal::SpawnBot(SpawnBotModal::new(
-                        BotSource::Prefab(BotPrefabType::Roberto),
-                    ))));
+                view.modal = Some(Box::new(Modal::SpawnBot(
+                    SpawnBotModal::new(BotSource::Prefab(BotPrefab::Roberto)),
+                )));
             }
 
             Event::OpenUploadBotModal { request } => match request.source {
