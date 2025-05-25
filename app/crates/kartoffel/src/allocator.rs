@@ -2,7 +2,7 @@ use core::ptr::addr_of;
 use spin::Mutex;
 use talc::*;
 
-extern "C" {
+unsafe extern "C" {
     #[link_name = "_heap_start"]
     static HEAP_START: u32;
 

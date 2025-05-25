@@ -1,4 +1,4 @@
-use crate::{theme, FromMarkdown, Ui};
+use crate::{FromMarkdown, Ui, theme};
 use ratatui::style::{Style, Stylize};
 use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, Padding};

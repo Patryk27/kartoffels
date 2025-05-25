@@ -7,7 +7,7 @@ use alloc::collections::VecDeque;
 use core::ops::RangeInclusive;
 use kartoffel::*;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     let mut rng = Rng::new();
     let mut display = Display::default();

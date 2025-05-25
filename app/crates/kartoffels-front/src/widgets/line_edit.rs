@@ -1,4 +1,4 @@
-use crate::{theme, Ui, UiWidget};
+use crate::{Ui, UiWidget, theme};
 use ratatui::style::Stylize;
 use ratatui::text::Span;
 use std::time::Instant;

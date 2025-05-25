@@ -1,4 +1,4 @@
-use glam::{ivec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2};
 use ratatui::layout::Rect;
 
 #[derive(Debug, Default)]

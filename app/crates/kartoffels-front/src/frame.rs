@@ -1,7 +1,7 @@
-use crate::{theme, Abort, Clear, Ui, UiDir, UiLayout};
+use crate::{Abort, Clear, Ui, UiDir, UiLayout, theme};
 use anyhow::{Context, Error, Result};
 use bytes::Bytes;
-use glam::{uvec2, UVec2};
+use glam::{UVec2, uvec2};
 use ratatui::crossterm::event::{
     DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste,
     EnableMouseCapture,
@@ -9,15 +9,15 @@ use ratatui::crossterm::event::{
 use ratatui::crossterm::terminal::{
     self, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
 };
-use ratatui::crossterm::{cursor, Command};
+use ratatui::crossterm::{Command, cursor};
 use ratatui::layout::Rect;
 use ratatui::prelude::CrosstermBackend;
 use ratatui::widgets::{Paragraph, Widget};
 use ratatui::{Terminal, TerminalOptions, Viewport};
 use std::io::Write;
 use std::{io, mem};
-use termwiz::escape::osc::Selection;
 use termwiz::escape::OperatingSystemCommand;
+use termwiz::escape::osc::Selection;
 use termwiz::input::{InputEvent, InputParser, MouseButtons, MouseEvent};
 use tokio::sync::mpsc;
 use tokio::time::Interval;

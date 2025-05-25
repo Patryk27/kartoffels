@@ -1,5 +1,5 @@
 use crate::views::game::{Event, JoinedBot, View};
-use crate::{theme, BotIdExt, Button, Ui, UiWidget};
+use crate::{BotIdExt, Button, Ui, UiWidget, theme};
 use kartoffels_world::prelude as w;
 use ordinal::Ordinal;
 use ratatui::layout::{Constraint, Layout, Rect};

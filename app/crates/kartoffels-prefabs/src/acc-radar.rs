@@ -3,7 +3,7 @@
 
 use kartoffel::*;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     radar_wait();
     radar_scan(5);

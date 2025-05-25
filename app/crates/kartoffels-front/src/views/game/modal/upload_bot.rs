@@ -1,9 +1,9 @@
 use super::{BotCount, BotPosition};
 use crate::views::game::Event;
-use crate::{theme, FrameType, FromMarkdown, Spinner, Ui, UiWidget};
+use crate::{FrameType, FromMarkdown, Spinner, Ui, UiWidget, theme};
 use anyhow::anyhow;
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use kartoffels_store::{Session, SessionUploadInterest};
 use ratatui::style::Stylize;
 use ratatui::text::{Line, Span};

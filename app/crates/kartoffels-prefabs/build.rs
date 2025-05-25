@@ -12,12 +12,13 @@ fn main() {
         return;
     }
 
-    // ---
-
-    env::set_var(
-        "CARGO_ENCODED_RUSTFLAGS",
-        "-Clink-arg=-Triscv32-kartoffel-bot.ld",
-    );
+    // SAFETY: We're single-threaded
+    unsafe {
+        env::set_var(
+            "CARGO_ENCODED_RUSTFLAGS",
+            "-Clink-arg=-Triscv32-kartoffel-bot.ld",
+        );
+    }
 
     println!("cargo:rerun-if-changed=./src");
     println!("cargo:rerun-if-changed=../kartoffel/src");

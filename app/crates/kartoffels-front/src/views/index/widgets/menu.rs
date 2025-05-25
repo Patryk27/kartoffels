@@ -1,5 +1,5 @@
 use super::super::Event;
-use crate::{theme, Ui};
+use crate::{Ui, theme};
 use ratatui::layout::Size;
 use ratatui::style::Style;
 use ratatui::widgets::{Block, Padding};

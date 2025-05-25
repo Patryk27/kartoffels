@@ -12,7 +12,10 @@ static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
              play:",
         ),
         MsgLine::new(""),
-        MsgLine::new("🔪 the knife 🔪").centered().fg(theme::YELLOW).bold(),
+        MsgLine::new("🔪 the knife 🔪")
+            .centered()
+            .fg(theme::YELLOW)
+            .bold(),
     ],
 
     buttons: vec![MsgButton::enter("lets-take-a-stab-at-it", ())],

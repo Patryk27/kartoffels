@@ -1,4 +1,4 @@
-use crate::{theme, Ui, UiWidget};
+use crate::{Ui, UiWidget, theme};
 use ratatui::layout::{Alignment, Rect};
 use ratatui::style::{Style, Styled, Stylize};
 use ratatui::text::{Span, Text};

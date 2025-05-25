@@ -1,5 +1,5 @@
-use crate::views::game::Event;
 use crate::Ui;
+use crate::views::game::Event;
 use anyhow::Error;
 use kartoffels_utils::ErrorExt;
 use ratatui::layout::{Constraint, Layout};

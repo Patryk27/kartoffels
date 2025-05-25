@@ -1,8 +1,8 @@
 mod ctrl;
 mod end;
 
-use crate::views::game;
 use crate::Frame;
+use crate::views::game;
 use anyhow::Result;
 use kartoffels_store::{Session, Store};
 

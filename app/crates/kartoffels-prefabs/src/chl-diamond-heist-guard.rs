@@ -6,7 +6,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 use kartoffel::*;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     while clock_ticks() <= 16000 {
         //

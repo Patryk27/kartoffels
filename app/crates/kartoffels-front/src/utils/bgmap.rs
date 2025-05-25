@@ -1,6 +1,6 @@
-use crate::{theme, Frame, Ui, UiWidget};
+use crate::{Frame, Ui, UiWidget, theme};
 use futures::FutureExt;
-use glam::{ivec2, uvec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2, uvec2};
 use kartoffels_store::Store;
 use kartoffels_world::prelude as w;
 use rand::{Rng, SeedableRng};
@@ -114,7 +114,7 @@ fn refresh(tx: watch::Sender<Arc<w::Map>>) {
                     && src_tile.meta[0] != frame
                     && rng.gen_bool(0.33)
                 {
-                    let dst = src + rng.gen::<w::AbsDir>();
+                    let dst = src + rng.r#gen::<w::AbsDir>();
 
                     if map.get(dst).kind == w::TileKind::FLOOR {
                         map.set(src, w::TileKind::FLOOR);

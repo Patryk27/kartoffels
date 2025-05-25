@@ -1,9 +1,9 @@
 use anyhow::Error;
 use derivative::Derivative;
 use kartoffels_utils::Id;
+use rand::Rng;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -51,7 +51,7 @@ impl Distribution<BotId> for Standard {
     where
         R: Rng + ?Sized,
     {
-        BotId(rng.gen())
+        BotId(rng.r#gen())
     }
 }
 

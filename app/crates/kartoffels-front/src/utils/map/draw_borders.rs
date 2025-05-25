@@ -1,4 +1,4 @@
-use glam::{ivec2, UVec2};
+use glam::{UVec2, ivec2};
 use kartoffels_world::prelude as w;
 
 pub async fn draw_borders(map: &mut w::MapBuilder, size: UVec2) {

@@ -2,7 +2,7 @@ use super::CmdContext;
 use anyhow::Result;
 use clap::Parser;
 use kartoffels_store::WorldVis;
-use prettytable::{row, Table};
+use prettytable::{Table, row};
 use std::fmt::Write;
 
 #[derive(Debug, Parser)]

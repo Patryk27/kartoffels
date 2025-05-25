@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Context, Error};
+use anyhow::{Context, Error, anyhow};
 use itertools::Itertools;
+use rand::Rng;
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
-use rand::Rng;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
@@ -33,7 +33,7 @@ impl Distribution<Id> for Standard {
     where
         R: Rng + ?Sized,
     {
-        Id(rng.gen())
+        Id(rng.r#gen())
     }
 }
 
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test() {
         let mut rng = ChaCha8Rng::from_seed(Default::default());
-        let id = rng.gen::<Id>();
+        let id = rng.r#gen::<Id>();
 
         assert_eq!("d640-5f89-2fef-003e", id.to_string());
 

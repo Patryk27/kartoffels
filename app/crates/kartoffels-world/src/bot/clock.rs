@@ -16,7 +16,7 @@ pub struct BotClock {
 impl BotClock {
     pub fn new(rng: &mut impl RngCore) -> Self {
         Self {
-            seed: rng.gen(),
+            seed: rng.r#gen(),
             ticks: 0,
             timer0: BotTimer::default(),
             timer1: BotTimer::default(),

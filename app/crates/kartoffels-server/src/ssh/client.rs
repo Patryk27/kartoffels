@@ -1,15 +1,15 @@
 use super::AppChannel;
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use glam::uvec2;
 use kartoffels_store::Store;
 use russh::keys::PublicKey;
 use russh::server::{Auth, Handler, Msg, Session};
 use russh::{Channel, ChannelId, Pty};
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_util::sync::CancellationToken;
-use tracing::{info, info_span, Span};
+use tracing::{Span, info, info_span};
 
 #[derive(Debug)]
 pub struct AppClient {

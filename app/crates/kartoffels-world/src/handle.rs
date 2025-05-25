@@ -5,7 +5,7 @@ use crate::{
     AbsDir, BotId, Clock, EventEnvelope, EventStream, Map, Object, ObjectId,
     Policy, Snapshot, SnapshotStream, WorldBuffer,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use arc_swap::{ArcSwap, Guard};
 use derivative::Derivative;
 use glam::IVec2;

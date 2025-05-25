@@ -1,4 +1,4 @@
-use crate::{theme, Ui};
+use crate::{Ui, theme};
 use kartoffels_store::Store;
 use ratatui::layout::Rect;
 use ratatui::style::Stylize;

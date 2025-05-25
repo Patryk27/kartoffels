@@ -10,7 +10,7 @@
 //!
 //! use kartoffel::*;
 //!
-//! #[no_mangle]
+//! #[unsafe(no_mangle)]
 //! fn main() {
 //!     loop {
 //!         println!("small step for a bot!");
@@ -54,16 +54,20 @@ use core::{fmt, mem, ptr};
 const MEM: u32 = 0x08000000;
 
 unsafe fn rdi(ptr: u32, off: usize) -> u32 {
-    ptr::read_volatile((ptr as *const u32).wrapping_add(off))
+    unsafe { ptr::read_volatile((ptr as *const u32).wrapping_add(off)) }
 }
 
 unsafe fn wri(ptr: u32, off: usize, val: u32) {
-    ptr::write_volatile((ptr as *mut u32).wrapping_add(off), val);
+    unsafe {
+        ptr::write_volatile((ptr as *mut u32).wrapping_add(off), val);
+    }
 }
 
 unsafe fn swi(ptr: u32, off: usize, val: u32) -> u32 {
-    AtomicU32::from_ptr((ptr as *mut u32).wrapping_add(off))
-        .swap(val, Ordering::SeqCst)
+    unsafe {
+        AtomicU32::from_ptr((ptr as *mut u32).wrapping_add(off))
+            .swap(val, Ordering::SeqCst)
+    }
 }
 
 #[doc(hidden)]

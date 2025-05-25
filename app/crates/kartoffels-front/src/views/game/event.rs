@@ -4,7 +4,7 @@ use super::{
     UploadBotRequest, View,
 };
 use crate::Frame;
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use glam::IVec2;
 use kartoffels_world::prelude as w;
 use std::ops::ControlFlow;

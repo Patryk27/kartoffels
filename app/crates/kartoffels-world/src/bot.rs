@@ -20,7 +20,7 @@ pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
 use crate::{AbsDir, Clock, Ticks, World};
-use glam::{ivec2, IVec2};
+use glam::{IVec2, ivec2};
 use kartoffels_cpu::{Atomic, Cpu, Firmware, Mmio, TickError};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};

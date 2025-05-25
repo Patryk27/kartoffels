@@ -11,7 +11,7 @@ use crate::{
     AbsDir, AliveBot, BotEvents, BotId, Clock, CreateBotRequest, DeadBot,
     Event, Events, Lives, Map, Objects, Policy, QueuedBot,
 };
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use glam::{IVec2, UVec2};
 use kartoffels_cpu::Firmware;
 use rand::{Rng, RngCore};
@@ -57,7 +57,7 @@ impl Bots {
         );
 
         let id = loop {
-            let id = rng.gen();
+            let id = rng.r#gen();
 
             if !self.contains(id) {
                 break id;
@@ -140,7 +140,7 @@ impl Bots {
         bot: &QueuedBot,
     ) -> Option<(IVec2, AbsDir)> {
         if let Some(pos) = bot.pos {
-            let dir = bot.dir.unwrap_or_else(|| rng.gen());
+            let dir = bot.dir.unwrap_or_else(|| rng.r#gen());
 
             return if self.is_pos_legal(map, objects, pos, false) {
                 Some((pos, dir))
@@ -150,7 +150,7 @@ impl Bots {
         }
 
         if let Some(pos) = spawn.pos {
-            let dir = spawn.dir.unwrap_or_else(|| rng.gen());
+            let dir = spawn.dir.unwrap_or_else(|| rng.r#gen());
 
             return if self.is_pos_legal(map, objects, pos, false) {
                 Some((pos, dir))
@@ -179,7 +179,7 @@ impl Bots {
             let pos = map.sample_pos(rng);
 
             if self.is_pos_legal(map, objects, pos, true) {
-                let dir = bot.dir.unwrap_or_else(|| rng.gen());
+                let dir = bot.dir.unwrap_or_else(|| rng.r#gen());
 
                 return Some((pos, dir));
             }

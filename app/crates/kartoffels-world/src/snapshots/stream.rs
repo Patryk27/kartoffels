@@ -3,8 +3,8 @@ use crate::Handle;
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use tokio::sync::watch;
-use tokio_stream::wrappers::WatchStream;
 use tokio_stream::StreamExt;
+use tokio_stream::wrappers::WatchStream;
 
 #[derive(Debug)]
 pub struct SnapshotStream {

@@ -16,7 +16,7 @@ members = [
 
 [workspace.package]
 version = "0.7.0"
-edition = "2021"
+edition = "2024"
 authors = ["Patryk Wychowaniec <pwychowaniec@pm.me>"]
 
 [workspace.dependencies]

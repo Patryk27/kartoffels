@@ -1,15 +1,15 @@
 use crate::common;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use glam::UVec2;
 use kartoffels_front::{Frame, FrameType, StdinEvent};
 use kartoffels_store::Store;
-use russh::server::{Handle as SessionHandle, Session};
 use russh::ChannelId;
+use russh::server::{Handle as SessionHandle, Session};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::task;
 use tokio_util::sync::CancellationToken;
-use tracing::{info, info_span, Instrument, Span};
+use tracing::{Instrument, Span, info, info_span};
 
 #[derive(Debug)]
 pub struct AppChannel {

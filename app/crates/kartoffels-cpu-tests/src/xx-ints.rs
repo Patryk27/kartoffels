@@ -21,7 +21,7 @@ use rand::prelude::Distribution;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-#[cfg_attr(target_arch = "riscv32", no_mangle)]
+#[cfg_attr(target_arch = "riscv32", unsafe(no_mangle))]
 fn main() {
     let mut rng = ChaCha8Rng::from_seed(Default::default());
 
@@ -61,43 +61,43 @@ where
     let mut items = BinaryHeap::new();
 
     for _ in 0..2048 {
-        let mut val = rng.gen::<T>();
+        let mut val = rng.r#gen::<T>();
 
-        match rng.gen::<u8>() % 10 {
+        match rng.r#gen::<u8>() % 10 {
             0 => {
                 if rng.gen_bool(0.33) {
-                    val = val.checked_add(&rng.gen()).unwrap_or(val);
+                    val = val.checked_add(&rng.r#gen()).unwrap_or(val);
                 } else {
-                    val = val + rng.gen::<T>();
+                    val = val + rng.r#gen::<T>();
                 }
             }
 
             1 => {
                 if rng.gen_bool(0.33) {
-                    val = val.checked_sub(&rng.gen()).unwrap_or(val);
+                    val = val.checked_sub(&rng.r#gen()).unwrap_or(val);
                 } else {
-                    val = val - rng.gen::<T>();
+                    val = val - rng.r#gen::<T>();
                 }
             }
 
             2 => {
                 if rng.gen_bool(0.33) {
-                    val = val.checked_mul(&rng.gen()).unwrap_or(val);
+                    val = val.checked_mul(&rng.r#gen()).unwrap_or(val);
                 } else {
-                    val = val * rng.gen::<T>();
+                    val = val * rng.r#gen::<T>();
                 }
             }
 
             3 => {
-                val = val / rng.gen::<T>().max(T::one());
+                val = val / rng.r#gen::<T>().max(T::one());
             }
 
             4 => {
-                val = val % rng.gen::<T>().max(T::one());
+                val = val % rng.r#gen::<T>().max(T::one());
             }
 
             5 => {
-                let rhs = rng.gen::<T>() % T::from_u32(16).unwrap();
+                let rhs = rng.r#gen::<T>() % T::from_u32(16).unwrap();
 
                 if let Some(rhs) = rhs.to_u32() {
                     val <<= rhs;
@@ -105,7 +105,7 @@ where
             }
 
             6 => {
-                let rhs = rng.gen::<T>() % T::from_u32(16).unwrap();
+                let rhs = rng.r#gen::<T>() % T::from_u32(16).unwrap();
 
                 if let Some(rhs) = rhs.to_u32() {
                     val >>= rhs;
@@ -115,7 +115,7 @@ where
             _ => (),
         }
 
-        if rng.gen::<bool>() {
+        if rng.r#gen::<bool>() {
             items.push(val);
         }
     }

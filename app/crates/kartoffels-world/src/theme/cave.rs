@@ -1,7 +1,7 @@
 use crate::{AbsDir, Map, MapBuilder, TileKind};
 use ahash::AHashSet;
 use anyhow::Result;
-use glam::{ivec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2};
 use rand::seq::SliceRandom;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -36,7 +36,7 @@ impl CaveTheme {
 
                 // ---
 
-                let sample_rng = ChaCha8Rng::from_seed(rng.gen());
+                let sample_rng = ChaCha8Rng::from_seed(rng.r#gen());
 
                 let sample_map = self
                     .build_ex(&mut sample_rng.clone(), MapBuilder::detached())
@@ -185,10 +185,13 @@ impl CaveTheme {
         floors >= walls
     }
 
-    fn sample_points(
+    fn sample_points<T>(
         &self,
-        rng: &mut impl RngCore,
-    ) -> impl Iterator<Item = IVec2> {
+        rng: &mut T,
+    ) -> impl Iterator<Item = IVec2> + use<T>
+    where
+        T: RngCore,
+    {
         let mut poss = Vec::new();
 
         for y in 0..self.size.y {

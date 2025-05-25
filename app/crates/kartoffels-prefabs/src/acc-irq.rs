@@ -57,14 +57,10 @@ fn motor_step_checked() -> Result<(), ()> {
         irq_replace(IRQ_MOTOR_BUSY, PREV.take());
     }
 
-    if unsafe { OK } {
-        Ok(())
-    } else {
-        Err(())
-    }
+    if unsafe { OK } { Ok(()) } else { Err(()) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     print!("boot ");
 

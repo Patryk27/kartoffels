@@ -1,5 +1,5 @@
 use super::{Event, Mode, Status, View};
-use crate::{theme, Button, Ui, UiWidget};
+use crate::{Button, Ui, UiWidget, theme};
 use kartoffels_world::prelude as w;
 use ratatui::prelude::Rect;
 use ratatui::style::Stylize;

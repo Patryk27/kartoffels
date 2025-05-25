@@ -1,5 +1,5 @@
 use super::{Event, Mode, View};
-use crate::{theme, FromMarkdown, Ui, UiWidget};
+use crate::{FromMarkdown, Ui, UiWidget, theme};
 use kartoffels_store::Store;
 use kartoffels_world::prelude as w;
 use ratatui::style::Stylize;

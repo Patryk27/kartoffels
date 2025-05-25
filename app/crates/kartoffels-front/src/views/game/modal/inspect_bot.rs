@@ -1,6 +1,6 @@
 use super::Modal;
 use crate::views::game::Event as ParentEvent;
-use crate::{theme, Button, Ui, UiWidget};
+use crate::{Button, Ui, UiWidget, theme};
 use kartoffels_world::prelude as w;
 use ordinal::Ordinal;
 use ratatui::layout::{Alignment, Constraint, Layout};

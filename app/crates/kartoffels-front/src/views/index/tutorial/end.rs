@@ -1,4 +1,4 @@
-use crate::{theme, Clear, Fade, Frame, Msg, MsgButton, MsgLine};
+use crate::{Clear, Fade, Frame, Msg, MsgButton, MsgLine, theme};
 use anyhow::Result;
 use kartoffels_store::Store;
 use ratatui::style::Stylize;

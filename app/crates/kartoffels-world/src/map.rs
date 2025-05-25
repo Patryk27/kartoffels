@@ -2,7 +2,7 @@ mod builder;
 
 pub use self::builder::*;
 use ahash::AHashMap;
-use glam::{ivec2, uvec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2, uvec2};
 use rand::{Rng, RngCore};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Write;

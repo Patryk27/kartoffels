@@ -1,6 +1,6 @@
 use super::AliveBotBody;
 use crate::{TileKind, World};
-use glam::{ivec2, IVec2, IVec3};
+use glam::{IVec2, IVec3, ivec2};
 use kartoffel as api;
 use serde::{Deserialize, Serialize};
 use std::ops::RangeInclusive;

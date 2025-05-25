@@ -18,7 +18,7 @@ use self::modal::*;
 pub use self::modal::{HelpMsg, HelpMsgEvent, HelpMsgRef};
 use self::overlay::*;
 use self::side::*;
-use crate::{theme, Clear, Fade, Frame, Ui};
+use crate::{Clear, Fade, Frame, Ui, theme};
 use anyhow::Result;
 use futures_util::FutureExt;
 use glam::{IVec2, UVec2};

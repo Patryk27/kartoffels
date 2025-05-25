@@ -1,5 +1,5 @@
 use crate::views::game::Event as ParentEvent;
-use crate::{theme, BotIdExt, Button, LineEdit, Ui, VRow};
+use crate::{BotIdExt, Button, LineEdit, Ui, VRow, theme};
 use kartoffels_world::prelude as w;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::{Style, Stylize};

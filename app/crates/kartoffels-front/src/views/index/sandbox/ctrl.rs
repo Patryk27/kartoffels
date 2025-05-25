@@ -1,5 +1,5 @@
 use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{utils, Msg, MsgLine};
+use crate::{Msg, MsgLine, utils};
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_world::prelude as w;

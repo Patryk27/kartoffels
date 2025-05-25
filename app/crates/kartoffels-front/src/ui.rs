@@ -1,4 +1,4 @@
-use crate::{theme, Button, Clear, FrameType};
+use crate::{Button, Clear, FrameType, theme};
 use glam::UVec2;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};

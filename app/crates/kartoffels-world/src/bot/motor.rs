@@ -150,7 +150,7 @@ impl BotMotor {
 mod tests {
     use super::*;
     use crate::{AbsDir, AliveBot, Map, Object, ObjectId, ObjectKind};
-    use glam::{ivec2, uvec2, IVec2};
+    use glam::{IVec2, ivec2, uvec2};
     use test_case::test_case;
 
     #[derive(Clone, Debug)]

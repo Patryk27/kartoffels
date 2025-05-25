@@ -1,9 +1,9 @@
-use super::{Challenge, CONFIG};
+use super::{CONFIG, Challenge};
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{theme, utils, Msg, MsgButton, MsgLine};
+use crate::{Msg, MsgButton, MsgLine, theme, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
-use glam::{ivec2, uvec2, UVec2};
+use glam::{UVec2, ivec2, uvec2};
 use kartoffels_store::{Store, World};
 use kartoffels_world::prelude as w;
 use ratatui::style::Stylize;

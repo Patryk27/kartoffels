@@ -1,4 +1,4 @@
-use crate::{store, Clock, Request, Shutdown, World};
+use crate::{Clock, Request, Shutdown, World, store};
 use tokio::sync::mpsc::error::TryRecvError;
 use tracing::{debug, warn};
 

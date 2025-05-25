@@ -1,9 +1,9 @@
-use super::{Challenge, CONFIG};
+use super::{CONFIG, Challenge};
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{utils, Msg, MsgButton, MsgLine};
+use crate::{Msg, MsgButton, MsgLine, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
-use glam::{ivec2, uvec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2, uvec2};
 use kartoffels_prefabs::DUMMY;
 use kartoffels_store::{Store, World};
 use kartoffels_world::prelude as w;

@@ -1,6 +1,6 @@
 use super::{Map, Tile};
 use crate::{AbsDir, TileKind};
-use glam::{ivec2, IVec2, UVec2};
+use glam::{IVec2, UVec2, ivec2};
 use rand::seq::SliceRandom;
 use rand::{Rng, RngCore};
 use std::{cmp, ops};

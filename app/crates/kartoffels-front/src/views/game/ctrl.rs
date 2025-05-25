@@ -1,7 +1,7 @@
 use super::{Modal, View};
 use crate::views::game::{Config, HelpMsgRef};
-use crate::{theme, Frame, Msg, Ui};
-use anyhow::{anyhow, Result};
+use crate::{Frame, Msg, Ui, theme};
+use anyhow::{Result, anyhow};
 use kartoffels_store::World;
 use std::time::Instant;
 use tokio::sync::{mpsc, oneshot};

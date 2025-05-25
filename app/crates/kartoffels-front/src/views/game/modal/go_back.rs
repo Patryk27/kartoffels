@@ -1,5 +1,5 @@
-use crate::views::game::Event;
 use crate::Ui;
+use crate::views::game::Event;
 use ratatui::text::Line;
 use termwiz::input::KeyCode;
 

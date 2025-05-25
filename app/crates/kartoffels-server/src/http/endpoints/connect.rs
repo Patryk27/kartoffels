@@ -3,8 +3,8 @@ use anyhow::{Context, Result};
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{ConnectInfo, State, WebSocketUpgrade};
 use axum::response::IntoResponse;
-use flate2::write::GzEncoder;
 use flate2::Compression;
+use flate2::write::GzEncoder;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use glam::uvec2;
@@ -17,7 +17,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::task;
 use tokio_util::sync::CancellationToken;
-use tracing::{info, info_span, Instrument};
+use tracing::{Instrument, info, info_span};
 
 pub async fn handle(
     socket: WebSocketUpgrade,

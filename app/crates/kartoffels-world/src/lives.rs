@@ -1,11 +1,11 @@
-use std::collections::{hash_map, VecDeque};
+use std::collections::{VecDeque, hash_map};
 use std::sync::Arc;
 
 use ahash::AHashMap;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{BotId, Clock, Ticks, MAX_LIVES_PER_BOT};
+use crate::{BotId, Clock, MAX_LIVES_PER_BOT, Ticks};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(transparent)]

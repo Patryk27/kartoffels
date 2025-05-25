@@ -4,7 +4,7 @@ extern crate kartoffel;
 
 use core::hint::black_box;
 
-#[cfg_attr(target_arch = "riscv32", no_mangle)]
+#[cfg_attr(target_arch = "riscv32", unsafe(no_mangle))]
 fn main() {
     let mut out = 0.0f32;
 

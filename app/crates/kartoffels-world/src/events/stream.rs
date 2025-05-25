@@ -2,9 +2,9 @@ use super::{Event, EventEnvelope};
 use crate::{BotId, Handle};
 use anyhow::{Context, Result};
 use tokio::sync::broadcast;
-use tokio_stream::wrappers::errors::BroadcastStreamRecvError;
-use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt;
+use tokio_stream::wrappers::BroadcastStream;
+use tokio_stream::wrappers::errors::BroadcastStreamRecvError;
 use tracing::warn;
 
 #[derive(Debug)]

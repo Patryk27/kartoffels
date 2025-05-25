@@ -2,8 +2,8 @@ use super::AppClient;
 use kartoffels_store::Store;
 use russh::server::Server;
 use std::net::SocketAddr;
-use std::sync::atomic::AtomicUsize;
 use std::sync::Arc;
+use std::sync::atomic::AtomicUsize;
 use tokio_util::sync::CancellationToken;
 
 #[derive(Debug)]

@@ -1,16 +1,16 @@
 use crate::{World, WorldEntry, WorldId, WorldVis};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use itertools::Itertools;
 use kartoffels_utils::Id;
 use kartoffels_world::prelude::{
     Config as WorldConfig, Handle as InnerWorldHandle, WorldBuffer,
 };
-use std::collections::{hash_map, HashMap};
+use std::collections::{HashMap, hash_map};
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::{fs, task};
-use tracing::{debug, info, info_span, Span};
+use tracing::{Span, debug, info, info_span};
 
 #[derive(Debug)]
 pub(crate) struct Worlds {

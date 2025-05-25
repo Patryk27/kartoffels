@@ -38,10 +38,10 @@ use alloc::vec::Vec;
 use core::cmp::Ordering;
 use core::iter;
 use core::ops::Add;
-use glam::{i8vec2, I8Vec2};
+use glam::{I8Vec2, i8vec2};
 use kartoffel::*;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 fn main() {
     // The World as we know it.
     //

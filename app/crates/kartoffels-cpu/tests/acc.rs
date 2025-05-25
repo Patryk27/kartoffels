@@ -197,10 +197,6 @@ impl TestExpectation {
             .map(|val| u32::from_str_radix(val, 16).unwrap() as i32)
             .unwrap_or_else(|| s.parse().unwrap());
 
-        if neg {
-            -val
-        } else {
-            val
-        }
+        if neg { -val } else { val }
     }
 }

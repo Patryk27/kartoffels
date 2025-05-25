@@ -1,6 +1,6 @@
-use super::{Challenge, CONFIG};
+use super::{CONFIG, Challenge};
 use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{utils, Msg, MsgButton, MsgLine};
+use crate::{Msg, MsgButton, MsgLine, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::IVec2;

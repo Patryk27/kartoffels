@@ -76,7 +76,7 @@ use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::thread;
 use tokio::sync::{broadcast, mpsc, watch};
-use tracing::{info, Span};
+use tracing::{Span, info};
 
 pub fn create(config: Config) -> Handle {
     let mut rng = config

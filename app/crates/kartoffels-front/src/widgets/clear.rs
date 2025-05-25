@@ -1,4 +1,4 @@
-use crate::{theme, Ui, UiWidget};
+use crate::{Ui, UiWidget, theme};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 

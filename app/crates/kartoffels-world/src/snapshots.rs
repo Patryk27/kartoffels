@@ -10,7 +10,7 @@ use crate::{
 use ahash::AHashMap;
 use glam::IVec2;
 use itertools::Itertools;
-use prettytable::{row, Table};
+use prettytable::{Table, row};
 use serde::Serialize;
 use std::cmp::Reverse;
 use std::collections::VecDeque;

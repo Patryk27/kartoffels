@@ -17,7 +17,7 @@ use kartoffels_store::{Session, SessionId, Store, World};
 use kartoffels_utils::Asserter;
 use kartoffels_world::prelude::Handle as WorldHandle;
 use russh::keys::ssh_key::PublicKey;
-use russh::{client as ssh, ChannelId};
+use russh::{ChannelId, client as ssh};
 use std::io::{Cursor, Read};
 use std::mem;
 use std::net::SocketAddr;

@@ -201,7 +201,7 @@ pub fn irq_take(irq: u8) -> Option<IrqFn> {
 ///     }
 /// }
 ///
-/// #[no_mangle]
+/// #[unsafe(no_mangle)]
 /// fn main() {
 ///     fn on_motor_busy() {
 ///         print!("one ");
@@ -231,7 +231,7 @@ unsafe fn irq_fn(ptr: u32) -> Option<IrqFn> {
     if ptr == 0 {
         None
     } else {
-        Some(mem::transmute::<usize, IrqFn>(ptr as usize))
+        Some(unsafe { mem::transmute::<usize, IrqFn>(ptr as usize) })
     }
 }
 
@@ -271,7 +271,7 @@ impl IrqFn {
     /// - Function returned here can assume the argument passed to it matches
     ///   something an actual IRQ would provide.
     pub unsafe fn call(self, arg: u32) {
-        let fun = {
+        let fun = unsafe {
             let addr = self.0 as *const u32;
 
             // We can't return `self.0`, because - following `irq!()` - this

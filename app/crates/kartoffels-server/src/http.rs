@@ -1,9 +1,9 @@
 mod endpoints;
 
 use anyhow::Result;
+use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::routing::{get, post};
-use axum::Router;
 use kartoffels_store::Store;
 use std::net::SocketAddr;
 use std::sync::Arc;

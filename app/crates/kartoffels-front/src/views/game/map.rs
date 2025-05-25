@@ -1,5 +1,5 @@
 use super::{Event, Mode, View};
-use crate::{theme, BotIdExt, Ui};
+use crate::{BotIdExt, Ui, theme};
 use glam::ivec2;
 use kartoffels_world::prelude as w;
 use ratatui::layout::Rect;
