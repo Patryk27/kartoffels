@@ -141,7 +141,7 @@ impl<T> Ui<'_, T> {
         &mut self,
         width: u16,
         height: u16,
-        title: Option<&str>,
+        title: &str,
         border: Color,
         f: impl FnOnce(&mut Ui<T>),
     ) {
@@ -164,15 +164,11 @@ impl<T> Ui<'_, T> {
         };
 
         self.at(area, |this| {
-            let mut block = Block::bordered()
+            let block = Block::bordered()
                 .border_style(Style::new().fg(border).bg(theme::BG))
-                .padding(Padding::horizontal(1));
-
-            if let Some(title) = title {
-                block = block
-                    .title(Line::from_iter([" ", title, " "]))
-                    .title_alignment(Alignment::Center);
-            }
+                .padding(Padding::horizontal(1))
+                .title(Line::from_iter([" ", title, " "]))
+                .title_alignment(Alignment::Center);
 
             this.block(block, f);
         });
@@ -182,7 +178,7 @@ impl<T> Ui<'_, T> {
         &mut self,
         width: u16,
         height: u16,
-        title: Option<&str>,
+        title: &str,
         f: impl FnOnce(&mut Ui<T>),
     ) {
         self.modal(width, height, title, theme::RED, f);
@@ -192,7 +188,7 @@ impl<T> Ui<'_, T> {
         &mut self,
         width: u16,
         height: u16,
-        title: Option<&str>,
+        title: &str,
         f: impl FnOnce(&mut Ui<T>),
     ) {
         self.modal(width, height, title, theme::YELLOW, f);
@@ -202,7 +198,7 @@ impl<T> Ui<'_, T> {
         &mut self,
         width: u16,
         height: u16,
-        title: Option<&str>,
+        title: &str,
         f: impl FnOnce(&mut Ui<T>),
     ) {
         self.modal(width, height, title, theme::GREEN, f);

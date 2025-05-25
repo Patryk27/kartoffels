@@ -1,21 +1,18 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("tutorial (7/16)"),
-
-    body: vec![
-        MsgLine::new(
+static MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new("tutorial (7/16)")
+        .line(
             "anyway, close this message to resume the game and let's see the \
              bot in action",
-        ),
-        MsgLine::new(""),
-        MsgLine::new(
+        )
+        .line("")
+        .line(
             "if everything goes correctly, we should see the machine driving \
              in squares, *how exquisite*!",
-        ),
-    ],
-
-    buttons: vec![MsgButton::enter("next", ())],
+        )
+        .btn(MsgBtn::enter("next", ()))
+        .build()
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

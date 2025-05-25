@@ -112,22 +112,14 @@ struct View<'a> {
 
 impl View<'_> {
     fn render(&mut self, ui: &mut Ui<Event>) {
-        let width = 44;
-        let height = self.height();
-        let title = self.title();
-
-        ui.imodal(width, height, Some(title), |ui| {
+        ui.imodal(self.width(), self.height(), self.title(), |ui| {
             self.render_body(ui);
             self.render_footer(ui);
         });
     }
 
-    fn title(&self) -> &'static str {
-        match &self.focus {
-            None => "sandbox",
-            Some(Focus::SandboxSize) => "sandbox › choose-size",
-            Some(Focus::SandboxTheme) => "sandbox › choose-theme",
-        }
+    fn width(&self) -> u16 {
+        44
     }
 
     fn height(&self) -> u16 {
@@ -135,6 +127,14 @@ impl View<'_> {
             None => 4,
             Some(Focus::SandboxSize) => SandboxSize::height() + 2,
             Some(Focus::SandboxTheme) => SandboxTheme::height() + 2,
+        }
+    }
+
+    fn title(&self) -> &'static str {
+        match &self.focus {
+            None => "sandbox",
+            Some(Focus::SandboxSize) => "sandbox › choose-size",
+            Some(Focus::SandboxTheme) => "sandbox › choose-theme",
         }
     }
 

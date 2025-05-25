@@ -1,30 +1,19 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some("tutorial (5/16)"),
-
-    body: vec![
-        MsgLine::new(
+static MSG: LazyLock<Msg<bool>> = LazyLock::new(|| {
+    Msg::new("tutorial (5/16)")
+        .line(
             "as you can see, the code in `main.rs` just calls a couple of \
              functions in a loop - let's see them in action!",
-        ),
-        MsgLine::new(""),
-    ]
-    .into_iter()
-    .chain(DOCS.clone())
-    .collect(),
-
-    buttons: vec![
-        MsgButton::escape("prev", false),
-        MsgButton::enter("next", true),
-    ],
+        )
+        .line("")
+        .lines(DOCS.clone())
+        .btn(MsgBtn::escape("back", false))
+        .btn(MsgBtn::enter("next", true))
+        .build()
 });
 
-static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
-});
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![

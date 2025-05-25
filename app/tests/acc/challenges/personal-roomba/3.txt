@@ -11,7 +11,7 @@ v11000007                                              id
        .│ flags back at their place, peace in our brainmuscle - we are │
        -│ grateful                                                     │
        .│                                                              │
-       -│                                                   [enter] ok │
+       -│                                                 [enter] exit │
        .└──────────────────────────────────────────────────────────────┘
        ---.-|..-.--.|.|.|.-.|.|.|.....-.|......-       scn:4 nav:7 drv:^
        .....|.|.|...|...|...|.......|.......|...       scn:4 nav:6 drv:^

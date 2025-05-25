@@ -24,7 +24,7 @@ impl ErrorModal {
         let width = 60;
         let height = self.error.line_count(width) as u16 + 2;
 
-        ui.emodal(width, height, Some("ouch"), |ui| {
+        ui.emodal(width, height, "ouch", |ui| {
             let [text_area, _, footer_area] = Layout::vertical([
                 Constraint::Fill(1),
                 Constraint::Length(1),

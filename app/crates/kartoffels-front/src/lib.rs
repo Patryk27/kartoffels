@@ -31,10 +31,9 @@ pub async fn main(
             }
 
             Err(err) => match err.downcast::<Abort>() {
-                Ok(abort) => {
-                    return Err(abort.into());
+                Ok(_) => {
+                    return Ok(());
                 }
-
                 Err(err) => {
                     views::error::run(frame, &bg, err).await?;
                 }

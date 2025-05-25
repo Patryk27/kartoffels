@@ -1,5 +1,5 @@
 use super::{Event, EventEnvelope};
-use crate::{BotId, Handle};
+use crate::{BotId, Handle, ObjectId};
 use anyhow::{Context, Result};
 use tokio::sync::broadcast;
 use tokio_stream::StreamExt;
@@ -33,22 +33,9 @@ impl EventStream {
                 Ok(event) => {
                     return Ok(event);
                 }
-
                 Err(BroadcastStreamRecvError::Lagged(_)) => {
                     warn!("event stream lagged");
                 }
-            }
-        }
-    }
-
-    pub async fn sync(&mut self, version: u64) -> Result<()> {
-        loop {
-            let event = self.next().await?;
-
-            if event.version > version {
-                self.pending = Some(event);
-
-                return Ok(());
             }
         }
     }
@@ -65,6 +52,26 @@ impl EventStream {
         loop {
             if let Event::BotDied { id, .. } = self.next().await?.event {
                 return Ok(id);
+            }
+        }
+    }
+
+    pub async fn next_dropped_object(&mut self) -> Result<ObjectId> {
+        loop {
+            if let Event::ObjectDropped { id } = self.next().await?.event {
+                return Ok(id);
+            }
+        }
+    }
+
+    pub async fn sync(&mut self, version: u64) -> Result<()> {
+        loop {
+            let event = self.next().await?;
+
+            if event.version > version {
+                self.pending = Some(event);
+
+                return Ok(());
             }
         }
     }

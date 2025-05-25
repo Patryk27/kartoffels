@@ -7,12 +7,12 @@
         │ timmy-bot went for a walk and got mugged by a perpetrator    │
         │ who took timmy-bot's wheels and ran away                     │
         │                                                              │
-        │                          show mercy                          │
+        │                      --- show mercy ---                      │
         │                                                              │
-        │ traverse the maze, find timmy and kill it - you start in the │
-        │ bottom-right corner                                          │
+        │ starting from the bottom-right corner, traverse the maze,    │
+        │ find timmy, and kill it; sweet release                       │
         │                                                              │
-        │ difficulty: easy                                             │
+        │ sounds easy, does it not?                                    │
         │                                                         xoxo │
         │                                               the architects │
         │                                                              │

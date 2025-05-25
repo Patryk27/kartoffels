@@ -25,7 +25,6 @@ use glam::{IVec2, UVec2};
 use kartoffels_store::{Session, Store, World};
 use kartoffels_world::prelude as w;
 use ratatui::layout::{Constraint, Layout};
-use std::future::Future;
 use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::time::Instant;
@@ -33,16 +32,12 @@ use tokio::select;
 use tokio::sync::oneshot;
 use tracing::{debug, info, trace};
 
-pub async fn run<CtrlFn, CtrlFut, CtrlOut>(
+pub async fn run<T>(
     store: &Store,
     sess: &Session,
     frame: &mut Frame,
-    ctrl: CtrlFn,
-) -> Result<Option<CtrlOut>>
-where
-    CtrlFn: FnOnce(GameCtrl) -> CtrlFut,
-    CtrlFut: Future<Output = Result<CtrlOut>>,
-{
+    ctrl: impl AsyncFnOnce(GameCtrl) -> Result<T>,
+) -> Result<Option<T>> {
     info!("run()");
 
     let (tx, rx) = GameCtrl::new();

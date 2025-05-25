@@ -1,5 +1,5 @@
 use crate::views::game::{Config, GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{Msg, MsgLine, utils};
+use crate::{Msg, utils};
 use anyhow::Result;
 use kartoffels_store::Store;
 use kartoffels_world::prelude as w;
@@ -8,35 +8,28 @@ use std::sync::LazyLock;
 
 const MAX_BOTS: u8 = 16;
 
-static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-
-    body: vec![
-        MsgLine::new("welcome to the *sandbox*!"),
-        MsgLine::new(""),
-        MsgLine::new(
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| {
+    Msg::new("help")
+        .line("welcome to the *sandbox*!")
+        .line("")
+        .line(
             "in here you're playing on your own, private world - it's a safe \
              place for you to play with, develop and debug bots",
-        ),
-        MsgLine::new(""),
-        MsgLine::new(
+        )
+        .line("")
+        .line(
             "i assume you already went through the tutorial - if not, feel \
              free to go back to the main menu and press [`t`]",
-        ),
-        MsgLine::new(""),
-        MsgLine::new("# rules"),
-        MsgLine::new(""),
-        MsgLine::new(format!("- there's a limit of {MAX_BOTS} bots")),
-        MsgLine::new("- you're allowed to delete bots and restart them"),
-        MsgLine::new(
-            "- you've got some extra commands at hand, like `spawn-bot`",
-        ),
-        MsgLine::new(
-            "- a new world is generated every time you open the sandbox",
-        ),
-    ],
-
-    buttons: vec![HelpMsgEvent::close()],
+        )
+        .line("")
+        .line("# rules")
+        .line("")
+        .line(format!("- there's a limit of {MAX_BOTS} bots"))
+        .line("- you're allowed to delete bots and restart them")
+        .line("- you've got some extra commands at hand, like `spawn-bot`")
+        .line("- a new world is generated every time you open the sandbox")
+        .btn(HelpMsgEvent::close_btn())
+        .build()
 });
 
 const CONFIG: Config = Config {

@@ -1,27 +1,18 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("tutorial (13/16)"),
-
-    body: vec![
-        MsgLine::new(
+static MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new("tutorial (13/16)")
+        .line(
             "so, how about we solidify all this knowledge by implementing a \
              good-old *line follower*, eh?",
-        ),
-        MsgLine::new(""),
-    ]
-    .into_iter()
-    .chain(DOCS.clone())
-    .collect(),
-
-    buttons: vec![MsgButton::enter("next", ())],
+        )
+        .line("")
+        .lines(DOCS.clone())
+        .btn(MsgBtn::enter("next", ()))
+        .build()
 });
 
-static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
-});
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![
@@ -51,13 +42,14 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     ]
 });
 
-static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("tutorial (13/16)"),
-    body: vec![MsgLine::new(
-        "hmm, your bot seems to have died - delete it and upload something \
-         better, i know you have it in you",
-    )],
-    buttons: vec![MsgButton::enter("try-again", ())],
+static MSG_RETRY: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new("tutorial (13/16)")
+        .line(
+            "hmm, your bot seems to have died - delete it and upload something \
+             better, i know you have it in you",
+        )
+        .btn(MsgBtn::enter("retry", ()))
+        .build()
 });
 
 pub async fn run(ctxt: &mut TutorialCtxt) -> Result<()> {

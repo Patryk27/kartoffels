@@ -31,7 +31,7 @@ impl InspectBotModal {
             let height = ui.area.height - 4;
             let title = format!("bots › {}", self.id);
 
-            ui.imodal(width, height, Some(&title), |ui| {
+            ui.imodal(width, height, &title, |ui| {
                 let [body_area, _, footer_area] = Layout::vertical([
                     Constraint::Fill(1),
                     Constraint::Length(1),

@@ -13,7 +13,7 @@
         │                                                              │
         │ ... and press [enter] once you're ready                      │
         │                                                              │
-        │ [esc] prev                     [c] copy-command [enter] next │
+        │ [esc] back                     [c] copy-command [enter] next │
         └──────────────────────────────────────────────────────────────┘
                 .......................
                 .......................

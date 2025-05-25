@@ -1,6 +1,6 @@
 use super::{CONFIG, Challenge};
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{Msg, MsgButton, MsgLine, utils};
+use crate::views::game::{GameCtrl, HelpMsg};
+use crate::{Msg, MsgBtn, MsgLine, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::IVec2;
@@ -28,7 +28,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              guard watch in the nearby museum",
         ),
         MsgLine::new(""),
-        MsgLine::new("*steal it back*").centered(),
+        MsgLine::new("--- *steal it back* ---").centered(),
         MsgLine::new(""),
         MsgLine::new(
             "go inside the room, take the diamond (using `arm_pick()`) and \
@@ -42,51 +42,41 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              your advantage",
         ),
         MsgLine::new(""),
-        MsgLine::new("difficulty: medium"),
+        MsgLine::new("sounds tricky, does it not?"),
         MsgLine::new("xoxo").italic().right_aligned(),
         MsgLine::new("the architects").italic().right_aligned(),
     ]
 });
 
-static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some("diamond-heist"),
-    body: DOCS.clone(),
+static START_MSG: LazyLock<Msg<bool>> =
+    LazyLock::new(|| Msg::start(CHALLENGE.name, &DOCS));
 
-    buttons: vec![
-        MsgButton::escape("exit", false),
-        MsgButton::enter("start", true),
-    ],
+static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
+
+static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new(CHALLENGE.name)
+        .line(
+            "ayy, you killed a guard, alarming the entire facility - i told \
+             you: *spill no oil!*",
+        )
+        .btn(MsgBtn::enter("restart", ()))
+        .build()
 });
 
-static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
+static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new(CHALLENGE.name)
+        .line("ayy, you died!")
+        .btn(MsgBtn::enter("restart", ()))
+        .build()
 });
 
-static GUARD_KILLED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("diamond-heist"),
-    body: vec![MsgLine::new(
-        "ayy, you killed a guard, alarming the entire facility - i told you: \
-         *spill no oil!*",
-    )],
-    buttons: vec![MsgButton::enter("ok", ())],
-});
-
-static PLAYER_DIED_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("diamond-heist"),
-    body: vec![MsgLine::new("ayy, you've died!")],
-    buttons: vec![MsgButton::enter("ok", ())],
-});
-
-static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("diamond-heist"),
-    body: vec![
-        MsgLine::new("congrats!"),
-        MsgLine::new(""),
-        MsgLine::new("now give me *my* diamond back and go away"),
-    ],
-    buttons: vec![MsgButton::enter("ok", ())],
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new(CHALLENGE.name)
+        .line("congrats!")
+        .line("")
+        .line("now give me *my* diamond back and go away")
+        .btn(MsgBtn::enter("exit", ()))
+        .build()
 });
 
 fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
@@ -97,30 +87,33 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         if *msg.answer() {
             msg.close().await?;
+            main(store, game).await
         } else {
-            return Ok(());
+            Ok(())
         }
-
-        let mut world;
-        let mut finish;
-
-        loop {
-            (world, finish) = init(store, &game).await?;
-
-            match watch(&game, &world, finish).await? {
-                ControlFlow::Continue(_) => {
-                    game.wait_for_restart().await?;
-                }
-
-                ControlFlow::Break(_) => break,
-            }
-        }
-
-        game.sync(world.version()).await?;
-        game.msg_ex(&CONGRATS_MSG).await?;
-
-        Ok(())
     })
+}
+
+async fn main(store: &Store, game: GameCtrl) -> Result<()> {
+    let mut world;
+    let mut finish;
+
+    loop {
+        (world, finish) = init(store, &game).await?;
+
+        match watch(&game, &world, finish).await? {
+            ControlFlow::Continue(_) => {
+                game.wait_for_restart().await?;
+            }
+
+            ControlFlow::Break(_) => break,
+        }
+    }
+
+    game.sync(world.version()).await?;
+    game.msg_ex(&CONGRATS_MSG).await?;
+
+    Ok(())
 }
 
 async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
@@ -166,7 +159,7 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, IVec2)> {
         .create_object(w::Object::new(w::ObjectKind::GEM), anchors.get('b'))
         .await?;
 
-    utils::map::build(store, game, &world, |mut rng, mut mapb| async move {
+    utils::map::build(store, game, &world, async |mut rng, mut mapb| {
         mapb.reveal(&mut rng, map).await;
 
         Ok(mapb.commit())

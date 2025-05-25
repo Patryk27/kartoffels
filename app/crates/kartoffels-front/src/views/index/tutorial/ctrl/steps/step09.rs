@@ -1,21 +1,15 @@
 use super::prelude::*;
 
-static MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("tutorial (9/16)"),
-
-    body: vec![MsgLine::new("*time for some fun!*"), MsgLine::new("")]
-        .into_iter()
-        .chain(DOCS.clone())
-        .collect(),
-
-    buttons: vec![MsgButton::enter("next", ())],
+static MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new("tutorial (9/16)")
+        .line("*time for some fun!*")
+        .line("")
+        .lines(DOCS.clone())
+        .btn(MsgBtn::enter("next", ()))
+        .build()
 });
 
-static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
-});
+static HELP: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
 
 static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
     vec![

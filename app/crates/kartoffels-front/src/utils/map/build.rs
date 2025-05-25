@@ -5,20 +5,15 @@ use kartoffels_store::Store;
 use kartoffels_world::prelude as w;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
-use std::future::Future;
 use tokio::{time, try_join};
 use tracing::debug;
 
-pub async fn build<BuildMapFn, BuildMapFut>(
+pub async fn build(
     store: &Store,
     game: &GameCtrl,
     world: &w::Handle,
-    build: BuildMapFn,
-) -> Result<()>
-where
-    BuildMapFn: FnOnce(ChaCha8Rng, w::MapBuilder) -> BuildMapFut,
-    BuildMapFut: Future<Output = Result<w::Map>>,
-{
+    build: impl AsyncFnOnce(ChaCha8Rng, w::MapBuilder) -> Result<w::Map>,
+) -> Result<()> {
     let rng = {
         let seed = if store.testing() {
             Default::default()

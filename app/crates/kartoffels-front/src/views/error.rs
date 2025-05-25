@@ -19,7 +19,7 @@ pub async fn run(frame: &mut Frame, bg: &BgMap, err: Error) -> Result<()> {
 
                 ui.add(bg);
 
-                ui.emodal(width, height, Some("ouch"), |ui| {
+                ui.emodal(width, height, "ouch", |ui| {
                     let [text_area, _, footer_area] = Layout::vertical([
                         Constraint::Fill(1),
                         Constraint::Length(1),

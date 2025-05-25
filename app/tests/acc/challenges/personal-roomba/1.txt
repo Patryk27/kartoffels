@@ -9,13 +9,13 @@
         │                                               not where they │
         │                                                    should be │
         │                                                              │
-        │                            tidy up                           │
+        │                        --- tidy up ---                       │
         │                                                              │
         │ you'll be put inside a maze - a dirty maze, lots of alleys   │
         │ and cycles in it; within the corners of that maze are four   │
         │ flags - find them and pick 'em using the arm_pick() function │
         │                                                              │
-        │ difficulty: much                                             │
+        │ sounds challenging, does it not?                             │
         │                                                         xoxo │
         │                                               the architects │
         │                                                              │

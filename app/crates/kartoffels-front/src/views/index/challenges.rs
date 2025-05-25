@@ -74,7 +74,7 @@ impl View {
         let width = self.width();
         let height = self.height(width);
 
-        ui.imodal(width, height, Some("challenges"), |ui| {
+        ui.imodal(width, height, "challenges", |ui| {
             for chl in CHALLENGES {
                 ui.btn(chl.name, chl.key, |btn| {
                     btn.help(chl.desc).throwing(Event::Play(chl))

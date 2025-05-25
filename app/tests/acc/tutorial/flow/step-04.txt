@@ -17,7 +17,7 @@
         │                                                              │
         │ you know, like people in ancient rome did                    │
         │                                                              │
-        │ [esc] prev                                      [enter] next │
+        │ [esc] back                                      [enter] next │
         └──────────────────────────────────────────────────────────────┘
                   ...................
                    .................

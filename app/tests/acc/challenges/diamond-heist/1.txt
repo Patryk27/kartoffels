@@ -5,7 +5,7 @@
         │ a precious, rare diamond has been stolen from us and put     │
         │ under a guard watch in the nearby museum                     │
         │                                                              │
-        │                         steal it back                        │
+        │                     --- steal it back ---                    │
         │                                                              │
         │ go inside the room, take the diamond (using arm_pick()) and  │
         │ then drive away - you'll be starting in the bottom-left      │
@@ -15,7 +15,7 @@
         │ intel says the guards scan only see the 3x3 area around      │
         │ them, use it to your advantage                               │
         │                                                              │
-        │ difficulty: medium                                           │
+        │ sounds tricky, does it not?                                  │
         │                                                         xoxo │
         │                                               the architects │
         │                                                              │

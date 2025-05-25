@@ -1,13 +1,12 @@
 use super::{CONFIG, Challenge};
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{Msg, MsgButton, MsgLine, utils};
+use crate::views::game::{GameCtrl, HelpMsg};
+use crate::{Msg, MsgBtn, MsgLine, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{IVec2, UVec2, ivec2, uvec2};
 use kartoffels_prefabs::DUMMY;
 use kartoffels_store::{Store, World};
 use kartoffels_world::prelude as w;
-use rand::RngCore;
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
@@ -27,47 +26,31 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              took timmy-bot's wheels and ran away",
         ),
         MsgLine::new(""),
-        MsgLine::new("*show mercy*").centered(),
+        MsgLine::new("--- *show mercy* ---").centered(),
         MsgLine::new(""),
         MsgLine::new(
-            "traverse the maze, find timmy and kill it - you start in the \
-             bottom-right corner",
+            "starting from the bottom-right corner, traverse the maze, find \
+             timmy, and kill it; sweet release",
         ),
         MsgLine::new(""),
-        MsgLine::new("difficulty: easy"),
+        MsgLine::new("sounds easy, does it not?"),
         MsgLine::new("xoxo").italic().right_aligned(),
         MsgLine::new("the architects").italic().right_aligned(),
     ]
 });
 
-static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some("acyclic-maze"),
-    body: DOCS.clone(),
+static START_MSG: LazyLock<Msg<bool>> =
+    LazyLock::new(|| Msg::start(CHALLENGE.name, &DOCS));
 
-    buttons: vec![
-        MsgButton::escape("exit", false),
-        MsgButton::enter("start", true),
-    ],
-});
+static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
 
-static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
-});
-
-static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("acyclic-maze"),
-
-    body: vec![
-        MsgLine::new("congrats!"),
-        MsgLine::new(""),
-        MsgLine::new(
-            "poor timmy is surely in a better place now, all thanks to you!",
-        ),
-    ],
-
-    buttons: vec![MsgButton::enter("ok", ())],
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new(CHALLENGE.name)
+        .line("congrats!")
+        .line("")
+        .line("poor timmy is in a better place now, all thanks to you")
+        .btn(MsgBtn::enter("exit", ()))
+        .build()
 });
 
 const AREA: UVec2 = uvec2(37, 19);
@@ -85,19 +68,22 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         if *msg.answer() {
             msg.close().await?;
+            main(store, game).await
         } else {
-            return Ok(());
+            Ok(())
         }
-
-        let (world, timmy) = init(store, &game).await?;
-
-        watch(&world, timmy).await?;
-
-        game.sync(world.version()).await?;
-        game.msg_ex(&CONGRATS_MSG).await?;
-
-        Ok(())
     })
+}
+
+async fn main(store: &Store, game: GameCtrl) -> Result<()> {
+    let (world, timmy) = init(store, &game).await?;
+
+    watch(&world, timmy).await?;
+
+    game.sync(world.version()).await?;
+    game.msg_ex(&CONGRATS_MSG).await?;
+
+    Ok(())
 }
 
 async fn init(store: &Store, game: &GameCtrl) -> Result<(World, w::BotId)> {
@@ -138,26 +124,26 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<(World, w::BotId)> {
 
     game.visit(&world).await?;
 
-    utils::map::build(store, game, &world, create_map).await?;
+    // ---
+
+    utils::map::build(store, game, &world, async |mut rng, mut map| {
+        map.begin(SIZE);
+
+        utils::map::draw_borders(&mut map, AREA).await;
+        utils::map::draw_maze(&mut rng, &mut map, AREA, TIMMY_POS).await;
+        draw_entrance(&mut map).await;
+
+        Ok(map.commit())
+    })
+    .await?;
+
+    // ---
 
     game.sync(world.version()).await?;
     game.set_config(CONFIG).await?;
     game.set_label(None).await?;
 
     Ok((world, timmy))
-}
-
-async fn create_map(
-    mut rng: impl RngCore,
-    mut map: w::MapBuilder,
-) -> Result<w::Map> {
-    map.begin(SIZE);
-
-    utils::map::draw_borders(&mut map, AREA).await;
-    utils::map::draw_maze(&mut rng, &mut map, AREA, TIMMY_POS).await;
-    draw_entrance(&mut map).await;
-
-    Ok(map.commit())
 }
 
 async fn draw_entrance(map: &mut w::MapBuilder) {

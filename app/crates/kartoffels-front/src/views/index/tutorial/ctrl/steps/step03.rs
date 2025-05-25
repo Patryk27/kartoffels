@@ -3,24 +3,21 @@ use termwiz::input::KeyCode;
 
 const CMD: &str = "git clone https://github.com/patryk27/kartoffel";
 
-static MSG: LazyLock<Msg<Action>> = LazyLock::new(|| Msg {
-    title: Some("tutorial (3/16)"),
-
-    body: vec![
-        MsgLine::new("look at you, learning so fast - *next lesson!*"),
-        MsgLine::new(""),
-        MsgLine::new("run this:"),
-        MsgLine::new(format!("    {CMD}")),
-        MsgLine::new(""),
-        MsgLine::new("... and press [`enter`] once you're ready"),
-    ],
-
-    buttons: vec![
-        MsgButton::escape("prev", Action::Prev),
-        MsgButton::new("copy-command", KeyCode::Char('c'), Action::Copy)
-            .right_aligned(),
-        MsgButton::enter("next", Action::Next),
-    ],
+static MSG: LazyLock<Msg<Action>> = LazyLock::new(|| {
+    Msg::new("tutorial (3/16)")
+        .line("look at you, learning so fast - *next lesson!*")
+        .line("")
+        .line("run this:")
+        .line(format!("    {CMD}"))
+        .line("")
+        .line("... and press [`enter`] once you're ready")
+        .btn(MsgBtn::escape("back", Action::Prev))
+        .btn(
+            MsgBtn::new("copy-command", KeyCode::Char('c'), Action::Copy)
+                .right_aligned(),
+        )
+        .btn(MsgBtn::enter("next", Action::Next))
+        .build()
 });
 
 #[derive(Clone, Copy, Debug)]

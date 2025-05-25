@@ -11,7 +11,7 @@ v1500008                                               id
         │                                                              │
         │ now give me my diamond back and go away                      │ce
         │                                                              │
-        │                                                   [enter] ok │
+        │                                                 [enter] exit │
         └──────────────────────────────────────────────────────────────┘
            |----------|.........|                      blending in
            +...................@|                      running to the exit

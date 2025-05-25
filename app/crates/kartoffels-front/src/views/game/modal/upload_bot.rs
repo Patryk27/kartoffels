@@ -90,7 +90,7 @@ impl UploadBotModal {
 
         // ---
 
-        ui.imodal(width, height, Some("upload-bot"), |ui| {
+        ui.imodal(width, height, "upload-bot", |ui| {
             ui.add(&body);
             ui.space(body_height + 1);
 

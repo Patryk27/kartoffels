@@ -85,7 +85,7 @@ async fn main(
             .render(|ui| {
                 bg.render(ui);
 
-                ui.imodal(width, height, Some("play"), |ui| {
+                ui.imodal(width, height, "play", |ui| {
                     for btn in &mut world_btns {
                         ui.add(btn);
                     }

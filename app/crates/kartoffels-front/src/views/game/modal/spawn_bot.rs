@@ -29,11 +29,7 @@ impl SpawnBotModal {
 
     pub fn render(&mut self, ui: &mut Ui<ParentEvent>) {
         let event = ui.catching(|ui| {
-            let width = 50;
-            let height = self.height();
-            let title = self.title();
-
-            ui.imodal(width, height, Some(title), |ui| {
+            ui.imodal(self.width(), self.height(), self.title(), |ui| {
                 self.render_body(ui);
                 self.render_footer(ui);
             });
@@ -44,13 +40,8 @@ impl SpawnBotModal {
         }
     }
 
-    fn title(&self) -> &'static str {
-        match &self.focus {
-            None => "spawn-bot",
-            Some(Focus::BotSource) => "spawn-bot › choose-source",
-            Some(Focus::BotPosition) => "spawn-bot › choose-position",
-            Some(Focus::BotCount) => "spawn-bot › choose-count",
-        }
+    fn width(&self) -> u16 {
+        50
     }
 
     fn height(&self) -> u16 {
@@ -69,6 +60,15 @@ impl SpawnBotModal {
         };
 
         body + 2
+    }
+
+    fn title(&self) -> &'static str {
+        match &self.focus {
+            None => "spawn-bot",
+            Some(Focus::BotSource) => "spawn-bot › choose-source",
+            Some(Focus::BotPosition) => "spawn-bot › choose-position",
+            Some(Focus::BotCount) => "spawn-bot › choose-count",
+        }
     }
 
     fn render_body(&self, ui: &mut Ui<Event>) {

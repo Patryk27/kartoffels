@@ -1,6 +1,6 @@
 use super::{CONFIG, Challenge};
-use crate::views::game::{GameCtrl, HelpMsg, HelpMsgEvent};
-use crate::{Msg, MsgButton, MsgLine, theme, utils};
+use crate::views::game::{GameCtrl, HelpMsg};
+use crate::{Msg, MsgBtn, MsgLine, theme, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
 use glam::{UVec2, ivec2, uvec2};
@@ -28,7 +28,7 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
         MsgLine::new("not where they").right_aligned(),
         MsgLine::new("should be").right_aligned(),
         MsgLine::new(""),
-        MsgLine::new("*tidy up*").centered(),
+        MsgLine::new("--- *tidy up* ---").centered(),
         MsgLine::new(""),
         MsgLine::new(
             "you'll be put inside a maze - a dirty maze, lots of alleys and \
@@ -36,41 +36,27 @@ static DOCS: LazyLock<Vec<MsgLine>> = LazyLock::new(|| {
              - find them and pick 'em using the `arm_pick()` function",
         ),
         MsgLine::new(""),
-        MsgLine::new("difficulty: much"),
+        MsgLine::new("sounds challenging, does it not?"),
         MsgLine::new("xoxo").italic().right_aligned(),
         MsgLine::new("the architects").italic().right_aligned(),
     ]
 });
 
-static START_MSG: LazyLock<Msg<bool>> = LazyLock::new(|| Msg {
-    title: Some("personal-roomba"),
-    body: DOCS.clone(),
+static START_MSG: LazyLock<Msg<bool>> =
+    LazyLock::new(|| Msg::start(CHALLENGE.name, &DOCS));
 
-    buttons: vec![
-        MsgButton::escape("exit", false),
-        MsgButton::enter("start", true),
-    ],
-});
+static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg::help(DOCS.clone()));
 
-static HELP_MSG: LazyLock<HelpMsg> = LazyLock::new(|| Msg {
-    title: Some("help"),
-    body: DOCS.clone(),
-    buttons: vec![HelpMsgEvent::close()],
-});
-
-static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| Msg {
-    title: Some("personal-roomba"),
-
-    body: vec![
-        MsgLine::new("congrats!"),
-        MsgLine::new(""),
-        MsgLine::new(
+static CONGRATS_MSG: LazyLock<Msg> = LazyLock::new(|| {
+    Msg::new(CHALLENGE.name)
+        .line("congrats!")
+        .line("")
+        .line(
             "flags back at their place, peace in our brainmuscle - we are \
              grateful",
-        ),
-    ],
-
-    buttons: vec![MsgButton::enter("ok", ())],
+        )
+        .btn(MsgBtn::enter("exit", ()))
+        .build()
 });
 
 const SIZE: UVec2 = uvec2(41, 21);
@@ -83,21 +69,24 @@ fn run(store: &Store, game: GameCtrl) -> BoxFuture<Result<()>> {
 
         if *msg.answer() {
             msg.close().await?;
+            main(store, game).await
         } else {
-            return Ok(());
+            Ok(())
         }
-
-        let (world, mut flags) = init(store, &game).await?;
-
-        while let ControlFlow::Continue(_) = watch(&game, &world).await? {
-            flags = reset(store, &game, &world, Some(flags)).await?;
-        }
-
-        game.sync(world.version()).await?;
-        game.msg_ex(&CONGRATS_MSG).await?;
-
-        Ok(())
     })
+}
+
+async fn main(store: &Store, game: GameCtrl) -> Result<()> {
+    let (world, mut flags) = init(store, &game).await?;
+
+    while let ControlFlow::Continue(_) = watch(&game, &world).await? {
+        flags = reset(store, &game, &world, Some(flags)).await?;
+    }
+
+    game.sync(world.version()).await?;
+    game.msg_ex(&CONGRATS_MSG).await?;
+
+    Ok(())
 }
 
 async fn init(
@@ -124,7 +113,7 @@ async fn init(
 
     // ---
 
-    utils::map::build(store, game, &world, |mut rng, mut map| async move {
+    utils::map::build(store, game, &world, async |mut rng, mut map| {
         map.begin(SIZE);
 
         utils::map::draw_maze(&mut rng, &mut map, SIZE, SIZE.as_ivec2() / 2)
