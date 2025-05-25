@@ -1,9 +1,10 @@
 use super::{Event, Mode, View};
 use crate::{BotIdExt, Ui, theme};
-use glam::ivec2;
+use glam::{IVec2, Vec2, ivec2, vec2};
 use kartoffels_world::prelude as w;
 use ratatui::layout::Rect;
-use std::time::Instant;
+use ratatui::style::Color;
+use std::time::{Instant, SystemTime};
 use termwiz::input::{KeyCode, Modifiers};
 
 #[derive(Debug)]
@@ -22,6 +23,15 @@ impl Map {
         let offset = view.camera.pos()
             - ivec2(ui.area.width as i32, ui.area.height as i32) / 2;
 
+        let time = {
+            let time = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_millis();
+
+            (time % 100_000_000) as f32 / 3500.0
+        };
+
         for dy in 0..ui.area.height {
             for dx in 0..ui.area.width {
                 let area = Rect {
@@ -32,12 +42,12 @@ impl Map {
                 };
 
                 ui.at(area, |ui| {
-                    let tile = view
-                        .snapshot
-                        .map
-                        .get(offset + ivec2(dx as i32, dy as i32));
-
-                    self.render_tile(ui, view, tile);
+                    self.render_tile(
+                        ui,
+                        view,
+                        time,
+                        offset + ivec2(dx as i32, dy as i32),
+                    );
                 });
             }
         }
@@ -75,7 +85,15 @@ impl Map {
         }
     }
 
-    fn render_tile(&self, ui: &mut Ui<Event>, view: &View, tile: w::Tile) {
+    fn render_tile(
+        &self,
+        ui: &mut Ui<Event>,
+        view: &View,
+        time: f32,
+        pos: IVec2,
+    ) {
+        let tile = view.snapshot.map.get(pos);
+
         let ch;
         let mut fg;
         let mut bg;
@@ -145,9 +163,18 @@ impl Map {
             }
 
             w::TileKind::WATER => {
+                let height = ocean(time, pos.as_vec2() / vec2(8.0, 4.0));
+                let color = 0.4 + (height * 8.0) as u8 as f32 / 16.0;
+
                 ch = '~';
-                fg = theme::BLUE;
-                bg = theme::DARK_BLUE;
+
+                fg = Color::Rgb(
+                    0,
+                    64 + (32.0 * color) as u8,
+                    128 + (128.0 * color) as u8,
+                );
+
+                bg = Color::Rgb(0, (64.0 * color) as u8, (255.0 * color) as u8);
             }
 
             w::ObjectKind::FLAG => {
@@ -256,4 +283,37 @@ impl Default for Map {
             blink: Instant::now(),
         }
     }
+}
+
+/// Inspired by https://www.shadertoy.com/view/MdXyzX.
+fn ocean(time: f32, pos: Vec2) -> f32 {
+    let pos = pos + vec2(128.0, 128.0);
+
+    let mut h_sum = 0.0;
+    let mut h_weight = 0.0;
+
+    let mut wave_pos = pos;
+    let mut wave_freq = 1.0;
+    let mut wave_weight = 1.0;
+
+    let mut noise = 0.0f32;
+
+    for _ in 0..12 {
+        let wave_dir = vec2(noise.cos(), noise.sin());
+
+        let wave = wave_dir.dot(wave_pos) * wave_freq + time;
+        let wave_h = (wave.sin() - 1.0).exp();
+        let wave_dh = wave_h * wave.cos();
+
+        h_sum += wave_h * wave_weight;
+        h_weight += wave_weight;
+
+        wave_pos -= 0.25 * wave_dh * wave_dir * wave_weight;
+        wave_freq *= 1.18;
+        wave_weight *= 0.82;
+
+        noise += 1234.4321;
+    }
+
+    h_sum / h_weight
 }
