@@ -333,8 +333,8 @@ pub enum UiDir {
 impl From<UiDir> for Alignment {
     fn from(dir: UiDir) -> Self {
         match dir {
-            UiDir::Ltr => Alignment::Left,
-            UiDir::Rtl => Alignment::Right,
+            UiDir::Ltr => Self::Left,
+            UiDir::Rtl => Self::Right,
         }
     }
 }
@@ -347,11 +347,11 @@ pub enum UiLayout {
 
 impl UiLayout {
     pub fn is_row(&self) -> bool {
-        matches!(self, UiLayout::Row)
+        matches!(self, Self::Row)
     }
 
     pub fn is_col(&self) -> bool {
-        matches!(self, UiLayout::Col)
+        matches!(self, Self::Col)
     }
 }
 

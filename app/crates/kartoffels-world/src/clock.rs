@@ -50,17 +50,17 @@ impl Clock {
 
     pub(crate) fn ticks(&self) -> u32 {
         match self {
-            Clock::Manual { .. } => 1,
+            Self::Manual { .. } => 1,
             _ => 16,
         }
     }
 
     fn speed(&self) -> Option<u32> {
         match self {
-            Clock::Normal => Some(1),
-            Clock::Fast => Some(2),
-            Clock::Faster => Some(4),
-            Clock::Unlimited | Clock::Manual { .. } => None,
+            Self::Normal => Some(1),
+            Self::Fast => Some(2),
+            Self::Faster => Some(4),
+            Self::Unlimited | Self::Manual { .. } => None,
         }
     }
 }

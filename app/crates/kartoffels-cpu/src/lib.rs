@@ -845,12 +845,12 @@ impl Region {
     fn of(addr: u32, size: u8) -> TickResult<Self> {
         if addr >= Cpu::MMIO_BASE {
             if size == 4 && addr % 4 == 0 {
-                Ok(Region::Mmio)
+                Ok(Self::Mmio)
             } else {
                 Err(TickError::InvalidAccess { addr, size })
             }
         } else if addr >= Cpu::RAM_BASE {
-            Ok(Region::Ram)
+            Ok(Self::Ram)
         } else if addr == 0 {
             Err(TickError::NullPointerAccess { addr, size })
         } else {

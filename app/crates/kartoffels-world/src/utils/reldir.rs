@@ -14,10 +14,10 @@ impl RelDir {
     #[must_use]
     pub fn as_caret(&self) -> char {
         match self {
-            RelDir::Up => '^',
-            RelDir::Right => '>',
-            RelDir::Down => 'v',
-            RelDir::Left => '<',
+            Self::Up => '^',
+            Self::Right => '>',
+            Self::Down => 'v',
+            Self::Left => '<',
         }
     }
 }
@@ -27,10 +27,10 @@ impl ops::Mul<AbsDir> for RelDir {
 
     fn mul(self, rhs: AbsDir) -> Self::Output {
         match self {
-            RelDir::Up => rhs,
-            RelDir::Right => rhs.turned_right(),
-            RelDir::Down => rhs.turned_back(),
-            RelDir::Left => rhs.turned_left(),
+            Self::Up => rhs,
+            Self::Right => rhs.turned_right(),
+            Self::Down => rhs.turned_back(),
+            Self::Left => rhs.turned_left(),
         }
     }
 }

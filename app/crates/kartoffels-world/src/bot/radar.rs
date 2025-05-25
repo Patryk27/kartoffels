@@ -260,16 +260,14 @@ impl BotRadarAddr {
 
     fn idx(&self, range: BotRadarRange, off: IVec3) -> usize {
         match self {
-            BotRadarAddr::Array => {
+            Self::Array => {
                 let len = range.len();
                 let off = off + IVec2::splat(len / 2).extend(0);
 
                 (off.z * len * len + off.y * len + off.x) as usize
             }
 
-            BotRadarAddr::Szudzik => {
-                api::radar_idx(off.x, off.y, off.z as u8) as usize
-            }
+            Self::Szudzik => api::radar_idx(off.x, off.y, off.z as u8) as usize,
         }
     }
 }

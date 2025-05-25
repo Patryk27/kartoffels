@@ -33,3 +33,6 @@ itertools.workspace = true
 kartoffels-prefabs = { path = "../kartoffels-prefabs" }
 pretty_assertions.workspace = true
 test-case.workspace = true
+
+[lints]
+workspace = true

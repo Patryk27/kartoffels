@@ -25,8 +25,8 @@ impl Theme {
         map: MapBuilder,
     ) -> Result<Map> {
         match self {
-            Theme::Arena(this) => this.build(rng, map).await,
-            Theme::Cave(this) => this.build(rng, map).await,
+            Self::Arena(this) => this.build(rng, map).await,
+            Self::Cave(this) => this.build(rng, map).await,
         }
     }
 }

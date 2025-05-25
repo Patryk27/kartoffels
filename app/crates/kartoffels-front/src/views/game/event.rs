@@ -65,11 +65,11 @@ impl Event {
         view: &mut View,
     ) -> Result<ControlFlow<(), ()>> {
         match self {
-            Event::Copy { payload } => {
+            Self::Copy { payload } => {
                 frame.copy(payload).await?;
             }
 
-            Event::GoBack { confirm } => match &view.mode {
+            Self::GoBack { confirm } => match &view.mode {
                 Mode::Default => {
                     if confirm {
                         view.modal = Some(Box::new(Modal::GoBack(GoBackModal)));
@@ -83,7 +83,7 @@ impl Event {
                 }
             },
 
-            Event::Restart => {
+            Self::Restart => {
                 view.bot = None;
                 view.mode = Mode::Default;
                 view.modal = None;
@@ -93,12 +93,12 @@ impl Event {
                 }
             }
 
-            Event::JoinBot { id } => {
+            Self::JoinBot { id } => {
                 view.join(id, true);
                 view.modal = None;
             }
 
-            Event::MoveCamera { delta } => {
+            Self::MoveCamera { delta } => {
                 view.camera.look_at(view.camera.pos() + delta);
 
                 if let Some(bot) = &mut view.bot {
@@ -106,7 +106,7 @@ impl Event {
                 }
             }
 
-            Event::ToggleStatus => {
+            Self::ToggleStatus => {
                 if view.status.is_paused() {
                     view.resume().await?;
                 } else {
@@ -114,39 +114,39 @@ impl Event {
                 }
             }
 
-            Event::CloseModal => {
+            Self::CloseModal => {
                 view.modal = None;
             }
 
-            Event::OpenModal { modal } => {
+            Self::OpenModal { modal } => {
                 view.modal = Some(modal);
             }
 
-            Event::OpenBotsModal => {
+            Self::OpenBotsModal => {
                 view.modal = Some(Box::new(Modal::Bots(BotsModal::default())));
             }
 
-            Event::OpenHelpModal => {
+            Self::OpenHelpModal => {
                 view.modal = Some(Box::new(Modal::Help(view.help.unwrap())));
             }
 
-            Event::OpenErrorModal { error } => {
+            Self::OpenErrorModal { error } => {
                 view.modal =
                     Some(Box::new(Modal::Error(ErrorModal::new(error))));
             }
 
-            Event::OpenJoinBotModal => {
+            Self::OpenJoinBotModal => {
                 view.modal =
                     Some(Box::new(Modal::JoinBot(JoinBotModal::default())));
             }
 
-            Event::OpenSpawnBotModal => {
+            Self::OpenSpawnBotModal => {
                 view.modal = Some(Box::new(Modal::SpawnBot(
                     SpawnBotModal::new(BotSource::Prefab(BotPrefab::Roberto)),
                 )));
             }
 
-            Event::OpenUploadBotModal { request } => match request.source {
+            Self::OpenUploadBotModal { request } => match request.source {
                 BotSource::Upload => {
                     let request = request.with_source(());
 
@@ -167,21 +167,21 @@ impl Event {
                 }
             },
 
-            Event::UploadBot { request } => {
+            Self::UploadBot { request } => {
                 view.modal = None;
                 view.upload_bot(request).await?;
             }
 
-            Event::CreateBot { src, pos, follow } => {
+            Self::CreateBot { src, pos, follow } => {
                 view.modal = None;
                 view.create_bot(src, pos, follow).await?;
             }
 
-            Event::LeaveBot => {
+            Self::LeaveBot => {
                 view.bot = None;
             }
 
-            Event::KillBot => {
+            Self::KillBot => {
                 let id = view.bot.as_ref().unwrap().id;
 
                 view.world
@@ -193,26 +193,26 @@ impl Event {
                 view.resume().await?;
             }
 
-            Event::DeleteBot => {
+            Self::DeleteBot => {
                 let id = view.bot.take().unwrap().id;
 
                 view.world.as_ref().unwrap().delete_bot(id).await?;
                 view.resume().await?;
             }
 
-            Event::FollowBot => {
+            Self::FollowBot => {
                 if let Some(bot) = &mut view.bot {
                     bot.follow = !bot.follow;
                 }
             }
 
-            Event::InspectBot { id } => {
+            Self::InspectBot { id } => {
                 view.modal = Some(Box::new(Modal::InspectBot(
                     InspectBotModal::new(id, view.modal.take()),
                 )));
             }
 
-            Event::Overclock { clock } => {
+            Self::Overclock { clock } => {
                 view.world.as_ref().unwrap().overclock(clock).await?;
             }
         }

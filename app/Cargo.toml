@@ -69,6 +69,9 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 tungstenite = "0.26.2"
 
+[workspace.lints.clippy]
+use_self = "warn"
+
 # ---
 
 [package]

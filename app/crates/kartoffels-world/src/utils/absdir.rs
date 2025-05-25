@@ -25,7 +25,7 @@ pub enum AbsDir {
 
 impl AbsDir {
     pub fn all() -> [Self; 4] {
-        [AbsDir::N, AbsDir::E, AbsDir::S, AbsDir::W]
+        [Self::N, Self::E, Self::S, Self::W]
     }
 
     pub fn shuffled(rng: &mut impl RngCore) -> [Self; 4] {
@@ -38,50 +38,50 @@ impl AbsDir {
     #[must_use]
     pub fn turned_left(self) -> Self {
         match self {
-            AbsDir::N => AbsDir::W,
-            AbsDir::E => AbsDir::N,
-            AbsDir::S => AbsDir::E,
-            AbsDir::W => AbsDir::S,
+            Self::N => Self::W,
+            Self::E => Self::N,
+            Self::S => Self::E,
+            Self::W => Self::S,
         }
     }
 
     #[must_use]
     pub fn turned_right(self) -> Self {
         match self {
-            AbsDir::N => AbsDir::E,
-            AbsDir::E => AbsDir::S,
-            AbsDir::S => AbsDir::W,
-            AbsDir::W => AbsDir::N,
+            Self::N => Self::E,
+            Self::E => Self::S,
+            Self::S => Self::W,
+            Self::W => Self::N,
         }
     }
 
     #[must_use]
     pub fn turned_back(self) -> Self {
         match self {
-            AbsDir::N => AbsDir::S,
-            AbsDir::E => AbsDir::W,
-            AbsDir::S => AbsDir::N,
-            AbsDir::W => AbsDir::E,
+            Self::N => Self::S,
+            Self::E => Self::W,
+            Self::S => Self::N,
+            Self::W => Self::E,
         }
     }
 
     #[must_use]
     pub fn as_vec(&self) -> IVec2 {
         match self {
-            AbsDir::N => ivec2(0, -1),
-            AbsDir::E => ivec2(1, 0),
-            AbsDir::S => ivec2(0, 1),
-            AbsDir::W => ivec2(-1, 0),
+            Self::N => ivec2(0, -1),
+            Self::E => ivec2(1, 0),
+            Self::S => ivec2(0, 1),
+            Self::W => ivec2(-1, 0),
         }
     }
 
     #[must_use]
     pub fn as_caret(&self) -> char {
         match self {
-            AbsDir::N => '^',
-            AbsDir::E => '>',
-            AbsDir::S => 'v',
-            AbsDir::W => '<',
+            Self::N => '^',
+            Self::E => '>',
+            Self::S => 'v',
+            Self::W => '<',
         }
     }
 }
@@ -89,10 +89,10 @@ impl AbsDir {
 impl fmt::Display for AbsDir {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            AbsDir::N => write!(f, "n"),
-            AbsDir::E => write!(f, "e"),
-            AbsDir::S => write!(f, "s"),
-            AbsDir::W => write!(f, "w"),
+            Self::N => write!(f, "n"),
+            Self::E => write!(f, "e"),
+            Self::S => write!(f, "s"),
+            Self::W => write!(f, "w"),
         }
     }
 }
@@ -114,10 +114,10 @@ impl Distribution<AbsDir> for Standard {
 impl From<u8> for AbsDir {
     fn from(value: u8) -> Self {
         match value {
-            0 => AbsDir::N,
-            1 => AbsDir::E,
-            2 => AbsDir::S,
-            _ => AbsDir::W,
+            0 => Self::N,
+            1 => Self::E,
+            2 => Self::S,
+            _ => Self::W,
         }
     }
 }
@@ -134,7 +134,7 @@ impl From<AbsDir> for u8 {
 }
 
 impl ops::Add<AbsDir> for IVec2 {
-    type Output = IVec2;
+    type Output = Self;
 
     fn add(self, rhs: AbsDir) -> Self::Output {
         self + rhs.as_vec()

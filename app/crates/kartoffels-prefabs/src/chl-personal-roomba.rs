@@ -77,15 +77,14 @@ fn main() {
     // Cost of moving between nodes, used by the pathfinding algorithm.
     //
     // Same case as `nav_queue`, we keep it here for performance reasons.
-    let mut nav_costs: Vec<_> = iter::repeat(0).take(map.tiles.len()).collect();
+    let mut nav_costs: Vec<_> = iter::repeat_n(0, map.tiles.len()).collect();
 
     // Parent nodes, used by the pathfinding algorithm to reconstruct the path
     // after we find a `Tile::Unknown` or `Tile::Flag`.
     //
     // Same case as `nav_queue`, we keep it here for performance reasons.
-    let mut nav_prevs: Vec<_> = iter::repeat(I8Vec2::default())
-        .take(map.tiles.len())
-        .collect();
+    let mut nav_prevs: Vec<_> =
+        iter::repeat_n(I8Vec2::default(), map.tiles.len()).collect();
 
     loop {
         // 1. Scan the environment - if something has changed, reset our cached
@@ -367,21 +366,21 @@ enum Dir {
 
 impl Dir {
     fn all() -> impl Iterator<Item = Self> {
-        [Dir::N, Dir::E, Dir::W, Dir::S].into_iter()
+        [Self::N, Self::E, Self::W, Self::S].into_iter()
     }
 
     fn as_vec(&self) -> I8Vec2 {
         match self {
-            Dir::N => i8vec2(0, -1),
-            Dir::E => i8vec2(1, 0),
-            Dir::S => i8vec2(0, 1),
-            Dir::W => i8vec2(-1, 0),
+            Self::N => i8vec2(0, -1),
+            Self::E => i8vec2(1, 0),
+            Self::S => i8vec2(0, 1),
+            Self::W => i8vec2(-1, 0),
         }
     }
 }
 
 impl Add<Dir> for I8Vec2 {
-    type Output = I8Vec2;
+    type Output = Self;
 
     fn add(mut self, rhs: Dir) -> Self::Output {
         let rhs = rhs.as_vec();

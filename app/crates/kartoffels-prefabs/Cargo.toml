@@ -31,3 +31,6 @@ edition.workspace = true
 [dependencies]
 glam = { workspace = true, features = ["libm"] }
 kartoffel = { path = "../../crates/kartoffel" }
+
+[lints]
+workspace = true

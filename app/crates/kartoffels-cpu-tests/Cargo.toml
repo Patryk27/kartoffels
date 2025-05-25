@@ -75,3 +75,6 @@ rand.workspace = true
 rand_chacha.workspace = true
 spin.workspace = true
 talc.workspace = true
+
+[lints]
+workspace = true

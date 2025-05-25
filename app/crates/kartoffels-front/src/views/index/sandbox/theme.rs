@@ -18,7 +18,7 @@ impl SandboxTheme {
     }
 
     pub fn render_form(ui: &mut Ui<Event>) {
-        for (idx, this) in SandboxTheme::all().enumerate() {
+        for (idx, this) in Self::all().enumerate() {
             if idx > 0 {
                 ui.space(1);
             }

@@ -335,9 +335,9 @@ impl Tab {
 
     fn btn(&self) -> Button<Event> {
         match self {
-            Tab::Stats => Button::new("stats", KeyCode::Char('s')),
-            Tab::Events => Button::new("events", KeyCode::Char('e')),
-            Tab::Lives => Button::new("lives", KeyCode::Char('l')),
+            Self::Stats => Button::new("stats", KeyCode::Char('s')),
+            Self::Events => Button::new("events", KeyCode::Char('e')),
+            Self::Lives => Button::new("lives", KeyCode::Char('l')),
         }
         .throwing(Event::ChangeTab(*self))
     }

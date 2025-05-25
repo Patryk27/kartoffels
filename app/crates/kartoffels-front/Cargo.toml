@@ -25,3 +25,6 @@ termwiz.workspace = true
 tokio-stream.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+
+[lints]
+workspace = true

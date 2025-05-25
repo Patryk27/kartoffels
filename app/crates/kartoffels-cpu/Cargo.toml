@@ -11,3 +11,6 @@ thiserror.workspace = true
 
 [dev-dependencies]
 itertools.workspace = true
+
+[lints]
+workspace = true

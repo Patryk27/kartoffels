@@ -45,29 +45,29 @@ impl Modal {
         Backdrop::render(ui);
 
         match self {
-            Modal::Bots(this) => {
+            Self::Bots(this) => {
                 this.render(ui, world);
             }
-            Modal::Error(this) => {
+            Self::Error(this) => {
                 this.render(ui);
             }
-            Modal::GoBack(this) => {
+            Self::GoBack(this) => {
                 this.render(ui);
             }
-            Modal::InspectBot(this) => {
+            Self::InspectBot(this) => {
                 this.render(ui, world);
             }
-            Modal::JoinBot(this) => {
+            Self::JoinBot(this) => {
                 this.render(ui, world);
             }
-            Modal::SpawnBot(this) => {
+            Self::SpawnBot(this) => {
                 this.render(ui);
             }
-            Modal::UploadBot(this) => {
+            Self::UploadBot(this) => {
                 this.render(ui, sess);
             }
 
-            Modal::Help(this) => {
+            Self::Help(this) => {
                 if let Some(event) = ui.catching(|ui| ui.add(&**this)) {
                     ui.throw(match event {
                         HelpMsgEvent::Copy { payload } => {
@@ -82,7 +82,7 @@ impl Modal {
                 }
             }
 
-            Modal::Custom(this) => {
+            Self::Custom(this) => {
                 ui.catching(this);
             }
         }

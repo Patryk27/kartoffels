@@ -13,8 +13,8 @@ pub enum Cmd {
 impl Cmd {
     pub fn run(self) -> Result<()> {
         match self {
-            Cmd::Bench(cmd) => cmd.run(),
-            Cmd::WorldToJson(cmd) => cmd.run(),
+            Self::Bench(cmd) => cmd.run(),
+            Self::WorldToJson(cmd) => cmd.run(),
         }
     }
 }

@@ -203,7 +203,7 @@ impl GameCtrlRequest {
         frame: &mut Frame,
     ) -> Result<()> {
         match self {
-            GameCtrlRequest::Visit(handle) => {
+            Self::Visit(handle) => {
                 info!(id=?handle.id(), name=?handle.name(), "visiting");
 
                 let mut snapshots = handle.snapshots();
@@ -217,39 +217,39 @@ impl GameCtrlRequest {
                 view.camera.look_at(view.snapshot.tiles.center());
             }
 
-            GameCtrlRequest::Pause => {
+            Self::Pause => {
                 view.pause().await?;
             }
 
-            GameCtrlRequest::Resume => {
+            Self::Resume => {
                 view.resume().await?;
             }
 
-            GameCtrlRequest::SetConfig(config) => {
+            Self::SetConfig(config) => {
                 view.config = config;
             }
 
-            GameCtrlRequest::SetModal(modal) => {
+            Self::SetModal(modal) => {
                 view.modal = modal.map(Modal::Custom).map(Box::new);
             }
 
-            GameCtrlRequest::SetHelp(help) => {
+            Self::SetHelp(help) => {
                 view.help = help;
             }
 
-            GameCtrlRequest::SetLabel(label) => {
+            Self::SetLabel(label) => {
                 view.label = label.map(|status| (status, Instant::now()));
             }
 
-            GameCtrlRequest::Copy(payload) => {
+            Self::Copy(payload) => {
                 frame.copy(payload).await?;
             }
 
-            GameCtrlRequest::GetWorldVersion(tx) => {
+            Self::GetWorldVersion(tx) => {
                 _ = tx.send(view.snapshot.version);
             }
 
-            GameCtrlRequest::WaitForRestart(tx) => {
+            Self::WaitForRestart(tx) => {
                 view.config.can_join_bots = false;
                 view.config.can_kill_bots = false;
                 view.config.can_spawn_bots = false;

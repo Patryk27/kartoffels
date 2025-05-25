@@ -18,3 +18,6 @@ serial-panic = []
 [dependencies]
 spin.workspace = true
 talc.workspace = true
+
+[lints]
+workspace = true
