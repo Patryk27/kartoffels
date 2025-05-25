@@ -1,6 +1,7 @@
 mod acyclic_maze;
 mod diamond_heist;
 mod personal_roomba;
+mod stranded_island;
 
 use crate::views::game::{Config, GameCtrl};
 use anyhow::Result;
@@ -34,4 +35,5 @@ pub static CHALLENGES: &[&Challenge] = &[
     &acyclic_maze::CHALLENGE,
     &diamond_heist::CHALLENGE,
     &personal_roomba::CHALLENGE,
+    &stranded_island::CHALLENGE,
 ];
