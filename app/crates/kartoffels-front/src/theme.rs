@@ -6,6 +6,7 @@ pub const FG: Color = Color::Rgb(240, 240, 240);
 
 pub const BLUE: Color = Color::Rgb(0, 128, 255);
 pub const DARKER_GRAY: Color = Color::Rgb(16, 16, 16);
+pub const DARK_BLUE: Color = Color::Rgb(0, 64, 128);
 pub const DARK_GRAY: Color = Color::Rgb(64, 64, 64);
 pub const GRAY: Color = Color::Rgb(96, 96, 96);
 pub const GREEN: Color = Color::Rgb(0, 255, 128);

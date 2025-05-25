@@ -144,6 +144,12 @@ impl Map {
                 bg = theme::BG;
             }
 
+            w::TileKind::WATER => {
+                ch = '~';
+                fg = theme::BLUE;
+                bg = theme::DARK_BLUE;
+            }
+
             w::ObjectKind::FLAG => {
                 ch = '=';
                 fg = theme::YELLOW;

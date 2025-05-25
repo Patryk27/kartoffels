@@ -60,6 +60,10 @@ impl<'de> Deserialize<'de> for Object {
 
 pub struct ObjectKind;
 
+// When adding a new object kind, don't forget to update the renderer (you can
+// easily find the relevant code by looking for usages of the existing objects).
+//
+// Also, note that objects shouldn't collide with tiles.
 impl ObjectKind {
     pub const FLAG: u8 = b'=';
     pub const GEM: u8 = b'*';

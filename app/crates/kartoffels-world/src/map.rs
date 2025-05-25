@@ -9,9 +9,10 @@ use std::fmt::Write;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::{cmp, fmt, mem};
 
-#[derive(Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
+    env: Tile,
     tiles: Box<[Tile]>,
 }
 
@@ -20,7 +21,11 @@ impl Map {
         let tiles = vec![Tile::new(TileKind::VOID); (size.x * size.y) as usize]
             .into_boxed_slice();
 
-        Self { size, tiles }
+        Self {
+            size,
+            env: Tile::new(TileKind::VOID),
+            tiles,
+        }
     }
 
     pub fn parse(s: &str) -> (Self, Anchors) {
@@ -53,17 +58,33 @@ impl Map {
         (map, anchors)
     }
 
+    /// Sets the environmental tile.
+    ///
+    /// See: [`Self::env()`].
+    pub fn set_env(&mut self, tile: impl Into<Tile>) {
+        self.env = tile.into();
+    }
+
+    /// Returns the environmental tile.
+    ///
+    /// This is the tile used for background - usually this is the void tile,
+    /// but if you are generating, say, an island, then water would be the
+    /// better environmental tile.
+    ///
+    /// See: [`Self::set_env()`].
+    pub fn env(&self) -> Tile {
+        self.env
+    }
+
     pub fn filled_with(mut self, tile: impl Into<Tile>) -> Self {
         self.fill(tile);
         self
     }
 
     pub fn get(&self, pos: IVec2) -> Tile {
-        if let Some(idx) = self.pos_to_idx(pos) {
-            self.tiles[idx]
-        } else {
-            Tile::new(TileKind::VOID)
-        }
+        self.pos_to_idx(pos)
+            .map(|idx| self.tiles[idx])
+            .unwrap_or(self.env)
     }
 
     pub fn get_mut(&mut self, pos: IVec2) -> &mut Tile {
@@ -203,6 +224,12 @@ impl Map {
     }
 }
 
+impl Default for Map {
+    fn default() -> Self {
+        Self::new(uvec2(0, 0))
+    }
+}
+
 impl fmt::Debug for Map {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let hash = {
@@ -336,13 +363,23 @@ impl<'de> Deserialize<'de> for Tile {
 
 pub struct TileKind;
 
+// When adding a new tile kind, don't forget to update the renderer (you can
+// easily find the relevant code by looking for usages of the existing tiles).
+//
+// Also, note that tiles shouldn't collide with objects.
 impl TileKind {
     pub const BOT: u8 = b'@';
-    pub const BOT_CHEVRON: u8 = b'~';
     pub const DOOR: u8 = b'+';
     pub const FLOOR: u8 = b'.';
     pub const VOID: u8 = b' ';
     pub const WALL: u8 = b'#';
     pub const WALL_H: u8 = b'-';
     pub const WALL_V: u8 = b'|';
+    pub const WATER: u8 = b'~';
+
+    /// Special kind of tile that marks the direction a bot is looking at.
+    ///
+    /// This is not a real tile - it's not persistent, it's added artificially
+    /// each time we generate a world snapshot.
+    pub const BOT_CHEVRON: u8 = 1;
 }

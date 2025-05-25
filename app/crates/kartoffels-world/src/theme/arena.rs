@@ -19,10 +19,16 @@ impl ArenaTheme {
         rng: &mut impl RngCore,
         mut map: MapBuilder,
     ) -> Result<Map> {
+        let env = map.env();
+
         map.reveal(rng, {
-            let map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
+            let mut map = Map::new(uvec2(self.radius, self.radius) * 2 + 1);
             let center = map.center();
             let radius = self.radius as f32;
+
+            // TODO
+            map.set_env(env);
+            map.fill(env);
 
             map.map(|pos, tile| {
                 if center.as_vec2().distance(pos.as_vec2()) < radius {

@@ -71,19 +71,28 @@ impl MapBuilder {
         f(&mut self.map)
     }
 
+    /// See: [`Map::set_env()`].
+    pub fn set_env(&mut self, tile: impl Into<Tile>) {
+        self.map.set_env(tile);
+    }
+
+    /// See: [`Map::set()`].
     pub async fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
         if self.map.set(pos, tile) {
             self.tick().await;
         }
     }
 
+    /// See: [`Map::set_if_void()`].
     pub async fn set_if_void(&mut self, pos: IVec2, tile: impl Into<Tile>) {
         if self.get(pos).is_void() {
             self.set(pos, tile).await;
         }
     }
 
-    // TODO duplicated with `Map::line()`
+    /// See: [`Map::line()`].
+    ///
+    /// TODO duplicated with `Map::line()`
     pub async fn line(&mut self, p1: IVec2, p2: IVec2, tile: impl Into<Tile>) {
         let tile = tile.into();
 
@@ -104,6 +113,12 @@ impl MapBuilder {
         }
     }
 
+    /// Reveals given map - like [`Self::begin()`], but animated.
+    ///
+    /// This is used for generating maps where it's difficult to provide a nice
+    /// animation out of the box - as compared to e.g. generating mazes where
+    /// the underlying algorithm can be sampled to get nice "map building in
+    /// progress" vibes.
     pub async fn reveal(&mut self, rng: &mut impl RngCore, map: Map) {
         const NOT_VISITED: u8 = 0;
         const VISITED: u8 = 1;

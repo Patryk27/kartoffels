@@ -88,8 +88,11 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<World> {
 
     // ---
 
-    utils::map::build(store, game, &world, async |mut _rng, map| {
-        Ok(map.commit())
+    utils::map::build(store, game, &world, async |mut rng, mut map| {
+        map.set_env(w::TileKind::WATER);
+
+        // TODO
+        w::ArenaTheme::new(12).build(&mut rng, map).await
     })
     .await?;
 
