@@ -58,6 +58,7 @@ pub fn send(world: &mut World) {
             map,
             objects,
             stats,
+            ticks: world.ticks,
             tiles,
             version: state.version,
         })

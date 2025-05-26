@@ -13,15 +13,21 @@ pub struct Map {
 }
 
 impl Map {
-    pub fn render(&self, ui: &mut Ui<Event>, view: &View) {
-        self.render_tiles(ui, view);
-        self.render_cursor(ui, view);
-        self.process_keys(ui);
+    pub fn render(ui: &mut Ui<Event>, view: &mut View) {
+        Self::render_tiles(ui, view);
+        Self::render_cursor(ui, view);
+        Self::process_keys(ui);
     }
 
-    fn render_tiles(&self, ui: &mut Ui<Event>, view: &View) {
+    fn render_tiles(ui: &mut Ui<Event>, view: &mut View) {
         let offset = view.camera.pos()
             - ivec2(ui.area.width as i32, ui.area.height as i32) / 2;
+
+        view.ocean.update(
+            offset,
+            offset + ivec2(ui.area.width as i32, ui.area.height as i32),
+            &view.snapshot,
+        );
 
         for dy in 0..ui.area.height {
             for dx in 0..ui.area.width {
@@ -33,7 +39,7 @@ impl Map {
                 };
 
                 ui.at(area, |ui| {
-                    self.render_tile(
+                    Self::render_tile(
                         ui,
                         view,
                         offset + ivec2(dx as i32, dy as i32),
@@ -43,39 +49,41 @@ impl Map {
         }
     }
 
-    fn render_cursor(&self, ui: &mut Ui<Event>, view: &View) {
-        if let Mode::SpawningBot {
+    fn render_cursor(ui: &mut Ui<Event>, view: &View) {
+        let Mode::SpawningBot {
             cursor_screen: Some(cursor_screen),
             cursor_valid,
             ..
         } = &view.mode
+        else {
+            return;
+        };
+
+        let cursor_screen = cursor_screen.as_ivec2()
+            - ivec2(ui.area.x as i32, ui.area.y as i32);
+
+        if cursor_screen.x >= 0
+            && cursor_screen.y >= 0
+            && cursor_screen.x < ui.area.width as i32
+            && cursor_screen.y < ui.area.height as i32
         {
-            let cursor_screen = cursor_screen.as_ivec2()
-                - ivec2(ui.area.x as i32, ui.area.y as i32);
+            let cursor_screen =
+                (cursor_screen.x as u16, cursor_screen.y as u16);
 
-            if cursor_screen.x >= 0
-                && cursor_screen.y >= 0
-                && cursor_screen.x < ui.area.width as i32
-                && cursor_screen.y < ui.area.height as i32
-            {
-                let cursor_screen =
-                    (cursor_screen.x as u16, cursor_screen.y as u16);
+            let cursor_bg = if *cursor_valid {
+                theme::GREEN
+            } else {
+                theme::RED
+            };
 
-                let cursor_bg = if *cursor_valid {
-                    theme::GREEN
-                } else {
-                    theme::RED
-                };
-
-                ui.buf[cursor_screen]
-                    .set_char('@')
-                    .set_fg(theme::BG)
-                    .set_bg(cursor_bg);
-            }
+            ui.buf[cursor_screen]
+                .set_char('@')
+                .set_fg(theme::BG)
+                .set_bg(cursor_bg);
         }
     }
 
-    fn render_tile(&self, ui: &mut Ui<Event>, view: &View, pos: IVec2) {
+    fn render_tile(ui: &mut Ui<Event>, view: &View, pos: IVec2) {
         let ch;
         let mut fg;
         let mut bg;
@@ -147,7 +155,7 @@ impl Map {
             }
 
             w::TileKind::WATER => {
-                let height = tile.meta[0] as f32 / 255.0;
+                let height = view.ocean.height(pos);
 
                 ch = '~';
 
@@ -209,7 +217,7 @@ impl Map {
                     #[allow(clippy::collapsible_else_if)]
                     if let Some(bot) = &view.bot
                         && bot.id == id
-                        && self.blink.elapsed().as_millis() % 1000 <= 500
+                        && view.map.blink.elapsed().as_millis() % 1000 <= 500
                     {
                         fg = theme::BG;
                         bg = theme::GREEN;
@@ -223,7 +231,7 @@ impl Map {
         ui.buf[pos].set_char(ch).set_fg(fg).set_bg(bg);
     }
 
-    fn process_keys(&self, ui: &mut Ui<Event>) {
+    fn process_keys(ui: &mut Ui<Event>) {
         if !ui.enabled {
             return;
         }

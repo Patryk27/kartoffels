@@ -286,7 +286,6 @@ impl World {
         if !self.paused {
             bots::dequeue(self);
             bots::tick(self);
-            map::tick(self);
         }
 
         stats::update(self);
