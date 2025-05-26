@@ -1,6 +1,8 @@
 mod builder;
+mod systems;
 
 pub use self::builder::*;
+pub use self::systems::*;
 use ahash::AHashMap;
 use glam::{IVec2, UVec2, ivec2, uvec2};
 use rand::{Rng, RngCore};
@@ -12,7 +14,6 @@ use std::{cmp, fmt, mem};
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Map {
     size: UVec2,
-    env: Tile,
     tiles: Box<[Tile]>,
 }
 
@@ -23,7 +24,6 @@ impl Map {
 
         Self {
             size,
-            env: Tile::new(TileKind::VOID),
             tiles,
         }
     }
@@ -58,24 +58,6 @@ impl Map {
         (map, anchors)
     }
 
-    /// Sets the environmental tile.
-    ///
-    /// See: [`Self::env()`].
-    pub fn set_env(&mut self, tile: impl Into<Tile>) {
-        self.env = tile.into();
-    }
-
-    /// Returns the environmental tile.
-    ///
-    /// This is the tile used for background - usually this is the void tile,
-    /// but if you are generating, say, an island, then water would be the
-    /// better environmental tile.
-    ///
-    /// See: [`Self::set_env()`].
-    pub fn env(&self) -> Tile {
-        self.env
-    }
-
     pub fn filled_with(mut self, tile: impl Into<Tile>) -> Self {
         self.fill(tile);
         self
@@ -84,7 +66,7 @@ impl Map {
     pub fn get(&self, pos: IVec2) -> Tile {
         self.pos_to_idx(pos)
             .map(|idx| self.tiles[idx])
-            .unwrap_or(self.env)
+            .unwrap_or_else(|| Tile::new(TileKind::VOID))
     }
 
     pub fn get_mut(&mut self, pos: IVec2) -> &mut Tile {
@@ -323,6 +305,10 @@ impl Tile {
 
     pub fn is_bot(&self) -> bool {
         self.kind == TileKind::BOT
+    }
+
+    pub fn is_water(&self) -> bool {
+        self.kind == TileKind::WATER
     }
 }
 

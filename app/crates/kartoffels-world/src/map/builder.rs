@@ -71,11 +71,6 @@ impl MapBuilder {
         f(&mut self.map)
     }
 
-    /// See: [`Map::set_env()`].
-    pub fn set_env(&mut self, tile: impl Into<Tile>) {
-        self.map.set_env(tile);
-    }
-
     /// See: [`Map::set()`].
     pub async fn set(&mut self, pos: IVec2, tile: impl Into<Tile>) {
         if self.map.set(pos, tile) {

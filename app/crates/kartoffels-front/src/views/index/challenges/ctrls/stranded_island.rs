@@ -3,8 +3,9 @@ use crate::views::game::{GameCtrl, HelpMsg};
 use crate::{Msg, MsgBtn, MsgLine, utils};
 use anyhow::Result;
 use futures::future::BoxFuture;
+use glam::uvec2;
 use kartoffels_store::{Store, World};
-use kartoffels_world::prelude as w;
+use kartoffels_world::prelude::{self as w, TileKind};
 use ratatui::style::Stylize;
 use std::sync::LazyLock;
 use termwiz::input::KeyCode;
@@ -88,11 +89,8 @@ async fn init(store: &Store, game: &GameCtrl) -> Result<World> {
 
     // ---
 
-    utils::map::build(store, game, &world, async |mut rng, mut map| {
-        map.set_env(w::TileKind::WATER);
-
-        // TODO
-        w::ArenaTheme::new(12).build(&mut rng, map).await
+    utils::map::build(store, game, &world, async |_, _| {
+        Ok(w::Map::new(uvec2(128, 128)).filled_with(TileKind::WATER))
     })
     .await?;
 
