@@ -20,10 +20,7 @@ impl Map {
         let tiles = vec![Tile::new(TileKind::VOID); (size.x * size.y) as usize]
             .into_boxed_slice();
 
-        Self {
-            size,
-            tiles,
-        }
+        Self { size, tiles }
     }
 
     pub fn parse(s: &str) -> (Self, Anchors) {
