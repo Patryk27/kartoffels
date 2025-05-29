@@ -9,6 +9,20 @@ run *args:
            --ssh 127.0.0.1:1314 \
            {{ args }}
 
+run-vg *args:
+    cd app \
+    && cargo build --release \
+    && cd .. \
+    && valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes \
+          ./app/target/release/kartoffels \
+           serve \
+           ./store \
+           --admin 127.0.0.1:1312 \
+           --open-admin \
+           --http 127.0.0.1:1313 \
+           --ssh 127.0.0.1:1314 \
+           {{ args }}
+
 toolbox *args:
     cd app \
     && cargo run --release -- \
