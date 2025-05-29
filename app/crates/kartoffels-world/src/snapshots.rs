@@ -26,6 +26,7 @@ pub struct Snapshot {
     pub map: Map,
     pub objects: ObjectsSnapshot,
     pub stats: StatsSnapshot,
+    pub ticks: u64,
     pub tiles: Map,
     pub version: u64,
 }
