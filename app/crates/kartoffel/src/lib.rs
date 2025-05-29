@@ -47,7 +47,6 @@ pub use self::irq::*;
 pub use self::motor::*;
 pub use self::radar::*;
 pub use self::serial::*;
-use core::arch::asm;
 use core::sync::atomic::{AtomicU32, Ordering};
 use core::{fmt, mem, ptr};
 
@@ -82,8 +81,9 @@ pub const fn pack(a: u8, b: u8, c: u8, d: u8) -> u32 {
 ///
 /// Note that this function doesn't work in online mode (it's a no-op there).
 pub fn breakpoint() {
+    #[cfg(target_arch = "riscv32")]
     unsafe {
-        asm!("ebreak");
+        core::arch::asm!("ebreak");
     }
 }
 
