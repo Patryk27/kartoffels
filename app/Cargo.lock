@@ -2720,9 +2720,7 @@ dependencies = [
  "palette",
  "ratatui-core",
  "ratatui-crossterm",
- "ratatui-macros",
  "ratatui-termion",
- "ratatui-termwiz",
  "ratatui-widgets",
 ]
 
@@ -2759,16 +2757,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ratatui-macros"
-version = "0.7.0-alpha.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "809b8926533c1f1e5fa5e26b25593146798d971d709c4a89084911f66140e6d4"
-dependencies = [
- "ratatui-core",
- "ratatui-widgets",
-]
-
-[[package]]
 name = "ratatui-termion"
 version = "0.1.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2777,16 +2765,6 @@ dependencies = [
  "instability",
  "ratatui-core",
  "termion",
-]
-
-[[package]]
-name = "ratatui-termwiz"
-version = "0.1.0-alpha.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5acd5fe259ff4d8e027eac64755ef5d8d5a5ea498b88abeab3449370b4a39510"
-dependencies = [
- "ratatui-core",
- "termwiz",
 ]
 
 [[package]]
