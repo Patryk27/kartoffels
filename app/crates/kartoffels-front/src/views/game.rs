@@ -5,6 +5,7 @@ mod ctrl;
 mod event;
 mod map;
 mod modal;
+mod ocean;
 mod overlay;
 mod side;
 
@@ -16,6 +17,7 @@ use self::event::*;
 use self::map::*;
 use self::modal::*;
 pub use self::modal::{HelpMsg, HelpMsgEvent, HelpMsgRef};
+use self::ocean::*;
 use self::overlay::*;
 use self::side::*;
 use crate::{Clear, Fade, Frame, Ui, theme};
@@ -111,6 +113,7 @@ struct View {
     map: Map,
     modal: Option<Box<Modal>>,
     mode: Mode,
+    ocean: Ocean,
     restart: Option<oneshot::Sender<()>>,
     snapshot: Arc<w::Snapshot>,
     snapshots: Option<w::SnapshotStream>,
@@ -195,7 +198,7 @@ impl View {
                     });
 
                     ui.at(map_area, |ui| {
-                        self.map.render(ui, self);
+                        Map::render(ui, self);
                     });
                 });
             }
