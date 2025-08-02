@@ -844,7 +844,7 @@ impl Region {
     #[inline(always)]
     fn of(addr: u32, size: u8) -> TickResult<Self> {
         if addr >= Cpu::MMIO_BASE {
-            if size == 4 && addr % 4 == 0 {
+            if size == 4 && addr.is_multiple_of(4) {
                 Ok(Self::Mmio)
             } else {
                 Err(TickError::InvalidAccess { addr, size })

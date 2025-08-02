@@ -119,7 +119,7 @@ impl BotTimer {
     fn tick(&mut self, irq: &mut BotIrq, irq_idx: u8) {
         self.ticks += 1;
 
-        if self.ticks % self.prescaler() != 0 {
+        if !self.ticks.is_multiple_of(self.prescaler()) {
             return;
         }
 

@@ -1,5 +1,4 @@
 #![feature(associated_type_defaults)]
-#![feature(let_chains)]
 #![feature(str_as_str)]
 #![allow(clippy::needless_pub_self)]
 

@@ -171,7 +171,7 @@ impl MapBuilder {
     }
 
     async fn tick(&mut self) {
-        if self.changes % self.frequency == 0 {
+        if self.changes.is_multiple_of(self.frequency) {
             self.notify().await;
         }
 

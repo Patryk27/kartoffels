@@ -1,4 +1,4 @@
-#![feature(array_chunks)]
+#![feature(iter_array_chunks)]
 
 mod asserter;
 mod cbor_map_ext;
