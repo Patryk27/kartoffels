@@ -213,6 +213,7 @@ impl Bootstrap {
             states: Default::default(),
             stats: Default::default(),
             theme: self.theme,
+            ticks: Default::default(),
         }
     }
 }
@@ -271,10 +272,14 @@ struct World {
     states: States,
     stats: Stats,
     theme: Option<Theme>,
+    ticks: u64,
 }
 
 impl World {
     fn tick(&mut self) -> ControlFlow<(), ()> {
+        // TODO what if paused
+        self.ticks += self.clock.ticks() as u64;
+
         handle::communicate(self);
 
         if !self.paused {
